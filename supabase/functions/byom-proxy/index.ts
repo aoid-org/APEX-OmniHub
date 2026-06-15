@@ -114,6 +114,42 @@ function sumAuditSpend(rows: { metadata: unknown }[] | null): number {
   return total;
 }
 
+async function verifyAuth(req: Request, corsHeaders: Record<string, string>) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith('Bearer ')) return { errorResponse: jsonResponse({ error: 'Missing Authorization' }, 401, corsHeaders) };
+  
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) return { errorResponse: jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders) };
+  
+  return { user };
+}
+
+async function verifyBudget(tenantId: string, providerConfig: ModelProviderConfig, user: unknown, provider: string, model: string, corsHeaders: Record<string, string>) {
+  const { data: currentSpendData } = await supabase.from('audit_logs').select('metadata').eq('resource_id', tenantId).eq('action_type', 'BYOM_AUDIT_SPAN');
+  const totalSpend = sumAuditSpend(currentSpendData);
+  if (totalSpend >= providerConfig.max_cost_usd) {
+     await supabase.from('audit_logs').insert({ action_type: 'BYOM_AUDIT_SPAN', resource_id: tenantId, actor_id: user.id, metadata: { status: 'blocked_budget', provider, model, cost_incurred: 0 } });
+     return jsonResponse({ error: 'Tenant AI budget exceeded' }, 403, corsHeaders);
+  }
+  return null;
+}
+
+async function fetchApiKey(userId: string, provider: string, tenantId: string, corsHeaders: Record<string, string>) {
+  const { data: connection, error: connectionError } = await supabase.from('provider_connections').select('credential_ciphertext').eq('user_id', userId).eq('provider', provider).eq('status', 'active').single();
+  if (connectionError || !connection) return { errorResponse: jsonResponse({ error: 'Provider not connected' }, 404, corsHeaders) };
+
+  let ciphertext: Uint8Array;
+  if (typeof connection.credential_ciphertext === 'string' && connection.credential_ciphertext.startsWith('\\x')) {
+    const hex = connection.credential_ciphertext.slice(2);
+    ciphertext = new Uint8Array(hex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  } else {
+    ciphertext = new Uint8Array(connection.credential_ciphertext as number[]);
+  }
+  const apiKey = await cockpitCrypto.decrypt(ciphertext, { tenantId });
+  return { apiKey };
+}
+
 serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -122,16 +158,8 @@ serve(async (req: Request) => {
   const corsHeaders = buildCorsHeaders(origin);
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith('Bearer ')) {
-      return jsonResponse({ error: 'Missing Authorization' }, 401, corsHeaders);
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
-    }
+    const { user, errorResponse: authErr } = await verifyAuth(req, corsHeaders);
+    if (authErr || !user) return authErr!;
 
     // Distributed rate limiting (Upstash) — additive to the Postgres-backed
     // RateLimiter below; both fail closed. Keyed per authenticated user.
@@ -144,7 +172,6 @@ serve(async (req: Request) => {
     const { provider, model, messages } = body;
 
     await RateLimiter.checkLimit(supabase, user.id);
-
     const tenantId = user.user_metadata?.tenant_id ?? user.id;
 
     // Load registry config
@@ -152,51 +179,15 @@ serve(async (req: Request) => {
     if (!providerConfig || providerConfig.provider_type === 'disabled') {
       return jsonResponse({ error: 'Provider is disabled or not configured in registry' }, 403, corsHeaders);
     }
-
     if (!providerConfig.allowed_models.includes(model)) {
       return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
     }
     
-    // Check tenant accumulated spend against registry budget cap
-    const { data: currentSpendData } = await supabase
-      .from('audit_logs')
-      .select('metadata')
-      .eq('resource_id', tenantId)
-      .eq('action_type', 'BYOM_AUDIT_SPAN');
-      
-    const totalSpend = sumAuditSpend(currentSpendData);
+    const budgetErr = await verifyBudget(tenantId, providerConfig, user, provider, model, corsHeaders);
+    if (budgetErr) return budgetErr;
 
-    if (totalSpend >= providerConfig.max_cost_usd) {
-       // Log rejection
-       await supabase.from('audit_logs').insert({
-         action_type: 'BYOM_AUDIT_SPAN',
-         resource_id: tenantId,
-         actor_id: user.id,
-         metadata: { status: 'blocked_budget', provider, model, cost_incurred: 0 }
-       });
-       return jsonResponse({ error: 'Tenant AI budget exceeded' }, 403, corsHeaders);
-    }
-
-    const { data: connection, error: connectionError } = await supabase
-      .from('provider_connections')
-      .select('credential_ciphertext')
-      .eq('user_id', user.id)
-      .eq('provider', provider)
-      .eq('status', 'active')
-      .single();
-
-    if (connectionError || !connection) {
-      return jsonResponse({ error: 'Provider not connected' }, 404, corsHeaders);
-    }
-
-    let ciphertext: Uint8Array;
-    if (typeof connection.credential_ciphertext === 'string' && connection.credential_ciphertext.startsWith('\\x')) {
-      const hex = connection.credential_ciphertext.slice(2);
-      ciphertext = new Uint8Array(hex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-    } else {
-      ciphertext = new Uint8Array(connection.credential_ciphertext as number[]);
-    }
-    const apiKey = await cockpitCrypto.decrypt(ciphertext, { tenantId });
+    const { apiKey, errorResponse: keyErr } = await fetchApiKey(user.id, provider, tenantId, corsHeaders);
+    if (keyErr || !apiKey) return keyErr!;
 
     const isByomSovereign = user.user_metadata?.identity_type === 'byom';
 

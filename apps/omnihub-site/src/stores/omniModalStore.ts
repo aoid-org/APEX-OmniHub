@@ -1,6 +1,7 @@
 /**
  * OmniModal Global State — "The Invisible Hand"
  * @version 2.0.0
+ * @module src/stores/omniModalStore
  *
  * APEX STANDARDS ENFORCED:
  * - Atomic Idempotency: invoke() with same config produces identical state

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
@@ -1326,7 +1326,7 @@ const EcosystemWidget = () => {
           fontSize:22, color:T.orange, flexShrink:0,
           boxShadow:`0 0 14px ${T.orange}55`,
         }}>+</span>
-        Add APEX App
+        {' '}Add APEX App
       </button>
     </div>
   </GlassCard>
@@ -1456,7 +1456,7 @@ export default function OmniDashShell() {
     // This prevents aggressive re-renders from detaching DOM nodes during test execution.
     if (
       (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (typeof window !== 'undefined' && (window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
+      (typeof globalThis.window !== 'undefined' && (globalThis.window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
     ) {
       return;
     }
@@ -1473,8 +1473,12 @@ export default function OmniDashShell() {
   const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
   const gridHeight = isDesktop ? 300 : undefined;
 
+  const layoutContextValue = useMemo(() => ({
+    hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions
+  }), [hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions]);
+
   return (
-    <LayoutContext.Provider value={{ hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions }}>
+    <LayoutContext.Provider value={layoutContextValue}>
     <div style={{
       fontFamily:"'Space Grotesk',sans-serif",
       background: T.bg, color: T.t1,

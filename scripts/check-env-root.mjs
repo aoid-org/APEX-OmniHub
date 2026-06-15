@@ -54,9 +54,17 @@ if (missing.length > 0) {
     '      does NOT trigger a redeploy. Use the dashboard "Retry" button',
   );
   console.warn('      or push an empty commit to force a rebuild.\n');
-  if (allowMissingSupabaseConfig && !isCiOrProduction) {
+  const isPreview = process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== 'main';
+  if (allowMissingSupabaseConfig && (!isCiOrProduction || isPreview)) {
     console.warn(
-      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in local development.',
+      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in local development or Preview Build.',
+    );
+    console.warn('         Auth remains unavailable until env vars are configured.\n');
+    process.exit(0);
+  }
+  if (isPreview) {
+    console.warn(
+      'WARNING: Proceeding without Supabase configuration for Cloudflare Pages Preview build.',
     );
     console.warn('         Auth remains unavailable until env vars are configured.\n');
     process.exit(0);

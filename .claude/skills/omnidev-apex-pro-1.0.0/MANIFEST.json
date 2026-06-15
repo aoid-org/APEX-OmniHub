@@ -1,0 +1,39 @@
+{
+  "name": "omnidev-apex-pro",
+  "version": "1.0.0",
+  "description": "APEX-OmniHub platform dev and debug agent skill. Use when developing, debugging, restoring, repairing, replicating, scaling, or optimizing any component of APEX-OmniHub—from Supabase schema to Cloudflare Workers to edge functions. Connects to the apex-omnihub-connector MCP immediately for full live platform access with recursive self-repair and zero-trust guard gates. Does not cover non-OmniHub products or general coding outside the OmniHub codebase.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary",
+  "spec": "agent-skills-open-format",
+  "runtime": "APEX-OmniHub",
+  "supersedes": "omnidev-apex v3.0.0",
+  "compatibility": "Claude 3.5+ / Claude 4.x · apex-omnihub-connector MCP required",
+  "mcp_required": "apex-omnihub-connector",
+  "mcp_tools": [
+    "apex_platform_health","apex_module_states","apex_mcp_status",
+    "apex_db_query","apex_db_schema","apex_db_rls_check","apex_db_indexes",
+    "apex_db_migrations","apex_db_read",
+    "apex_gh_file","apex_gh_dir","apex_gh_pr_status","apex_gh_workflows",
+    "apex_gh_commits","apex_gh_branches","apex_gh_search",
+    "apex_cf_deployment",
+    "apex_edge_list","apex_edge_invoke",
+    "apex_dashboard_kpis","apex_realtime_poll",
+    "apex_audit_log","apex_error_log","apex_mcp_audit",
+    "apex_mcp_help"
+  ],
+  "install": {
+    "skills_sh": "npx skills add github.com/apexbusiness-systems/apex-skills --skill omnidev-apex-pro",
+    "claude_code": "/plugin marketplace add apexbusiness-systems/apex-skills",
+    "claude_ai": "upload dist/omnidev-apex-pro-1.0.0.skill in Settings > Capabilities"
+  },
+  "evidence": {
+    "scorecard": "scorecard.json",
+    "trigger_eval": "evals/trigger-eval.json"
+  },
+  "quality_gate": {
+    "test_coverage": "100% new code",
+    "regressions": 0,
+    "security_high_crit": 0,
+    "lint_warnings": 0
+  }
+}

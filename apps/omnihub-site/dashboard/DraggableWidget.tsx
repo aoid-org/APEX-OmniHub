@@ -90,27 +90,30 @@ function findFreePosition(
     return { left: snapLeft, top: snapTop };
   }
 
+  const checkCandidates = (candidates: {left: number; top: number}[]) => {
+    for (const c of candidates) {
+      if (c.top >= 0 && !hasCollision(c.left, c.top)) return c;
+    }
+    return null;
+  };
+
   // Expand outward in square shells until a free slot is found
   for (let radius = SNAP; radius <= MAX_SEARCH_RADIUS; radius += SNAP) {
     // Top and bottom edges
     for (let dx = -radius; dx <= radius; dx += SNAP) {
-      const candidates = [
+      const match = checkCandidates([
         { left: snapLeft + dx, top: snapTop - radius },
         { left: snapLeft + dx, top: snapTop + radius },
-      ];
-      for (const c of candidates) {
-        if (c.top >= 0 && !hasCollision(c.left, c.top)) return c;
-      }
+      ]);
+      if (match) return match;
     }
     // Left and right edges (skip corners already covered above)
     for (let dy = -radius + SNAP; dy < radius; dy += SNAP) {
-      const candidates = [
+      const match = checkCandidates([
         { left: snapLeft - radius, top: snapTop + dy },
         { left: snapLeft + radius, top: snapTop + dy },
-      ];
-      for (const c of candidates) {
-        if (c.top >= 0 && !hasCollision(c.left, c.top)) return c;
-      }
+      ]);
+      if (match) return match;
     }
   }
 

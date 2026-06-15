@@ -33,3 +33,7 @@ Attack vector is Windows-only; our CI runs on ubuntu-22.04 and production runs o
 esbuild is not imported in any production bundle; it is a build-time tool only.
 Reviewed and accepted: 2026-06-15. Re-evaluate when tsx publishes an update.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-8988-4f7v-96qf"
+reason = "CVSS 5.3: @opentelemetry/core uses a flawed id generator. Affects only telemetry devtooling, no production exposure. Reviewed and accepted: 2026-06-15."

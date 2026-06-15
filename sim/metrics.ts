@@ -156,6 +156,42 @@ export class MetricsCollector {
     this.endTime = new Date(Date.now());
   }
 
+  private calculateOperationStats(op: string, metrics: LatencyMetric[]): LatencyStats {
+    const len = metrics.length;
+    let successes = 0;
+    let durationSum = 0;
+    const durations = new Array(len);
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (let i = 0; i < len; i++) {
+      const m = metrics[i];
+      const d = m.durationMs;
+      durations[i] = d;
+      durationSum += d;
+      if (d < min) min = d;
+      if (d > max) max = d;
+      if (m.success) successes++;
+    }
+    durations.sort((a, b) => a - b);
+    if (len === 0) {
+      min = 0;
+      max = 0;
+    }
+
+    return {
+      operation: op,
+      count: len,
+      min: min,
+      max: max,
+      mean: len > 0 ? durationSum / len : 0,
+      p50: this.percentile(durations, 0.50),
+      p95: this.percentile(durations, 0.95),
+      p99: this.percentile(durations, 0.99),
+      successRate: len > 0 ? successes / len : 0,
+    };
+  }
+
   /**
    * Calculate latency stats for operation
    */
@@ -176,39 +212,7 @@ export class MetricsCollector {
     const stats: LatencyStats[] = [];
 
     for (const [op, metrics] of byOp.entries()) {
-      const len = metrics.length;
-      let successes = 0;
-      let durationSum = 0;
-      const durations = new Array(len);
-      let min = Infinity;
-      let max = -Infinity;
-
-      for (let i = 0; i < len; i++) {
-        const m = metrics[i];
-        const d = m.durationMs;
-        durations[i] = d;
-        durationSum += d;
-        if (d < min) min = d;
-        if (d > max) max = d;
-        if (m.success) successes++;
-      }
-      durations.sort((a, b) => a - b);
-      if (len === 0) {
-        min = 0;
-        max = 0;
-      }
-
-      stats.push({
-        operation: op,
-        count: len,
-        min: min,
-        max: max,
-        mean: len > 0 ? durationSum / len : 0,
-        p50: this.percentile(durations, 0.50),
-        p95: this.percentile(durations, 0.95),
-        p99: this.percentile(durations, 0.99),
-        successRate: successes / metrics.length,
-      });
+      stats.push(this.calculateOperationStats(op, metrics));
     }
 
     return stats;
@@ -306,6 +310,34 @@ export class MetricsCollector {
     };
   }
 
+  private processAppScores(appMetrics: AppMetrics[]): { apps: Record<AppName, AppScore>; avgScore: number; issues: string[] } {
+    const apps = {} as Record<AppName, AppScore>;
+    const issues: string[] = [];
+    let sum = 0;
+
+    for (const metric of appMetrics) {
+      const score = this.calculateAppScore(metric);
+      apps[metric.app] = score;
+      sum += score.score;
+      if (score.score < 70) {
+        issues.push(...score.issues);
+      }
+    }
+
+    return {
+      apps,
+      issues,
+      avgScore: appMetrics.length > 0 ? sum / appMetrics.length : 0,
+    };
+  }
+
+  private calculateSystemWarnings(metrics: SystemMetrics): string[] {
+    const warnings: string[] = [];
+    if (metrics.p95LatencyMs > 500) warnings.push(`High p95 latency: ${metrics.p95LatencyMs.toFixed(0)}ms`);
+    if (metrics.errorRate > 0.1) warnings.push(`High error rate: ${(metrics.errorRate * 100).toFixed(1)}%`);
+    return warnings;
+  }
+
   /**
    * Generate scorecard
    *
@@ -327,35 +359,13 @@ export class MetricsCollector {
     const appMetrics = this.getAppMetrics();
     const systemMetrics = this.getSystemMetrics(queueDepth, circuitStates);
 
-    // Score each app
-    const apps: Record<AppName, AppScore> = {} as Record<AppName, AppScore>;
-    const appIssues: string[] = [];
-
-    for (const metric of appMetrics) {
-      const score = this.calculateAppScore(metric);
-      const passed = score.score >= 70; // 70% threshold
-
-      apps[metric.app] = score;
-
-      if (!passed) {
-        appIssues.push(...score.issues);
-      }
-    }
-
-    // Score system
+    const { apps, avgScore, issues } = this.processAppScores(appMetrics);
     const systemScore = this.calculateSystemScore(systemMetrics);
 
     // Overall score (weighted average)
-    const appScores = Object.values(apps).map(a => a.score);
-    const avgAppScore = appScores.length > 0
-      ? appScores.reduce((a, b) => a + b, 0) / appScores.length
-      : 0;
-
-    const overallScore = (avgAppScore * 0.6) + (systemScore.score * 0.4); // 60% app, 40% system
+    const overallScore = (avgScore * 0.6) + (systemScore.score * 0.4); // 60% app, 40% system
 
     // Determine threshold based on context
-    // Default: 70 for PRs (permissive), 90 for main/scheduled (strict)
-    // Can be overridden via CHAOS_THRESHOLD env var or requiredScore param
     const envParsed = Number.parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);
     const threshold = requiredScore ?? (Number.isNaN(envParsed) ? 70 : envParsed);
 
@@ -363,16 +373,7 @@ export class MetricsCollector {
     const passed = overallScore >= threshold && systemScore.passed;
 
     // Collect all issues
-    const issues = [...appIssues];
-    const warnings: string[] = [];
-
-    if (systemMetrics.p95LatencyMs > 500) {
-      warnings.push(`High p95 latency: ${systemMetrics.p95LatencyMs.toFixed(0)}ms`);
-    }
-
-    if (systemMetrics.errorRate > 0.1) {
-      warnings.push(`High error rate: ${(systemMetrics.errorRate * 100).toFixed(1)}%`);
-    }
+    const warnings = this.calculateSystemWarnings(systemMetrics);
 
     return {
       runId,

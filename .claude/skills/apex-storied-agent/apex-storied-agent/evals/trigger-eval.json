@@ -1,0 +1,20 @@
+[
+  { "query": "review this payment function and make sure it's actually correct, not just looks right", "should_trigger": true, "note": "core: adversarial code review" },
+  { "query": "I keep missing subtle bugs in my PRs — can you go over this diff with real rigor?", "should_trigger": true, "note": "core: catch what peers miss" },
+  { "query": "audit your own reasoning on this before you give me a final answer please", "should_trigger": true, "note": "core: adversarial self-check" },
+  { "query": "harden this analysis — attack it, find where my conclusion breaks", "should_trigger": true, "note": "core: oppose pass" },
+  { "query": "apply the storied-agent discipline to this architecture decision, stakes are high", "should_trigger": true, "note": "direct invocation" },
+  { "query": "I want you to reason like that retired Fable model that caught bugs others missed", "should_trigger": true, "note": "profile reference" },
+  { "query": "before you say this is done, give me a verification trace I can actually replay", "should_trigger": true, "note": "evidence trace request" },
+  { "query": "double-check this financial calc with maximum care, it's going to a client", "should_trigger": true, "note": "high-stakes calibration" },
+  { "query": "raise the rigor on this incident postmortem so we don't hand-wave the root cause", "should_trigger": true, "note": "rigor on analysis" },
+  { "query": "write me a React component for a login form with email and password fields", "should_trigger": false, "note": "near-miss: pure build — apex-frontend" },
+  { "query": "run the full Playwright e2e suite against staging and report failures", "should_trigger": false, "note": "near-miss: test execution — apexomni-test" },
+  { "query": "just fix this typo in my README and push it, nothing fancy", "should_trigger": false, "note": "near-miss: trivial, no rigor needed" },
+  { "query": "what were Fable 5's exact benchmark scores on MMLU and SWE-bench?", "should_trigger": false, "note": "near-miss: factual lookup; numbers not public" },
+  { "query": "generate marketing copy for our new pricing page launch", "should_trigger": false, "note": "near-miss: creative GTM — gtm-omni" },
+  { "query": "package and publish my existing skill to the marketplace", "should_trigger": false, "note": "near-miss: packaging — apex-skill-forge" },
+  { "query": "design a Postgres schema for a multi-tenant SaaS app", "should_trigger": false, "note": "near-miss: data architecture — apex-data-architect" },
+  { "query": "what's the weather in Toronto tomorrow afternoon for my trip?", "should_trigger": false, "note": "off-domain" },
+  { "query": "summarize this three-paragraph email into two bullet points for me", "should_trigger": false, "note": "near-miss: light summarization, no correctness stakes" }
+]

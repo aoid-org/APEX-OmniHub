@@ -167,7 +167,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
-    "dompurify": "^3.3.3",
+    "dompurify": "^3.4.9",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.34.3",
     "i18next": "^25.8.14",
@@ -183,7 +183,7 @@
     "react-hook-form": "^7.61.1",
     "react-i18next": "^16.5.4",
     "react-resizable-panels": "^2.1.9",
-    "react-router-dom": "^7.15.0",
+    "react-router-dom": "^7.15.1",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -193,7 +193,8 @@
     "viem": "^2.43.4",
     "wagmi": "^2.19.5",
     "zod": "^3.25.76",
-    "zustand": "^4.5.7"
+    "zustand": "^4.5.7",
+    "react-router": "^7.15.1"
   },
   "devDependencies": {
     "@aws-sdk/client-lambda": "^3.1014.0",
@@ -249,7 +250,7 @@
     "globals": "^15.15.0",
     "hardhat": "^2.28.5",
     "hardhat-gas-reporter": "^1.0.10",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.1.2",
     "jsdom": "^26.0.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
@@ -285,7 +286,6 @@
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
     "js-tokens": "^10.0.0",
-    "protobufjs": "^7.5.8",
     "ip-address": "10.2.0",
     "cookie": ">=0.7.2",
     "elliptic": "6.6.1",
@@ -293,7 +293,16 @@
     "bn.js": "4.12.3",
     "qs": "6.15.2",
     "ws": "8.21.0",
-    "brace-expansion@^5.0.0": "5.0.6"
+    "brace-expansion@^5.0.0": "5.0.6",
+    "form-data": "^4.0.6",
+    "esbuild": "^0.28.1",
+    "js-yaml": "^4.1.2",
+    "@opentelemetry/otlp-transformer": {
+      "protobufjs": "^8.6.3"
+    },
+    "@temporalio/client": {
+      "protobufjs": "^7.6.3"
+    }
   },
   "resolutions": {
     "h3": "^1.15.9",
