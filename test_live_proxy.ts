@@ -107,7 +107,7 @@ async function testLiveProxy() {
     console.error("Failed to fetch logs:", logsError);
   } else {
     console.log("Audit Logs (Compression Metrics):");
-    logs.forEach((log: any, i: number) => {
+    logs.forEach((log: unknown, i: number) => {
       console.log(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
       console.log(`Log Status: ${log.metadata?.status}`);
     });

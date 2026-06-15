@@ -125,7 +125,7 @@ async function verifyAuth(req: Request, corsHeaders: Record<string, string>) {
   return { user };
 }
 
-async function verifyBudget(tenantId: string, providerConfig: ModelProviderConfig, user: any, provider: string, model: string, corsHeaders: Record<string, string>) {
+async function verifyBudget(tenantId: string, providerConfig: ModelProviderConfig, user: unknown, provider: string, model: string, corsHeaders: Record<string, string>) {
   const { data: currentSpendData } = await supabase.from('audit_logs').select('metadata').eq('resource_id', tenantId).eq('action_type', 'BYOM_AUDIT_SPAN');
   const totalSpend = sumAuditSpend(currentSpendData);
   if (totalSpend >= providerConfig.max_cost_usd) {
