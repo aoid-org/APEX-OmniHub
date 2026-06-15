@@ -54,7 +54,7 @@ async function seed() {
     console.warn("Registry seeded successfully.");
   }
 
-  const apiKey = "gsk_DUMMY_KEY_REMOVED";
+  const apiKey = "mock_key_removed";
   const ciphertext = await crypto.encrypt(apiKey, { tenantId });
   const fingerprint = await crypto.fingerprint(apiKey);
 
