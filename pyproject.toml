@@ -26,3 +26,10 @@ python_functions = ["test_*"]
 [tool.rsi]
 artifact_dir = "artifacts/rsi"
 policy_file = "policy/rsi-policy.yaml"
+
+[dependency-groups]
+dev = [
+    "markupsafe>=3.0.3",
+    "prometheus-client>=0.25.0",
+    "pyyaml>=6.0.3",
+]

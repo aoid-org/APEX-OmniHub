@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -36,9 +36,20 @@ https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/<workflow
 Static `img.shields.io/badge/...` badges are forbidden for CI/security/test status claims.
 The License badge is exempt (it is not a CI claim).
 
+## Current CI State (verified 2026-06-14)
+
+Run #906 (ID `27500918710`) on SHA `873de83c` — **conclusion: success**. All 5 `verify:release` gates green:
+- `verify:ci-integrity` ✅
+- `verify:types` ✅ (0 TypeScript errors)
+- `verify:test` ✅ (2,660 tests passed)
+- `verify:build` ✅
+- `verify:claim-hygiene` ✅ (new gate — 0 unproven claims)
+
+Verdict: `NOT_CERTIFIED_NO_RELEASE_CUT` (expected — HEAD is fix commit, not version bump).
+
 ## Workflow Registry (verified 2026-05-20)
 
-The repository has 21 active GitHub Actions workflows. RSI-related workflows:
+The repository has 22 active GitHub Actions workflows (21 + `rsi-governance.yml` added). RSI-related workflows:
 - `rsi-governance.yml` — **active RSI governance workflow (live mode)**
 - `rsi-governance-gate.yml` — pass-through placeholder (not the live gate)
 
@@ -63,4 +74,4 @@ This policy is enforced by:
 
 ## Last Updated
 
-2026-05-20
+2026-06-14 — CI run #906 results added; workflow count corrected to 22

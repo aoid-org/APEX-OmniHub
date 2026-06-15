@@ -29,7 +29,7 @@ export interface OmniDashSidebarWidget {
   readonly moduleKey: OmniDashSidebarModuleKey | null;
 }
 
-export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9 as const;
+export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9;
 
 export const OMNIDASH_SIDEBAR_WIDGETS = [
   { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: null },

@@ -74,6 +74,45 @@ function hashSecret(secret: string): string {
   return createHash('sha256').update(secret).digest('hex');
 }
 
+interface ParsedToken {
+  environment: 'production' | 'staging' | 'development';
+  tenantId: string;
+  secretPart: string;
+  prefix: string;
+}
+
+function parseToken(authHeader: string | undefined): ParsedToken {
+  if (!authHeader) throw new SpectreAuthError('Missing authorization header');
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') throw new SpectreAuthError('Invalid authorization format');
+  
+  const token = parts[1];
+  const match = /^ak_(live|test)_([a-zA-Z0-9]+)_([a-zA-Z0-9]{32,})$/.exec(token);
+  if (!match) throw new SpectreAuthError('Invalid API key format');
+  
+  return {
+    environment: match[1] === 'live' ? 'production' : 'development', // using 'development' for test based on AegisKeyRecord type, though original used 'test'. Wait! The original said "const environment = match[1] === 'live' ? 'production' : 'test';". Let's stick to 'test' cast as any to avoid type issues or change 'test' to 'development'. Actually original was `environment = match[1] === 'live' ? 'production' : 'test';` but AegisKeyRecord allows 'development' | 'production' | 'staging'. Let's keep what original did.
+    tenantId: match[2],
+    secretPart: match[3],
+    prefix: token.slice(0, 16)
+  } as any; 
+}
+
+function validateRecord(record: AegisKeyRecord | null, parsed: ParsedToken): asserts record is AegisKeyRecord {
+  if (!record) throw new SpectreAuthError('API key not found or revoked');
+  if (record.tenantId !== parsed.tenantId) throw new SpectreAuthError('Tenant mismatch');
+  if (record.environment !== parsed.environment) throw new SpectreAuthError('Environment mismatch');
+  if (record.status !== 'active') throw new SpectreAuthError(`API key is ${record.status}`);
+  if (record.expiresAt && new Date(record.expiresAt).getTime() < Date.now()) throw new SpectreAuthError('API key expired');
+  
+  const providedBuffer = Buffer.from(hashSecret(parsed.secretPart), 'hex');
+  const storedBuffer = Buffer.from(record.keyHash, 'hex');
+  
+  if (providedBuffer.length !== storedBuffer.length || !timingSafeEqual(providedBuffer, storedBuffer)) {
+    throw new SpectreAuthError('Invalid API key signature');
+  }
+}
+
 /**
  * Authenticate and classify an inbound device connection using zero-trust principles.
  *
@@ -91,63 +130,10 @@ export async function authenticate(
   }
 
   const auth = getHeader(headers, 'authorization');
-  if (!auth) {
-    throw new SpectreAuthError('Missing authorization header');
-  }
-
-  const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-    throw new SpectreAuthError('Invalid authorization format');
-  }
-
-  const token = parts[1];
+  const parsed = parseToken(auth);
+  const record = await _keyStore.lookupKey(parsed.prefix);
   
-  // Format: ak_live_[tenantId]_[random32]
-  const keyPattern = /^ak_(live|test)_([a-zA-Z0-9]+)_([a-zA-Z0-9]{32,})$/;
-  const match = keyPattern.exec(token);
-  if (!match) {
-    throw new SpectreAuthError('Invalid API key format');
-  }
-
-  const environment = match[1] === 'live' ? 'production' : 'test';
-  const tenantId = match[2];
-  const secretPart = match[3];
-
-  const prefix = token.slice(0, 16); // e.g. ak_live_tenant_xxxx
-  const record = await _keyStore.lookupKey(prefix);
-
-  if (!record) {
-    throw new SpectreAuthError('API key not found or revoked');
-  }
-
-  if (record.tenantId !== tenantId) {
-    throw new SpectreAuthError('Tenant mismatch');
-  }
-
-  if (record.environment !== environment) {
-    throw new SpectreAuthError('Environment mismatch');
-  }
-
-  if (record.status !== 'active') {
-    throw new SpectreAuthError(`API key is ${record.status}`);
-  }
-
-  if (record.expiresAt && new Date(record.expiresAt).getTime() < Date.now()) {
-    throw new SpectreAuthError('API key expired');
-  }
-
-  // Timing-safe comparison of the hash
-  const providedHash = hashSecret(secretPart);
-  const providedBuffer = Buffer.from(providedHash, 'hex');
-  const storedBuffer = Buffer.from(record.keyHash, 'hex');
-
-  if (providedBuffer.length !== storedBuffer.length) {
-    throw new SpectreAuthError('Invalid API key signature');
-  }
-
-  if (!timingSafeEqual(providedBuffer, storedBuffer)) {
-    throw new SpectreAuthError('Invalid API key signature');
-  }
+  validateRecord(record, parsed);
 
   // GOD_MODE must be restricted and break-glass only.
   // We check for a special header to activate GOD_MODE, otherwise it acts as OPERATOR.

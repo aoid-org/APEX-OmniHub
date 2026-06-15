@@ -16,7 +16,7 @@ env:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
       pull-requests: write
@@ -192,7 +192,7 @@ jobs:
     name: Atomic Routing Flip (Promote to Active)
     needs: [release]
     if: needs.release.outputs.tf_plan_result == 'pass'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: production-shadow
     permissions:
       contents: read

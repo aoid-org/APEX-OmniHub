@@ -10,10 +10,14 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo "═══════════════════════════════════════════════════════════"
+readonly SEPARATOR_DOUBLE="═══════════════════════════════════════════════════════════"
+readonly SEPARATOR_TOP="┌─────────────────────────────────────────────────────────┐"
+readonly SEPARATOR_BOTTOM="└─────────────────────────────────────────────────────────┘"
+
+echo "$SEPARATOR_DOUBLE"
 echo "  APEX OmniHub Build Verification"
 echo "  $(date '+%Y-%m-%d %H:%M:%S %Z')"
-echo "═══════════════════════════════════════════════════════════"
+echo "$SEPARATOR_DOUBLE"
 echo ""
 
 FAILED=0
@@ -52,59 +56,59 @@ check_verbose() {
     fi
 }
 
-echo "┌─────────────────────────────────────────────────────────┐"
+echo "$SEPARATOR_TOP"
 echo "│ STEP 1: Environment Checks                              │"
-echo "└─────────────────────────────────────────────────────────┘"
+echo "$SEPARATOR_BOTTOM"
 
 check "Node.js installed" "command -v node"
 check "npm installed" "command -v npm"
-check "package.json exists" "[ -f package.json ]"
-check "node_modules exists" "[ -d node_modules ]"
+check "package.json exists" "[[ -f package.json ]]"
+check "node_modules exists" "[[ -d node_modules ]]"
 
 echo ""
-echo "┌─────────────────────────────────────────────────────────┐"
+echo "$SEPARATOR_TOP"
 echo "│ STEP 2: Code Quality                                    │"
-echo "└─────────────────────────────────────────────────────────┘"
+echo "$SEPARATOR_BOTTOM"
 
 check "TypeScript compiles" "npm run typecheck 2>&1"
 check "ESLint passes" "npm run lint 2>&1"
 check "No console.log in src" "! grep -r 'console\.log' src/ --include='*.ts' --include='*.tsx' | grep -v '// eslint-disable' | grep -v 'import.meta.env.DEV'"
 
 echo ""
-echo "┌─────────────────────────────────────────────────────────┐"
+echo "$SEPARATOR_TOP"
 echo "│ STEP 3: Build                                           │"
-echo "└─────────────────────────────────────────────────────────┘"
+echo "$SEPARATOR_BOTTOM"
 
 check "Production build succeeds" "npm run build 2>&1"
-check "dist/ created" "[ -d dist ]"
-check "index.html in dist" "[ -f dist/index.html ]"
+check "dist/ created" "[[ -d dist ]]"
+check "index.html in dist" "[[ -f dist/index.html ]]"
 
 echo ""
-echo "┌─────────────────────────────────────────────────────────┐"
+echo "$SEPARATOR_TOP"
 echo "│ STEP 4: Tests                                           │"
-echo "└─────────────────────────────────────────────────────────┘"
+echo "$SEPARATOR_BOTTOM"
 
 check "Unit tests pass" "npm test -- --run 2>&1"
 check "Prompt defense tests pass" "npm run test:prompt-defense 2>&1 || true"
 
 echo ""
-echo "┌─────────────────────────────────────────────────────────┐"
+echo "$SEPARATOR_TOP"
 echo "│ STEP 5: Security                                        │"
-echo "└─────────────────────────────────────────────────────────┘"
+echo "$SEPARATOR_BOTTOM"
 
 check "No high/critical vulns" "npm audit --audit-level=high 2>&1 || true"
 check "No secrets in code" "! grep -rE '(api_key|apikey|secret|password)\s*[:=]\s*[\"'\''][^\"'\'']+[\"'\'']' src/ --include='*.ts' --include='*.tsx' 2>/dev/null"
-check ".env.example exists" "[ -f .env.example ] || [ -f .env.local.example ]"
+check ".env.example exists" "[[ -f .env.example ]] || [[ -f .env.local.example ]]"
 
 echo ""
-echo "═══════════════════════════════════════════════════════════"
+echo "$SEPARATOR_DOUBLE"
 
-if [ $FAILED -eq 0 ]; then
+if [[ $FAILED -eq 0 ]]; then
     echo -e "${GREEN}  ✅ ALL CHECKS PASSED - Build is verified${NC}"
-    echo "═══════════════════════════════════════════════════════════"
+    echo "$SEPARATOR_DOUBLE"
     exit 0
 else
     echo -e "${RED}  ❌ SOME CHECKS FAILED - Fix before deploying${NC}"
-    echo "═══════════════════════════════════════════════════════════"
+    echo "$SEPARATOR_DOUBLE"
     exit 1
 fi

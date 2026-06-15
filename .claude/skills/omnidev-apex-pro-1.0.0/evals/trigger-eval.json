@@ -1,0 +1,92 @@
+[
+  {
+    "query": "fix the failing e2e test in ops-widgets-smoke.spec.ts — rt_security testid is missing",
+    "should_trigger": true,
+    "note": "Direct OmniHub debug task"
+  },
+  {
+    "query": "apex platform health is showing degraded, all three modules need checking",
+    "should_trigger": true,
+    "note": "Platform health diagnostic — core trigger"
+  },
+  {
+    "query": "the omnilink-port edge function handleModuleState is still returning mock data, need to wire real Supabase",
+    "should_trigger": true,
+    "note": "Known P1 gap — live-data wiring task"
+  },
+  {
+    "query": "review and fix all RLS policies on the clients and payments tables in OmniHub",
+    "should_trigger": true,
+    "note": "Security audit + RLS enforcement"
+  },
+  {
+    "query": "SentinelPanel and NotificationCenter are showing hardcoded data, implement the real-data wiring per OMNIDASH_REAL_DATA_IMPLEMENTATION_PROMPT",
+    "should_trigger": true,
+    "note": "OmniDash real-data wiring — P1 gap resolution"
+  },
+  {
+    "query": "ESLint is throwing warnings on the SkillForgeWidget component after the latest commit",
+    "should_trigger": true,
+    "note": "CI/lint failure — OmniHub repo"
+  },
+  {
+    "query": "debug the CI pipeline — release.yml is failing on the apex_policy_check gate",
+    "should_trigger": true,
+    "note": "CI debug — governance gate"
+  },
+  {
+    "query": "apex_error_log shows a spike in P0 errors from the supabase edge runtime, need diagnosis",
+    "should_trigger": true,
+    "note": "P0 error triage — RSI engine activation"
+  },
+  {
+    "query": "deploy the latest Cloudflare Workers build and verify the omni-gateway worker is live",
+    "should_trigger": true,
+    "note": "Deployment task — CF domain"
+  },
+  {
+    "query": "audit the OmniHub GitHub repo for any service role keys accidentally committed",
+    "should_trigger": true,
+    "note": "Security audit — credential scan"
+  },
+  {
+    "query": "write a blog post about the best practices for SaaS pricing models",
+    "should_trigger": false,
+    "note": "GTM/marketing task — not OmniHub dev"
+  },
+  {
+    "query": "help me set up a new React project from scratch using Vite and TypeScript",
+    "should_trigger": false,
+    "note": "Generic frontend setup — not OmniHub specific"
+  },
+  {
+    "query": "debug the CheapStays booking flow — listing_availability_windows table is missing",
+    "should_trigger": false,
+    "note": "Different APEX product (CheapStays), not OmniHub"
+  },
+  {
+    "query": "create a pitch deck slide about APEX-OmniHub market positioning for investors",
+    "should_trigger": false,
+    "note": "GTM/pitch task — apex-pitch-maker skill handles this"
+  },
+  {
+    "query": "analyze the audio file for tempo and groove pocket quality",
+    "should_trigger": false,
+    "note": "Music analysis task — different skill domain"
+  },
+  {
+    "query": "fix the DueRadar production health probe — it's returning 503 on Fly.io",
+    "should_trigger": false,
+    "note": "Different APEX product (DueRadar), not OmniHub"
+  },
+  {
+    "query": "write SQL to analyze our user growth metrics for the last 30 days",
+    "should_trigger": false,
+    "note": "Generic data query — could match any platform; no OmniHub-specific context"
+  },
+  {
+    "query": "optimize the SBBL HQ live stream player performance",
+    "should_trigger": false,
+    "note": "SBBL HQ product — different skill domain"
+  }
+]
