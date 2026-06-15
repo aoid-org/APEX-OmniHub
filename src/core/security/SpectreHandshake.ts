@@ -95,7 +95,7 @@ function parseToken(authHeader: string | undefined): ParsedToken {
     tenantId: match[2],
     secretPart: match[3],
     prefix: token.slice(0, 16)
-  } as any; 
+  } as unknown; 
 }
 
 function validateRecord(record: AegisKeyRecord | null, parsed: ParsedToken): asserts record is AegisKeyRecord {
