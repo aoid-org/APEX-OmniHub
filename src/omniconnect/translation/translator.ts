@@ -99,8 +99,7 @@ function countryCodeToLang(cc: string): string | null {
  *  4. Fallback: 'en'
  */
 function resolveTargetLocale(event: CanonicalEvent): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const md = (event as any).metadata ?? {};
+  const md = event.metadata ?? {};
   const explicit = md['locale'];
   if (typeof explicit === 'string' && explicit.trim()) {
     // Extract base language from BCP-47 (e.g. 'fr-FR' → 'fr')
@@ -109,7 +108,12 @@ function resolveTargetLocale(event: CanonicalEvent): string {
 
   const loc = md['location'];
   let cc = '';
-  if (typeof loc === 'object' && loc !== null && typeof loc.countryCode === 'string') {
+  if (
+    typeof loc === 'object' &&
+    loc !== null &&
+    'countryCode' in loc &&
+    typeof loc.countryCode === 'string'
+  ) {
     cc = String(loc.countryCode);
   } else if (typeof md['countryCode'] === 'string') {
     cc = String(md['countryCode']);
@@ -144,6 +148,15 @@ export class SemanticTranslator {
       'Save': 'Guardar'
     }
   };
+
+  // ⚡ Bolt: Pre-calculated reverse dictionary for O(1) lookups during detranslation
+  private static readonly REVERSE_DICTIONARY: Record<string, Record<string, string>> =
+    Object.fromEntries(
+      Object.entries(SemanticTranslator.DICTIONARY).map(([lang, dict]) => [
+        lang,
+        Object.fromEntries(Object.entries(dict).map(([k, v]) => [v, k]))
+      ])
+    );
 
   private isTranslatable(val: unknown): boolean {
     if (typeof val !== 'string') return false;
@@ -186,10 +199,10 @@ export class SemanticTranslator {
     }
     if (typeof val !== 'string') return val;
     
-    const langDict = SemanticTranslator.DICTIONARY[targetLang] || {};
-    // Find reverse lookup
-    for (const [source, translated] of Object.entries(langDict)) {
-      if (translated === val) return source;
+    const reverseLangDict = SemanticTranslator.REVERSE_DICTIONARY[targetLang] || {};
+    // ⚡ Bolt: O(1) reverse lookup instead of O(N) array iteration
+    if (Object.prototype.hasOwnProperty.call(reverseLangDict, val)) {
+      return reverseLangDict[val];
     }
     // Fallback: strip locale tag
     const prefix = `[${targetLang}] `;

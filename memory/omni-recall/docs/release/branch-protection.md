@@ -1,6 +1,10 @@
 ---
 version: 1.0.0
+<<<<<<<< HEAD:memory/omni-recall/docs/release/branch-protection.md
 last_audited: 2026-06-12
+========
+last_audited: 2026-06-14
+>>>>>>>> origin/main:docs/release/branch-protection.md
 status: verified
 ---
 

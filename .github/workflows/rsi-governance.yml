@@ -16,7 +16,7 @@ concurrency:
 jobs:
   rsi-governance:
     name: "RSI Governance Gate"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
 
     steps:

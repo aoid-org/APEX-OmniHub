@@ -70,12 +70,15 @@ export {
   type RegisteredAgent,
 } from './AgentCard';
 
-// Semantic Router (A2A)
+// Semantic Router (A2A + Solver Routing)
 export {
   SemanticRouter,
   extractKeywords,
+  routeToSolvers,
   type RoutingCandidate,
   type RoutingResult,
+  type SolverType,
+  type ExecutionPayload,
 } from './SemanticRouter';
 
 // Idempotency Manager

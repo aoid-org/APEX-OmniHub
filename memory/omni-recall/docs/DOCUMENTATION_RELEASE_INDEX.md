@@ -1,12 +1,12 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed for the 2026-06-10 drift audit (post apex-skill-forge v9.4.0 merge, PR #1369). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_06.md`.
+> Current repo-truth index refreshed 2026-06-14 (CI green campaign — PRs #1391, #1392, #1393 merged). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_14.md`.
 
 ## Current Repo Facts Verified in This Pass
 
@@ -17,13 +17,15 @@ status: verified
 | Release/package versions | Root `package.json` declares `1.7.0`; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority; verdict is `NOT_CERTIFIED_NO_RELEASE_CUT` — trigger `release.yml` on main |
+| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` — verdict `NOT_CERTIFIED_NO_RELEASE_CUT`; CI run #900 in progress with all blockers resolved (PRs #1391/1392/1393) |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
 | `chore: version packages` | Merged to main at `959a8fd6` on 2026-06-05 |
+| CI green campaign | PRs #1391 (routing-flip), #1392 (pyOpenSSL), #1393 (SSRF) merged 2026-06-14. Main was red #878–#897. Run #900 in_progress. |
+| `TF_TOKEN_app_terraform_io` | Set in GitHub Actions Secrets — 2026-06-14 |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_02.md` is now historical.)
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_06.md` is now historical.)
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -41,7 +43,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(current — supersedes 2026-06-02 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` _(current — supersedes 2026-06-06 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical — 2026-06-06 snapshot)_
 - `README.md`
 - `docs/README.md`
 - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 
 vi.mock('../../apps/omnihub-site/src/contexts/DemoModeContext', () => ({
   useDemoMode: vi.fn(() => ({ demoMode: false })),
@@ -8,16 +7,41 @@ vi.mock('../../apps/omnihub-site/src/contexts/DemoModeContext', () => ({
 
 const defaultDashData = {
   kpiSummary: {
+    tradeline_paid_starts: 4,
     tradeline_active_pilots: 5,
-    flowbills_paid_accounts: 12,
-    ops_sev1_incidents: 2,
     tradeline_churn_risks: 3,
+    flowbills_demos: 8,
+    flowbills_paid_accounts: 12,
+    cash_days_to_cash: 30,
+    ops_sev1_incidents: 2,
   },
   kpiHistory: [
-    { day: '2026-06-01T00:00:00Z', tradeline_paid_starts: 4 },
-    { day: '2026-06-02T00:00:00Z', tradeline_paid_starts: 6 },
+    {
+      id: 'kpi-2026-06-01',
+      day: '2026-06-01T00:00:00Z',
+      tradeline_paid_starts: 4,
+      tradeline_active_pilots: 5,
+      tradeline_churn_risks: 3,
+      flowbills_demos: 8,
+      flowbills_paid_accounts: 12,
+      cash_days_to_cash: 30,
+      ops_sev1_incidents: 2,
+    },
+    {
+      id: 'kpi-2026-06-02',
+      day: '2026-06-02T00:00:00Z',
+      tradeline_paid_starts: 6,
+      tradeline_active_pilots: 5,
+      tradeline_churn_risks: 3,
+      flowbills_demos: 8,
+      flowbills_paid_accounts: 12,
+      cash_days_to_cash: 30,
+      ops_sev1_incidents: 2,
+    },
   ],
   openIncidents: [],
+  settings: null,
+  memoryHealth: null,
   isLoading: false,
   error: null,
   refresh: vi.fn(),
@@ -43,7 +67,7 @@ describe('M03Panels', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useDemoMode).mockReturnValue({ demoMode: false } as ReturnType<typeof useDemoMode>);
-    vi.mocked(useDashboardData).mockReturnValue(defaultDashData as ReturnType<typeof useDashboardData>);
+    vi.mocked(useDashboardData).mockReturnValue(defaultDashData);
   });
 
   describe('SystemHealthOverview', () => {
@@ -61,7 +85,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       expect(screen.getByText('System Health Overview')).toBeTruthy();
     });
@@ -70,9 +94,9 @@ describe('M03Panels', () => {
       const refresh = vi.fn();
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
-        error: new Error('fail'),
+        error: 'fail',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();
@@ -82,7 +106,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         kpiSummary: { ...defaultDashData.kpiSummary, ops_sev1_incidents: 0 },
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       expect(screen.getAllByText('0').length).toBeGreaterThan(0);
     });
@@ -98,7 +122,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       expect(screen.getByText('Agent Activity (last 60m)')).toBeTruthy();
     });
@@ -107,9 +131,9 @@ describe('M03Panels', () => {
       const refresh = vi.fn();
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
-        error: new Error('timeline error'),
+        error: 'timeline error',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();
@@ -119,7 +143,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         kpiHistory: [],
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       expect(screen.getByText('Agent Activity (last 60m)')).toBeTruthy();
     });
@@ -140,10 +164,10 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         openIncidents: [
-          { id: '1', severity: 'sev1', title: 'DB latency spike', occurred_at: '2026-06-01T12:00:00Z' },
-          { id: '2', severity: 'sev2', title: 'Auth service slow', occurred_at: '2026-06-01T11:00:00Z' },
+          { id: '1', severity: 'sev1', status: 'open', title: 'DB latency spike', occurred_at: '2026-06-01T12:00:00Z' },
+          { id: '2', severity: 'sev2', status: 'open', title: 'Auth service slow', occurred_at: '2026-06-01T11:00:00Z' },
         ],
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       expect(screen.getByText('DB latency spike')).toBeTruthy();
       expect(screen.getByText('Auth service slow')).toBeTruthy();
@@ -153,7 +177,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       expect(screen.getByText('Guardian Alert Feed')).toBeTruthy();
     });
@@ -162,9 +186,9 @@ describe('M03Panels', () => {
       const refresh = vi.fn();
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
-        error: new Error('feed error'),
+        error: 'feed error',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();

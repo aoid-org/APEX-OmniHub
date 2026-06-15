@@ -40,7 +40,7 @@ export interface VerifyResult {
   reason?: 'malformed' | 'bad_signature' | 'expired' | 'invalid_timestamp';
 }
 
-function base64UrlToBytes(value: string): Uint8Array | null {
+function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> | null {
   // NOSONAR javascript:S5547 — atob() is the correct Web Crypto-compatible
   // primitive for base64url decoding in Cloudflare Pages Functions runtime.
   // Node's Buffer API is not available; atob/btoa are the canonical choice.
@@ -123,8 +123,7 @@ export async function verifySyncPacket(
       false,
       ['verify'],
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ok = await crypto.subtle.verify('HMAC', key, sigBytes as any, encoder.encode(canonicalBody));
+    const ok = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(canonicalBody));
     return ok ? { valid: true } : { valid: false, reason: 'bad_signature' };
   } catch {
     return { valid: false, reason: 'bad_signature' };

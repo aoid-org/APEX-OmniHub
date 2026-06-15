@@ -765,6 +765,535 @@
   };
 
   /* ============================================================
+   * 5.5 STATION ARTIFACTS — unique Three.js geometry per station.
+   *     makeArtifact(idx, THREE, cap, worldPos) → THREE.Group
+   *     animateArtifact(artifact, idx, isActive, t, dt) → void
+   *     Wireframe edges + faint solid fill = space-tech aesthetic.
+   *     All geometry is additive-blended so it never occludes stars.
+   * ============================================================ */
+  function makeArtifact(idx, THREE, cap, pos) {
+    var g = new THREE.Group();
+    g.position.copy(pos);
+    var sz = cap.size;
+
+    function edgeMat(hex, op) {
+      return new THREE.LineBasicMaterial({
+        color: hex, transparent: true, opacity: op !== undefined ? op : 0.75,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      });
+    }
+    function wireMesh(geo, hex, op) {
+      return new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat(hex, op));
+    }
+    function fillMesh(geo, hex, op) {
+      return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        color: hex, transparent: true, opacity: op !== undefined ? op : 0.05,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+      }));
+    }
+
+    var OG  = 0xea7c44; // brand orange
+    var OGD = 0xc4571c; // brand orange dim
+    var WH  = 0xf8fafc; // near-white
+    var CY  = 0x7dd3fc; // cool cyan accent
+    var GN  = 0x4ade80; // success green
+    var PU  = 0xc4b5fd; // soft violet
+
+    switch (cap.demo) {
+
+      // ── 1. OmniPort ─────────────────────────────────────────
+      // Icosahedron hub + 6 spokes radiating to octahedron nodes
+      case 'omniport': {
+        var hub = wireMesh(new THREE.IcosahedronGeometry(2.2 * sz, 1), OG, 0.80);
+        var hubFill = fillMesh(new THREE.IcosahedronGeometry(2.2 * sz, 1), OG, 0.05);
+        g.add(hub); g.add(hubFill);
+        var spokeVecs = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+        var spokeNodes = [];
+        spokeVecs.forEach(function (d, si2) {
+          var a = new THREE.Vector3(d[0] * 2.2 * sz, d[1] * 2.2 * sz, d[2] * 2.2 * sz);
+          var b = new THREE.Vector3(d[0] * 6 * sz,   d[1] * 6 * sz,   d[2] * 6 * sz);
+          var spokeGeo = new THREE.BufferGeometry().setFromPoints([a, b]);
+          g.add(new THREE.Line(spokeGeo, edgeMat(OGD, 0.55)));
+          var node = wireMesh(new THREE.OctahedronGeometry(0.65 * sz, 0), OG, 0.90);
+          node.position.copy(b); node.userData.phase = si2 * 1.05; g.add(node);
+          spokeNodes.push(node);
+        });
+        g.userData = { type: 'omniport', hub: hub, spokeNodes: spokeNodes };
+        break;
+      }
+
+      // ── 2. Tri-Force ────────────────────────────────────────
+      // Three tetrahedra at 120° offsets, each spinning on its own axis
+      case 'triforce': {
+        var tetGeo = new THREE.TetrahedronGeometry(2.0 * sz, 0);
+        var tColors = [OG, CY, GN];
+        var offsets = [[0, 3.2*sz, 0], [-2.8*sz, -1.6*sz, 0], [2.8*sz, -1.6*sz, 0]];
+        var tets = offsets.map(function (op, i) {
+          var tw = wireMesh(tetGeo, tColors[i], 0.88);
+          var tf = fillMesh(tetGeo, tColors[i], 0.06);
+          tw.position.set(op[0], op[1], op[2]);
+          tf.position.set(op[0], op[1], op[2]);
+          g.add(tw); g.add(tf);
+          return tw;
+        });
+        var triPts = offsets.map(function (op) { return new THREE.Vector3(op[0], op[1], op[2]); });
+        triPts.push(triPts[0]);
+        g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(triPts), edgeMat(OGD, 0.38)));
+        g.userData = { type: 'triforce', tets: tets };
+        break;
+      }
+
+      // ── 3. OmniDash ─────────────────────────────────────────
+      // Floating holographic command center mirroring the live UI:
+      // left nav rail · central APEX-Agent session ring · OmniSlate
+      // input bar (sweeping scan) · right analytics tiles (pulsing) ·
+      // bottom integration slots (AWAITING).
+      case 'omnidash': {
+        var W = 12 * sz, H = 7.5 * sz;
+        // rounded-rectangle outline (closed loop) in the XY plane
+        function rrect(w, h, r) {
+          var pts = [], sn = 4, hw = w / 2 - r, hh = h / 2 - r;
+          var cs = [[hw, hh, 0], [-hw, hh, Math.PI / 2], [-hw, -hh, Math.PI], [hw, -hh, 1.5 * Math.PI]];
+          cs.forEach(function (c2) {
+            for (var i = 0; i <= sn; i++) {
+              var a = c2[2] + (Math.PI / 2) * (i / sn);
+              pts.push(new THREE.Vector3(c2[0] + Math.cos(a) * r, c2[1] + Math.sin(a) * r, 0));
+            }
+          });
+          pts.push(pts[0].clone());
+          return new THREE.BufferGeometry().setFromPoints(pts);
+        }
+        function panel(w, h, r, hex, op, cx, cy, cz) {
+          var ln = new THREE.Line(rrect(w, h, r), edgeMat(hex, op));
+          ln.position.set(cx, cy, cz || 0);
+          g.add(ln);
+          return ln;
+        }
+        // main shell + faint screen fill
+        panel(W, H, 0.5 * sz, OG, 0.85, 0, 0, 0);
+        g.add(fillMesh(new THREE.PlaneGeometry(W - 0.3 * sz, H - 0.3 * sz), OG, 0.025));
+
+        // left nav rail + 9 items (top item = active = OmniBoard)
+        var navW = 1.6 * sz, navX = -W / 2 + navW / 2 + 0.5 * sz, navItems = [];
+        panel(navW, H - 1.4 * sz, 0.25 * sz, OGD, 0.55, navX, 0, 0.04 * sz);
+        for (var ni = 0; ni < 9; ni++) {
+          var ny = (H - 2.6 * sz) / 2 - ni * ((H - 2.8 * sz) / 8);
+          var navOn = ni === 0;
+          var navSeg = fillMesh(new THREE.PlaneGeometry(navW - 0.5 * sz, 0.40 * sz),
+            navOn ? OG : WH, navOn ? 0.5 : 0.12);
+          navSeg.position.set(navX, ny, 0.06 * sz);
+          g.add(navSeg);
+          if (navOn) navItems.push(navSeg);
+        }
+
+        // central APEX-Agent module + session ring + play triangle
+        var modX = -0.4 * sz, modY = 1.35 * sz;
+        panel(6.2 * sz, 3.8 * sz, 0.3 * sz, OG, 0.6, modX, modY, 0.05 * sz);
+        var sessRing = wireMesh(new THREE.TorusGeometry(1.0 * sz, 0.11, 4, 28), OG, 0.92);
+        sessRing.position.set(modX - 1.7 * sz, modY, 0.12 * sz);
+        g.add(sessRing);
+        var sessArc = wireMesh(new THREE.TorusGeometry(1.0 * sz, 0.17, 4, 16, Math.PI * 1.3), WH, 0.85);
+        sessArc.position.copy(sessRing.position);
+        g.add(sessArc);
+        var playTri = wireMesh(new THREE.ConeGeometry(0.30 * sz, 0.52 * sz, 3), WH, 0.9);
+        playTri.position.copy(sessRing.position);
+        playTri.rotation.z = -Math.PI / 2;
+        g.add(playTri);
+        for (var dl = 0; dl < 3; dl++) {  // agent output rows
+          var row = fillMesh(new THREE.PlaneGeometry((2.6 - dl * 0.5) * sz, 0.15 * sz), WH, 0.16);
+          row.position.set(modX + 0.8 * sz, modY + 0.65 * sz - dl * 0.52 * sz, 0.08 * sz);
+          g.add(row);
+        }
+
+        // OmniSlate input bar with sweeping scan
+        var slateY = -1.45 * sz;
+        panel(8.0 * sz, 1.0 * sz, 0.2 * sz, OGD, 0.6, modX, slateY, 0.05 * sz);
+        var scanBar = fillMesh(new THREE.PlaneGeometry(0.5 * sz, 0.85 * sz), OG, 0.5);
+        scanBar.userData.minX = modX - 3.5 * sz;
+        scanBar.userData.maxX = modX + 3.5 * sz;
+        scanBar.position.set(scanBar.userData.minX, slateY, 0.09 * sz);
+        g.add(scanBar);
+
+        // bottom integration slots (AWAITING — dim, empty)
+        for (var bi2 = 0; bi2 < 3; bi2++) {
+          var slot = panel(2.4 * sz, 1.3 * sz, 0.18 * sz, OGD, 0.32,
+            modX - 2.2 * sz + bi2 * 2.7 * sz, -H / 2 + 1.0 * sz, 0.04 * sz);
+          var sdot = fillMesh(new THREE.PlaneGeometry(0.28 * sz, 0.28 * sz), OGD, 0.4);
+          sdot.position.set(slot.position.x - 0.7 * sz, slot.position.y, 0.07 * sz);
+          g.add(sdot);
+        }
+
+        // right analytics column (3 stacked metric tiles, mid = green health)
+        var tileX = W / 2 - 1.9 * sz, metricTiles = [];
+        [2.0, 0, -2.0].forEach(function (ty, i) {
+          panel(3.0 * sz, 1.7 * sz, 0.2 * sz, OGD, 0.5, tileX, ty * sz, 0.05 * sz);
+          var fillT = fillMesh(new THREE.PlaneGeometry(2.7 * sz, 1.4 * sz), i === 1 ? GN : OG, 0.06);
+          fillT.position.set(tileX, ty * sz, 0.06 * sz);
+          fillT.userData.tphase = i * 1.2;
+          g.add(fillT);
+          metricTiles.push(fillT);
+        });
+
+        g.rotation.y = -0.22;
+        g.userData = { type: 'omnidash', sessArc: sessArc, scanBar: scanBar,
+          metricTiles: metricTiles, navItems: navItems };
+        break;
+      }
+
+      // ── 4. Policy Engine ────────────────────────────────────
+      // Three nested octahedra (shield layers) + three rotating gate rings
+      case 'policy': {
+        [1.0, 1.55, 2.1].forEach(function (sc, i) {
+          var oct = wireMesh(new THREE.OctahedronGeometry(2.4 * sz * sc, 0), OG, 0.72 - i * 0.18);
+          oct.rotation.y = i * 0.45; g.add(oct);
+        });
+        var gateRings = [[1,0,0,OG,0.60],[0,1,0,OGD,0.52],[0.6,0.6,0,CY,0.42]].map(function (d) {
+          var r = wireMesh(new THREE.TorusGeometry(5.4 * sz, 0.13, 4, 28), d[3], d[4]);
+          r.rotation.x = d[0] * Math.PI / 2;
+          r.rotation.y = d[1] * Math.PI / 2;
+          r.rotation.z = d[2] * Math.PI / 3;
+          r.userData.dir = (d[0] + d[1] + d[2]) % 2 === 0 ? 1 : -1;
+          g.add(r);
+          return r;
+        });
+        g.userData = { type: 'policy', gateRings: gateRings };
+        break;
+      }
+
+      // ── 5. One-Click Rollback ────────────────────────────────
+      // TorusKnot (tangled timeline) + orbiting rewind-arrow
+      case 'rollback': {
+        var knot = wireMesh(new THREE.TorusKnotGeometry(2.8 * sz, 0.32, 96, 8, 2, 3), OG, 0.78);
+        var knotFill = fillMesh(new THREE.TorusKnotGeometry(2.8 * sz, 0.32, 96, 8, 2, 3), OG, 0.04);
+        g.add(knot); g.add(knotFill);
+        var orbit = wireMesh(new THREE.TorusGeometry(5.2 * sz, 0.14, 4, 20), WH, 0.48);
+        orbit.rotation.x = Math.PI / 5;
+        g.add(orbit);
+        var arrow = wireMesh(new THREE.ConeGeometry(0.45 * sz, 1.1 * sz, 4), OG, 0.92);
+        g.add(arrow);
+        g.userData = { type: 'rollback', knot: knot, orbit: orbit, arrow: arrow };
+        break;
+      }
+
+      // ── 6. OmniTrace ────────────────────────────────────────
+      // DNA double helix with connecting rungs
+      case 'omnitrace': {
+        var turns = 3, segsPerTurn = 14, totalSegs = turns * segsPerTurn;
+        var hH = 11 * sz, hR = 2.6 * sz;
+        var hp1 = [], hp2 = [];
+        for (var hi = 0; hi <= totalSegs; hi++) {
+          var ht = hi / totalSegs;
+          var ha = ht * turns * Math.PI * 2;
+          var hy = (ht - 0.5) * hH;
+          hp1.push(new THREE.Vector3( Math.cos(ha) * hR, hy,  Math.sin(ha) * hR));
+          hp2.push(new THREE.Vector3(-Math.cos(ha) * hR, hy, -Math.sin(ha) * hR));
+        }
+        g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(hp1), edgeMat(OG, 0.82)));
+        g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(hp2), edgeMat(CY, 0.62)));
+        for (var ri = 0; ri < totalSegs; ri += 2) {
+          g.add(new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([hp1[ri], hp2[ri]]),
+            edgeMat(WH, 0.22)));
+        }
+        g.userData = { type: 'omnitrace' };
+        break;
+      }
+
+      // ── 7. MAN Mode ─────────────────────────────────────────
+      // Hexagonal prism gate + pulsing suspended octahedron
+      case 'manmode': {
+        var hexWall = wireMesh(new THREE.CylinderGeometry(3.8 * sz, 3.8 * sz, 0.9 * sz, 6, 1, true), OG, 0.80);
+        g.add(hexWall);
+        var hexCapGeo = new THREE.CircleGeometry(3.8 * sz, 6);
+        var hexT = wireMesh(hexCapGeo, OG, 0.55);
+        var hexB = wireMesh(hexCapGeo, OG, 0.45);
+        hexT.position.y =  0.45 * sz; hexB.position.y = -0.45 * sz;
+        g.add(hexT); g.add(hexB);
+        var gateRingM = wireMesh(new THREE.TorusGeometry(4.8 * sz, 0.15, 4, 24), OGD, 0.50);
+        gateRingM.rotation.x = Math.PI / 2; g.add(gateRingM);
+        var manCore = wireMesh(new THREE.OctahedronGeometry(1.4 * sz, 0), WH, 0.92);
+        var manCoreFill = fillMesh(new THREE.OctahedronGeometry(1.4 * sz, 0), WH, 0.09);
+        g.add(manCore); g.add(manCoreFill);
+        var pb1 = fillMesh(new THREE.BoxGeometry(0.38 * sz, 2.0 * sz, 0.38 * sz), OG, 0.55);
+        var pb2 = fillMesh(new THREE.BoxGeometry(0.38 * sz, 2.0 * sz, 0.38 * sz), OG, 0.55);
+        pb1.position.set(-0.48 * sz, 0, 0); pb2.position.set(0.48 * sz, 0, 0);
+        g.add(pb1); g.add(pb2);
+        g.userData = { type: 'manmode', manCore: manCore, manCoreFill: manCoreFill };
+        break;
+      }
+
+      // ── 8. Connect AI / BYOM ────────────────────────────────
+      // Central icosahedron + 4 orbital model nodes with dynamic tether lines
+      case 'byom': {
+        var center = wireMesh(new THREE.IcosahedronGeometry(1.9 * sz, 1), OG, 0.88);
+        var centerFill = fillMesh(new THREE.IcosahedronGeometry(1.9 * sz, 1), OG, 0.06);
+        g.add(center); g.add(centerFill);
+        var modelColors = [OG, CY, PU, GN];
+        var orbs = modelColors.map(function (col, i) {
+          var orb = wireMesh(new THREE.OctahedronGeometry(0.85 * sz, 0), col, 0.88);
+          orb.userData.orbAngle = (i / modelColors.length) * Math.PI * 2;
+          orb.userData.orbR     = 4.8 * sz;
+          orb.userData.orbTilt  = i * (Math.PI / 4.5);
+          orb.userData.orbSpeed = 0.22 + i * 0.065;
+          var cPts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)];
+          var cLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(cPts), edgeMat(col, 0.28));
+          g.add(cLine); g.add(orb);
+          orb.userData.tether = cLine;
+          return orb;
+        });
+        g.userData = { type: 'byom', center: center, orbs: orbs };
+        break;
+      }
+
+      // ── 9. SkillForge ───────────────────────────────────────
+      // Tall elongated crystal + 3 orbiting skill shards
+      case 'skillforge': {
+        var scaleMat = new THREE.Matrix4().makeScale(1, 2.3, 1);
+        var cGeo1 = new THREE.OctahedronGeometry(2.0 * sz, 0);
+        cGeo1.applyMatrix4(scaleMat);
+        var cGeo2 = new THREE.OctahedronGeometry(1.25 * sz, 0);
+        cGeo2.applyMatrix4(scaleMat);
+        var crystal1 = wireMesh(cGeo1, OG, 0.85);
+        var crystal1f = fillMesh(cGeo1, OG, 0.05);
+        var crystal2 = wireMesh(cGeo2, WH, 0.52);
+        crystal2.rotation.y = Math.PI / 5;
+        g.add(crystal1); g.add(crystal1f); g.add(crystal2);
+        var forgeSparks = [0, 1, 2].map(function (i) {
+          var shard = wireMesh(new THREE.TetrahedronGeometry(0.70 * sz, 0), CY, 0.82);
+          shard.userData.shardAngle = (i / 3) * Math.PI * 2;
+          shard.userData.shardR = 4.6 * sz;
+          g.add(shard);
+          return shard;
+        });
+        g.userData = { type: 'skillforge', crystal1: crystal1, forgeSparks: forgeSparks };
+        break;
+      }
+
+      // ── 10. Real-Time Telemetry ─────────────────────────────
+      // Radar hemisphere dish + rotating sweep arm + blinking data pips
+      case 'telemetry': {
+        var dishGeo = new THREE.SphereGeometry(4 * sz, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2);
+        var dish = wireMesh(dishGeo, OGD, 0.55);
+        dish.rotation.x = Math.PI;
+        g.add(dish);
+        var rim = wireMesh(new THREE.TorusGeometry(4 * sz, 0.15, 4, 32), OG, 0.75);
+        g.add(rim);
+        var sweepPivot = new THREE.Group();
+        var sweepArm = fillMesh(new THREE.PlaneGeometry(4 * sz, 0.12), OG, 0.55);
+        sweepArm.rotation.x = -Math.PI / 2;
+        sweepArm.position.x = 2 * sz;
+        sweepPivot.add(sweepArm);
+        g.add(sweepPivot);
+        var pips = [];
+        for (var pi = 0; pi < 7; pi++) {
+          var pa = (pi / 7) * Math.PI * 2;
+          var pr = (1.0 + (pi % 3) * 1.1) * sz;
+          var pip = fillMesh(new THREE.OctahedronGeometry(0.22 * sz, 0), GN, 0.90);
+          pip.position.set(Math.cos(pa) * pr, 0.3, Math.sin(pa) * pr);
+          pip.userData.blinkPhase = pi * 0.88;
+          g.add(pip); pips.push(pip);
+        }
+        g.userData = { type: 'telemetry', sweepPivot: sweepPivot, pips: pips };
+        break;
+      }
+
+      // ── 11. PhysiOmni ───────────────────────────────────────
+      // Articulated robot arm: base + two segments + gripper fingers
+      case 'physiomni': {
+        var baseGeo = new THREE.CylinderGeometry(2.0 * sz, 2.5 * sz, 0.9 * sz, 6);
+        g.add(wireMesh(baseGeo, OG, 0.80));
+        g.add(fillMesh(baseGeo, OG, 0.06));
+        var arm1 = new THREE.Group();
+        arm1.position.y = 0.45 * sz;
+        var seg1 = wireMesh(new THREE.CylinderGeometry(0.38 * sz, 0.50 * sz, 4.2 * sz, 6), OG, 0.74);
+        seg1.position.y = 2.1 * sz; arm1.add(seg1);
+        var j1 = wireMesh(new THREE.OctahedronGeometry(0.68 * sz, 0), WH, 0.82);
+        j1.position.y = 4.2 * sz; arm1.add(j1);
+        var arm2 = new THREE.Group();
+        arm2.position.y = 4.2 * sz;
+        arm2.rotation.z = -0.45;
+        var seg2 = wireMesh(new THREE.CylinderGeometry(0.28 * sz, 0.38 * sz, 3.4 * sz, 6), OGD, 0.70);
+        seg2.position.y = 1.7 * sz; arm2.add(seg2);
+        var j2 = wireMesh(new THREE.OctahedronGeometry(0.52 * sz, 0), WH, 0.80);
+        j2.position.y = 3.4 * sz; arm2.add(j2);
+        var gripper = new THREE.Group();
+        gripper.position.y = 3.4 * sz;
+        [-0.38, 0.38].forEach(function (ox) {
+          var finger = wireMesh(new THREE.ConeGeometry(0.22 * sz, 1.2 * sz, 4), CY, 0.80);
+          finger.rotation.z = ox > 0 ? -0.32 : 0.32;
+          finger.position.set(ox * sz, 0.6 * sz, 0);
+          gripper.add(finger);
+        });
+        arm2.add(gripper); arm1.add(arm2); g.add(arm1);
+        g.userData = { type: 'physiomni', arm1: arm1, arm2: arm2, gripper: gripper };
+        break;
+      }
+
+      // ── 12. Early Access / finale ────────────────────────────
+      // Portal: main torus ring + two counter-rotating inner rings + orbiting particles
+      default: {
+        var portal = wireMesh(new THREE.TorusGeometry(6.0 * sz, 0.45, 10, 52), OG, 0.88);
+        g.add(portal);
+        var portalFill = fillMesh(new THREE.CircleGeometry(5.5 * sz, 52), OG, 0.04);
+        g.add(portalFill);
+        var iRingA = wireMesh(new THREE.TorusGeometry(3.6 * sz, 0.20, 4, 36), WH, 0.48);
+        var iRingB = wireMesh(new THREE.TorusGeometry(5.0 * sz, 0.16, 4, 36), OGD, 0.38);
+        iRingB.rotation.x = Math.PI / 3;
+        g.add(iRingA); g.add(iRingB);
+        var portParticles = [];
+        for (var pri = 0; pri < 28; pri++) {
+          var pp = fillMesh(new THREE.OctahedronGeometry(0.18 * sz, 0), OG, 0.82);
+          pp.userData.pAngle = (pri / 28) * Math.PI * 2;
+          pp.userData.pR = 6.0 * sz;
+          g.add(pp); portParticles.push(pp);
+        }
+        g.userData = { type: 'portal', portal: portal, iRingA: iRingA, iRingB: iRingB, portParticles: portParticles };
+        break;
+      }
+    }
+
+    g.userData.baseScale = sz;
+    return g;
+  }
+
+  function animateArtifact(artifact, idx, isActive, t, dt) {
+    var d = artifact.userData;
+    if (!d || !d.type) return;
+    var sz  = d.baseScale || 1;
+    var aB  = isActive ? 1.30 : 1.0;
+    var oM  = isActive ? 1.0  : 0.52;
+
+    switch (d.type) {
+
+      case 'omniport':
+        d.hub.rotation.y += dt * 0.38;
+        d.hub.rotation.x += dt * 0.18;
+        d.spokeNodes.forEach(function (n, i) {
+          n.rotation.y += dt * (0.45 + i * 0.09);
+          n.material.opacity = (0.55 + 0.35 * Math.sin(t * 2.1 + n.userData.phase)) * oM;
+        });
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'triforce':
+        d.tets.forEach(function (tet, i) {
+          tet.rotation.x += dt * (0.28 + i * 0.14);
+          tet.rotation.z += dt * (0.18 + i * 0.09);
+        });
+        artifact.rotation.y += dt * 0.16;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'omnidash':
+        d.sessArc.rotation.z -= dt * 0.9;                 // session progress sweep
+        d.scanBar.position.x += dt * 5.0 * sz;            // OmniSlate scan
+        if (d.scanBar.position.x > d.scanBar.userData.maxX) d.scanBar.position.x = d.scanBar.userData.minX;
+        d.metricTiles.forEach(function (tile) {
+          tile.material.opacity = (0.05 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.8 + tile.userData.tphase))) * oM;
+        });
+        if (d.navItems[0]) d.navItems[0].material.opacity = (0.35 + 0.20 * Math.sin(t * 2.2)) * oM;
+        artifact.rotation.y = -0.22 + Math.sin(t * 0.25) * 0.14;  // gentle parallax sway
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'policy':
+        d.gateRings.forEach(function (r, i) {
+          r.rotation.y += dt * (0.26 + i * 0.10) * r.userData.dir;
+          r.rotation.x += dt * 0.08 * r.userData.dir;
+        });
+        artifact.rotation.y += dt * 0.07;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'rollback':
+        d.knot.rotation.y += dt * 0.20;
+        d.knot.rotation.x += dt * 0.07;
+        d.orbit.rotation.y -= dt * 0.42;
+        var rA = t * 0.55;
+        d.arrow.position.set(Math.cos(rA) * 5.2 * sz, Math.sin(rA * 0.72) * 1.4 * sz, Math.sin(rA) * 5.2 * sz);
+        d.arrow.rotation.y = -rA + Math.PI;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'omnitrace':
+        artifact.rotation.y += dt * 0.14;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'manmode':
+        var mPulse = 1 + 0.22 * Math.sin(t * 3.8);
+        d.manCore.scale.setScalar(mPulse);
+        d.manCoreFill.scale.setScalar(mPulse * 1.4);
+        d.manCoreFill.material.opacity = (0.06 + 0.05 * Math.abs(Math.sin(t * 3.8))) * oM;
+        artifact.rotation.y += dt * 0.055;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'byom':
+        d.orbs.forEach(function (orb) {
+          orb.userData.orbAngle += dt * orb.userData.orbSpeed;
+          var oa  = orb.userData.orbAngle;
+          var or2 = orb.userData.orbR;
+          var ot  = orb.userData.orbTilt;
+          var nx  = Math.cos(oa) * or2;
+          var ny  = Math.sin(oa) * Math.sin(ot) * or2 * 0.45;
+          var nz  = Math.sin(oa) * or2;
+          orb.position.set(nx, ny, nz);
+          orb.rotation.y += dt * 0.45;
+          var arr = orb.userData.tether.geometry.attributes.position.array;
+          arr[0] = 0;  arr[1] = 0;  arr[2] = 0;
+          arr[3] = nx; arr[4] = ny; arr[5] = nz;
+          orb.userData.tether.geometry.attributes.position.needsUpdate = true;
+        });
+        d.center.rotation.y += dt * 0.28;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'skillforge':
+        d.crystal1.rotation.y += dt * 0.24;
+        d.forgeSparks.forEach(function (shard, i) {
+          shard.userData.shardAngle += dt * (0.38 + i * 0.09);
+          var sa = shard.userData.shardAngle;
+          var sr = shard.userData.shardR;
+          shard.position.set(Math.cos(sa) * sr, Math.sin(t * 0.65 + i * 1.1) * 0.9 * sz, Math.sin(sa) * sr);
+          shard.rotation.y += dt * 0.55;
+        });
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'telemetry':
+        d.sweepPivot.rotation.y += dt * 1.25;
+        d.pips.forEach(function (pip) {
+          pip.material.opacity = (0.45 + 0.50 * Math.abs(Math.sin(t * 2.6 + pip.userData.blinkPhase))) * oM;
+        });
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'physiomni':
+        d.arm1.rotation.y  += dt * 0.32;
+        d.arm2.rotation.z   = -0.45 + Math.sin(t * 0.75) * 0.42;
+        d.gripper.rotation.y = Math.sin(t * 1.35) * 0.48;
+        artifact.scale.setScalar(aB);
+        break;
+
+      case 'portal':
+        d.portal.rotation.y  += dt * 0.17;
+        d.iRingA.rotation.y  += dt * 0.50;
+        d.iRingA.rotation.x  += dt * 0.18;
+        d.iRingB.rotation.y  -= dt * 0.33;
+        d.iRingB.rotation.z  += dt * 0.13;
+        d.portParticles.forEach(function (pp) {
+          pp.userData.pAngle += dt * 0.52;
+          var pa = pp.userData.pAngle;
+          var pr = pp.userData.pR;
+          pp.position.set(Math.cos(pa) * pr, Math.sin(t * 0.28 + pa) * 1.4 * sz, Math.sin(pa) * pr);
+        });
+        artifact.scale.setScalar(aB * (1 + 0.055 * Math.sin(t * 0.65)));
+        break;
+    }
+  }
+
+  /* ============================================================
    * 6. OVERLAY (the map experience)
    * ============================================================ */
   function Overlay(opts) {
@@ -968,7 +1497,9 @@
         m.userData = { angle: (bi / Math.max(1, c.chips.length)) * Math.PI * 2, radius: 6.5 * c.size + (bi % 3) * 1.8, speed: 0.18 + (bi % 4) * 0.045, tilt: (bi % 2 ? 1 : -1) * (0.3 + 0.12 * (bi % 3)) };
         group.add(m); motes.push(m);
       });
-      starObjects.push({ core: core, halo: halo, motes: motes, cap: c, basePos: p });
+      var artifact = makeArtifact(idx, THREE, c, p);
+      group.add(artifact);
+      starObjects.push({ core: core, halo: halo, motes: motes, artifact: artifact, cap: c, basePos: p });
     });
 
     (function () {
@@ -1098,6 +1629,7 @@
             s.basePos.y + Math.sin(u.angle) * u.radius * u.tilt,
             s.basePos.z + Math.sin(u.angle) * u.radius * 0.55);
         });
+        if (s.artifact) animateArtifact(s.artifact, si, si === self.current, t, dt);
       });
 
       var strength = 0;

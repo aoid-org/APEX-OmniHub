@@ -29,3 +29,6 @@ status: verified
 ## 2026-05-23 - Memoizing List Items in Live Feeds
 **Learning:** Extracting list items into a `React.memo`ized component is especially critical for live feeds (e.g., SSE or WebSocket connections). Without this, adding a single new item to the top of an array causes every existing item in the list to re-render, creating an O(n) performance degradation that blocks the main thread.
 **Action:** Always extract and memoize list items in components that frequently append or prepend to lists.
+## 2026-06-12 - O(N) array search inside object traversal is a major bottleneck
+**Learning:** Calling `Object.entries()` inside loops (e.g. for detranslating values based on reverse lookup) is highly inefficient due to array allocations and O(N) searching for reverse key lookups.
+**Action:** Use a pre-calculated `REVERSE_DICTIONARY` with a direct lookup utilizing `Object.prototype.hasOwnProperty.call` to prevent prototype pollution and achieve O(1) direct property access instead.

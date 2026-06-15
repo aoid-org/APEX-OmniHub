@@ -78,7 +78,7 @@ function base64urlDecode(input: string): string {
 /**
  * Base64url-decode to a Uint8Array.
  */
-function base64urlDecodeBytes(input: string): Uint8Array {
+function base64urlDecodeBytes(input: string): Uint8Array<ArrayBuffer> {
   let base64 = input.replaceAll('-', '+').replaceAll('_', '/');
   while (base64.length % 4 !== 0) {
     base64 += '=';
@@ -180,8 +180,7 @@ export async function verifyM2MToken(token: string, secret: string): Promise<M2M
   const valid = await crypto.subtle.verify(
     'HMAC',
     key,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    signatureBytes as any,
+    signatureBytes,
     encoder.encode(signingInput),
   );
 

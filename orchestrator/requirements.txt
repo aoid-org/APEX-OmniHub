@@ -53,3 +53,8 @@ black>=23.12.0
 
 # Auth
 authlib>=1.3.0
+# SSL/TLS compatibility
+# pyOpenSSL <24.0.0 uses cryptography internals removed in cryptography>=42.0.0
+# (lib.GEN_EMAIL). Pin >=24.0.0 to ensure instructor->botocore->urllib3
+# import chain resolves correctly on the CI runner's Python environment.
+pyopenssl>=24.0.0

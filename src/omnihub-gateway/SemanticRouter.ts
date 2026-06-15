@@ -80,6 +80,93 @@ export function extractKeywords(query: string): string[] {
 }
 
 // ============================================================================
+// Solver Routing — Automated Tool Injection
+// ============================================================================
+
+export type SolverType = 'static-analyzer' | 'multi-agent' | 'search-verifier';
+
+export interface ExecutionPayload {
+  readonly intent: string;
+  readonly solvers: readonly SolverType[];
+  readonly tools: readonly string[];
+  readonly rationale: string;
+  readonly requestId: string;
+  readonly timestamp: string;
+}
+
+const CODE_SIGNALS = new Set([
+  'syntax', 'lint', 'analyze', 'parse', 'ast', 'compile', 'typecheck',
+  'eslint', 'tsc', 'static', 'code', 'refactor', 'debug', 'fix',
+]);
+
+const PLANNING_SIGNALS = new Set([
+  'plan', 'design', 'architect', 'orchestrate', 'coordinate', 'strategy',
+  'workflow', 'saga', 'multistep', 'pipeline', 'schedule', 'roadmap',
+]);
+
+const VERIFICATION_SIGNALS = new Set([
+  'verify', 'test', 'validate', 'search', 'check', 'confirm', 'audit',
+  'review', 'scan', 'assert', 'proof', 'benchmark', 'e2e',
+]);
+
+const SOLVER_TOOLS: Readonly<Record<SolverType, readonly string[]>> = {
+  'static-analyzer':   ['eslint', 'typescript-checker', 'ast-parser', 'dependency-analyzer'],
+  'multi-agent':       ['planner-agent', 'executor-agent', 'critic-agent', 'temporal-orchestrator'],
+  'search-verifier':   ['web-search', 'doc-retriever', 'test-runner', 'assertion-engine'],
+};
+
+/**
+ * Classify an intent and build an execution payload with solver arrays and
+ * tools pre-injected. Eliminates all manual tool invocation.
+ *
+ * Solver selection rules (non-exclusive):
+ *   Code keywords        → static-analyzer  (ESLint, TypeScript, AST)
+ *   Planning keywords    → multi-agent      (planner, executor, critic)
+ *   Verification keywords→ search-verifier  (web-search, test-runner)
+ *   No signal matched    → multi-agent      (fail-safe capable default)
+ */
+export function routeToSolvers(intent: string): ExecutionPayload {
+  const requestId = `sv-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const keywords = extractKeywords(intent);
+  const keywordSet = new Set(keywords);
+
+  const matched = new Set<SolverType>();
+  const rationale: string[] = [];
+
+  for (const kw of keywordSet) {
+    if (CODE_SIGNALS.has(kw)) {
+      matched.add('static-analyzer');
+      rationale.push(`code:${kw}`);
+    }
+    if (PLANNING_SIGNALS.has(kw)) {
+      matched.add('multi-agent');
+      rationale.push(`planning:${kw}`);
+    }
+    if (VERIFICATION_SIGNALS.has(kw)) {
+      matched.add('search-verifier');
+      rationale.push(`verification:${kw}`);
+    }
+  }
+
+  if (matched.size === 0) {
+    matched.add('multi-agent');
+    rationale.push('default:multi-agent');
+  }
+
+  const solvers = [...matched];
+  const tools = [...new Set(solvers.flatMap((s) => [...SOLVER_TOOLS[s]]))];
+
+  return {
+    intent,
+    solvers,
+    tools,
+    rationale: rationale.join(', '),
+    requestId,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// ============================================================================
 // Scoring Helpers (extracted to reduce cognitive complexity of route())
 // ============================================================================
 
@@ -214,6 +301,14 @@ export class SemanticRouter {
       selectedAgent: candidates.length > 0 ? candidates[0].agent : null,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Classify the intent and return an execution payload with solver arrays
+   * and tools pre-injected. Delegates to the standalone routeToSolvers.
+   */
+  routeToSolvers(intent: string): ExecutionPayload {
+    return routeToSolvers(intent);
   }
 
   /**

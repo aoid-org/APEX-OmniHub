@@ -203,7 +203,7 @@ export function scoreTask(taskDescription: string): TaskScoreResult {
   if (depthScore > ROUTE_THRESHOLD) {
     target = 'CLAUDE_OPUS';
     reasoning = `depth_score=${depthScore} exceeds threshold=${ROUTE_THRESHOLD}. Routing to Claude Opus for deep processing.`;
-  } else if (depthScore <= ROUTE_THRESHOLD && frontendDomains.includes(bestDomain)) {
+  } else if (frontendDomains.includes(bestDomain)) {
     target = 'GEMINI_PRO';
     reasoning = `depth_score=${depthScore} within frontend range, domain=${bestDomain}. Routing to Gemini Pro for UI/visual tasks.`;
   } else {
@@ -219,5 +219,64 @@ export function scoreTask(taskDescription: string): TaskScoreResult {
     target,
     reasoning,
     matchedKeywords,
+  };
+}
+
+// ============================================================================
+// Stakes Assessment — Pre-Compute Routing Layer
+// ============================================================================
+
+/** Stakes tier that governs reasoning budget allocation */
+export type StakesLevel = 'syntax' | 'logic' | 'architecture';
+
+/** Pre-computed stakes descriptor injected into the execution context */
+export interface TaskStakes {
+  /** Deterministic token budget for this task's reasoning phase */
+  readonly reasoning_budget: number;
+  /** Classified stakes tier */
+  readonly stakes_level: StakesLevel;
+  /** Primary domain detected */
+  readonly domain: TaskDomain;
+  /** Keywords that contributed to the assessment */
+  readonly signals: readonly string[];
+}
+
+const BUDGET_BY_STAKES: Readonly<Record<StakesLevel, number>> = {
+  syntax: 50,
+  logic: 500,
+  architecture: 5000,
+};
+
+/**
+ * Assess the stakes of a task and allocate a deterministic reasoning budget.
+ *
+ * Budget schedule:
+ *   syntax       (depthScore ≤ 10):   50 tokens — pattern matching, formatting
+ *   logic        (10 < score ≤ 50):  500 tokens — moderate inference
+ *   architecture (score > 50):      5000 tokens — deep planning, security, orchestration
+ *
+ * Call before the STORIED execution loop to pre-populate the reasoning
+ * budget in the execution context.
+ *
+ * @param intent - Natural language task description
+ * @returns TaskStakes with reasoning_budget ready for context injection
+ */
+export function assessTaskStakes(intent: string): TaskStakes {
+  const score = scoreTask(intent);
+
+  let stakes_level: StakesLevel;
+  if (score.depthScore > ROUTE_THRESHOLD) {
+    stakes_level = 'architecture';
+  } else if (score.depthScore > 10) {
+    stakes_level = 'logic';
+  } else {
+    stakes_level = 'syntax';
+  }
+
+  return {
+    reasoning_budget: BUDGET_BY_STAKES[stakes_level],
+    stakes_level,
+    domain: score.domain,
+    signals: score.matchedKeywords.map((k) => k.keyword),
   };
 }

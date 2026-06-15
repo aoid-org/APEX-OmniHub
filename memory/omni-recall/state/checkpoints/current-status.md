@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -116,3 +116,90 @@ status: verified
 - installed_skill: .claude/skills/apex-universal-sync-orchestrator v1.0.0 (rubric 100/100; deterministic omni_id; single-pass violation reporting)
 - policy_gate: apex_policy_check.py v1.2.0 — expands directory args; fails closed on 0 files scanned
 - saga_dispatch: _execute_activity call sites use keyword args (_step_id=, is_compensation=); locked by 4 regression tests
+
+## Correction (2026-06-13) — checkpoint drift + Clean-Room Certification fix
+- correction_scope: the `2026-06-10 (final)` block above contained stale/optimistic facts; superseded here.
+- stale_main_head: `ef0f337` — INCORRECT as of 2026-06-13. Verified `git log` main HEAD: `def90cf`
+  (fix(omnihub-site): resolve SonarQube audit issues in OmniHubPlatformMap, #1383).
+- stale_tech_debt_claim: `tech_debt_remaining: 0` — NOT VERIFIED. Type-suppression and `.skip`/`.todo`
+  debt remain across the tree; treat as ACTIVE pending a dedicated triage pass (out of scope this session).
+- certification_status_at_def90cf: was RED. `bun run verify:types` (`tsc -b --noEmit`) reported 34 errors.
+  NOTE: the repo `typecheck` script (`tsc -p tsconfig.json`) is a false-green no-op (root tsconfig has
+  `files: []` and only project references, so `-p` compiles nothing). The real gate is `verify:types`.
+- root_cause (verified, not the alias theory in the external report): the app build (vite: `@` ->
+  apps/omnihub-site/src) and the test build (vitest: `@` -> ./src, an INTENTIONAL split documented in
+  vitest.config.ts) both resolve correctly at runtime. Only `tsc -b` (tsconfig.app.json `@/*` root-first)
+  type-checked apps/dashboard files against the root `src/` test-double stubs, whose TYPES had drifted
+  from canonical (useAuth returned `{session,user,isLoading}` vs canonical `{session,loading,isAuthenticated}`;
+  useOmniModuleState lacked moduleKey/headline/stateKind/detail/variant/message). The root `src/` stubs are
+  LOAD-BEARING for the vitest suite — deleting them (as the report proposed) would break tests.
+- fix_applied (branch claude/sharp-brahmagupta-d26wms): updated the root test-double stub TYPES to mirror
+  canonical (src/lib/useAuth.ts, src/hooks/useOmniModuleState.ts), added the two missing config exports to
+  src/lib/supabase/index.ts for parity, and corrected fixture drift in tests/omnidash/m03-panels.spec.tsx,
+  links-settings-modules.spec.tsx, use-speech-recognition.spec.tsx, design-system-components.spec.tsx
+  (DashboardData settings/memoryHealth + full KpiSummary/KpiDaily/Incident shapes; SpeechRecognition mock
+  typing; unused React imports).
+- verification (observed exit 0): `verify:types` 0 errors; vitest across tests/omnidash + affected files
+  551 passed / 28 skipped / 20 todo (0 failed); eslint on changed files 0 problems.
+- p1_node24_status: NOT a live risk. release.yml is already SHA-pinned to actions/checkout + setup-node v4
+  with node-version 24; no v1/v2/v3 actions exist in any workflow. The "CI breaks in 72h" inference was false.
+
+## Session (2026-06-14) — Cert unblock + P2/P3 debt closure
+- branch: `main` (cert fix, direct) + `fix/type-suppression-triage` (PR #1389) + `claude/nifty-thompson-2q3y49` (session backup, all commits)
+- scope: Fixed the cert-blocking `verify:ci-integrity` failure by adding
+  `docs/release/branch-protection.md` at repo root (it existed only at
+  `memory/omni-recall/docs/release/`). Completed P2-1 type-suppression triage and
+  P2-2 test-debt triage; ground-truth-verified P3-1 partition RLS and P3-2 entitlement
+  table designation (no DB change — see below).
+- key outcomes:
+  - `docs/release/branch-protection.md` created at root — scanner reports `verify:ci-integrity PASSED` (exit 0). All 6 required job IDs verified present in their workflows.
+  - cert fix pushed to `main` (`50ffe39..b66870b`) — `Release` job should run and unblock `Atomic Routing Flip` -> Clean-Room Final Certification (pending Actions confirmation).
+  - as-any: 90 -> 79 (src/ 24 -> 13, all 11 removed via real root fixes; remaining 13 documented). @ts-ignore: 0 -> 0. @ts-expect-error: 16 -> 16 (all already reasoned). eslint-disable: 139 -> 128. .skip: 19 -> 18 (one re-enabled). it.todo: 29 (formal backlog). .only: 0.
+  - NOTE on type fixes: the crypto BufferSource `as any` were stale only under the looser `typecheck` script; the real gate `verify:types` (`tsc -b`) required typing byte-helpers `Uint8Array<ArrayBuffer>` — applied as the root fix (confirms prior correction that `typecheck` is a false-green no-op).
+  - P3-1: physiomni_telemetry partitions RLS verified already remediated by migration `20260528000000` (fail-closed: RLS enabled, no child policy -> direct access denied, reads go through parent's tenant-scoped policies). The triage protocol's fallback policy SQL references a non-existent `user_id` column (isolation column is `tenant_id`) — NOT applied. Live pg_policies confirmation pending Supabase auth (owner action).
+  - P3-2: canonical = BOTH, distinct domains. `entitlements` (polymorphic web3 subject/wallet/device) and `user_entitlements` (per-user subscription tier + UEP active_skills) are not an orphan/duplicate pair; deprecating either would break a live flow. No COMMENT/deprecation applied. Latent gap flagged: `tenant_entitlements` (used by omniconnect entitlements-service) has no migration.
+- verification: verify:ci-integrity exit 0; verify:types exit 0; lint exit 0; `bun run test` 2736 passed / 70 skipped / 30 todo / 0 failed.
+- certification_status: GREEN expected post-push (pending Actions confirmation).
+- cert_commit: b66870b (main); pr: #1389 (fix/type-suppression-triage -> main)
+- p0_1_status: RESOLVED (d95715e — stub type alignment + fixture drift)
+- p1_1_status: NOT A RISK (node-version 24 already in release.yml)
+- p2_1_status: RESOLVED this session (suppressions reduced/justified; verify:types green)
+- p2_2_status: RESOLVED this session (.skip triaged; .todo inventoried as formal backlog)
+- p2_3_status: RESOLVED (2026-06-13 correction block)
+- p3_1_status: VERIFIED this session (existing fail-closed migration; no change needed)
+- p3_2_status: VERIFIED this session (two distinct canonical tables; no change needed)
+- p3_3_status: RESOLVED (deploy.sh set -euo pipefail pre-existing)
+- findings_doc: `DEBT_TRIAGE_2026-06-14.md` (on PR #1389 branch)
+
+## Session (2026-06-14) — CI green campaign: pyOpenSSL + routing-flip + SSRF fixes
+
+### Blockers resolved this session (all merged to main)
+
+| PR | Branch | Merge SHA | Fix |
+|---|---|---|---|
+| #1392 | fix/ci-pytest-pyopenssl-main-green | 726d7cc0 | `pyopenssl>=24.0.0` added to `orchestrator/requirements.txt`. Cured `AttributeError: module 'lib' has no attribute 'GEN_EMAIL'` — 10 pytest collection errors across runs #878–#897. |
+| #1391 | fix/routing-flip-interlock-unhardcode | 50013c4c | Un-hardcoded `ENABLE_ATOMIC_ROUTING_FLIP` in `release.yml` at L64, L136, L154, L157. Now reads `vars.ENABLE_ATOMIC_ROUTING_FLIP`; gate is live once TF infra confirmed. |
+| #1393 | fix/ssrf-ipv4-mapped-classification | 16f06b6f | `_check_ip()` in `orchestrator/security/ssrf.py`: moved `ipv4_mapped` guard before `is_reserved`. Python marks `::ffff:0:0/96` as `is_reserved`, incorrectly blocking public IPv4-mapped and misclassifying private ones. Fixes 3 pytest tests. |
+
+### CI run ledger (Clean-Room Final Certification, main)
+
+| Run | Head SHA | Result | Root cause |
+|---|---|---|---|
+| #878–#897 | various | ❌ | pyOpenSSL crash — 10 collection errors |
+| #898 | 726d7cc0 | ❌ | pyOpenSSL fixed (921 passed); 3 SSRF tests failed |
+| #899 | 50013c4c | ❌ | Same 3 SSRF failures |
+| #900 | 16f06b6f | 🔄 in_progress | All 3 fixes present — expected green |
+
+### Infrastructure state (2026-06-14)
+
+| Item | Status |
+|---|---|
+| `TF_TOKEN_app_terraform_io` GitHub Secret | ✅ Set (confirmed via screenshot) |
+| `production-shadow` GitHub Environment | ✅ Configured — required_reviewers, all 6 secrets/vars present |
+| `ENABLE_ATOMIC_ROUTING_FLIP` repo variable | ✅ true |
+| Terraform Cloud org | apexbusiness-systems-ltd |
+
+### Certification verdict (2026-06-14)
+
+`NOT_CERTIFIED_NO_RELEASE_CUT` — verify:test gate pending run #900. Once green, shadow deploy runs → health check → `write-release-evidence.mjs` → CERTIFIED or CERTIFICATION_PENDING_FINAL_MAIN_CI.
+

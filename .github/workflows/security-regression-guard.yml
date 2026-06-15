@@ -21,7 +21,7 @@ on:
 jobs:
   security-invariants:
     name: Security Invariant Checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
 
@@ -80,7 +80,7 @@ jobs:
 
   dependency-audit:
     name: Dependency Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       security-events: write
@@ -125,7 +125,7 @@ jobs:
 
   code-quality:
     name: Code Quality Gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
 

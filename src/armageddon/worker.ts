@@ -35,7 +35,7 @@ export async function createArmageddonWorker(): Promise<Worker> {
             destination: {
                 type: 'console',
             },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Temporal Runtime logger destination typing is incomplete for the console variant (P2-1 deferral)
         } as any,
     });
 

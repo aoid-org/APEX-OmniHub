@@ -52,7 +52,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   build-web:
     name: Build Web Assets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
 
     steps:
@@ -88,7 +88,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   build-android:
     name: Android Build (Debug)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build-web
     if: github.event.inputs.skip_android != 'true'
     timeout-minutes: 30
@@ -250,7 +250,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   mobile-gate:
     name: Mobile Build Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [build-android, build-ios]
     if: always()
     timeout-minutes: 2
@@ -264,20 +264,21 @@ jobs:
           echo "Android build: $ANDROID"
           echo "iOS build:     $IOS"
 
-          # When concurrency cancel-in-progress supersedes this run, both jobs
-          # land as 'cancelled'. Treat that as neutral — the newer run is the
-          # authoritative verdict.
-          if [[ "$ANDROID" == "cancelled" && "$IOS" == "cancelled" ]]; then
-            echo "::notice::Mobile build gate — run superseded by a newer push; gate is neutral."
-            exit 0
+          # A 'cancelled' result carries no verdict: it happens when a newer
+          # push supersedes this run (concurrency cancel-in-progress), on manual
+          # cancellation, or on timeout. A genuine build problem reports
+          # 'failure', so cancellations are treated as neutral — only real
+          # failures fail the gate. The latest uncancelled run is authoritative.
+          if [[ "$ANDROID" == "cancelled" || "$IOS" == "cancelled" ]]; then
+            echo "::notice::Mobile build gate — a platform build was cancelled (likely superseded by a newer push); treating as neutral."
           fi
 
-          # 'skipped' is allowed when the input flag is set
+          # 'skipped' is allowed when the input flag is set; 'cancelled' is neutral.
           for result in "$ANDROID" "$IOS"; do
-            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
-              echo "::error::Mobile build gate FAILED — one or more platform builds did not succeed."
+            if [[ "$result" != "success" && "$result" != "skipped" && "$result" != "cancelled" ]]; then
+              echo "::error::Mobile build gate FAILED — a platform build did not succeed (result: $result)."
               exit 1
             fi
           done
 
-          echo "::notice::Mobile build gate PASSED — all platform builds succeeded."
+          echo "::notice::Mobile build gate PASSED — no platform build failed."

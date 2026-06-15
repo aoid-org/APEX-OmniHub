@@ -16,8 +16,11 @@ export {
 
 export {
   scoreTask,
+  assessTaskStakes,
   TaskScoreResultSchema,
   type TaskScoreResult,
+  type TaskStakes,
+  type StakesLevel,
   type RouteTarget,
   type TaskDomain,
 } from './TaskComplexityScorer';

@@ -57,21 +57,4 @@ The repository has 22 active GitHub Actions workflows (21 + `rsi-governance.yml`
 
 Current Vitest coverage thresholds (vitest.config.ts):
 
-| Metric | Threshold | North-Star Target |
-|---|---|---|
-| Statements | 70 | — |
-| Branches | 63 | 80% |
-| Functions | 72 | — |
-| Lines | 71 | — |
-
-Previous thresholds (pre-2026-05-20): statements 69, branches 60, functions 71, lines 70.
-
-## Enforcement
-
-This policy is enforced by:
-- Code review: Reviewers must reject PRs that add static CI/certification badges
-- Docs drift reconciliation: run periodically as part of production certification hardening
-
-## Last Updated
-
-2026-06-14 — CI run #906 results added; workflow count corrected to 22
+| Metric | Threshold

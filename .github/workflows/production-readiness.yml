@@ -24,7 +24,7 @@ env:
 jobs:
   quality-gates:
     name: Quality Gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -69,7 +69,7 @@ jobs:
   security-gates:
     name: Security Gates
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -125,7 +125,7 @@ jobs:
 
   smoke-tests:
     name: Smoke Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 35
     needs: [quality-gates]
     permissions:
@@ -188,7 +188,7 @@ jobs:
 
   readiness-summary:
     name: Production Readiness Summary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 5
     needs: [quality-gates, security-gates, smoke-tests]
     if: always() && !cancelled()

@@ -253,7 +253,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       const { data: result, error } = await this.client
         .from(table)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic provider erases per-table row types; supabase-js needs a concrete Insert type unavailable at this boundary (P2-1 deferral)
         .insert(data as any)
         .select()
         .single()
@@ -278,7 +278,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       const { data: result, error } = await this.client
         .from(table)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic provider erases per-table row types; supabase-js needs a concrete Insert type unavailable at this boundary (P2-1 deferral)
         .insert(data as any)
         .select()
 
@@ -301,7 +301,7 @@ export class SupabaseDatabase implements IDatabase {
     options?: { filters?: QueryFilter[] }
   ): Promise<DatabaseListResult<T>> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic provider erases per-table row types; supabase-js needs a concrete Update type unavailable at this boundary (P2-1 deferral)
       let query = this.client.from(table).update(data as any)
 
       if (options?.filters) {
@@ -331,7 +331,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       const { data: result, error } = await this.client
         .from(table)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic provider erases per-table row types; supabase-js needs a concrete Update type unavailable at this boundary (P2-1 deferral)
         .update(data as any)
         .eq('id', id)
         .select()
@@ -416,7 +416,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       // Supabase doesn't have direct raw SQL API in client library
       // Use RPC function as workaround
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 'execute_sql' RPC is a generic raw-query escape hatch not present in generated function types (P2-1 deferral)
       const { data, error } = await this.client.rpc('execute_sql' as any, {
         query_text: query,
         query_params: params || [],

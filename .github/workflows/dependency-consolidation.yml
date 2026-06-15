@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   consolidate-dependencies:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # BETA-T3: Only process PRs with "dependencies" label
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     steps:

@@ -197,7 +197,7 @@ describe('OmniDash Widgets Chaos Battery', () => {
   // ── Error boundary simulation ──────────────────────────────────────────────
 
   describe('graceful error handling', () => {
-    it.skip('does not crash when Today mock throws on first render', async () => {
+    it('does not crash when Today mock throws on first render', async () => {
       // Override Today mock to throw once, then recover
       const { Today: MockedToday } = await import('@/dashboard/components/Today');
       vi.mocked(MockedToday)

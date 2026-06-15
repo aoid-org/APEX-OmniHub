@@ -17,7 +17,7 @@ on:
 
 jobs:
   evaluate-agent:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code
@@ -139,7 +139,7 @@ jobs:
         # In a real scenario, you might send a Slack notification or email here
 
   health-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code

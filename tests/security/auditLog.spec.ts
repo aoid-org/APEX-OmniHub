@@ -40,6 +40,9 @@ describe('audit log queue', () => {
     expect(entry.id).toBeDefined();
   });
 
+  // DEFER (P2-2): fails un-skipped — asserts queue-retained-on-500 behaviour that the
+  // current flushQueue retry/drain semantics no longer match. Tracked for an audit-queue
+  // retry-path rework; left skipped to keep CI deterministic.
   it.skip('keeps events queued when Lovable returns 500', { timeout: 10000 }, async () => {
     const { recordAuditEvent, getAuditQueueSnapshot, flushQueue } = await importAudit();
     let callCount = 0;

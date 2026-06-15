@@ -35,7 +35,7 @@ function bufferToHex(buffer: ArrayBuffer): string {
 /**
  * Convert a hex-encoded string to a Uint8Array.
  */
-function hexToBuffer(hex: string): Uint8Array {
+function hexToBuffer(hex: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = Number.parseInt(hex.substring(i, i + 2), 16);
@@ -112,8 +112,7 @@ export async function validateHMAC(
     const key = await importKey(secret);
     const signatureBytes = hexToBuffer(signature);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return crypto.subtle.verify('HMAC', key, signatureBytes as any, encoder.encode(payload));
+    return crypto.subtle.verify('HMAC', key, signatureBytes, encoder.encode(payload));
   } catch {
     return false;
   }
