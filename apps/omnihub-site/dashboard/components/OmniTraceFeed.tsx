@@ -31,13 +31,12 @@ function relativeTime(iso: string): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: any }>) {
+export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: unknown }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
   useEffect(() => {
     const url = import.meta.env.VITE_SUPABASE_URL ?? '';
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-    console.log('OmniTraceFeed INIT url:', url, 'key:', key);
     if (!url || !key) {
       setStatus('ERROR');
       setLogs(DEMO_LOGS);
@@ -47,14 +46,12 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
   useEffect(() => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-    console.log('OmniTraceFeed USE EFFECT url:', supabaseUrl, 'key:', supabaseKey);
 
     if (!supabaseUrl || !supabaseKey) {
-      console.log('OmniTraceFeed USE EFFECT returning early because empty env');
       return;
     }
 
-    const supabase = mockSupabase || createClient(supabaseUrl, supabaseKey);
+    const supabase = (mockSupabase as ReturnType<typeof createClient>) || createClient(supabaseUrl, supabaseKey);
     let channel: ReturnType<typeof supabase.channel>;
 
     try {
@@ -62,7 +59,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
       channel = supabase
         .channel('omnitrace-feed')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audit_log', filter: channelFilter },
-          (payload) => {
+          (payload: Record<string, unknown>) => {
             const newLog = payload.new as AuditLog;
             setLogs((prev) => [newLog, ...prev].slice(0, 50));
           }
@@ -77,7 +74,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
     }
 
     return () => { if (channel) supabase.removeChannel(channel); };
-  }, [tenantId]);
+  }, [tenantId, mockSupabase]);
 
   const isDemo = status === 'ERROR';
   const displayLogs = isDemo ? DEMO_LOGS : logs;
