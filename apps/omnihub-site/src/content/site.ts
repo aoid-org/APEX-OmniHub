@@ -130,8 +130,8 @@ export const proofConfig = {
   tiles: [
     buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', true),
     buildProofTile('armageddon-l7', 'Armageddon L7', 'VERIFIED', true),
-    buildProofTile('eu-ai-act', 'EU AI Act Ready', 'AUGUST 2026', true),
-    buildProofTile('gdpr', 'GDPR Native', 'MAPPED', true),
+    buildProofTile('eu-ai-act', 'AI Governance Aligned', 'AUGUST 2026', true),
+    buildProofTile('privacy-design', 'Privacy-by-Design', 'MAPPED', true),
   ],
 } as const;
 
