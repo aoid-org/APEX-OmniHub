@@ -15,12 +15,24 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const rel = (p) => path.relative(repoRoot, p).replaceAll("\\", "/");
 
 // Production-facing copy. Tests, legal rights disclosures, and generated assets excluded.
-const SCAN_ROOTS = [path.join(repoRoot, "apps", "omnihub-site", "src"), path.join(repoRoot, "public")];
-const SCAN_EXTS = new Set([".ts", ".tsx", ".html", ".md"]);
+const SCAN_ROOTS = [
+  path.join(repoRoot, "apps", "omnihub-site", "src"),
+  path.join(repoRoot, "apps", "omnihub-site", "dashboard"),
+  path.join(repoRoot, "apps", "omnihub-site", "src", "i18n", "locales"),
+  path.join(repoRoot, "public"),
+  path.join(repoRoot, "src"),
+];
+const SCAN_EXTS = new Set([".ts", ".tsx", ".html", ".md", ".json", ".js", ".jsx"]);
 const EXCLUDE = [
   /\.test\.|\.spec\.|__tests__/,
   /\/legal\//i, // privacy/terms legitimately reference GDPR/CCPA *rights*, not posture claims
   /privacyPolicy|PRIVACY_POLICY|termsOf|TERMS_OF/i,
+  // Internal source modules — backend/utility code, not production-facing copy
+  /\/src\/armageddon\//i,
+  /\/src\/integrations\//i,
+  /\/src\/omnihub-gateway\//i,
+  /\/src\/scripts\//i,
+  /\/src\/lib\//i,
 ];
 
 // High-risk affirmative-claim patterns. Each requires proof in approved-claims.json.
@@ -33,6 +45,9 @@ const CLAIM_PATTERNS = [
   { id: "uptime-sla", re: /\b(uptime|availability)\b.*\b\d{2}\.\d{1,2}%/i },
   { id: "revenue-metric", re: /\$\s?\d[\d,.]*\s?[KMB]?\s*(MRR|ARR)\b/i },
   { id: "latency-metric", re: /\bp99\b/i },
+  { id: "gdpr", re: /\bGDPR\b/i },
+  { id: "eu-ai-act", re: /\bEU\s+AI\s+Act\b/i },
+  { id: "audit-claim", re: /\b(independent(ly)?\s+(audit|certif)|third.party\s+(audit|certif))/i },
 ];
 
 const approvedPath = path.join(repoRoot, "docs", "release", "approved-claims.json");
