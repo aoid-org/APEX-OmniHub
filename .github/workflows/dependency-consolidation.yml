@@ -26,7 +26,7 @@ jobs:
 
       - name: Find open dependency PRs
         id: find-prs
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { data: prs } = await github.rest.pulls.list({
@@ -57,7 +57,7 @@ jobs:
 
       - name: Auto-merge dependency PRs
         if: steps.find-prs.outputs.has_prs == 'true'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const prNumbers = JSON.parse('${{ steps.find-prs.outputs.pr_numbers }}');
