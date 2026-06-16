@@ -79,8 +79,8 @@ const STRATEGY_PROFILES: Readonly<Record<RouteStrategy, StrategyProfile>> = {
   direct: {
     steps: ['parse-intent', 'execute-action', 'return-result'],
     latencyMs: 800,
-    tokenMultiplier: 1.0,
-    correctnessPrior: 0.70,
+    tokenMultiplier: 1,
+    correctnessPrior: 0.7,
   },
   decompose: {
     steps: ['parse-intent', 'decompose-subtasks', 'execute-subtasks', 'merge-results', 'return-result'],
@@ -91,18 +91,18 @@ const STRATEGY_PROFILES: Readonly<Record<RouteStrategy, StrategyProfile>> = {
   'search-then-execute': {
     steps: ['parse-intent', 'search-context', 'synthesize-plan', 'execute-action', 'verify-output', 'return-result'],
     latencyMs: 3500,
-    tokenMultiplier: 3.0,
+    tokenMultiplier: 3,
     correctnessPrior: 0.92,
   },
   'multi-agent-consensus': {
     steps: ['parse-intent', 'fan-out-agents', 'collect-responses', 'consensus-vote', 'execute-winner', 'return-result'],
     latencyMs: 5000,
-    tokenMultiplier: 4.0,
+    tokenMultiplier: 4,
     correctnessPrior: 0.95,
   },
 };
 
-// Scoring weights (must sum to 1.0)
+// Scoring weights (must sum to 1)
 const SCORE_WEIGHTS = { speed: 0.25, correctness: 0.50, profitability: 0.25 } as const;
 
 // ⚡ Bolt: pre-compute normalization denominators once

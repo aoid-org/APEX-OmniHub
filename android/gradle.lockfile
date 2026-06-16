@@ -1,0 +1,4 @@
+# This is a Gradle dependency lock file for the Android project.
+# Regenerate with: cd android && ./gradlew dependencies --write-locks --no-daemon
+# No dependency entries are checked in yet because this repository snapshot is
+# missing generated Capacitor Gradle files required to resolve configurations.

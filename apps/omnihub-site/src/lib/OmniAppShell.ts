@@ -38,9 +38,7 @@ const SHELL_TAG = 'omni-app-shell';
 // SSG prerender runs in Node.js where HTMLElement is not defined; fall back to an
 // inert base class so the module loads without error in that environment.
 const _HTMLElement: typeof HTMLElement =
-  globalThis.HTMLElement === undefined
-    ? (Object as unknown as typeof HTMLElement)
-    : globalThis.HTMLElement;
+  globalThis.HTMLElement ?? (Object as unknown as typeof HTMLElement);
 
 class OmniAppShellElement extends _HTMLElement {
   private _shadowRoot: ShadowRoot | null = null;
