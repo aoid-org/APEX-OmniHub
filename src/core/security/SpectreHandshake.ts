@@ -91,11 +91,11 @@ function parseToken(authHeader: string | undefined): ParsedToken {
   if (!match) throw new SpectreAuthError('Invalid API key format');
   
   return {
-    environment: match[1] === 'live' ? 'production' : 'development', // using 'development' for test based on AegisKeyRecord type, though original used 'test'. Wait! The original said "const environment = match[1] === 'live' ? 'production' : 'test';". Let's stick to 'test' cast as any to avoid type issues or change 'test' to 'development'. Actually original was `environment = match[1] === 'live' ? 'production' : 'test';` but AegisKeyRecord allows 'development' | 'production' | 'staging'. Let's keep what original did.
+    environment: match[1] === 'live' ? 'production' : 'development',
     tenantId: match[2],
     secretPart: match[3],
     prefix: token.slice(0, 16)
-  } as unknown; 
+  };
 }
 
 function validateRecord(record: AegisKeyRecord | null, parsed: ParsedToken): asserts record is AegisKeyRecord {
