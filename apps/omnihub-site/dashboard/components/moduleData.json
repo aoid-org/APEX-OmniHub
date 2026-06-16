@@ -79,8 +79,8 @@
         "up"
       ],
       [
-        "Uptime",
-        "99.7%",
+        "Demo uptime",
+        "sample value",
         "stable"
       ]
     ],
@@ -147,7 +147,7 @@
     [
       [
         "aud-001",
-        "SOC 2 Type II Attestation",
+        "Security Controls Roadmap Attestation",
         "active",
         "Last verified: 2026-03-01"
       ],
@@ -266,7 +266,7 @@
       ],
       [
         "Success Rate",
-        "99.8%",
+        "demo health sample",
         "stable"
       ]
     ],
@@ -478,7 +478,7 @@
         "usage-api",
         "API Usage — Current Period",
         "active",
-        "142K / 500K requests (28.4%)"
+        "142K / 500K requests"
       ]
     ],
     [
@@ -569,7 +569,7 @@
       ],
       [
         "Uptime",
-        "99.97%",
+        "demo availability sample",
         "stable"
       ],
       [
@@ -583,7 +583,7 @@
         "sys-api",
         "API Gateway",
         "active",
-        "Healthy | 4,200 req/min | P99: 42ms"
+        "Healthy | 4,200 req/min | Tail: 42ms"
       ],
       [
         "sys-db",
@@ -595,7 +595,7 @@
         "sys-cache",
         "Redis Cache",
         "active",
-        "Healthy | Hit rate: 98.4% | Memory: 1.2GB"
+        "Healthy | Cache hit sample | Memory: 1.2GB"
       ],
       [
         "sys-queue",
@@ -724,7 +724,7 @@
         "up"
       ],
       [
-        "P99 Latency",
+        "Tail Latency",
         "38ms",
         "down"
       ],
@@ -739,7 +739,7 @@
         "trace-api",
         "API Gateway Traces",
         "active",
-        "842 spans/min | Avg: 12ms | P99: 38ms"
+        "842 spans/min | Avg: 12ms | Tail: 38ms"
       ],
       [
         "trace-db",
@@ -791,7 +791,7 @@
       ],
       [
         "Intent Accuracy",
-        "94.2%",
+        "demo accuracy sample",
         "up"
       ],
       [
@@ -811,7 +811,7 @@
         "agent-intent",
         "Intent Classifier",
         "active",
-        "GPT-4o | 12 intent categories | 94.2% accuracy"
+        "GPT-4o | 12 intent categories | demo accuracy sample accuracy"
       ],
       [
         "agent-action",

@@ -244,7 +244,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 ### Fixed
 
 - SonarCloud security hotspot (window.location.search usage)
-- Code duplication reduced from 28.2% to <3%
+- Code duplication reduced substantially
 
 ## [1.0.0] - 2026-01-14
 

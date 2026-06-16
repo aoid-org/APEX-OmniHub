@@ -17,11 +17,14 @@ const cases = [
   ['pending', 'pending', 'CERTIFICATION_PENDING_TERRAFORM_APPLY'],
   ['fail', 'fail', 'NOT_CERTIFIED_BLOCKED'],
   ['pass', 'pass', 'CERTIFIED'],
+  ['pass + skipped outcome', 'pass', 'CERTIFICATION_PENDING_TERRAFORM_APPLY', 'skipped'],
+  ['pass + failure outcome', 'pass', 'NOT_CERTIFIED_BLOCKED', 'failure'],
+  ['pass + success outcome', 'pass', 'CERTIFIED', 'success'],
 ];
 
-for (const [name, terraformApply, expected] of cases) {
+for (const [name, terraformApply, expected, explicitOutcome] of cases) {
   assert.equal(
-    computeVerdict({ ...base, terraformApply, terraformApplyOutcome: terraformApply === 'pass' ? 'success' : terraformApply }),
+    computeVerdict({ ...base, terraformApply, terraformApplyOutcome: explicitOutcome ?? (terraformApply === 'pass' ? 'success' : terraformApply) }),
     expected,
     `plan pass + apply ${name}`,
   );

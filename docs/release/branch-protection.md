@@ -10,7 +10,7 @@ This document specifies the exact required checks that must pass before any Pull
 
 ## Required Status Checks
 
-The following exact job names must be configured as required status checks in GitHub Repository Settings under **Settings → Branches → Branch Protection Rules**:
+The following exact job names must be configured as required status checks in GitHub Repository Settings under **Settings → Branches → Branch Protection Rules**. Every PR-required check below must be backed by a workflow that runs on `pull_request`:
 
 1. **RSI Governance Gate**
    - **Job ID / Name**: `rsi-governance` (defined in `.github/workflows/rsi-governance.yml`)
@@ -28,11 +28,7 @@ The following exact job names must be configured as required status checks in Gi
    - **Job ID / Name**: `build-and-test` (defined in `.github/workflows/ci-runtime-gates.yml`)
    - **Workflow Name**: `CI Runtime Gates`
 
-5. **Release**
-   - **Job ID / Name**: `release` (defined in `.github/workflows/release.yml`)
-   - **Workflow Name**: `Clean-Room Final Certification`
-
-6. **Governance gate (required for branch protection)**
+5. **Governance gate (required for branch protection)**
    - **Job ID / Name**: `governance-gate` (defined in `.github/workflows/apex-governance.yml`)
    - **Workflow Name**: `APEX Governance`
    - **Note**: This gate is fail-closed; policy, secret-scan, dependency-audit, SAST, and RFC architecture marker failures block merge.
@@ -42,6 +38,7 @@ The following exact job names must be configured as required status checks in Gi
 The CI integrity scanner (`verify:ci-integrity`) validates that:
 
 - Every job listed above exists in the respective workflow file.
+- Every PR-required workflow listed above declares a `pull_request` trigger.
 - The names and IDs match exactly without branch-protection drift.
 - Required workflows do not hide gate failures with unaudited `|| true` or `continue-on-error: true`.
 - Verify scripts are not fake-pass placeholders.
@@ -55,6 +52,6 @@ The CI integrity scanner (`verify:ci-integrity`) validates that:
 
 1. Navigate to **Settings → Branches → Branch Protection Rules** for `main` / `master`.
 2. Enable **Require status checks to pass before merging**.
-3. Add each job from the list above as a required status check.
+3. Add each PR job from the list above as a required status check. Do **not** require `.github/workflows/release.yml` / `release` on PRs; it is a protected post-merge/main release gate because it performs final release certification and protected Terraform apply flow only on `push` to `main`/`master` or manual dispatch.
 4. Enable **Require branches to be up to date before merging**.
 5. Enable **Do not allow bypassing the above settings**.

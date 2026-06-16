@@ -400,7 +400,7 @@ export const Today = () => {
                     <HiddenMetric
                       icon={Activity}
                       label="Success Rate"
-                      value="96.8%"
+                      value="demo score sample"
                       valueClass="text-emerald-400"
                     />
                     <HiddenMetric

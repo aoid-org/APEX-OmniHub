@@ -69,7 +69,7 @@ const useCases = [
 const technicalSpecs = [
   { label: 'Event Processing', value: 'Up to 10,000 events/second per workflow' },
   { label: 'Latency', value: 'Sub-100ms translation and routing (p95)' },
-  { label: 'Reliability', value: '99.9% workflow completion rate' },
+  { label: 'Reliability', value: 'workflow completion target' },
   { label: 'Supported Protocols', value: 'REST, GraphQL, WebSocket, gRPC, MQTT, AMQP, Kafka' },
 ];
 
