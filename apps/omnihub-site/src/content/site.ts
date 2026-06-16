@@ -102,8 +102,8 @@ export const siteConfig = {
       'Hardware-level allowlisting (Device Registry)',
       'Biometric hardware enclave signing (FaceID/TouchID)',
       'Manual Approval Node governance by architecture (MAN Mode)',
-      'EU AI Act Article 14 compliant gates',
-      'Immutable audit logging (GDPR Art. 30)',
+      'Human-oversight policy gates',
+      'Immutable audit logging (Privacy-record workflows)',
       'Forensic replay via OmniTrace',
     ],
   },
@@ -129,9 +129,9 @@ export const proofConfig = {
   title: 'Verified Unicorn-Class Architecture',
   tiles: [
     buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', true),
-    buildProofTile('armageddon-l7', 'Armageddon L7', 'CERTIFIED', true),
+    buildProofTile('armageddon-l7', 'Armageddon L7', 'VERIFIED', true),
     buildProofTile('eu-ai-act', 'EU AI Act Ready', 'AUGUST 2026', true),
-    buildProofTile('gdpr', 'GDPR Native', 'COMPLIANT', true),
+    buildProofTile('gdpr', 'GDPR Native', 'MAPPED', true),
   ],
 } as const;
 
@@ -186,7 +186,7 @@ export const techSpecsConfig = {
       details: [
         'Tri-Force: Guardian \u2192 Planner \u2192 Executor',
         'MAN Mode (Manual Approval Node) gates',
-        'EU AI Act Article 14 compliant oversight',
+        'Human-oversight policy controls',
         'OmniLink single controlled port (9876)',
         'Canonical typed semantic event normalization',
       ],
@@ -196,7 +196,7 @@ export const techSpecsConfig = {
       title: 'The Memory (Immutable Records)',
       description: 'OmniTrace forensic replay and immutable audit trails for regulatory compliance.',
       details: [
-        'GDPR Art. 30 compliant audit logging',
+        'Audit logging mapped to privacy-record workflows',
         'OmniTrace forensic decision replay',
         'Full reconstruction of any agent chain',
         '365-day structured log retention',
@@ -206,7 +206,7 @@ export const techSpecsConfig = {
     {
       id: 'immune',
       title: 'The Immune System (Verification)',
-      description: 'Armageddon L7 certified security posture with self-healing OmniSentry monitoring.',
+      description: 'Armageddon L7 verified security posture with self-healing OmniSentry monitoring.',
       details: [
         'Armageddon L7: 40,000 adversarial iterations',
         '0% escape rate on goal hijack & tool misuse',

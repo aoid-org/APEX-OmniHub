@@ -82,24 +82,24 @@ export function FortressPage() {
 
           {/* Compliance */}
           <div style={{ marginTop: 'var(--space-16)' }}>
-            <h2 className="heading-2 mb-8">Compliance & Certifications</h2>
+            <h2 className="heading-2 mb-8">Control Readiness</h2>
             <div className="card" style={{ padding: 'var(--space-8)', backgroundColor: 'var(--color-surface)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-6)', textAlign: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>SOC 2</div>
-                  <div className="text-secondary text-sm">Type II</div>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>Security controls</div>
+                  <div className="text-secondary text-sm">Mapped</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>ISO 27001</div>
-                  <div className="text-secondary text-sm">Certified</div>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>ISMS-ready controls</div>
+                  <div className="text-secondary text-sm">Verified</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>GDPR</div>
-                  <div className="text-secondary text-sm">Compliant</div>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>Privacy records</div>
+                  <div className="text-secondary text-sm">Mapped</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>HIPAA</div>
-                  <div className="text-secondary text-sm">Ready</div>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>Healthcare controls</div>
+                  <div className="text-secondary text-sm">Architecture-ready</div>
                 </div>
               </div>
             </div>

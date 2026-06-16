@@ -4,11 +4,11 @@
     "subtitle": "Die governierte Kommandoflaeche fuer Unternehmens-KI. Vereinen Sie Software, KI-Agenten und Unternehmensplattformen in einer orchestrierten Schicht, wo jede Aktion autorisiert, protokolliert und rueckgaengig gemacht werden kann.",
     "tiles": ["DIREKT", "AUDITIEREN", "ABLEITEN"],
     "cta": { "primary": "Fruehzeitig Zugang anfordern", "secondary": "Demo ansehen" },
-    "trust": { "soc2": "SOC 2 Konform", "euaiact": "EU KI-Gesetz Art. 14", "gdpr": "DSGVO Art. 30", "trusted": "Vertraut in regulierten Branchen" },
+    "trust": { "securityControls": "Sicherheitskontrollen ausgerichtet", "humanOversight": "Menschliche Kontrollmechanismen", "privacyRecords": "Privacy-record workflows", "trusted": "Vertraut in regulierten Branchen" },
     "art": { "intelliDesig": "INTELLIGENZ, DESIGNED." }
   },
   "ticker": {
-    "items": ["Universeller Sync", "Agenten-Governance", "Unveraenderungliches Audit-Log", "Richtlinien-Enforcement", "One-Click Rollback", "MAN-Modus", "Tri-Force-Architektur", "Null Anbieter-Abhaengigkeit", "Universelle Integrationen", "SOC 2 Konform"]
+    "items": ["Universeller Sync", "Agenten-Governance", "Unveraenderungliches Audit-Log", "Richtlinien-Enforcement", "One-Click Rollback", "MAN-Modus", "Tri-Force-Architektur", "Null Anbieter-Abhaengigkeit", "Universelle Integrationen", "Sicherheitskontrollen ausgerichtet"]
   },
   "governance": {
     "label": "Totale Kommando",
@@ -71,11 +71,11 @@
     "headline": { "line1": "Entwickelt fuer regulierte", "line2": "Umgebungen." },
     "description": "Vom ersten Tag an fuer Compliance und Governance konzipiert.",
     "cards": [
-      { "name": "SOC 2 Type II", "desc": "Sicherheits- und Verfuegbarkeitskontrollen validiert" },
-      { "name": "EU KI-Gesetz Art. 14", "desc": "Governance-Anforderungen fuer Hochrisiko-KI-Systeme" },
+      { "name": "Security Controls Roadmap", "desc": "Sicherheits- und Verfuegbarkeitskontrollen validiert" },
+      { "name": "Menschliche Kontrollmechanismen", "desc": "Governance-Anforderungen fuer Hochrisiko-KI-Systeme" },
       { "name": "DSGVO Artikel 30", "desc": "Vollstaendige Aufzeichnungen ueber Verarbeitungstaetigkeiten" },
-      { "name": "ISO 27001", "desc": "Informations-Sicherheits-Managementsystem-kompatible Architektur" },
-      { "name": "HIPAA-Ready", "desc": "Architektur fuer Gesundheitsdaten mit BAA-Unterstuetzung" },
+      { "name": "ISMS-ready controls", "desc": "Informations-Sicherheits-Managementsystem-kompatible Architektur" },
+      { "name": "Healthcare Architecture Ready", "desc": "Architektur fuer Gesundheitsdaten mit BAA-Unterstuetzung" },
       { "name": "Zero-Trust-Modell", "desc": "Kein implizites Vertrauen" },
       { "name": "RBAC + ABAC", "desc": "Granulare rollen- und attributbasierte Zugriffskontrolle" },
       { "name": "E2E-Verschluesselung", "desc": "Alle Daten in Transit und Ruhe mit AES-256 verschluesselt" }

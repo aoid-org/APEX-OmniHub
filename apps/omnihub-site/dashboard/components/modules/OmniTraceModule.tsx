@@ -9,7 +9,7 @@ export default function OmniTraceModule({ onClose }: Props) {
   const state = useOmniModuleState('omnitrace');
 
   const spansStat = state.stats.find(s => s.label === 'Active Spans');
-  const latencyStat = state.stats.find(s => s.label === 'P99 Latency');
+  const latencyStat = state.stats.find(s => s.label === 'Tail Latency');
   const spansVal = spansStat?.value ?? '0';
   const latencyVal = latencyStat?.value ?? '—';
 
@@ -22,7 +22,7 @@ export default function OmniTraceModule({ onClose }: Props) {
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{spansVal} active spans</span>
-            <span className="tabular-nums">P99: {latencyVal}</span>
+            <span className="tabular-nums">Tail: {latencyVal}</span>
           </div>
         </div>
       )}

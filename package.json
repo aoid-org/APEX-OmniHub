@@ -89,7 +89,7 @@
     "verify:lint": "bun run lint && bun run lint:py",
     "verify:test": "bun run test && bun run test:py",
     "verify:build": "APEX_ALLOW_MISSING_SUPABASE_CONFIG=true bun run build",
-    "verify:security": "bun run secret:scan && bun run security:audit",
+    "verify:security": "bun run secret:scan && bun run test:secret-scan && bun run security:audit",
     "verify:assets": "bun run test:assets",
     "verify:supabase-security": "node scripts/ci/verify-supabase-security.mjs",
     "verify:claim-hygiene": "node scripts/ci/verify-claim-hygiene.mjs",
@@ -98,7 +98,8 @@
     "verify:release": "node scripts/ci/verify-release.mjs",
     "check:pwa": "node scripts/ci/check-pwa-integrity.mjs",
     "check:omnidash": "node scripts/ci/check-omnidash-integrity.mjs",
-    "check:coverage-integrity": "node scripts/ci/check-coverage-integrity.mjs"
+    "check:coverage-integrity": "node scripts/ci/check-coverage-integrity.mjs",
+    "test:secret-scan": "node tests/ci/secret-scan-fixtures.test.mjs"
   },
   "size-limit": [
     {

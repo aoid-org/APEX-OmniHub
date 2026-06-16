@@ -2,9 +2,9 @@
 // APEX-OmniHub Launch-Claim Hygiene Gate (Prompts 5 & 17).
 // Scans production-facing copy for high-risk, unproven claims (compliance/certification
 // posture, uptime SLAs, fabricated runtime metrics) and fails closed unless the exact
-// claim is recorded as proven in docs/release/approved-claims.json. Whether a claim is
-// TRUE is a business/legal fact the operator must assert via the allowlist — this gate
-// only guarantees no unproven claim ships silently.
+// claim is recorded in docs/release/approved-claims.json with a separate evidence
+// artifact. This gate rejects self-attestation: evidence_ref may not point back to
+// the allowlist itself, and referenced files/anchors must exist.
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -57,9 +57,57 @@ if (fs.existsSync(approvedPath)) {
   }
 }
 const normalize = (value) => String(value).replace(/\s+/g, " ").trim().toLowerCase();
-const approvedSet = new Set(approved.map((a) => typeof a === "string" ? a : a?.claim).filter((a) => typeof a === "string" && a.trim()).map(normalize));
-const approvedEvidence = new Map(approved.map((a) => [normalize(typeof a === "string" ? a : a?.claim ?? ""), typeof a === "string" ? "legacy-approved-claim" : a?.evidence_ref]).filter(([claim]) => claim));
-const isApproved = (line) => approvedSet.has(normalize(line)) && Boolean(approvedEvidence.get(normalize(line)));
+const ALLOWED_CATEGORIES = new Set(["externally_certified", "internally_aligned", "architecture_ready", "demo_sample_metric"]);
+const approvalViolations = [];
+
+function anchorExists(text, anchor) {
+  if (!anchor) return true;
+  const normalizedAnchor = normalize(anchor).replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-");
+  return text.split(/\r?\n/).some((line) => {
+    const heading = line.match(/^#+\s+(.+)$/);
+    if (!heading) return false;
+    const slug = normalize(heading[1]).replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-");
+    return slug === normalizedAnchor;
+  });
+}
+
+function validateEvidenceRef(entry, index) {
+  const claim = typeof entry === "string" ? entry : entry?.claim;
+  if (typeof entry === "string") {
+    approvalViolations.push({ index, claim, reason: "legacy string approvals are not evidence-bound" });
+    return false;
+  }
+  if (!ALLOWED_CATEGORIES.has(entry?.category)) {
+    approvalViolations.push({ index, claim, reason: `category must be one of ${[...ALLOWED_CATEGORIES].join(", ")}` });
+    return false;
+  }
+  const evidenceRef = entry?.evidence_ref;
+  if (typeof evidenceRef !== "string" || !evidenceRef.trim()) {
+    approvalViolations.push({ index, claim, reason: "missing evidence_ref" });
+    return false;
+  }
+  const [refPath, anchor] = evidenceRef.split("#");
+  const normalizedRef = refPath.replaceAll("\\", "/");
+  if (normalizedRef === rel(approvedPath)) {
+    approvalViolations.push({ index, claim, reason: "evidence_ref must not point back to approved-claims.json" });
+    return false;
+  }
+  const absoluteRef = path.resolve(repoRoot, normalizedRef);
+  if (!absoluteRef.startsWith(repoRoot + path.sep) || !fs.existsSync(absoluteRef) || fs.statSync(absoluteRef).isDirectory()) {
+    approvalViolations.push({ index, claim, reason: `evidence file not found: ${normalizedRef}` });
+    return false;
+  }
+  const evidenceText = fs.readFileSync(absoluteRef, "utf8");
+  if (anchor && !anchorExists(evidenceText, anchor)) {
+    approvalViolations.push({ index, claim, reason: `evidence anchor not found: ${evidenceRef}` });
+    return false;
+  }
+  return true;
+}
+
+const validApproved = approved.filter((entry, index) => validateEvidenceRef(entry, index));
+const approvedSet = new Set(validApproved.map((a) => a?.claim).filter((a) => typeof a === "string" && a.trim()).map(normalize));
+const isApproved = (line) => approvedSet.has(normalize(line));
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -92,6 +140,14 @@ for (const file of files) {
 console.log("=== verify:claim-hygiene — Launch-Claim Hygiene Gate ===");
 console.log(`Scanned ${files.length} production-copy file(s); ${approved.length} approved claim(s) on the allowlist.`);
 
+if (approvalViolations.length > 0) {
+  console.error(`\n❌ verify:claim-hygiene FAILED — ${approvalViolations.length} invalid approved claim entr${approvalViolations.length === 1 ? "y" : "ies"}:`);
+  for (const v of approvalViolations) {
+    console.error(`  [approved:${v.index}] ${String(v.claim ?? "<missing claim>").slice(0, 120)}\n      ${v.reason}`);
+  }
+  process.exit(1);
+}
+
 if (findings.length > 0) {
   console.error(`\n❌ verify:claim-hygiene FAILED — ${findings.length} unproven public claim(s):`);
   for (const f of findings) {
@@ -99,7 +155,7 @@ if (findings.length > 0) {
   }
   console.error(
     `\nFor each: either (a) record the exact backing claim string in ${rel(approvedPath)} once it is provably true, ` +
-      `or (b) remove / demo-gate the claim. Compliance and SLA claims must be operator-verified before allowlisting.`,
+      `or (b) remove / demo-gate the claim. Certification, compliance, independent-audit, and SLA claims require separate evidence artifacts before allowlisting.`,
   );
   process.exit(1);
 }

@@ -40,7 +40,7 @@ export function TechSpecsPage() {
     <Layout title="Tech Specs">
       <SEOMeta
         title="Technical Specifications — APEX OmniHub Platform"
-        description="SOC 2 aligned, EU AI Act Article 14, GDPR Art. 30 ready. Full technical architecture, security protocols, and integration specs."
+        description="Security-control aligned, human-oversight mapped, and privacy-record workflow ready. Full technical architecture, security protocols, and integration specs."
         canonical="https://apexomnihub.icu/tech-specs/"
         appendBrandSuffix={false}
       />

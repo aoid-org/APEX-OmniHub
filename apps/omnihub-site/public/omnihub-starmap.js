@@ -81,13 +81,13 @@
     {
       name: 'OmniTrace', tag: 'IMMUTABLE AUDIT \u00b7 FORENSIC REPLAY',
       lead: 'Access forensic replay and immutable audit trails to easily meet regulatory compliance. You can fully reconstruct any agent chain and prove every decision your AI has ever made on demand.',
-      chips: ['Immutable Audit Log', 'Forensic decision replay', 'GDPR Art. 30', 'Full chain reconstruction'],
+      chips: ['Immutable Audit Log', 'Forensic decision replay', 'Privacy-record workflows', 'Full chain reconstruction'],
       demo: 'omnitrace', pos: [-40, 22, -266], size: 1.2
     },
     {
       name: 'MAN Mode', tag: 'MANUAL APPROVAL NODE',
       lead: 'High-risk actions automatically pause at an approval checkpoint. Authorized operators can then approve, reject, or escalate the request with full traceability. Your AI works quickly while keeping the biggest decisions in human hands.',
-      chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'EU AI Act Art. 14'],
+      chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'Human oversight controls'],
       demo: 'manmode', pos: [38, -20, -318], size: 1.2
     },
     {
@@ -571,7 +571,7 @@
         ['09:14:05', 'Planner: 3-step plan compiled', 'planner'],
         ['09:14:09', 'Executor: step 1, records updated', 'executor'],
         ['09:14:14', 'Executor: step 2, systems notified', 'executor'],
-        ['09:14:18', 'Write logged immutably (GDPR Art. 30)', 'audit'],
+        ['09:14:18', 'Write logged immutably (Privacy-record workflows)', 'audit'],
         ['09:14:19', 'Chain sealed and fully reconstructable', 'omnitrace']
       ];
       var range = el('input', 'ohsm-range');
@@ -608,7 +608,7 @@
           : cls === 'bad'
             ? '<span class="ohsm-bad">\u2715 ' + label + ':</span> ' + line
             : '<span class="ohsm-hi">\u2191 ' + label + ':</span> ' + line);
-        logLine(log, 'Recorded with full traceability: who, what, when, why. (EU AI Act Art. 14 oversight)');
+        logLine(log, 'Recorded with full traceability: who, what, when, why. (Human oversight controls oversight)');
         var again = el('button', 'ohsm-dbtn', 'New request');
         again.addEventListener('click', function () {
           log.innerHTML = ''; again.remove();
@@ -1387,7 +1387,7 @@
       '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
       '<button class="ohsm-btn ohsm-btn-ghost" data-ohsm-replay>START OVER</button>' +
       '</div>' +
-      '<div class="ohsm-proof">SOC 2 ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
+      '<div class="ohsm-proof">SECURITY CONTROLS ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
       '</div>';
     fin.querySelector('.ohsm-btn-primary').setAttribute('href', safeHref(opts.ctaHref));
     fin.querySelector('.ohsm-btn-ghost').setAttribute('href', safeHref(opts.demoHref));

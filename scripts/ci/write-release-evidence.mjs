@@ -45,8 +45,14 @@ export function computeVerdict({ releaseCut, preflight, shadowUrl, health, valid
       : 'NOT_CERTIFIED_BLOCKED';
   }
 
-  if (terraformApply === 'pass') {
+  if (terraformApply === 'pass' && terraformApplyOutcome === 'success') {
     return 'CERTIFIED';
+  }
+
+  if (terraformApply === 'pass') {
+    return terraformApplyOutcome === 'skipped' || terraformApplyOutcome === 'pending'
+      ? 'CERTIFICATION_PENDING_TERRAFORM_APPLY'
+      : 'NOT_CERTIFIED_BLOCKED';
   }
 
   if (terraformApply == null || ['', 'skipped', 'pending', 'blocked', 'missing'].includes(terraformApply)) {

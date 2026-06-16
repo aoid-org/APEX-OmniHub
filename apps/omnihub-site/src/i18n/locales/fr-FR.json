@@ -4,11 +4,11 @@
     "subtitle": "La surface de commande gouvernee pour l'IA d'entreprise. Unifiez logiciels, agents IA et plateformes dans une couche orchestree ou chaque action est autorisee, enregistree et reversible.",
     "tiles": ["DIRECT", "AUDITER", "DEDUIRE"],
     "cta": { "primary": "Demander un acces anticipe", "secondary": "Voir la Demo" },
-    "trust": { "soc2": "Conforme SOC 2", "euaiact": "Loi IA UE Art. 14", "gdpr": "RGPD Art. 30", "trusted": "Apprecie dans les industries reglementees" },
+    "trust": { "securityControls": "Controle securite aligne", "humanOversight": "Controles de supervision humaine", "privacyRecords": "Privacy-record workflows", "trusted": "Apprecie dans les industries reglementees" },
     "art": { "intelliDesig": "INTELLIGENCE, CONNUE." }
   },
   "ticker": {
-    "items": ["Sync Universel", "Gouvernance des Agents", "Journal d'Audit", "Politiques", "Rollback", "Mode MAN", "Tri-Force", "Zero Lock-In", "Integrations", "SOC 2"]
+    "items": ["Sync Universel", "Gouvernance des Agents", "Journal d'Audit", "Politiques", "Rollback", "Mode MAN", "Tri-Force", "Zero Lock-In", "Integrations", "Controle securite"]
   },
   "governance": {
     "label": "Commande Totale",
@@ -70,11 +70,11 @@
     "headline": { "line1": "Concu pour les environnements", "line2": "reglementes." },
     "description": "Architecte des le premier jour pour la conformite et la gouvernance.",
     "cards": [
-      { "name": "SOC 2 Type II", "desc": "Controles valides par audit independent" },
-      { "name": "Loi IA UE Art. 14", "desc": "Gouvernance par Noeud d'Approbation Manuel" },
+      { "name": "Security Controls Roadmap", "desc": "Controles valides par audit independent" },
+      { "name": "Controles de supervision humaine", "desc": "Gouvernance par Noeud d'Approbation Manuel" },
       { "name": "RGPD Article 30", "desc": "Registres de traitement exportables" },
-      { "name": "ISO 27001", "desc": "Architecture de gestion de securite" },
-      { "name": "HIPAA-Ready", "desc": "Architecture de donnees de sante avec BAA" },
+      { "name": "ISMS-ready controls", "desc": "Architecture de gestion de securite" },
+      { "name": "Healthcare Architecture Ready", "desc": "Architecture de donnees de sante avec BAA" },
       { "name": "Modele Zero Trust", "desc": "Pas de confiance implicite" },
       { "name": "RBAC + ABAC", "desc": "Controle d'acces granulaire" },
       { "name": "Chiffrement E2E", "desc": "Donnees chiffrees en transit et au repos" }

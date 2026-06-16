@@ -92,6 +92,28 @@ function parseRequiredJobs() {
 
 // Extract top-level job IDs from a workflow file (line-based, no YAML dependency —
 // integrity scans must not add runtime deps).
+
+function workflowHasPullRequestTrigger(lines) {
+  let inOn = false;
+  let onIndent = -1;
+  for (const line of lines) {
+    if (/^on:\s*\[.*\bpull_request\b.*\]/.test(line)) return true;
+    if (/^on:\s*$/.test(line)) {
+      inOn = true;
+      onIndent = line.search(/\S/);
+      continue;
+    }
+    if (!inOn) continue;
+    const indent = line.search(/\S/);
+    if (line.trim() !== "" && indent <= onIndent && !line.startsWith("on:")) {
+      inOn = false;
+      continue;
+    }
+    if (/^\s*pull_request\s*:/.test(line)) return true;
+  }
+  return false;
+}
+
 function parseWorkflowJobs(lines) {
   const jobs = [];
   let inJobs = false;
@@ -190,7 +212,11 @@ function scanWorkflows(required) {
       record("required-workflow-missing", workflow, "workflow declared in branch-protection.md not found");
       continue;
     }
-    const jobs = parseWorkflowJobs(readLines(full));
+    const requiredWorkflowLines = readLines(full);
+    if (!workflowHasPullRequestTrigger(requiredWorkflowLines)) {
+      record("required-workflow-no-pr-trigger", workflow, `required PR workflow for job "${jobId}" does not declare pull_request`);
+    }
+    const jobs = parseWorkflowJobs(requiredWorkflowLines);
     if (!jobs.some((j) => j.id === jobId)) {
       record("required-job-drift", workflow, `required job "${jobId}" not found (branch-protection drift)`);
     }

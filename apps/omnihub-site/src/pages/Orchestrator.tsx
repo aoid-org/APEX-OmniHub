@@ -49,7 +49,7 @@ const capabilities = [
 const performanceStats = [
   { value: '100K+', label: 'Events/second' },
   { value: '<10ms', label: 'Orchestration overhead' },
-  { value: '99.99%', label: 'Uptime SLA' },
+  { value: 'target: high availability', label: 'Operational target' },
 ];
 
 export function OrchestratorPage() {

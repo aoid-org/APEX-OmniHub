@@ -3,7 +3,7 @@ import type { KpiSummary } from '../types/dashboard.types';
 
 function resolveSystemHealth(demoMode: boolean, kpi: KpiSummary): string {
   if (demoMode) return '100%';
-  return kpi.ops_sev1_incidents > 0 ? '94.2%' : '100%';
+  return kpi.ops_sev1_incidents > 0 ? 'demo accuracy sample' : '100%';
 }
 
 interface MetricCardProps {

@@ -41,7 +41,7 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
             </a>
           </div>
           <p className="hero-trust rv d3">
-            SOC 2 Aligned<span>&middot;</span>EU AI Act Art. 14<span>&middot;</span>GDPR Art. 30<span>&middot;</span>Trusted in regulated industries
+            Security Controls Aligned<span>&middot;</span>Human oversight controls<span>&middot;</span>Privacy-record workflows<span>&middot;</span>Trusted in regulated industries
           </p>
         </div>
         <div className="hero-right rv d1">
@@ -362,7 +362,7 @@ function TickerSection() {
   const items = [
     "Universal Sync", "Agent Governance", "Immutable Audit Log", "Policy Enforcement",
     "One-Click Rollback", "MAN Mode", "Tri-Force Architecture", "Zero Vendor Lock-In",
-    "Universal Integrations", "SOC 2 Aligned"
+    "Universal Integrations", "Security Controls Aligned"
   ];
   const doubledItems = [...items, ...items];
 
@@ -783,11 +783,11 @@ function MaestroSection() {
 
 function EnterpriseSection() {
   const cards = [
-    { n: "SOC 2 Type II", d: "Security and availability controls validated by independent audit" },
-    { n: "EU AI Act Art. 14", d: "Manual Approval Node governance requirements for high-risk AI systems" },
+    { n: "Security Controls Roadmap", d: "Security and availability controls mapped for external assessment" },
+    { n: "Human oversight controls", d: "Manual Approval Node governance requirements for high-risk AI systems" },
     { n: "GDPR Article 30", d: "Complete records of processing activities, always exportable" },
-    { n: "ISO 27001", d: "Information security management system compatible architecture" },
-    { n: "HIPAA-Ready", d: "Healthcare data handling architecture with BAA support" },
+    { n: "ISMS-ready controls", d: "Information security management system compatible architecture" },
+    { n: "Healthcare Architecture Ready", d: "Healthcare data handling architecture with BAA support" },
     { n: "Zero Trust Model", d: "No implicit trust. Each agent and action verified." },
     { n: "RBAC + ABAC", d: "Granular role and attribute-based access control across all surfaces" },
     { n: "E2E Encryption", d: "All data in transit and at rest encrypted with AES-256" }
