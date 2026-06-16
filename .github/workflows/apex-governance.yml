@@ -34,9 +34,28 @@ jobs:
       - name: Run APEX policy check
         # Fail-closed: no continue-on-error — policy failures must block the gate.
         run: |
-          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
-          if [ -n "$changed_files" ]; then
-            python governance/ci/scripts/apex_policy_check.py $changed_files
+          # On pull_request events github.base_ref is set; on push-to-main it is
+          # empty, making "origin/...HEAD" an invalid ref. Guard both cases.
+          if [ -n "${{ github.base_ref }}" ]; then
+            changed_files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" 2>/dev/null || true)
+          fi
+          if [ -z "$changed_files" ]; then
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          fi
+          # Filter to extensions the policy scanner recognises. Non-scannable
+          # files (.properties, .toml, .lock, etc.) that are the sole changes
+          # would otherwise trigger the fail-closed exit-2 path. When no
+          # scannable files remain, run the full repo scan (no args).
+          scannable=""
+          for f in $changed_files; do
+            case "$f" in
+              *.py|*.ts|*.tsx|*.js|*.jsx|*.md|*.txt|*.yml|*.yaml|*.json|*.sql|*.rs|*.go|*.java)
+                scannable="$scannable $f"
+                ;;
+            esac
+          done
+          if [ -n "$scannable" ]; then
+            python governance/ci/scripts/apex_policy_check.py $scannable
           else
             python governance/ci/scripts/apex_policy_check.py
           fi
@@ -46,9 +65,22 @@ jobs:
         # || echo fallback ensures artifact upload never fails on report-gen error;
         # NOT a gate bypass — the gate already ran in the step above.
         run: |
-          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
-          if [ -n "$changed_files" ]; then
-            python governance/ci/scripts/apex_policy_check.py --json $changed_files > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
+          if [ -n "${{ github.base_ref }}" ]; then
+            changed_files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" 2>/dev/null || true)
+          fi
+          if [ -z "$changed_files" ]; then
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          fi
+          scannable=""
+          for f in $changed_files; do
+            case "$f" in
+              *.py|*.ts|*.tsx|*.js|*.jsx|*.md|*.txt|*.yml|*.yaml|*.json|*.sql|*.rs|*.go|*.java)
+                scannable="$scannable $f"
+                ;;
+            esac
+          done
+          if [ -n "$scannable" ]; then
+            python governance/ci/scripts/apex_policy_check.py --json $scannable > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
           else
             python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
           fi

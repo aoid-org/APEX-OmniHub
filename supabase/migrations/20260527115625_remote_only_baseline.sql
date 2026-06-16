@@ -1,0 +1,6 @@
+-- Migration 20260527115625 was applied directly to the remote Supabase instance
+-- outside of the normal migration workflow. This placeholder file restores
+-- local-to-remote migration history consistency so that supabase db push
+-- does not abort with "Remote migration versions not found in local migrations
+-- directory". The schema changes from this migration are already reflected in
+-- the remote database; this file is a no-op when applied.
