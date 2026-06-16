@@ -31,13 +31,20 @@ claims:
     evidence: [docs/audits/armageddon-l7-certification.md]
     expiry: 2026-12-31
   - claim_id: eu-ai-act
-    claim_text: EU AI Act Ready AUGUST 2026
+    claim_text: AI Governance Aligned AUGUST 2026
     surface: site
     status: verified
     evidence: [docs/compliance/OMNILINK_HYBRID_CERTIFICA.md]
     expiry: 2026-12-31
   - claim_id: gdpr
     claim_text: GDPR Native COMPLIANT
+    surface: site
+    status: removed
+    evidence: []
+    rationale: Claim removed from marketing surface; replaced by privacy-design (architectural framing).
+    expiry: 2026-12-31
+  - claim_id: privacy-design
+    claim_text: Privacy-by-Design MAPPED
     surface: site
     status: verified
     evidence: [docs/compliance/GDPR_COMPLIANCE.md]
