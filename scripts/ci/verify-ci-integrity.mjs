@@ -22,6 +22,12 @@ const rel = (p) => path.relative(repoRoot, p).replaceAll("\\", "/");
 // Inline escape hatch: `# ci-integrity-allow: <reason>` on the same or previous line.
 const ALLOW_TOKEN = "ci-integrity-allow:";
 
+const BINARY_EXTENSIONS = new Set([
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip", ".gz", ".tar", ".7z", ".mp4", ".webm", ".mp3", ".wav", ".woff", ".woff2", ".ttf", ".eot", ".wasm", ".bin",
+]);
+const EXCLUDED_DIRS = new Set([".git", "node_modules", "dist", "build", "coverage", ".turbo", ".cache"]);
+const GENERATED_SEGMENTS = new Set(["generated", "build-artifacts"]);
+
 function readLines(file) {
   return fs.readFileSync(file, "utf8").split(/\r?\n/);
 }
@@ -34,6 +40,34 @@ function isAllowed(lines, index) {
 
 function isYamlCommentLine(line) {
   return line.trimStart().startsWith("#");
+}
+
+
+function walkTextFiles(dir, acc = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (EXCLUDED_DIRS.has(entry.name) || GENERATED_SEGMENTS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkTextFiles(full, acc);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    if (BINARY_EXTENSIONS.has(path.extname(full).toLowerCase())) continue;
+    const buffer = fs.readFileSync(full);
+    if (buffer.includes(0)) continue;
+    acc.push(full);
+  }
+  return acc;
+}
+
+function scanConflictMarkers() {
+  const markerRe = /^(<<<<<<<|=======|>>>>>>>)($|[ 	].*)/m;
+  for (const file of walkTextFiles(repoRoot)) {
+    const text = fs.readFileSync(file, "utf8");
+    if (markerRe.test(text)) {
+      record("conflict-marker", rel(file), "unresolved merge conflict marker found");
+    }
+  }
 }
 
 // 1. Required job IDs are parsed from branch-protection.md so the scanner cannot
@@ -199,6 +233,7 @@ function scanFakePassScripts() {
 const required = parseRequiredJobs();
 scanWorkflows(required);
 scanFakePassScripts();
+scanConflictMarkers();
 
 console.log("=== verify:ci-integrity — CI Integrity Scanner ===");
 console.log(`Scanned workflows in ${rel(workflowDir)} and verify scripts in ${rel(verifyScriptDir)}.`);

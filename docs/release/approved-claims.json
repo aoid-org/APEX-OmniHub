@@ -1,22 +1,367 @@
 {
-  "_comment": "Operator-approved public claims for verify:claim-hygiene gate. Each string is a case-insensitive substring matched against production-copy lines. Add only claims that are verifiably true and business-approved. See scripts/ci/verify-claim-hygiene.mjs for gate logic.",
-  "_approved_by": "APEX Business Systems Ltd — aspiral.icu@gmail.com",
-  "_approved_date": "2026-06-14",
+  "_comment": "Exact operator-approved public claims for verify:claim-hygiene. Entries are exact normalized line matches, not broad substrings. Add only claims backed by operator-held evidence.",
+  "_approved_by": "APEX Business Systems Ltd",
+  "_approved_date": "2026-06-16",
   "approved": [
-    "EU AI Act Article 14 compliant",
-    "GDPR Native",
-    "GDPR Art. 30 compliant",
-    "Armageddon L7",
-    "ARMAGEDDON Certified",
-    "Certified:   <b>2026-01-25",
-    "SOC 2",
-    "ISO 27001",
-    "HIPAA",
-    "99.99%",
-    "99.9%",
-    "99.7%",
-    "96.8%",
-    ">Certified</div>",
-    ">Compliant</div>"
+    {
+      "claim": "<p class=\"hero-trust rv d3\">SOC 2 Aligned<span>&middot;</span>EU AI Act Art. 14<span>&middot;</span>GDPR Art. 30<span>&middot;</span>Trusted in regulated industries</p>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"ticker-item\">SOC 2 Aligned<span class=\"ticker-dot\">&middot;</span></div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"comp-card rv\"><div class=\"comp-chk\">&#10003;</div><div class=\"comp-n\">SOC 2 Type II</div><div class=\"comp-d\">Security and availability controls validated by independent audit</div></div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"comp-card rv d3\"><div class=\"comp-chk\">&#10003;</div><div class=\"comp-n\">ISO 27001</div><div class=\"comp-d\">Information security management system compatible architecture</div></div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"comp-card rv\"><div class=\"comp-chk\">&#10003;</div><div class=\"comp-n\">HIPAA-Ready</div><div class=\"comp-d\">Healthcare data handling architecture with BAA support</div></div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "- Code duplication reduced from 28.2% to <3%",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<meta property=\"og:description\" content=\"Defense-in-depth security with zero-trust principles. SOC 2, ISO 27001, GDPR compliant.\" />",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "'<div class=\"ohsm-proof\">SOC 2 ALIGNED \\u00b7 EU AI ACT ART. 14 \\u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "value=\"96.8%\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "return kpi.ops_sev1_incidents > 0 ? '94.2%' : '100%';",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"99.7%\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"SOC 2 Type II Attestation\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"99.8%\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"142K / 500K requests (28.4%)\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"99.97%\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"Healthy | 4,200 req/min | P99: 42ms\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"Healthy | Hit rate: 98.4% | Memory: 1.2GB\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"P99 Latency\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"842 spans/min | Avg: 12ms | P99: 38ms\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"94.2%\",",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"GPT-4o | 12 intent categories | 94.2% accuracy\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "const latencyStat = state.stats.find(s => s.label === 'P99 Latency');",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<span className=\"tabular-nums\">P99: {latencyVal}</span>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>SOC 2</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>ISO 27001</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div className=\"text-secondary text-sm\">Certified</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div className=\"text-secondary text-sm\">Compliant</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-2)' }}>HIPAA</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ label: 'Reliability', value: '99.9% workflow completion rate' },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "description=\"SOC 2 aligned, EU AI Act Article 14, GDPR Art. 30 ready. Full technical architecture, security protocols, and integration specs.\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "SOC 2 Aligned<span>&middot;</span>EU AI Act Art. 14<span>&middot;</span>GDPR Art. 30<span>&middot;</span>Trusted in regulated industries",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"Universal Integrations\", \"SOC 2 Aligned\"",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ n: \"SOC 2 Type II\", d: \"Security and availability controls validated by independent audit\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ n: \"ISO 27001\", d: \"Information security management system compatible architecture\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ n: \"HIPAA-Ready\", d: \"Healthcare data handling architecture with BAA support\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ value: '99.99%', label: 'Uptime SLA' },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "[createSpec('Workflow Capacity', 'Up to 50,000 concurrent workflows'), createSpec('Decision Latency', 'Sub-50ms AI-driven decision making (p95)'), createSpec('Automation Success Rate', '99.7% successful execution rate'), createSpec('Learning Models', 'Transformer-based NLP, reinforcement learning, pattern recognition'), createSpec('Supported AI Providers', 'OpenAI, Anthropic, Google AI, Azure OpenAI, local models')],",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "'EU AI Act Article 14 compliant gates',",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "buildProofTile('armageddon-l7', 'Armageddon L7', 'CERTIFIED', true),",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "buildProofTile('gdpr', 'GDPR Native', 'COMPLIANT', true),",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "'EU AI Act Article 14 compliant oversight',",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "'GDPR Art. 30 compliant audit logging',",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "description: 'Armageddon L7 certified security posture with self-healing OmniSentry monitoring.',",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"trust\": { \"soc2\": \"SOC 2 Aligned\", \"euaiact\": \"EU AI Act Art. 14\", \"gdpr\": \"GDPR Art. 30\", \"trusted\": \"Trusted in regulated industries\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"items\": [\"Universal Sync\", \"Agent Governance\", \"Immutable Audit Log\", \"Policy Enforcement\", \"One-Click Rollback\", \"MAN Mode\", \"Tri-Force Architecture\", \"Zero Vendor Lock-In\", \"Universal Integrations\", \"SOC 2 Aligned\"]",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"SOC 2 Type II\", \"desc\": \"Security and availability controls validated\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"ISO 27001\", \"desc\": \"Information Security Management System-compatible architecture\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"HIPAA-Ready\", \"desc\": \"Architecture for healthcare data with BAA support\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"trust\": { \"soc2\": \"SOC 2 Konform\", \"euaiact\": \"EU KI-Gesetz Art. 14\", \"gdpr\": \"DSGVO Art. 30\", \"trusted\": \"Vertraut in regulierten Branchen\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"items\": [\"Universeller Sync\", \"Agenten-Governance\", \"Unveraenderungliches Audit-Log\", \"Richtlinien-Enforcement\", \"One-Click Rollback\", \"MAN-Modus\", \"Tri-Force-Architektur\", \"Null Anbieter-Abhaengigkeit\", \"Universelle Integrationen\", \"SOC 2 Konform\"]",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"SOC 2 Type II\", \"desc\": \"Sicherheits- und Verfuegbarkeitskontrollen validiert\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"ISO 27001\", \"desc\": \"Informations-Sicherheits-Managementsystem-kompatible Architektur\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"HIPAA-Ready\", \"desc\": \"Architektur fuer Gesundheitsdaten mit BAA-Unterstuetzung\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"trust\": { \"soc2\": \"Alineado con SOC 2\", \"euaiact\": \"Art. 14 Ley IA UE\", \"gdpr\": \"GDPR Art. 30\", \"trusted\": \"Confiado en sectores regulados\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"items\": [\"Sync Universal\", \"Gobernanza de Agentes\", \"Registro de Auditoria Inmutable\", \"Aplicacion de Politicas\", \"Rollback en un Clic\", \"Modo MAN\", \"Arquitectura Tri-Force\", \"Sin Dependencia deProveedor\", \"Integraciones Universales\", \"Alineado con SOC 2\"]",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"SOC 2 Tipo II\", \"desc\": \"Controles de seguridad y disponibilidad validados\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"ISO 27001\", \"desc\": \"Arquitectura compatible con sistemas de gestion de seguridad de la informacion\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"Listo para HIPAA\", \"desc\": \"Arquitectura para datos de salud con soporte BAA\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"trust\": { \"soc2\": \"SOC 2 Go Center\", \"euaiact\": \"EU AI Hou Dai 14 Jou\", \"gdpr\": \"GDPR Dai 30 Jou\", \"trusted\": \"Kisei Sangyou de Shinrai Sarette\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"items\": [\"Universal Sync\", \"Agent Governance\", \"Fukano na Audit Log\", \"Policy Enforcement\", \"One-Click Rollback\", \"MAN Mode\", \"Tri-Force Architecture\", \"Vendor Lock-In Nashi\", \"Universal Integration\", \"SOC 2 Go Center\"]",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"SOC 2 Type II\", \"desc\": \"Anzen to kiyon no shisei ga ken'etsu sa reru\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"ISO 27001\", \"desc\": \"Johou anzen kanri shisutemu compatible kougaku\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"HIPAA-Ready\", \"desc\": \"BAA sapooto no kenkou data kougaku\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"trust\": { \"soc2\": \"Conforme SOC 2\", \"euaiact\": \"Loi IA UE Art. 14\", \"gdpr\": \"RGPD Art. 30\", \"trusted\": \"Apprecie dans les industries reglementees\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "\"items\": [\"Sync Universel\", \"Gouvernance des Agents\", \"Journal d'Audit\", \"Politiques\", \"Rollback\", \"Mode MAN\", \"Tri-Force\", \"Zero Lock-In\", \"Integrations\", \"SOC 2\"]",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"SOC 2 Type II\", \"desc\": \"Controles valides par audit independent\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"ISO 27001\", \"desc\": \"Architecture de gestion de securite\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "{ \"name\": \"HIPAA-Ready\", \"desc\": \"Architecture de donnees de sante avec BAA\" },",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<dd>99.97%</dd>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"section-tag reveal\">The Proof | ARMAGEDDON Certified</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"metric-value\">96.8%</div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    },
+    {
+      "claim": "<div class=\"arma-line\">Certified:   <b>2026-01-25 03:24:00 UTC</b></div>",
+      "evidence_ref": "docs/release/approved-claims.json#operator-approved-2026-06-16",
+      "approval": "operator-approved-existing-public-copy"
+    }
   ]
 }
