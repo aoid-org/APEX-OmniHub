@@ -226,6 +226,9 @@ export function DialogModeRenderer({
     case 'confirmation':
       return (
         <div className="py-4">
+          {modal.description && (
+            <p className="text-sm text-muted-foreground mb-4">{modal.description}</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={onClose} disabled={isProcessing}>
               Cancel
