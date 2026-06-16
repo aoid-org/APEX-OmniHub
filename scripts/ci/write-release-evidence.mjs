@@ -26,7 +26,7 @@ function value(name, fallback = '') {
   return process.env[name] || fallback;
 }
 
-function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }) {
+export function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraformPlan, terraformPlanOutcome, terraformApply, terraformApplyOutcome }) {
   if (releaseCut !== 'true') {
     return 'NOT_CERTIFIED_NO_RELEASE_CUT';
   }
@@ -39,12 +39,22 @@ function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, t
     return 'NOT_CERTIFIED_BLOCKED';
   }
 
-  if (terraform === 'pass') {
+  if (terraformPlan !== 'pass') {
+    return terraformPlanOutcome === 'skipped'
+      ? 'CERTIFICATION_PENDING_TERRAFORM_PLAN'
+      : 'NOT_CERTIFIED_BLOCKED';
+  }
+
+  if (terraformApply === 'pass') {
     return 'CERTIFIED';
   }
 
-  if (terraformOutcome === 'skipped') {
-    return 'CERTIFICATION_PENDING_FINAL_MAIN_CI';
+  if (terraformApply == null || ['', 'skipped', 'pending', 'blocked', 'missing'].includes(terraformApply)) {
+    return 'CERTIFICATION_PENDING_TERRAFORM_APPLY';
+  }
+
+  if (terraformApplyOutcome === 'skipped') {
+    return 'CERTIFICATION_PENDING_TERRAFORM_APPLY';
   }
 
   return 'NOT_CERTIFIED_BLOCKED';
@@ -56,8 +66,10 @@ const releaseCut = value('RELEASE_CUT_RAW', 'false');
 const shadowUrl = value('SHADOW_URL_RAW');
 const health = value('HEALTH_RAW', 'skipped');
 const validator = value('VALIDATOR_RAW', 'skipped');
-const terraform = value('TF_RESULT_RAW', 'skipped');
-const terraformOutcome = value('TF_OUTCOME_RAW', 'skipped');
+const terraformPlan = value('TF_PLAN_RESULT_RAW', value('TF_RESULT_RAW', 'skipped'));
+const terraformPlanOutcome = value('TF_PLAN_OUTCOME_RAW', value('TF_OUTCOME_RAW', 'skipped'));
+const terraformApply = value('TF_APPLY_RESULT_RAW', 'skipped');
+const terraformApplyOutcome = value('TF_APPLY_OUTCOME_RAW', 'skipped');
 const workflowRunUrl = `${value('GH_SERVER_URL', 'https://github.com')}/${value('GH_REPOSITORY', 'unknown/repository')}/actions/runs/${value('GH_RUN_ID', 'unknown')}`;
 
 const evidence = {
@@ -69,13 +81,19 @@ const evidence = {
   shadow_url: shadowUrl,
   health_result: health,
   validator_result: validator,
-  terraform_result: terraform,
-  terraform_outcome: terraformOutcome,
+  terraform_result: terraformPlan,
+  terraform_outcome: terraformPlanOutcome,
+  terraform_plan_result: terraformPlan,
+  terraform_plan_outcome: terraformPlanOutcome,
+  terraform_apply_result: terraformApply,
+  terraform_apply_outcome: terraformApplyOutcome,
   shadow_preflight_status: preflight.status,
   blockers: Array.isArray(preflight.blockers) ? preflight.blockers : [],
-  final_verdict: computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }),
+  final_verdict: computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraformPlan, terraformPlanOutcome, terraformApply, terraformApplyOutcome }),
   timestamp: new Date().toISOString(),
 };
 
-writeFileSync(OUTPUT_PATH, `${JSON.stringify(evidence, null, 2)}\n`);
-console.log(JSON.stringify(evidence, null, 2));
+if (import.meta.url === `file://${process.argv[1]}`) {
+  writeFileSync(OUTPUT_PATH, `${JSON.stringify(evidence, null, 2)}\n`);
+  console.log(JSON.stringify(evidence, null, 2));
+}

@@ -15,12 +15,22 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const rel = (p) => path.relative(repoRoot, p).replaceAll("\\", "/");
 
 // Production-facing copy. Tests, legal rights disclosures, and generated assets excluded.
-const SCAN_ROOTS = [path.join(repoRoot, "apps", "omnihub-site", "src"), path.join(repoRoot, "public")];
-const SCAN_EXTS = new Set([".ts", ".tsx", ".html", ".md"]);
+const SCAN_ROOTS = [
+  path.join(repoRoot, "apps", "omnihub-site"),
+  path.join(repoRoot, "apps", "omnihub-site", "src"),
+  path.join(repoRoot, "apps", "omnihub-site", "src", "i18n", "locales"),
+  path.join(repoRoot, "apps", "omnihub-site", "dashboard"),
+  path.join(repoRoot, "public"),
+];
+const SCAN_EXTS = new Set([".json", ".html", ".md", ".ts", ".tsx", ".js", ".jsx"]);
 const EXCLUDE = [
   /\.test\.|\.spec\.|__tests__/,
   /\/legal\//i, // privacy/terms legitimately reference GDPR/CCPA *rights*, not posture claims
   /privacyPolicy|PRIVACY_POLICY|termsOf|TERMS_OF/i,
+  /\/node_modules\//,
+  /\/dist\//,
+  /\/build\//,
+  /\/coverage\//,
 ];
 
 // High-risk affirmative-claim patterns. Each requires proof in approved-claims.json.
@@ -46,8 +56,10 @@ if (fs.existsSync(approvedPath)) {
     process.exit(1);
   }
 }
-// Approved entries match by case-insensitive substring of the offending line.
-const isApproved = (line) => approved.some((a) => typeof a === "string" && a.length > 0 && line.toLowerCase().includes(a.toLowerCase()));
+const normalize = (value) => String(value).replace(/\s+/g, " ").trim().toLowerCase();
+const approvedSet = new Set(approved.map((a) => typeof a === "string" ? a : a?.claim).filter((a) => typeof a === "string" && a.trim()).map(normalize));
+const approvedEvidence = new Map(approved.map((a) => [normalize(typeof a === "string" ? a : a?.claim ?? ""), typeof a === "string" ? "legacy-approved-claim" : a?.evidence_ref]).filter(([claim]) => claim));
+const isApproved = (line) => approvedSet.has(normalize(line)) && Boolean(approvedEvidence.get(normalize(line)));
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -61,7 +73,7 @@ function walk(dir, acc) {
   return acc;
 }
 
-const files = SCAN_ROOTS.flatMap((root) => walk(root, []));
+const files = [...new Set(SCAN_ROOTS.flatMap((root) => walk(root, [])))];
 const findings = [];
 
 for (const file of files) {

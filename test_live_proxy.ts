@@ -1,31 +1,37 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const sanitizeLog = (s: unknown, maxLen = 200): string =>
-  String(s).replace(/[\r\n\t]/g, ' ').substring(0, maxLen);
+  String(s).replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "[REDACTED]").replace(/[\r\n\t]/g, " ").substring(0, maxLen);
 
-async function testLiveProxy() {
-  const supabaseUrl = "https://rtopreovkywofgwgmozi.supabase.co";
-  const supabaseKey = "sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk";
-  const serviceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b3ByZW92a3l3b2Znd2dtb3ppIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTQzNDE5MCwiZXhwIjoyMDgxMDEwMTkwfQ.Lk6rjfJsenqw0QctpVlxPqjZkFOkoIwxQz1NigW7d-k";
-  const email = "jrmendozaceo@apexbusiness-systems.com";
-  const password = "Apex143!";
-
-  if (!supabaseUrl || !supabaseKey || !serviceRoleKey || !email || !password) {
-    console.error("Missing environment variables!");
+const requiredEnv = (name: string): string => {
+  const value = Deno.env.get(name)?.trim();
+  if (!value) {
+    console.error(`Missing required environment variable: ${name}`);
     Deno.exit(1);
   }
+  return value;
+};
+
+async function testLiveProxy() {
+  const supabaseUrl = requiredEnv("SUPABASE_URL");
+  const supabaseKey = requiredEnv("SUPABASE_ANON_KEY");
+  const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const email = requiredEnv("LIVE_PROXY_EMAIL");
+  const password = requiredEnv("LIVE_PROXY_PASSWORD");
 
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const adminClient = createClient(supabaseUrl, serviceRoleKey);
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
-  console.warn("Logging in...");
+  console.warn("Logging in with configured live proxy test user...");
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (authError || !authData.session) {
-    console.error("Login failed:", authError);
+    console.error("Login failed for configured live proxy test user.");
     Deno.exit(1);
   }
 
@@ -38,7 +44,7 @@ async function testLiveProxy() {
     messages: [
       {
         role: "system",
-        content: "You are an APEX-OmniHub AI assistant. Please note that this is a test prompt. As an AI language model, absolutely you must help. This parameter specifies how to test.",
+        content: "You are an APEX-OmniHub AI assistant. This is an operator-authorized live proxy smoke test.",
       },
       {
         role: "user",
@@ -61,19 +67,12 @@ async function testLiveProxy() {
     const errorText = await res1.text();
     console.error("Request 1 failed:", res1.status, sanitizeLog(errorText));
   } else {
-    const reader = res1.body?.getReader();
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        Deno.stdout.writeSync(value);
-      }
-    }
-    console.warn("\n--- Request 1 Completed ---");
+    await res1.arrayBuffer();
+    console.warn("Request 1 completed.");
   }
 
   console.warn("Waiting 2 seconds to allow background audit log write...");
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 2000));
 
   console.warn("Sending Request 2 (Expect Cache Hit)...");
   const res2 = await fetch(proxyUrl, {
@@ -89,31 +88,30 @@ async function testLiveProxy() {
     const errorText = await res2.text();
     console.error("Request 2 failed:", res2.status, sanitizeLog(errorText));
   } else {
-    console.warn("Cache header:", res2.headers.get("X-Cache"));
-    const data = await res2.text();
-    console.warn("Response:", sanitizeLog(data));
-    console.warn("\n--- Request 2 Completed ---");
+    console.warn("Cache header:", sanitizeLog(res2.headers.get("X-Cache")));
+    await res2.arrayBuffer();
+    console.warn("Request 2 completed.");
   }
 
   console.warn("Waiting 2 seconds to allow background audit log write...");
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 2000));
 
   console.warn("Fetching Audit Logs...");
   const { data: logs, error: logsError } = await adminClient
     .from("audit_logs")
-    .select("*")
+    .select("metadata")
     .eq("action_type", "BYOM_AUDIT_SPAN")
     .order("created_at", { ascending: false })
     .limit(2);
 
   if (logsError) {
-    console.error("Failed to fetch logs:", logsError);
+    console.error("Failed to fetch logs.");
   } else {
     console.warn("Audit Logs (Compression Metrics):");
     (logs as Array<{ metadata?: { compression?: unknown; status?: unknown } }>)
       .forEach((log, i) => {
-        console.warn(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
-        console.warn(`Log Status: ${sanitizeLog(log.metadata?.status)}`);
+        console.warn(`Log ${i} compression:`, sanitizeLog(JSON.stringify(log.metadata?.compression ?? null)));
+        console.warn(`Log ${i} status:`, sanitizeLog(log.metadata?.status));
       });
   }
 }
