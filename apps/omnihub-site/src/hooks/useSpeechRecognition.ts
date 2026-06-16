@@ -81,7 +81,7 @@ export function useSpeechRecognition(
   }, []);
 
   const toggle = useCallback(() => {
-    const voiceWindow = window as VoiceWindow;
+    const voiceWindow = globalThis.window as VoiceWindow;
     const SpeechRecognitionAPI =
       voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition;
 
