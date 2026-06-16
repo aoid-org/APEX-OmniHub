@@ -61,10 +61,14 @@ function walkTextFiles(dir, acc = []) {
 }
 
 function scanConflictMarkers() {
-  const markerRe = /^(<<<<<<<|=======|>>>>>>>)($|[ 	].*)/m;
+  // Require all three conflict marker shapes in the same file to avoid false
+  // positives on Markdown setext headings (which use lines of ======= chars).
+  const hasStart = /^<<<<<<<[ \t].*/m;
+  const hasMid = /^=======[ \t]*$/m;
+  const hasEnd = /^>>>>>>>[ \t].*/m;
   for (const file of walkTextFiles(repoRoot)) {
     const text = fs.readFileSync(file, "utf8");
-    if (markerRe.test(text)) {
+    if (hasStart.test(text) && hasMid.test(text) && hasEnd.test(text)) {
       record("conflict-marker", rel(file), "unresolved merge conflict marker found");
     }
   }

@@ -4,7 +4,7 @@
     "subtitle": "The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible.",
     "tiles": ["DIRECT", "AUDIT", "DEDUCE"],
     "cta": { "primary": "Request Early Access", "secondary": "Watch Demo" },
-    "trust": { "securityControls": "Security Controls Aligned", "humanOversight": "Human oversight controls", "privacyRecords": "Privacy-record workflows", "trusted": "Trusted in regulated industries" },
+    "trust": { "securityControls": "Security Controls Aligned", "humanOversight": "Human oversight controls", "privacyRecords": "Privacy-record workflows", "trusted": "Designed for enterprise environments" },
     "art": { "intelliDesig": "INTELLIGENCE, DESIGNED." }
   },
   "ticker": {
@@ -39,7 +39,7 @@
       { "name": "Audit on Write", "desc": "Each write operation logged immutably" },
       { "name": "Rollback Window", "desc": "30-minute compensating transaction window" },
       { "name": "MAN Mode", "desc": "High-risk actions require Manual Approval Node approval" },
-      { "name": "Cross-Border Block", "desc": "GDPR: EU data stays within EEA zones" }
+      { "name": "Cross-Border Block", "desc": "EU data stays within EEA zones (data residency)" }
     ]
   },
   "capabilities": {
@@ -72,9 +72,9 @@
     "cards": [
       { "name": "Security Controls Roadmap", "desc": "Security and availability controls mapped" },
       { "name": "Human oversight controls", "desc": "Governance requirements for high-risk AI systems" },
-      { "name": "GDPR Article 30", "desc": "Complete records of processing activities" },
+      { "name": "Records of Processing Activities", "desc": "Complete records of processing activities" },
       { "name": "ISMS-ready controls", "desc": "Information Security Management System-compatible architecture" },
-      { "name": "Healthcare Architecture Ready", "desc": "Architecture for healthcare data with BAA support" },
+      { "name": "Healthcare Architecture Ready", "desc": "Architecture for healthcare data, BAA-compatible design" },
       { "name": "Zero Trust Model", "desc": "No implicit trust" },
       { "name": "RBAC + ABAC", "desc": "Granular role and attribute-based access control" },
       { "name": "E2E Encryption", "desc": "All data encrypted in transit and at rest with AES-256" }

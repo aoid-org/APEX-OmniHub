@@ -69,7 +69,7 @@
     {
       name: 'Policy Enforcement Engine', tag: 'RULES BEFORE ACTIONS',
       lead: 'We apply your governance rules before any action is taken, preventing issues before they occur. Agents never access unauthorized data, and every single write is securely and immutably logged.',
-      chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block (GDPR)'],
+      chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block'],
       demo: 'policy', pos: [-56, -14, -158], size: 1.15
     },
     {
@@ -478,7 +478,7 @@
         ['Scope Restriction', 'No agent accesses unauthorized data scopes', true],
         ['Audit on Write', 'Each write operation logged immutably', true],
         ['Rollback Window', 'High-risk actions require approval', true],
-        ['Cross-Border Block', 'EU data stays within EEA zones (GDPR)', true]
+        ['Cross-Border Block', 'EU data stays within EEA zones (data residency)', true]
       ];
       var states = rules.map(function (r) { return r[2]; });
       var list = el('div');
@@ -1387,7 +1387,7 @@
       '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
       '<button class="ohsm-btn ohsm-btn-ghost" data-ohsm-replay>START OVER</button>' +
       '</div>' +
-      '<div class="ohsm-proof">SECURITY CONTROLS ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
+      '<div class="ohsm-proof">SECURITY CONTROLS ALIGNED \u00b7 AI OVERSIGHT CONTROLS \u00b7 PROCESSING ACTIVITY RECORDS<br>DESIGNED FOR ENTERPRISE ENVIRONMENTS</div>' +
       '</div>';
     fin.querySelector('.ohsm-btn-primary').setAttribute('href', safeHref(opts.ctaHref));
     fin.querySelector('.ohsm-btn-ghost').setAttribute('href', safeHref(opts.demoHref));

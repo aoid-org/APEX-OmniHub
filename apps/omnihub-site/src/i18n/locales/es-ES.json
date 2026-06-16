@@ -39,7 +39,7 @@
       { "name": "Auditoria en Escritura", "desc": "Cada operacion de escritura registrada inmutablemente" },
       { "name": "Ventana de Rollback", "desc": "Ventana de 30 minutos para transacciones compensatorias" },
       { "name": "Modo MAN", "desc": "Las acciones de alto riesgo requieren aprobacion del Nodo de Aprobacion Manual" },
-      { "name": "Bloqueo Transfronterizo", "desc": "GDPR: Los datos de la UE permanecen dentro de las zonas del EEE" }
+      { "name": "Bloqueo Transfronterizo", "desc": "Los datos de la UE permanecen dentro de las zonas del EEE (residencia de datos)" }
     ]
   },
   "capabilities": {
@@ -72,7 +72,7 @@
     "cards": [
       { "name": "Hoja de ruta de controles de seguridad", "desc": "Controles de seguridad y disponibilidad validados" },
       { "name": "Controles de supervision humana", "desc": "Requisitos de gobernanza para sistemas de IA de alto riesgo" },
-      { "name": "GDPR Articulo 30", "desc": "Registros completos de actividades de procesamiento" },
+      { "name": "Registros de Actividades de Procesamiento", "desc": "Registros completos de actividades de procesamiento" },
       { "name": "ISMS-ready controls", "desc": "Arquitectura compatible con sistemas de gestion de seguridad de la informacion" },
       { "name": "Arquitectura sanitaria preparada", "desc": "Arquitectura para datos de salud con soporte BAA" },
       { "name": "Modelo de Confianza Cero", "desc": "Sin confianza implicita" },

@@ -72,7 +72,7 @@
     "cards": [
       { "name": "Security Controls Roadmap", "desc": "Controles valides par audit independent" },
       { "name": "Controles de supervision humaine", "desc": "Gouvernance par Noeud d'Approbation Manuel" },
-      { "name": "RGPD Article 30", "desc": "Registres de traitement exportables" },
+      { "name": "Registres des Activites de Traitement", "desc": "Registres de traitement exportables" },
       { "name": "ISMS-ready controls", "desc": "Architecture de gestion de securite" },
       { "name": "Healthcare Architecture Ready", "desc": "Architecture de donnees de sante avec BAA" },
       { "name": "Modele Zero Trust", "desc": "Pas de confiance implicite" },

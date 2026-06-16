@@ -39,7 +39,7 @@
       { "name": "Audit on Write", "desc": "Subete no kakikikomu koudo wa fukyo ni kiroku sa reru" },
       { "name": "Rollback Window", "desc": "30 pun no hosho kouden kusho" },
       { "name": "MAN Mode", "desc": "Kiken na koudo wa Manual Approval Node no shonin wo hitsuyou" },
-      { "name": "Kokusai Block", "desc": "GDPR: EU data wa EEA zone ni oku" }
+      { "name": "Kokusai Block", "desc": "EU data wa EEA zone ni oku (data residency)" }
     ]
   },
   "capabilities": {

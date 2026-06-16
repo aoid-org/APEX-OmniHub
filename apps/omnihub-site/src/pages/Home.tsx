@@ -41,7 +41,7 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
             </a>
           </div>
           <p className="hero-trust rv d3">
-            Security Controls Aligned<span>&middot;</span>Human oversight controls<span>&middot;</span>Privacy-record workflows<span>&middot;</span>Trusted in regulated industries
+            Security Controls Aligned<span>&middot;</span>Human oversight controls<span>&middot;</span>Privacy-record workflows<span>&middot;</span>Designed for enterprise environments
           </p>
         </div>
         <div className="hero-right rv d1">
@@ -435,7 +435,7 @@ function GovernanceSection() {
                 <span className="vp-tag">Live Audit Trail</span>
                 <div className="alog">
                   <div className="arow"><span className="at">14:32:07</span><span className="adot ok"></span><span className="atxt">SalesForce Sync: write contact #4821</span><span className="apill p-auth">Authorized</span></div>
-                  <div className="arow"><span className="at">14:32:05</span><span className="adot info"></span><span className="atxt">Compliance Reporter: export GDPR batch</span><span className="apill p-log">Logged</span></div>
+                  <div className="arow"><span className="at">14:32:05</span><span className="adot info"></span><span className="atxt">Compliance Reporter: export data batch</span><span className="apill p-log">Logged</span></div>
                   <div className="arow"><span className="at">14:31:58</span><span className="adot ok"></span><span className="atxt">ERP Orchestrator: inventory sync complete</span><span className="apill p-auth">Authorized</span></div>
                   <div className="arow"><span className="at">14:31:44</span><span className="adot warn"></span><span className="atxt">Anomaly: unauthorized scope attempt blocked</span><span className="apill p-block">Blocked</span></div>
                   <div className="arow"><span className="at">14:31:33</span><span className="adot info"></span><span className="atxt">Policy update: RBAC rule #12 applied</span><span className="apill p-log">Logged</span></div>
@@ -581,7 +581,7 @@ function ReversibleSection() {
                       </div>
                       <div>
                         <div className="prule-n">Cross-Border Block</div>
-                        <div className="prule-d">GDPR: EU data stays within EEA zones</div>
+                        <div className="prule-d">EU data stays within EEA zones (data residency)</div>
                       </div>
                     </div>
                     <div className="toggle"></div>
@@ -785,9 +785,9 @@ function EnterpriseSection() {
   const cards = [
     { n: "Security Controls Roadmap", d: "Security and availability controls mapped for external assessment" },
     { n: "Human oversight controls", d: "Manual Approval Node governance requirements for high-risk AI systems" },
-    { n: "GDPR Article 30", d: "Complete records of processing activities, always exportable" },
+    { n: "Records of Processing Activities", d: "Complete records of processing activities, always exportable" },
     { n: "ISMS-ready controls", d: "Information security management system compatible architecture" },
-    { n: "Healthcare Architecture Ready", d: "Healthcare data handling architecture with BAA support" },
+    { n: "Healthcare Architecture Ready", d: "Healthcare data handling architecture, BAA-compatible design" },
     { n: "Zero Trust Model", d: "No implicit trust. Each agent and action verified." },
     { n: "RBAC + ABAC", d: "Granular role and attribute-based access control across all surfaces" },
     { n: "E2E Encryption", d: "All data in transit and at rest encrypted with AES-256" }
