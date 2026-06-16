@@ -196,9 +196,65 @@ function scanFakePassScripts() {
   }
 }
 
+// Detect unresolved git conflict markers in text files across the repo.
+// Binary files and generated/vendor directories are skipped.
+function scanConflictMarkers() {
+  const BINARY_EXTENSIONS = new Set([
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp", ".svg",
+    ".pdf", ".zip", ".tar", ".gz", ".tgz", ".bz2", ".7z", ".rar",
+    ".woff", ".woff2", ".ttf", ".otf", ".eot",
+    ".mp3", ".mp4", ".wav", ".ogg", ".webm", ".avi", ".mov",
+    ".exe", ".bin", ".dll", ".so", ".dylib", ".a", ".o",
+    ".db", ".sqlite", ".sqlite3",
+    ".DS_Store", ".lock",
+  ]);
+  const SKIP_DIRS = new Set([".git", "node_modules", "dist", "build", "coverage", ".turbo", "artifacts"]);
+
+  // Conflict marker regexes — exact 7-char sequences only.
+  const RE_START = /^\s*<{7}/;
+  const RE_SEP   = /^\s*={7}\s*$/;
+  const RE_END   = /^\s*>{7}/;
+
+  function walkDir(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!SKIP_DIRS.has(entry.name)) walkDir(full);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (BINARY_EXTENSIONS.has(ext)) continue;
+        let lines;
+        try {
+          lines = fs.readFileSync(full, "utf8").split(/\r?\n/);
+        } catch {
+          continue;
+        }
+        lines.forEach((line, i) => {
+          if (RE_START.test(line) || RE_SEP.test(line) || RE_END.test(line)) {
+            record(
+              "conflict-marker",
+              `${rel(full)}:${i + 1}`,
+              "unresolved git conflict marker",
+            );
+          }
+        });
+      }
+    }
+  }
+
+  walkDir(repoRoot);
+}
+
 const required = parseRequiredJobs();
 scanWorkflows(required);
 scanFakePassScripts();
+scanConflictMarkers();
 
 console.log("=== verify:ci-integrity — CI Integrity Scanner ===");
 console.log(`Scanned workflows in ${rel(workflowDir)} and verify scripts in ${rel(verifyScriptDir)}.`);
