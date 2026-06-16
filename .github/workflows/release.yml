@@ -177,6 +177,7 @@ jobs:
           HEALTH_RAW: ${{ steps.shadow_health.outputs.health_result || 'skipped' }}
           VALIDATOR_RAW: ${{ steps.validator.outputs.validator_result || 'skipped' }}
           TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
+          TF_APPLY_RESULT_RAW: ''
           TF_OUTCOME_RAW: ${{ steps.tf_plan.outcome || 'skipped' }}
           PUBLISHED_RAW: 'false'
           RELEASE_CUT_RAW: ${{ steps.release_signal.outputs.release_cut || 'false' }}
@@ -235,3 +236,29 @@ jobs:
           terraform apply -input=false tfplan
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "24"
+      - name: Write final release evidence (post-apply)
+        if: always()
+        env:
+          GH_SHA: ${{ github.sha }}
+          GH_SERVER_URL: ${{ github.server_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
+          TF_RESULT_RAW: pass
+          TF_APPLY_RESULT_RAW: ${{ job.status == 'success' && 'pass' || 'fail' }}
+          RELEASE_CUT_RAW: 'true'
+          SHADOW_URL_RAW: ''
+          HEALTH_RAW: 'pass'
+          VALIDATOR_RAW: 'pass'
+          PUBLISHED_RAW: 'false'
+        run: node scripts/ci/write-release-evidence.mjs
+      - name: Upload final release evidence artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-evidence-final
+          path: release-evidence.json
+          retention-days: 90

@@ -26,7 +26,7 @@ function value(name, fallback = '') {
   return process.env[name] || fallback;
 }
 
-function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }) {
+export function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraformPlan, terraformApply }) {
   if (releaseCut !== 'true') {
     return 'NOT_CERTIFIED_NO_RELEASE_CUT';
   }
@@ -39,15 +39,20 @@ function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, t
     return 'NOT_CERTIFIED_BLOCKED';
   }
 
-  if (terraform === 'pass') {
+  if (terraformPlan !== 'pass') {
+    return 'NOT_CERTIFIED_BLOCKED';
+  }
+
+  if (terraformApply === 'pass') {
     return 'CERTIFIED';
   }
 
-  if (terraformOutcome === 'skipped') {
-    return 'CERTIFICATION_PENDING_FINAL_MAIN_CI';
+  if (terraformApply === 'fail') {
+    return 'NOT_CERTIFIED_BLOCKED';
   }
 
-  return 'NOT_CERTIFIED_BLOCKED';
+  // missing, 'skipped', 'pending', '' — apply has not run yet
+  return 'CERTIFICATION_PENDING_TERRAFORM_APPLY';
 }
 
 const preflight = readPreflight();
@@ -56,8 +61,8 @@ const releaseCut = value('RELEASE_CUT_RAW', 'false');
 const shadowUrl = value('SHADOW_URL_RAW');
 const health = value('HEALTH_RAW', 'skipped');
 const validator = value('VALIDATOR_RAW', 'skipped');
-const terraform = value('TF_RESULT_RAW', 'skipped');
-const terraformOutcome = value('TF_OUTCOME_RAW', 'skipped');
+const terraform = value('TF_RESULT_RAW', 'skipped');       // plan result (backward compat)
+const terraformApply = value('TF_APPLY_RESULT_RAW', '');   // apply result (empty = not yet run)
 const workflowRunUrl = `${value('GH_SERVER_URL', 'https://github.com')}/${value('GH_REPOSITORY', 'unknown/repository')}/actions/runs/${value('GH_RUN_ID', 'unknown')}`;
 
 const evidence = {
@@ -69,11 +74,12 @@ const evidence = {
   shadow_url: shadowUrl,
   health_result: health,
   validator_result: validator,
-  terraform_result: terraform,
-  terraform_outcome: terraformOutcome,
+  terraform_plan_result: terraform,    // was terraform_result
+  terraform_apply_result: terraformApply,  // NEW field
+  terraform_result: terraform,         // keep for schema compat (maps to plan)
   shadow_preflight_status: preflight.status,
   blockers: Array.isArray(preflight.blockers) ? preflight.blockers : [],
-  final_verdict: computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }),
+  final_verdict: computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraformPlan: terraform, terraformApply }),
   timestamp: new Date().toISOString(),
 };
 
