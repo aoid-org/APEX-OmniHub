@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const sanitizeLog = (s: unknown, maxLen = 200): string =>
+  String(s).replace(/[\r\n\t]/g, ' ').substring(0, maxLen);
+
 async function testLiveProxy() {
   const supabaseUrl = "https://rtopreovkywofgwgmozi.supabase.co";
   const supabaseKey = "sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk";
@@ -56,15 +59,15 @@ async function testLiveProxy() {
 
   if (!res1.ok) {
     const errorText = await res1.text();
-    console.error("Request 1 failed:", res1.status, errorText);
+    console.error("Request 1 failed:", res1.status, sanitizeLog(errorText));
   } else {
-    // Read the stream to completion
     const reader = res1.body?.getReader();
-    // const decoder = new TextDecoder();
-    while (reader) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      Deno.stdout.writeSync(value);
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        Deno.stdout.writeSync(value);
+      }
     }
     console.warn("\n--- Request 1 Completed ---");
   }
@@ -84,11 +87,11 @@ async function testLiveProxy() {
 
   if (!res2.ok) {
     const errorText = await res2.text();
-    console.error("Request 2 failed:", res2.status, errorText);
+    console.error("Request 2 failed:", res2.status, sanitizeLog(errorText));
   } else {
     console.warn("Cache header:", res2.headers.get("X-Cache"));
     const data = await res2.text();
-    console.warn("Response:", data.substring(0, 200) + "...");
+    console.warn("Response:", sanitizeLog(data));
     console.warn("\n--- Request 2 Completed ---");
   }
 
@@ -107,10 +110,11 @@ async function testLiveProxy() {
     console.error("Failed to fetch logs:", logsError);
   } else {
     console.warn("Audit Logs (Compression Metrics):");
-    logs.forEach((log: unknown, i: number) => {
-      console.warn(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
-      console.warn(`Log Status: ${log.metadata?.status}`);
-    });
+    (logs as Array<{ metadata?: { compression?: unknown; status?: unknown } }>)
+      .forEach((log, i) => {
+        console.warn(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
+        console.warn(`Log Status: ${sanitizeLog(log.metadata?.status)}`);
+      });
   }
 }
 
