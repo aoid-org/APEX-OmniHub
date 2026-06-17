@@ -184,7 +184,7 @@ export class MetricsCollector {
       count: len,
       min: min,
       max: max,
-      mean: len > 0 ? durationSum / len : 0,
+      mean: len > 0 ? Math.trunc(durationSum / len) : 0,
       p50: this.percentile(durations, 0.50),
       p95: this.percentile(durations, 0.95),
       p99: this.percentile(durations, 0.99),
@@ -250,7 +250,7 @@ export class MetricsCollector {
 
       const bucket = appLatencies.get(app)!;
       const len = bucket.durations.length;
-      const avgLatency = len > 0 ? bucket.sum / len : 0;
+      const avgLatency = len > 0 ? Math.trunc(bucket.sum / len) : 0;
 
       const durations = [...bucket.durations].sort((a: number, b: number) => a - b);
       const p95Latency = len > 0 ? this.percentile(durations, 0.95) : 0;
@@ -297,7 +297,7 @@ export class MetricsCollector {
       totalEvents,
       totalDurations: allDurations.length,
       avgLatencyMs: allDurations.length > 0
-        ? totalDurationSum / allDurations.length
+        ? Math.trunc(totalDurationSum / allDurations.length)
         : 0,
       p50LatencyMs: this.percentile(allDurations, 0.50),
       p95LatencyMs: this.percentile(allDurations, 0.95),
@@ -327,7 +327,7 @@ export class MetricsCollector {
     return {
       apps,
       issues,
-      avgScore: appMetrics.length > 0 ? sum / appMetrics.length : 0,
+      avgScore: appMetrics.length > 0 ? Math.trunc(sum / appMetrics.length) : 0,
     };
   }
 
@@ -363,7 +363,7 @@ export class MetricsCollector {
     const systemScore = this.calculateSystemScore(systemMetrics);
 
     // Overall score (weighted average)
-    const overallScore = (avgScore * 0.6) + (systemScore.score * 0.4); // 60% app, 40% system
+    const overallScore = Math.trunc((avgScore * 0.6) + (systemScore.score * 0.4)); // 60% app, 40% system
 
     // Determine threshold based on context
     const envParsed = Number.parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);

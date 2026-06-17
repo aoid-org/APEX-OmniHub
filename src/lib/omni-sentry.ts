@@ -113,22 +113,25 @@ function sleep(attempt: number): Promise<void> {
 }
 
 /**
- * Safely persist to localStorage with fallback
+ * Safely persist to sessionStorage with fallback.
+ * NS-M-008: Moved from localStorage — error objects may contain PII;
+ * sessionStorage is tab-scoped and not accessible across origins.
  */
 function safePersist(key: string, data: unknown): void {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    sessionStorage.setItem(key, JSON.stringify(data));
   } catch {
     // Storage full or unavailable - non-fatal
   }
 }
 
 /**
- * Safely read from localStorage
+ * Safely read from sessionStorage.
+ * NS-M-008: Moved from localStorage.
  */
 function safeRead<T>(key: string, fallback: T): T {
   try {
-    const data = localStorage.getItem(key);
+    const data = sessionStorage.getItem(key);
     return data ? JSON.parse(data) : fallback;
   } catch {
     return fallback;
@@ -397,9 +400,10 @@ export async function reportError(
 
   if (!isCircuitClosed()) {
     // Persist locally when circuit is open
+    // NS-M-008: Omit stack trace from stored offline errors — stacks may contain PII (file paths, user data)
     const offlineErrors = safeRead<unknown[]>('omni_sentry_offline', []);
     offlineErrors.push({
-      error: { name: error.name, message: error.message, stack: error.stack },
+      error: { name: error.name, message: error.message },
       context,
       timestamp: new Date().toISOString(),
     });
@@ -484,10 +488,11 @@ export function getStoredErrors(): unknown[] {
  * Clear all stored data
  */
 export function clearAllData(): void {
-  localStorage.removeItem('omni_sentry_errors');
-  localStorage.removeItem('omni_sentry_offline');
-  localStorage.removeItem('omni_sentry_health');
-  localStorage.removeItem('omni_sentry_circuit');
+  // NS-M-008: Keys now live in sessionStorage
+  sessionStorage.removeItem('omni_sentry_errors');
+  sessionStorage.removeItem('omni_sentry_offline');
+  sessionStorage.removeItem('omni_sentry_health');
+  sessionStorage.removeItem('omni_sentry_circuit');
   errorFingerprints.clear();
   circuitBreaker = {
     state: 'closed',

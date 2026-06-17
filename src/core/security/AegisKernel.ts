@@ -71,6 +71,11 @@ export function validateAccess(
   device: DeviceProfile,
 ): boolean {
   if (device.trustTier === TrustTier.GOD_MODE) {
+    // SECURITY NS-M-003: GOD_MODE grants ['all'] capabilities with no secondary confirmation.
+    // An incorrect GOD_MODE assignment gives unrestricted tool access silently.
+    // TODO: wire this to a Supabase audit_log insert: { action: 'GOD_MODE_ACCESS', actor_id: device.deviceId, tool: toolName, timestamp: new Date().toISOString() }
+    // GOD_MODE is assigned via the keystore record's trustTier field — see SpectreHandshake.ts authenticate().
+    console.error('[SECURITY] GOD_MODE access — audit_log write required', { deviceId: device.deviceId, tool: toolName });
     return true;
   }
 

@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import type { OmniDashIntent } from '@/omnidash/useOmniDashAction';
-import { useOmniDashAction } from '@/omnidash/useOmniDashAction';
-import { useOmniBoard } from '@/stores/omniBoardStore';
-import { useOmniModal } from '@/stores/omniModalStore';
+import type { OmniDashIntent } from '@omnihub/hooks/useOmniDashAction';
+import { useOmniDashAction } from '@omnihub/hooks/useOmniDashAction';
+import { useOmniBoard } from '@omnihub/stores/omniBoardStore';
+import { useOmniModal } from '@omnihub/stores/omniModalStore';
 
 const mockSupabaseInvoke = vi.fn();
 
-vi.mock('@/stores/omniBoardStore', () => ({
+vi.mock('@omnihub/stores/omniBoardStore', () => ({
   useOmniBoard: vi.fn(),
 }));
 
-vi.mock('@/stores/omniModalStore', () => ({
+vi.mock('@omnihub/stores/omniModalStore', () => ({
   useOmniModal: {
     getState: vi.fn(() => ({ invoke: vi.fn() })),
   },

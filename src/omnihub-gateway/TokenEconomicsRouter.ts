@@ -5,7 +5,7 @@
  *
  * Implements the asymmetric routing mandate:
  *   - Complex reasoning → Claude Opus 4.6
- *   - Background loops → GPT-5.4 Mini / Cursor Composer 2
+ *   - Background loops → GPT-4o Mini / Cursor Composer 2
  *
  * Supersedes OmniRoute + TaskComplexityScorer with a unified
  * cost-aware routing engine. Scores tasks on complexity, domain,
@@ -56,7 +56,7 @@ const MODEL_PROFILES: readonly ModelProfile[] = [
     latencyClass: 'medium',
   },
   {
-    modelId: 'gpt-5.4-mini',
+    modelId: 'gpt-4o-mini',
     provider: 'openai',
     tier: 'economy',
     costPerInputToken: 0.0000003,
