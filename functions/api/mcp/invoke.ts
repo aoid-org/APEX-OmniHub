@@ -355,7 +355,7 @@ function isValidUUID(s: string): boolean {
 function sanitizeError(err: unknown): string {
   if (typeof err === "string") {
     // Remove any stack trace or secret patterns
-    return err.replace(/at\s+\w+.*$/gm, "").substring(0, 200).trim();
+    return err.replace(/^\s*at\s+.*$/gm, "").substring(0, 200).trim();
   }
   return "agent_execution_failed";
 }
