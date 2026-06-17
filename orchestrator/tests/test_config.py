@@ -233,27 +233,45 @@ class TestSupabaseRequired:
 
 
 class TestLLMDefaults:
-    """LLM settings should have sensible defaults."""
+    """LLM settings should have sensible defaults. APEX Policy: only anthropic/groq."""
 
-    def test_openai_api_key_default_empty(self):
+    def test_groq_api_key_default_empty(self):
+        # openai_api_key removed by APEX policy; groq_api_key is the permitted peer key
         s = make_settings()
-        assert s.openai_api_key.get_secret_value() == ""
+        assert s.groq_api_key.get_secret_value() == ""
 
     def test_anthropic_api_key_default_empty(self):
         s = make_settings()
         assert s.anthropic_api_key.get_secret_value() == ""
 
-    def test_default_llm_model(self):
+    def test_default_llm_provider(self):
+        # APEX Policy: default provider is 'anthropic'
         s = make_settings()
-        assert s.default_llm_model == "gpt-4-turbo-preview"
+        assert s.default_llm_provider == "anthropic"
+
+    def test_default_llm_model(self):
+        # APEX Policy: default model must be Anthropic — no GPT defaults
+        s = make_settings()
+        assert s.default_llm_model == "anthropic/claude-sonnet-4-5"
 
     def test_default_llm_temperature(self):
         s = make_settings()
         assert s.default_llm_temperature == pytest.approx(0.0)
 
-    def test_llm_model_env_override(self):
-        s = make_settings(DEFAULT_LLM_MODEL="gpt-4o")
-        assert s.default_llm_model == "gpt-4o"
+    def test_llm_model_env_override_permitted(self):
+        # Groq model is permitted by APEX policy
+        s = make_settings(DEFAULT_LLM_MODEL="groq/llama3-8b-8192")
+        assert s.default_llm_model == "groq/llama3-8b-8192"
+
+    def test_forbidden_gpt_model_raises(self):
+        # APEX Policy: GPT models are forbidden as defaults
+        with pytest.raises((ValidationError, ValueError)):
+            make_settings(DEFAULT_LLM_MODEL="gpt-4o")
+
+    def test_forbidden_llm_provider_raises(self):
+        # APEX Policy: only 'anthropic' and 'groq' are permitted providers
+        with pytest.raises((ValidationError, ValueError)):
+            make_settings(DEFAULT_LLM_PROVIDER="openai")
 
 
 # ---------------------------------------------------------------------------
@@ -347,11 +365,21 @@ class TestProductionValidator:
         """Production env without redis_password should raise ValueError."""
 
         with pytest.raises((ValidationError, ValueError)):
-            make_settings(ENVIRONMENT="production")
+            make_settings(ENVIRONMENT="production", ANTHROPIC_API_KEY="test-anthropic-key")  # noqa: S106  # NOSONAR
+
+    def test_production_without_anthropic_api_key_raises(self):
+        """Production env without anthropic_api_key should raise ValueError."""
+
+        with pytest.raises((ValidationError, ValueError)):
+            make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR
 
     def test_production_with_redis_password_ok(self):
-        """Production env with redis_password should succeed."""
-        s = make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR
+        """Production env with redis_password + anthropic_api_key should succeed."""
+        s = make_settings(
+            ENVIRONMENT="production",
+            REDIS_PASSWORD="secure-pass",  # noqa: S106  # NOSONAR
+            ANTHROPIC_API_KEY="test-anthropic-key",  # noqa: S106  # NOSONAR
+        )
         assert s.environment == "production"
         assert s.redis_password is not None
         assert s.redis_password.get_secret_value() == "secure-pass"
