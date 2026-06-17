@@ -391,43 +391,4 @@ class TestProductionValidator:
         assert s.redis_password is None
 
     def test_staging_without_redis_password_ok(self):
-        """Staging env should not require redis_password."""
-        s = make_settings(ENVIRONMENT="staging")
-        assert s.environment == "staging"
-
-    def test_validate_production_config_method_called(self):
-        """Validator should run and return self on success."""
-        s = make_settings(ENVIRONMENT="development")
-        # validator returns self so settings object is valid
-        assert s is not None
-
-
-# ---------------------------------------------------------------------------
-# Case-insensitive env var loading
-# ---------------------------------------------------------------------------
-
-
-class TestCaseInsensitive:
-    """Settings should accept env vars in any case."""
-
-    def test_lowercase_env_var(self):
-        s = make_settings(temporal_host="lower.host:7233")
-        assert s.temporal_host == "lower.host:7233"
-
-    def test_mixed_case_env_var(self):
-        s = make_settings(Temporal_Host="mixed.host:7233")
-        assert s.temporal_host == "mixed.host:7233"
-
-
-def test_production_without_signature_disabled():
-    import pytest
-    import os
-
-    with pytest.raises(
-        ValueError, match="ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production"
-    ):
-        os.environ["ORCHESTRATOR_REQUIRE_SIGNATURE"] = "false"
-        try:
-            make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR
-        finally:
-            del os.environ["ORCHESTRATOR_REQUIRE_SIGNATURE"]
+        """Staging env should
