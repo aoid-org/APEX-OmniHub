@@ -18,3 +18,4 @@ Follow-up — 2026-06-17:
 - Added Vitest coverage for `apps/omnihub-proof/src/App.tsx`, extracted/tested `bootstrapOmniHubProof` in `apps/omnihub-proof/src/main.tsx`, and completed branch coverage for `src/swInit.ts`.
 - Added a fail-closed Cloudflare Pages repo contract verifier and runbook for the observed provider/internal post-CI Pages error; no root `wrangler.toml` was added.
 - Adjusted release verifier PATH allowlist for pyenv/mise runtime shims so `verify:release` can execute Python lint tools in this CI-like environment without weakening gates.
+- RSI follow-up: restored `orchestrator/security/guardian_fabric.py` to its prior protected-path content and added an orchestrator-local Python startup compatibility shim so Python 3.10 can still resolve `datetime.UTC` without touching `orchestrator/security/**`.
