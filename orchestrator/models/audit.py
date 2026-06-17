@@ -231,7 +231,7 @@ class AuditLogger:
             AuditFailureException: If logging fails (critical for compliance)
         """
         # Set processing timestamp
-        event.processed_at = datetime.now(UTC)
+        event.processed_at = datetime.now(timezone.utc)
 
         # Generate integrity hash
         event.integrity_hash = self._generate_integrity_hash(event)
@@ -461,7 +461,7 @@ async def log_audit_event(
     event = AuditLogEntry(
         id=str(uuid.uuid4()),
         correlation_id=str(uuid.uuid4()),  # In practice, this would be passed from request context
-        timestamp=datetime.now(UTC),
+        timestamp=datetime.now(timezone.utc),
         event_sequence=1,  # Would be incremented per correlation_id
         actor_id=actor_id,
         actor_type="user",

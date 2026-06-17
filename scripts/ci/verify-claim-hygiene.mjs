@@ -21,6 +21,7 @@ const SCAN_ROOTS = [
   path.join(repoRoot, "apps", "omnihub-site", "src", "i18n", "locales"),
   path.join(repoRoot, "apps", "omnihub-site", "dashboard"),
   path.join(repoRoot, "public"),
+  path.join(repoRoot, "apps", "omnihub-proof", "src"),
 ];
 const SCAN_EXTS = new Set([".json", ".html", ".md", ".ts", ".tsx", ".js", ".jsx"]);
 const EXCLUDE = [

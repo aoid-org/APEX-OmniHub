@@ -87,7 +87,7 @@
     "rsi:test": "python3 -m pytest tests/rsi/ -v --tb=short",
     "verify:types": "tsc -b --noEmit",
     "verify:lint": "bun run lint && bun run lint:py",
-    "verify:test": "bun run test && bun run test:py",
+    "verify:test": "bun run test:coverage && bun run check:new-code-coverage && bun run test:py",
     "verify:build": "APEX_ALLOW_MISSING_SUPABASE_CONFIG=true bun run build",
     "verify:security": "bun run secret:scan && bun run test:secret-scan && bun run security:audit",
     "verify:assets": "bun run test:assets",
@@ -100,6 +100,7 @@
     "check:omnidash": "node scripts/ci/check-omnidash-integrity.mjs",
     "check:coverage-integrity": "node scripts/ci/check-coverage-integrity.mjs",
     "test:secret-scan": "node tests/ci/secret-scan-fixtures.test.mjs",
+    "check:new-code-coverage": "node scripts/ci/check-new-code-coverage.mjs",
     "verify:cloudflare-pages-contract": "node scripts/ci/verify-cloudflare-pages-contract.mjs"
   },
   "size-limit": [
@@ -208,6 +209,7 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^9.39.2",
     "@lhci/cli": "^0.15.1",
+    "@noble/hashes": "1.8.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-ignition": "^0.15.8",

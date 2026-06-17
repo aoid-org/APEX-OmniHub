@@ -6,11 +6,11 @@ const CONTACT_EMAIL = 'jr@apexbiz.ca-REPLACE'
 const proofStats = [
   { stat: '93,000+', label: 'Lines of Production Code' },
   { stat: '3,120', label: 'Automated Tests' },
-  { stat: '26', label: 'CI Gates — All Green' },
-  { stat: 'A-Grade', label: 'SonarQube Security · Reliability · Maintainability' },
+  { stat: '26', label: 'Release Gates Tracked' },
+  { stat: 'Evidence', label: 'Security · Reliability · Maintainability Signals' },
 ]
 
-const tags = ['Cloudflare Workers', 'Supabase', 'Stripe', 'PWA', 'Revenue-Generating']
+const tags = ['Cloudflare Workers', 'Supabase', 'Stripe', 'PWA', 'Operational Evidence']
 
 function OrchestrateIcon() {
   return (
@@ -63,7 +63,7 @@ function App() {
             <span aria-hidden="true">·</span>
             <span>Cloudflare Native</span>
             <span aria-hidden="true">·</span>
-            <span>SonarQube A-Grade</span>
+            <span>Release Evidence</span>
           </div>
           <h1 className="mt-8 text-5xl font-bold leading-tight md:text-7xl">
             <span className="block">Connect anything.</span>
@@ -116,7 +116,7 @@ function App() {
               <CheckCircleIcon />
               <h3 className="mt-6 text-2xl font-bold">Prove</h3>
               <p className="mt-4 text-muted">
-                Armageddon L8 certified. Every build passes 26 gates. Every security and reliability metric at A-grade. Auditable by design.
+                Release evidence is tracked through CI, security, reliability, and maintainability checks so delivery decisions stay auditable by design.
               </p>
             </article>
           </div>
@@ -124,15 +124,15 @@ function App() {
 
         <section className="mx-auto max-w-4xl px-6 py-24 text-center">
           <p className="text-xs uppercase tracking-widest text-gold">Live Deployment</p>
-          <h2 className="mt-4 text-3xl font-bold md:text-4xl">Already running in production.</h2>
-          <p className="mx-auto mb-12 mt-4 max-w-2xl text-muted">Not a prototype. Not a demo environment. Real revenue. Real users.</p>
+          <h2 className="mt-4 text-3xl font-bold md:text-4xl">Operational proof under review.</h2>
+          <p className="mx-auto mb-12 mt-4 max-w-2xl text-muted">A focused proof package for reviewing deployment, payments, entitlement, and operational-readiness evidence.</p>
           <article className="rounded-lg border border-gold bg-card p-10 text-left">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-2xl font-bold">SBBL HQ</h3>
-              <span className="rounded-full bg-gold-dim px-3 py-1 text-xs text-gold">Live Since April 2, 2026</span>
+              <span className="rounded-full bg-gold-dim px-3 py-1 text-xs text-gold">Evidence Review</span>
             </div>
             <p className="mt-4 leading-relaxed text-muted">
-              Basketball super-platform for 3 leagues, ~100 teams, ~2,000 players. Handles PPV payments, live broadcast access control, replay entitlement, Stripe checkout, and Supabase-backed player management — all on Cloudflare Workers. Zero native app required.
+              Basketball operations reference architecture covering league management, PPV payments, broadcast access control, replay entitlement, Stripe checkout, and Supabase-backed player workflows on Cloudflare Workers.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {tags.map((tag) => (

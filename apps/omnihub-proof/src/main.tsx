@@ -3,14 +3,18 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-export function bootstrapOmniHubProof(root: HTMLElement | null): void {
+export function mountOmniHubProof(root: HTMLElement | null = document.getElementById('root')): void {
   if (!root) {
-    throw new Error('OmniHub Proof root element not found')
+    throw new Error('APEX OmniHub Proof root element #root not found')
   }
 
   ReactDOM.createRoot(root).render(
-    <React.StrictMode><App /></React.StrictMode>
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
   )
 }
 
-bootstrapOmniHubProof(document.getElementById('root'))
+if (import.meta.env.MODE !== 'test') {
+  mountOmniHubProof()
+}

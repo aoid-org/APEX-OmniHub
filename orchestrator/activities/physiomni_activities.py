@@ -57,7 +57,7 @@ async def compute_14_day_baseline(params: dict[str, Any]) -> dict[str, Any]:
         asset_class = params.get("asset_class", "industrial_motor")
 
         client = get_supabase_client()
-        cutoff_time = (datetime.now(UTC) - timedelta(days=14)).isoformat()
+        cutoff_time = (datetime.now(timezone.utc) - timedelta(days=14)).isoformat()
 
         # Query all historical telemetry in pilot window
         response = (
@@ -126,9 +126,9 @@ async def compute_14_day_baseline(params: dict[str, Any]) -> dict[str, Any]:
             "tenant_id": tenant_id,
             "asset_class": asset_class,
             "baseline_period_start": cutoff_time,
-            "baseline_period_end": datetime.now(UTC).isoformat(),
+            "baseline_period_end": datetime.now(timezone.utc).isoformat(),
             "normal_envelope": normal_envelope,
-            "computed_at": datetime.now(UTC).isoformat(),
+            "computed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Check for existing profile to execute clean update or insert
@@ -303,7 +303,7 @@ async def man_mode_escalation_activity(params: dict[str, Any]) -> dict[str, Any]
         )
 
         client = get_supabase_client()
-        expires_at = (datetime.now(UTC) + timedelta(hours=24)).isoformat()
+        expires_at = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
 
         record = {
             "workflow_id": workflow_id,
@@ -389,7 +389,7 @@ async def dispatch_work_order_activity(params: dict[str, Any]) -> dict[str, Any]
                         "tenant_id": tenant_id,
                         "device_serial": device_serial,
                         "message": message,
-                        "dispatched_at": datetime.now(UTC).isoformat(),
+                        "dispatched_at": datetime.now(timezone.utc).isoformat(),
                     },
                 }
             )

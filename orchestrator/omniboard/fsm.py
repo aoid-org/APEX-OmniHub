@@ -242,7 +242,7 @@ class OmniBoardFSM:
             token_ref=t_ref,
             verified=True,
             verification_method=VerificationMethod.SAFE_PING,
-            connected_at=datetime.now(UTC).isoformat(),
+            connected_at=datetime.now(timezone.utc).isoformat(),
         )
 
         spec = ConnectionSpec(
@@ -255,7 +255,7 @@ class OmniBoardFSM:
             ),
             audit=AuditContext(
                 trace_id=context.trace_id,
-                created_at=datetime.now(UTC).isoformat(),
+                created_at=datetime.now(timezone.utc).isoformat(),
             ),
         )
 

@@ -329,6 +329,8 @@ describe('sanitizeEventPayload', () => {
         metadata: { timestamp: Date.now() },
       };
 
+      sanitizeEventPayload(input);
+
       const start = performance.now();
       sanitizeEventPayload(input);
       const duration = performance.now() - start;

@@ -44,7 +44,7 @@ async def system_health_check(params: dict[str, Any]) -> dict[str, Any]:
     return {
         "healthy": True,
         "python_version": platform.python_version(),
-        "timestamp": datetime.now(UTC).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
+        "timestamp": datetime.now(timezone.utc).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
         "worker_hostname": platform.node(),
     }
 
@@ -67,7 +67,7 @@ async def system_echo(params: dict[str, Any]) -> dict[str, Any]:
         "echoed": True,
         "received_keys": sorted(params.keys()),
         "payload": params,
-        "timestamp": datetime.now(UTC).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
+        "timestamp": datetime.now(timezone.utc).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
     }
 
 
@@ -87,5 +87,5 @@ async def system_list_intents(params: dict[str, Any]) -> dict[str, Any]:
     return {
         "intents": registry.list_intents(),
         "count": len(registry),
-        "timestamp": datetime.now(UTC).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
+        "timestamp": datetime.now(timezone.utc).isoformat().replace(_UTC_OFFSET, _ZULU_SUFFIX),
     }

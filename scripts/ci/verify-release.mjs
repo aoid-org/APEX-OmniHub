@@ -13,6 +13,7 @@ const verifyScripts = [
   { name: "verify:lint",              desc: "Strict ESLint & Ruff checks" },
   { name: "verify:test",              desc: "Vitest & Pytest verification" },
   { name: "verify:build",             desc: "Vite production compilation" },
+  { name: "verify:cloudflare-pages-contract", desc: "Cloudflare Pages repository contract" },
   { name: "verify:security",          desc: "Secrets & npm audit checks" },
   { name: "verify:assets",            desc: "Production assets resolution checks" },
   { name: "verify:supabase-security", desc: "Supabase table RLS & functions audit" },
@@ -34,8 +35,8 @@ const WIN_PATH_ALLOWLIST = [
 ];
 const UNIX_PATH_ALLOWLIST = [
   "/.bun/bin",
-  "/.local/share/mise/",
   "/.pyenv/",
+  "/.local/share/mise/",
   "/usr/local/bin",
   "/usr/bin",
   "/bin",

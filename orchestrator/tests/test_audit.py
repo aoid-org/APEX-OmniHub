@@ -28,7 +28,7 @@ def test_audit_log_entry():
     entry = AuditLogEntry(
         id="123",
         correlation_id="corr-123",
-        timestamp=datetime.now(UTC),
+        timestamp=datetime.now(timezone.utc),
         event_sequence=1,
         actor_id="user-123",
         action=AuditAction.LOGIN,
@@ -50,7 +50,7 @@ def test_generate_integrity_hash(logger):
     entry = AuditLogEntry(
         id="123",
         correlation_id="corr",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=1,
         actor_id="actor",
         action=AuditAction.READ,
@@ -69,7 +69,7 @@ async def test_log_event_supabase(logger):
     entry = AuditLogEntry(
         id="123",
         correlation_id="corr",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=1,
         actor_id="actor",
         action=AuditAction.READ,
@@ -98,7 +98,7 @@ async def test_log_event_supabase_fallback(logger, capsys):
     entry = AuditLogEntry(
         id="123",
         correlation_id="corr",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=1,
         actor_id="actor",
         action=AuditAction.READ,
@@ -122,7 +122,7 @@ async def test_log_event_file():
     entry = AuditLogEntry(
         id="123",
         correlation_id="corr",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=1,
         actor_id="actor",
         action=AuditAction.READ,
@@ -178,7 +178,7 @@ def test_validate_integrity():
     entry1 = AuditLogEntry(
         id="1",
         correlation_id="c",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=1,
         actor_id="a",
         action=AuditAction.READ,
@@ -191,7 +191,7 @@ def test_validate_integrity():
     entry2 = AuditLogEntry(
         id="2",
         correlation_id="c",
-        timestamp=datetime(2023, 1, 1, tzinfo=UTC),
+        timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
         event_sequence=2,
         actor_id="a",
         action=AuditAction.READ,
@@ -214,7 +214,7 @@ def _make_entry(**kwargs):
     defaults = {
         "id": "123",
         "correlation_id": "corr",
-        "timestamp": datetime(2023, 1, 1, tzinfo=UTC),
+        "timestamp": datetime(2023, 1, 1, tzinfo=timezone.utc),
         "event_sequence": 1,
         "actor_id": "actor",
         "action": AuditAction.READ,
@@ -276,7 +276,7 @@ async def test_query_events_basic():
     row = {
         "id": "r1",
         "correlation_id": "c",
-        "timestamp": datetime(2023, 1, 1, tzinfo=UTC).isoformat(),
+        "timestamp": datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat(),
         "event_sequence": 1,
         "actor_id": "a",
         "action": "read",
@@ -304,8 +304,8 @@ async def test_query_events_basic():
             actor_id="a",
             action=AuditAction.READ,
             resource_type=AuditResourceType.DOCUMENT,
-            start_date=datetime(2023, 1, 1, tzinfo=UTC),
-            end_date=datetime(2023, 12, 31, tzinfo=UTC),
+            start_date=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2023, 12, 31, tzinfo=timezone.utc),
             limit=10,
         )
     assert isinstance(results, list)

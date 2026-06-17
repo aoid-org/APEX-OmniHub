@@ -235,6 +235,12 @@ describe('QuadTree Performance', () => {
 
 describe('Matrix3d Composition Performance', () => {
   it('should compose 10,000 matrix transformations within 50ms', () => {
+    const warmupRand = createSeededRandom(5);
+    let warmupMatrix = createIdentityMatrix();
+    for (let i = 0; i < 10_000; i++) {
+      warmupMatrix = translateMatrix(warmupMatrix, warmupRand() * 2 - 1, warmupRand() * 2 - 1);
+    }
+
     const rand = createSeededRandom(5);
     let matrix = createIdentityMatrix();
     const start = performance.now();

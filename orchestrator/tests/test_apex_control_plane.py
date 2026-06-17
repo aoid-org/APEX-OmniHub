@@ -67,7 +67,9 @@ def test_mutating_request_fails_closed_when_stale() -> None:
         stale_after="2020-01-01T00:00:00+00:00",
     )
     with pytest.raises(ValueError, match="apex_stale_event"):
-        assert_mutation_envelope("POST", envelope.__dict__, datetime(2021, 1, 1, tzinfo=UTC))
+        assert_mutation_envelope(
+            "POST", envelope.__dict__, datetime(2021, 1, 1, tzinfo=timezone.utc)
+        )
 
 
 def test_hash_is_order_independent() -> None:
@@ -186,7 +188,7 @@ def test_guardian_denies_stale_event() -> None:
         context={"mfa_verified": True},
         envelope=stale_envelope,
         rules=(),
-        now=datetime(2021, 1, 1, tzinfo=UTC),
+        now=datetime(2021, 1, 1, tzinfo=timezone.utc),
     )
     assert decision.decision == "deny"
     assert decision.reason_code == "STALE_EVENT"

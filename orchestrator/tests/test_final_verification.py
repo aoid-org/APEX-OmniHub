@@ -135,8 +135,6 @@ class TestAuditPersistence:
         """Audit events should be inserted into audit_logs table."""
         from datetime import datetime, timezone
 
-        utc = timezone.utc
-
         from models.audit import (
             AuditAction,
             AuditLogEntry,
@@ -150,7 +148,7 @@ class TestAuditPersistence:
         event = AuditLogEntry(
             id="test-123",
             correlation_id="corr-456",
-            timestamp=datetime.now(utc),
+            timestamp=datetime.now(timezone.utc),
             event_sequence=1,
             actor_id="user-789",
             action=AuditAction.DATA_ACCESS,
@@ -175,7 +173,6 @@ class TestAuditPersistence:
         """Audit should log to stderr on DB failure."""
         from datetime import datetime, timezone
 
-        utc = timezone.utc
         from io import StringIO
 
         from models.audit import (
@@ -191,7 +188,7 @@ class TestAuditPersistence:
         event = AuditLogEntry(
             id="fallback-test",
             correlation_id="corr-123",
-            timestamp=datetime.now(utc),
+            timestamp=datetime.now(timezone.utc),
             event_sequence=1,
             actor_id="user-123",
             action=AuditAction.DATA_DELETE,

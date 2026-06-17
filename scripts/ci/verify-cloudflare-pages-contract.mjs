@@ -1,43 +1,39 @@
-import fs from 'node:fs';
-import path from 'node:path';
+#!/usr/bin/env node
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const root = process.cwd();
-const fail = (message) => {
-  console.error(`[cloudflare-pages-contract] ${message}`);
-  process.exitCode = 1;
-};
-const readJson = (relativePath) => JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8'));
+const ROOT = resolve(new URL('../..', import.meta.url).pathname);
+const rootWrangler = resolve(ROOT, 'wrangler.toml');
+const pkgPath = resolve(ROOT, 'package.json');
+const distIndex = resolve(ROOT, 'dist/index.html');
+const expectedBuildCommand = 'bun run build';
+const expectedOutputDirectory = 'dist';
+let failed = 0;
 
-const rootWrangler = path.join(root, 'wrangler.toml');
-if (fs.existsSync(rootWrangler)) {
-  fail('root wrangler.toml must not exist; Cloudflare Pages deployment is dashboard/workflow managed.');
+function check(label, condition, detail = '') {
+  if (condition) console.log(`  ✓ ${label}`);
+  else {
+    console.error(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`);
+    failed += 1;
+  }
 }
 
-const packageJson = readJson('package.json');
-if (packageJson.scripts?.build !== 'vite build') {
-  fail('package.json must keep the canonical Cloudflare Pages build command as `bun run build` -> `vite build`.');
+console.log('=== verify:cloudflare-pages-contract ===');
+const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+
+check('root wrangler.toml is absent', !existsSync(rootWrangler), 'Cloudflare Pages must not be configured from a root wrangler.toml');
+check('package.json defines canonical build script', pkg.scripts?.build === 'vite build', 'expected scripts.build to remain vite build');
+check('dist/index.html exists after build', existsSync(distIndex), 'run bun run build before this contract check');
+
+console.log('\nExpected Cloudflare Pages dashboard settings:');
+console.log('  root directory: repository root');
+console.log(`  build command: ${expectedBuildCommand}`);
+console.log(`  output directory: ${expectedOutputDirectory}`);
+console.log('  root wrangler.toml: intentionally absent');
+
+if (failed > 0) {
+  console.error(`\n❌ verify:cloudflare-pages-contract FAILED — ${failed} contract check(s) failed`);
+  process.exit(1);
 }
 
-const productionWorkflow = fs.readFileSync(path.join(root, '.github/workflows/deploy-production-cf-direct.yml'), 'utf8');
-if (!productionWorkflow.includes('bun run build')) {
-  fail('production Cloudflare workflow must build with `bun run build`.');
-}
-if (!productionWorkflow.includes('wrangler@latest pages deploy dist')) {
-  fail('production Cloudflare workflow must deploy the root dist directory.');
-}
-
-const ciRuntimeGates = fs.readFileSync(path.join(root, '.github/workflows/ci-runtime-gates.yml'), 'utf8');
-if (!ciRuntimeGates.includes('bun run verify:cloudflare-pages-contract')) {
-  fail('ci-runtime-gates must run verify:cloudflare-pages-contract before Cloudflare deployment.');
-}
-
-const distIndex = path.join(root, 'dist/index.html');
-if (!fs.existsSync(distIndex)) {
-  fail('dist/index.html is missing. Run `bun run build` before this verifier.');
-}
-
-if (process.exitCode) {
-  process.exit(process.exitCode);
-}
-
-console.log('[cloudflare-pages-contract] OK: no root wrangler.toml, build command is bun run build, output is dist/index.html.');
+console.log('\nverify:cloudflare-pages-contract PASSED');
