@@ -25,6 +25,5 @@ export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseC
      console.error('CRITICAL SECURITY WARNING: Service Role Key passed to client factory in browser environment. It is ignored, but this is a security risk.');
   }
 
-  // @ts-expect-error - PNPM workspace type mismatch workaround
   return supabase;
 }
