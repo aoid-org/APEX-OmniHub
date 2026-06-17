@@ -61,6 +61,13 @@ jobs:
           path: apex-policy-report.json
           retention-days: 14
 
+      - name: Implementation-test sync guard
+        # Catches: storage API drift (localStorage↔sessionStorage), forbidden model
+        # refs in happy-path tests, stale config field assertions.
+        # This is the PREVENTION for the class of bug where an impl change is not
+        # mirrored in the corresponding test file, causing cryptic CI failures.
+        run: python scripts/ci/impl_test_sync_guard.py
+
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-22.04
@@ -239,11 +246,4 @@ jobs:
              [ "${{ needs.dependency-audit.result }}" != "success" ] || \
              [ "${{ needs.rfc-architecture-marker.result }}" != "success" ]; then
             echo "::error::APEX governance gate FAILED."
-            echo "apex-policy: ${{ needs.apex-policy.result }}"
-            echo "secret-scan: ${{ needs.secret-scan.result }}"
-            echo "dependency-audit: ${{ needs.dependency-audit.result }}"
-            echo "sast: ${{ needs.sast.result }}"
-            echo "rfc-architecture-marker: ${{ needs.rfc-architecture-marker.result }}"
-            exit 1
-          fi
-          echo "APEX governance gate passed."
+   
