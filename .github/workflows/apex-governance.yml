@@ -147,7 +147,7 @@ jobs:
       # repository variable ENABLE_GHAS=true after enabling Advanced Security to
       # run full CodeQL analysis with code-scanning upload.
       - name: Initialize CodeQL
-        if: ${{ vars.ENABLE_GHAS == 'true' }}
+        if: ${{ vars['ENABLE_GHAS'] == 'true' }}
         uses: github/codeql-action/init@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
         with:
           languages: javascript,python
@@ -156,11 +156,11 @@ jobs:
               - apps/omnihub-site/public/omnihub-starmap.js
 
       - name: Perform CodeQL Analysis
-        if: ${{ vars.ENABLE_GHAS == 'true' }}
+        if: ${{ vars['ENABLE_GHAS'] == 'true' }}
         uses: github/codeql-action/analyze@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
 
-      - name: CodeQL not enabled (GHAS unavailable)
-        if: ${{ vars.ENABLE_GHAS != 'true' }}
+      - name: Skip CodeQL Analysis (GHAS Disabled)
+        if: ${{ vars['ENABLE_GHAS'] != 'true' }}
         run: |
           echo "::notice::CodeQL code-scanning upload skipped — requires GitHub Advanced Security (set ENABLE_GHAS=true once enabled)."
           echo "SAST coverage remains active via SonarCloud, ESLint security rules, and osv-scanner."

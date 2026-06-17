@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  omni-dash:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "cd apps/omnihub-site && npm install -g pnpm && pnpm install && pnpm build && pnpm preview --host 0.0.0.0 --port 4173"
+    ports:
+      - "4173:4173"
+    environment:
+      - NODE_ENV=staging
+      - VITE_SUPABASE_URL=http://supabase-kong:8000
+    networks:
+      - staging_net
+networks:
+  staging_net:
+    driver: bridge

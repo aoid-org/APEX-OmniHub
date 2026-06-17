@@ -81,23 +81,37 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
   const isDemo = status === 'ERROR';
   const displayLogs = isDemo ? DEMO_LOGS : logs;
 
+  let traceColor = '#f59e0b';
+  let traceBg = 'rgba(245,158,11,0.08)';
+  let traceBorderColor = 'rgba(245,158,11,0.22)';
+  let traceText = 'Connecting';
+
+  if (isDemo) {
+    traceText = 'Demo';
+  } else if (status === 'SUBSCRIBED') {
+    traceColor = '#34d399';
+    traceBg = 'rgba(52,211,153,0.08)';
+    traceBorderColor = 'rgba(52,211,153,0.22)';
+    traceText = 'Live';
+  }
+
   return (
     <div data-testid="omni-trace-feed" className="sentinel-section" style={{ paddingBottom: 8 }}>
       <div className="sentinel-section-title" style={{ marginBottom: 8 }}>
-        OmniTrace
+        OmniTrace{' '}
         <span style={{
           marginLeft: 'auto',
           fontSize: 9,
           fontWeight: 700,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          color: isDemo ? '#f59e0b' : status === 'SUBSCRIBED' ? '#34d399' : '#f59e0b',
+          color: traceColor,
           padding: '2px 6px',
           borderRadius: 4,
-          background: isDemo ? 'rgba(245,158,11,0.08)' : status === 'SUBSCRIBED' ? 'rgba(52,211,153,0.08)' : 'rgba(245,158,11,0.08)',
-          border: `1px solid ${isDemo ? 'rgba(245,158,11,0.22)' : status === 'SUBSCRIBED' ? 'rgba(52,211,153,0.22)' : 'rgba(245,158,11,0.22)'}`,
+          background: traceBg,
+          border: `1px solid ${traceBorderColor}`,
         }}>
-          {isDemo ? 'Demo' : status === 'SUBSCRIBED' ? 'Live' : 'Connecting'}
+          {traceText}
         </span>
       </div>
 
@@ -134,8 +148,8 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
           fontFamily: "'Space Grotesk',sans-serif",
           transition: 'border-color .15s, background .15s',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = '#f97316'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--od-text-tertiary)'; }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)'; e.currentTarget.style.color = '#f97316'; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--od-text-tertiary)'; }}
       >
         + Replay Workflows
       </button>

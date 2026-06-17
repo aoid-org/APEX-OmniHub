@@ -133,16 +133,16 @@ export const onRequestPost: PagesFunction = async (context) => {
   });
 
   // ── 7. Async orchestration (fire-and-forget into background) ─────────────
-  runGateway(
+  runGateway({
     writer,
     enc,
     traceId,
     prompt,
-    context_ as Record<string, unknown>,
+    ctx: context_ as Record<string, unknown>,
     userJwt,
     supabaseUrl,
     supabaseAnonKey,
-  ).catch((err) => {
+  }).catch((err) => {
     console.error("[omniport-gateway] Unhandled gateway error:", err);
     writer.close().catch(() => {});
   });
@@ -168,16 +168,19 @@ export const onRequestOptions: PagesFunction = async (context) => {
 
 // ── Gateway orchestration logic ──────────────────────────────────────────────
 
-async function runGateway(
-  writer: WritableStreamDefaultWriter<Uint8Array>,
-  enc: TextEncoder,
-  traceId: string,
-  prompt: string,
-  ctx: Record<string, unknown>,
-  userJwt: string,
-  supabaseUrl: string,
-  supabaseAnonKey: string,
-): Promise<void> {
+interface GatewayOptions {
+  writer: WritableStreamDefaultWriter<Uint8Array>;
+  enc: TextEncoder;
+  traceId: string;
+  prompt: string;
+  ctx: Record<string, unknown>;
+  userJwt: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+}
+
+async function runGateway(options: GatewayOptions): Promise<void> {
+  const { writer, enc, traceId, prompt, ctx, userJwt, supabaseUrl, supabaseAnonKey } = options;
   const emit = async (event: string, data: Record<string, unknown>) => {
     try {
       await writer.write(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
@@ -245,74 +248,8 @@ async function runGateway(
     await emit("status", { traceId, status: "running", workflowId });
 
     // ── Poll agent_runs for terminal state ───────────────────────────────────
-    const POLL_INTERVAL_MS = 750;
-    const TIMEOUT_MS = 90_000;
-    const startTime = Date.now();
+    await pollAgentRuns(traceId, userJwt, supabaseUrl, supabaseAnonKey, workflowId, emit);
 
-    while (Date.now() - startTime < TIMEOUT_MS) {
-      await sleep(POLL_INTERVAL_MS);
-
-      let rows: Array<Record<string, unknown>> = [];
-      try {
-        const pollRes = await fetch(
-          `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,result,reply,error,workflow_id,completed_at`,
-          {
-            headers: {
-              "Authorization": `Bearer ${userJwt}`,
-              "apikey": supabaseAnonKey,
-              "Accept": "application/json",
-            },
-          },
-        );
-        if (pollRes.ok) {
-          rows = (await pollRes.json()) as Array<Record<string, unknown>>;
-        }
-      } catch (err) {
-        console.warn("[omniport-gateway] poll error:", err);
-        // Continue polling — transient network error
-      }
-
-      const row = rows?.[0];
-      if (!row) continue;
-
-      const status = row.status as string | undefined;
-
-      if (status === "completed") {
-        const reply =
-          (row.reply as string | undefined) ??
-          (row.result as string | undefined) ??
-          "";
-        await emit("completed", {
-          traceId,
-          status: "completed",
-          reply,
-          result: row.result ?? {},
-          workflowId: row.workflow_id ?? workflowId,
-        });
-        await writer.close();
-        return;
-      }
-
-      if (status === "failed") {
-        await emit("failed", {
-          traceId,
-          status: "failed",
-          error: sanitizeError(row.error),
-          workflowId: row.workflow_id ?? workflowId,
-        });
-        await writer.close();
-        return;
-      }
-
-      // status is queued/running — keep polling
-    }
-
-    // Timeout
-    await emit("timeout", {
-      traceId,
-      status: "timeout",
-      workflowId,
-    });
     await writer.close();
   } catch (err) {
     console.error("[omniport-gateway] runGateway error:", err);
@@ -327,6 +264,82 @@ async function runGateway(
       // Already closed
     }
   }
+}
+
+async function pollAgentRuns(
+  traceId: string,
+  userJwt: string,
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  workflowId: string | undefined,
+  emit: (event: string, data: Record<string, unknown>) => Promise<void>
+): Promise<void> {
+  const POLL_INTERVAL_MS = 750;
+  const TIMEOUT_MS = 90_000;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < TIMEOUT_MS) {
+    await sleep(POLL_INTERVAL_MS);
+
+    let rows: Array<Record<string, unknown>> = [];
+    try {
+      const pollRes = await fetch(
+        `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,result,reply,error,workflow_id,completed_at`,
+        {
+          headers: {
+            "Authorization": `Bearer ${userJwt}`,
+            "apikey": supabaseAnonKey,
+            "Accept": "application/json",
+          },
+        },
+      );
+      if (pollRes.ok) {
+        rows = (await pollRes.json()) as Array<Record<string, unknown>>;
+      }
+    } catch (err) {
+      console.warn("[omniport-gateway] poll error:", err);
+      // Continue polling — transient network error
+    }
+
+    const row = rows?.[0];
+    if (!row) continue;
+
+    const status = row.status as string | undefined;
+
+    if (status === "completed") {
+      const reply =
+        (row.reply as string | undefined) ??
+        (row.result as string | undefined) ??
+        "";
+      await emit("completed", {
+        traceId,
+        status: "completed",
+        reply,
+        result: row.result ?? {},
+        workflowId: row.workflow_id ?? workflowId,
+      });
+      return;
+    }
+
+    if (status === "failed") {
+      await emit("failed", {
+        traceId,
+        status: "failed",
+        error: sanitizeError(row.error),
+        workflowId: row.workflow_id ?? workflowId,
+      });
+      return;
+    }
+
+    // status is queued/running — keep polling
+  }
+
+  // Timeout
+  await emit("timeout", {
+    traceId,
+    status: "timeout",
+    workflowId,
+  });
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
