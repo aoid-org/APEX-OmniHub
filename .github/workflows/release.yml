@@ -246,6 +246,24 @@ jobs:
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
 
+      - name: Write final release evidence (apply failed)
+        if: failure()
+        env:
+          GH_SHA: ${{ github.sha }}
+          GH_SERVER_URL: ${{ github.server_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
+          SHADOW_URL_RAW: ${{ needs.release.outputs.shadow_url }}
+          HEALTH_RAW: ${{ needs.release.outputs.health_result }}
+          VALIDATOR_RAW: ${{ needs.release.outputs.validator_result }}
+          TF_PLAN_RESULT_RAW: ${{ needs.release.outputs.tf_plan_result }}
+          TF_PLAN_OUTCOME_RAW: 'success'
+          TF_APPLY_RESULT_RAW: 'fail'
+          TF_APPLY_OUTCOME_RAW: 'failure'
+          PUBLISHED_RAW: 'false'
+          RELEASE_CUT_RAW: 'true'
+          PREFLIGHT_OUTPUT_PATH: pre-apply-evidence/shadow-preflight.json
+        run: node scripts/ci/write-release-evidence.mjs
       - name: Write final release evidence
         if: success()
         env:

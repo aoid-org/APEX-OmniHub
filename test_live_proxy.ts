@@ -13,6 +13,14 @@ const requiredEnv = (name: string): string => {
 };
 
 async function testLiveProxy() {
+  if (Deno.env.get("APEX_ALLOW_LIVE_SUPABASE_ADMIN_SCRIPT") !== "true") {
+    console.error(
+      "Refusing to run: APEX_ALLOW_LIVE_SUPABASE_ADMIN_SCRIPT must be set to 'true'. " +
+      "This script performs live privileged Supabase operations using the service-role key."
+    );
+    Deno.exit(1);
+  }
+
   const supabaseUrl = requiredEnv("SUPABASE_URL");
   const supabaseKey = requiredEnv("SUPABASE_ANON_KEY");
   const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
