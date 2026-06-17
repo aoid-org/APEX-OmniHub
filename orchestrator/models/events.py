@@ -18,6 +18,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
+UTC = timezone.utc
+
 # Constant for UTC offset string (used in ISO 8601 timestamp parsing)
 UTC_OFFSET_SUFFIX = "+00:00"
 

@@ -16,6 +16,8 @@ from .schema import (
 )
 from .service import OmniBoardService
 
+UTC = timezone.utc
+
 logger = logging.getLogger(__name__)
 
 

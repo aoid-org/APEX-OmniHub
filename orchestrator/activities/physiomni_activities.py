@@ -19,6 +19,8 @@ from temporalio.exceptions import ApplicationError
 
 from providers.database.factory import get_database_provider
 
+UTC = timezone.utc
+
 # ── 1. SECURE CLIENT INITIALIZATION ──────────────────────────────────────────
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY", "")

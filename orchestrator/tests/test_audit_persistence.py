@@ -19,6 +19,8 @@ from models.audit import (
     AuditStatus,
 )
 
+UTC = timezone.utc
+
 # Test fixtures for security validation - intentionally fake credentials
 # used to verify they are NOT leaked in audit fallback logs
 # String concatenation prevents static analysis false positives

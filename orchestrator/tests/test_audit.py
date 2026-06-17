@@ -15,6 +15,8 @@ from models.audit import (
     log_audit_event,
 )
 
+UTC = timezone.utc
+
 
 def test_audit_metadata():
     metadata = AuditMetadata(user_agent="TestAgent", custom_fields={"key": "value"})

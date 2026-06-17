@@ -57,10 +57,9 @@ function createIdentityMatrix(): number[] {
 
 /** Applies a translation to a matrix3d */
 function translateMatrix(matrix: number[], tx: number, ty: number): number[] {
-  const result = [...matrix];
-  result[12] += tx;
-  result[13] += ty;
-  return result;
+  matrix[12] += tx;
+  matrix[13] += ty;
+  return matrix;
 }
 
 /** Applies a scale to a matrix3d */

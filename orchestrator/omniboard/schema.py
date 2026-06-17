@@ -5,6 +5,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+UTC = timezone.utc
+
 
 class AuthType(StrEnum):
     OAUTH = "oauth"

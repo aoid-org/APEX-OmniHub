@@ -18,6 +18,8 @@ from models.execution_envelope import (
 )
 from security.guardian_fabric import GuardianPolicyRule, evaluate_guardian_policy
 
+UTC = timezone.utc
+
 
 def load_compensation_catalog() -> Any:
     module_path = Path(__file__).parents[1] / "activities" / "compensation_catalog.py"

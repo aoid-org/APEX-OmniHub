@@ -11,6 +11,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+UTC = timezone.utc
+
 
 class RiskLane(str, Enum):
     """APEX-DEV D2: MAN Mode Risk Lanes | Source: apex-dev.md"""

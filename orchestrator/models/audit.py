@@ -21,6 +21,8 @@ from pydantic import BaseModel, Field
 
 from providers.database.factory import get_database_provider
 
+UTC = timezone.utc
+
 
 class AuditAction(str, Enum):  # noqa: UP042
     """Standardized audit actions for compliance tracking."""

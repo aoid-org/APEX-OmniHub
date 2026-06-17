@@ -12,6 +12,8 @@ from temporalio.exceptions import ApplicationError
 
 from providers.database.factory import get_database_provider
 
+UTC = timezone.utc
+
 
 @activity.defn(name="notify_man_task")
 async def notify_man_task(params: dict[str, Any]) -> dict[str, Any]:

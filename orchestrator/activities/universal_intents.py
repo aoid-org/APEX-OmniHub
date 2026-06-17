@@ -19,6 +19,8 @@ from temporalio import activity
 
 from core.intent_registry import registry
 
+UTC = timezone.utc
+
 # UTC offset replaced by Zulu suffix for ISO 8601 compliance
 _UTC_OFFSET = "+00:00"
 _ZULU_SUFFIX = "Z"

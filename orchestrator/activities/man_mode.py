@@ -25,6 +25,8 @@ from pydantic import BaseModel, Field
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
+UTC = timezone.utc
+
 
 class PolicyDecision(BaseModel):
     """Unified policy decision surface."""
