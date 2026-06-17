@@ -12,9 +12,7 @@
 // OmniSentry uses structured logging via console.warn/error for operational diagnostics.
 // All console.info calls are guarded behind import.meta.env.DEV.
 
-// ============================================================================
-// TYPES
-// ============================================================================
+// --- TYPES ---
 
 export interface SentryConfig {
   /** Maximum errors per minute before circuit opens */
@@ -57,9 +55,7 @@ interface ErrorFingerprint {
   lastSeen: number;
 }
 
-// ============================================================================
-// DEFAULT CONFIGURATION
-// ============================================================================
+// --- DEFAULT CONFIGURATION ---
 
 const DEFAULT_CONFIG: SentryConfig = {
   errorThreshold: 10,
@@ -70,9 +66,7 @@ const DEFAULT_CONFIG: SentryConfig = {
   dedupeWindowMs: 60_000,
 };
 
-// ============================================================================
-// STATE
-// ============================================================================
+// --- STATE ---
 
 let config: SentryConfig = { ...DEFAULT_CONFIG };
 let circuitBreaker: CircuitBreakerState = {
@@ -85,9 +79,7 @@ const errorFingerprints = new Map<string, ErrorFingerprint>();
 let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 let startTime = Date.now();
 
-// ============================================================================
-// UTILITIES
-// ============================================================================
+// --- UTILITIES ---
 
 /**
  * Generate stable hash for error deduplication
@@ -138,9 +130,7 @@ function safeRead<T>(key: string, fallback: T): T {
   }
 }
 
-// ============================================================================
-// CIRCUIT BREAKER
-// ============================================================================
+// --- CIRCUIT BREAKER ---
 
 /**
  * Check if circuit allows operation
@@ -187,9 +177,7 @@ function recordFailure(): void {
   }
 }
 
-// ============================================================================
-// ERROR DEDUPLICATION
-// ============================================================================
+// --- ERROR DEDUPLICATION ---
 
 /**
  * Check if error should be reported (deduplication)
@@ -235,9 +223,7 @@ function cleanupFingerprints(): void {
   }
 }
 
-// ============================================================================
-// SELF-HEALING RETRY
-// ============================================================================
+// --- SELF-HEALING RETRY ---
 
 /**
  * Execute operation with automatic retry and circuit breaker
@@ -269,9 +255,7 @@ export async function withResilience<T>(
   return null;
 }
 
-// ============================================================================
-// HEALTH DIAGNOSTICS
-// ============================================================================
+// --- HEALTH DIAGNOSTICS ---
 
 /**
  * Get current health status
@@ -356,9 +340,7 @@ function runSelfDiagnostics(): void {
   safePersist('omni_sentry_health', health);
 }
 
-// ============================================================================
-// PUBLIC API
-// ============================================================================
+// --- PUBLIC API ---
 
 /**
  * Initialize OmniSentry with optional configuration
