@@ -42,7 +42,7 @@ const FORBIDDEN_PROVIDER_PATTERNS = /^(openai|xai|google|gemini|gpt.*)$/i;
  * Forbidden providers are cleared from sessionStorage.
  */
 function getCleanProviderPreference(): string | null {
-  if (typeof globalThis.window === 'undefined') return null;
+  if (globalThis.window === undefined) return null;
   const stored = globalThis.window.sessionStorage.getItem('omni_ai_provider');
   if (!stored) return null;
 
@@ -155,6 +155,34 @@ export async function queryAgentRegistry(): Promise<AgentCard[]> {
 // SSE parsing
 // ============================================================================
 
+function processTerminalSseEvent(
+  status: string,
+  lastEventName: string,
+  parsed: Record<string, unknown>,
+  workflowId?: string,
+  traceId?: string
+): McpIntentResponse | null {
+  if (lastEventName === 'completed' || status === 'completed') {
+    const reply =
+      (parsed.reply as string | undefined) ??
+      (parsed.result as string | undefined) ??
+      '';
+    return { reply, status: 'completed', workflowId, traceId };
+  }
+  if (lastEventName === 'failed' || status === 'failed') {
+    const error = (parsed.error as string | undefined) ?? 'Agent execution failed';
+    throw new Error(`[MCP Client] Agent failed: ${error}`);
+  }
+  if (lastEventName === 'timeout' || status === 'timeout') {
+    throw new Error('[MCP Client] Agent timed out');
+  }
+  if (lastEventName === 'error' || status === 'error') {
+    const errMsg = (parsed.error as string | undefined) ?? 'Unknown error';
+    throw new Error(`[MCP Client] Gateway error: ${errMsg}`);
+  }
+  return null;
+}
+
 async function parseSseToCompletion(
   body: ReadableStream<Uint8Array>,
   onStatus?: (status: string, workflowId?: string, traceId?: string) => void,
@@ -201,23 +229,9 @@ async function parseSseToCompletion(
           }
 
           // Terminal events
-          if (lastEventName === 'completed' || status === 'completed') {
-            const reply =
-              (parsed.reply as string | undefined) ??
-              (parsed.result as string | undefined) ??
-              '';
-            finalResult = { reply, status: 'completed', workflowId, traceId };
-          } else if (lastEventName === 'failed' || status === 'failed') {
-            const error = (parsed.error as string | undefined) ?? 'Agent execution failed';
-            finalResult = { reply: '', status: 'failed', workflowId, traceId };
-            throw new Error(`[MCP Client] Agent failed: ${error}`);
-          } else if (lastEventName === 'timeout' || status === 'timeout') {
-            finalResult = { reply: '', status: 'timeout', workflowId, traceId };
-            throw new Error('[MCP Client] Agent timed out');
-          } else if (lastEventName === 'error' || status === 'error') {
-            finalResult = { reply: '', status: 'error', workflowId, traceId };
-            const errMsg = (parsed.error as string | undefined) ?? 'Unknown error';
-            throw new Error(`[MCP Client] Gateway error: ${errMsg}`);
+          const result = processTerminalSseEvent(status, lastEventName, parsed, workflowId, traceId);
+          if (result) {
+            finalResult = result;
           }
 
           lastEventName = '';

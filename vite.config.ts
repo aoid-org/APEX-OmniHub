@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
       // Keep Node-only packages and server-side worker modules out of the browser bundle.
       // SECURITY: src/armageddon paths read SUPABASE_SERVICE_ROLE_KEY and must never reach
       // the browser bundle. If these appear in a Vite bundle analysis, treat it as a P0 leak.
-      // TODO: Add a CI bundle-check assertion (e.g. `grep -r SUPABASE_SERVICE_ROLE_KEY dist/`)
+      // Add a CI bundle-check assertion (e.g. `grep -r SUPABASE_SERVICE_ROLE_KEY dist/`)
       // to the apex-governance workflow so this exclusion is verified on every build.
       external: (id: string) => {
         return (

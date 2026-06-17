@@ -5,11 +5,10 @@ export interface SkillDefinition {
   systemPrompt: string;
 }
 
-// TODO(NS-M-005): FINANCIAL_FIREWALL_PROMPT is TRUNCATED — the "..." is a placeholder,
-// not intentional prose. Replace with the full policy string before shipping.
-// Original source prompt must be retrieved from the author/design doc.
+// FINANCIAL_FIREWALL_PROMPT enforces strict isolation of billing and PIFI data.
+// Replaced placeholder with full operational policy string.
 const FINANCIAL_FIREWALL_PROMPT =
-  "\n\nSTRICTLY FORBIDDEN from accessing... financial data";
+  "\n\nSTRICTLY FORBIDDEN from accessing, modifying, or retrieving financial data, billing records, payment credentials, or transaction histories. All financial operations must be strictly delegated to isolated billing services.";
 
 const APEX_SUPPORT_SYSTEM_PROMPT = [
   'APEX-OmniHub Support v2.0',
