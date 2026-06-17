@@ -365,7 +365,7 @@ class TestProductionValidator:
         """Production env without redis_password should raise ValueError."""
 
         with pytest.raises((ValidationError, ValueError)):
-            make_settings(ENVIRONMENT="production", ANTHROPIC_API_KEY="test-anthropic-key")  # noqa: S106  # NOSONAR
+            make_settings(ENVIRONMENT="production", ANTHROPIC_API_KEY="placeholder-anthropic-key")  # noqa: S106  # NOSONAR
 
     def test_production_without_anthropic_api_key_raises(self):
         """Production env without anthropic_api_key should raise ValueError."""
@@ -378,7 +378,7 @@ class TestProductionValidator:
         s = make_settings(
             ENVIRONMENT="production",
             REDIS_PASSWORD="secure-pass",  # noqa: S106  # NOSONAR
-            ANTHROPIC_API_KEY="test-anthropic-key",  # noqa: S106  # NOSONAR
+            ANTHROPIC_API_KEY="placeholder-anthropic-key",  # noqa: S106  # NOSONAR
         )
         assert s.environment == "production"
         assert s.redis_password is not None
