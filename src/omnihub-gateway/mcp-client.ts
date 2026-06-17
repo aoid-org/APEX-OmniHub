@@ -155,11 +155,6 @@ export async function queryAgentRegistry(): Promise<AgentCard[]> {
 // SSE parsing
 // ============================================================================
 
-interface SseEvent {
-  event: string;
-  data: Record<string, unknown>;
-}
-
 async function parseSseToCompletion(
   body: ReadableStream<Uint8Array>,
   onStatus?: (status: string, workflowId?: string, traceId?: string) => void,
