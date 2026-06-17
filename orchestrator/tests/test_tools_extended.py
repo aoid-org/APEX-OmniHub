@@ -579,11 +579,31 @@ async def test_generate_plan_prompt_injection_blocked():
 
 
 @pytest.mark.asyncio
-async def test_generate_plan_model_not_in_allowlist():
-    """requested_model not in allowed_models → ApplicationError non_retryable."""
+async def test_generate_plan_forbidden_model_rejected():
+    """requested_model forbidden by APEX policy → ApplicationError non_retryable."""
     context = {
         "requested_model": "gpt-4o",
-        "allowed_models": ["gpt-3.5-turbo", "claude-3-haiku"],
+        "allowed_models": ["gpt-4o"],
+    }
+
+    with _patch_llm(_make_plan()):
+        with patch("activities.tools.create_safe_user_message", return_value="safe"):
+            with pytest.raises(ApplicationError) as exc_info:
+                await generate_plan_with_llm("do something", context)
+
+    assert "forbidden" in str(exc_info.value).lower()
+    assert exc_info.value.non_retryable is True
+
+
+@pytest.mark.asyncio
+async def test_generate_plan_model_not_in_allowlist():
+    """requested_model not in allowed_models → ApplicationError non_retryable.
+    Uses a non-forbidden model (cohere/command-r) that is simply absent from the allowlist.
+    GPT models are now rejected earlier by the APEX provider policy check.
+    """
+    context = {
+        "requested_model": "cohere/command-r",
+        "allowed_models": ["anthropic/claude-3-haiku", "groq/llama3-8b-8192"],
     }
 
     with _patch_llm(_make_plan()):
@@ -597,10 +617,12 @@ async def test_generate_plan_model_not_in_allowlist():
 
 @pytest.mark.asyncio
 async def test_generate_plan_model_in_allowlist_passes():
-    """requested_model inside allowed_models → proceeds normally."""
+    """requested_model inside allowed_models → proceeds normally.
+    Uses Anthropic model (APEX policy compliant).
+    """
     context = {
-        "requested_model": "gpt-3.5-turbo",
-        "allowed_models": ["gpt-3.5-turbo", "gpt-4o"],
+        "requested_model": "anthropic/claude-3-haiku",
+        "allowed_models": ["anthropic/claude-3-haiku", "groq/llama3-8b-8192"],
     }
 
     import activities.tools as tools_mod

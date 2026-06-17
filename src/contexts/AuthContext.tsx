@@ -227,6 +227,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // NS-H-001: Clear BYOM provider config from sessionStorage on logout
+    sessionStorage.removeItem('omni_ai_provider');
     stopBackgroundDeviceSync();
     if (session?.user) {
       recordAuditEvent({

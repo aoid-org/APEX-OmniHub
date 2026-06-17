@@ -217,10 +217,30 @@ def _raise_non_retryable_plan_error(message: str) -> NoReturn:
 
 
 def _resolve_llm_model(context: dict[str, Any]) -> str:
-    system_default_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4-turbo-preview")
+    """
+    Resolve the LLM model for plan generation.
+
+    APEX Policy:
+    - Default provider: Anthropic
+    - Forbidden: any gpt-* or openai/* model
+    - Source priority: requested_model > tenant_model > ANTHROPIC_PLANNER
+    """
+    system_default_model = (
+        os.getenv("ANTHROPIC_PLANNER_MODEL")
+        or os.getenv("ANTHROPIC_DEFAULT_MODEL")
+        or "anthropic/claude-sonnet-4-5"
+    )
     tenant_model = context.get("tenant_model")
     requested_model = context.get("requested_model")
     resolved_model = requested_model or tenant_model or system_default_model
+
+    # APEX governance: reject GPT/OpenAI models as non-retryable violations
+    forbidden_prefixes = ("gpt-", "openai/", "text-davinci", "o1-", "o3-")
+    if any(str(resolved_model).startswith(p) for p in forbidden_prefixes):
+        _raise_non_retryable_plan_error(
+            f"Model '{resolved_model}' is forbidden by APEX provider policy. "
+            "Only Anthropic and Groq models are permitted for plan generation."
+        )
 
     allowed_models = context.get("allowed_models", [])
     if allowed_models and resolved_model not in allowed_models:

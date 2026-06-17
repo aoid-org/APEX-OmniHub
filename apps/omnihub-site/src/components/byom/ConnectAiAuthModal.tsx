@@ -45,8 +45,8 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
         const { error: sessionError } = await supabase.auth.setSession(data.session);
         if (sessionError) throw sessionError;
         
-        // Store the selected provider for the OmniDashShell UI to read
-        localStorage.setItem('omni_ai_provider', provider);
+        // NS-H-001: Store provider in sessionStorage (clears on tab close; XSS-safer than localStorage)
+        sessionStorage.setItem('omni_ai_provider', provider);
         
         onSuccess();
       } else {

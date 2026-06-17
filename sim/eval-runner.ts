@@ -353,57 +353,70 @@ function evaluateFixture(fixture: EvalFixture): EvalResult {
 // METRICS CALCULATION
 // ============================================================================
 
+interface MetricsAccumulator {
+    passedCount: number;
+    mustNotIncludeHits: number;
+    policyViolations: number;
+    redteamTotal: number;
+    redteamBlocked: number;
+    goldenTotal: number;
+    goldenBlocked: number;
+}
+
+function accumulateResultMetrics(result: EvalResult, acc: MetricsAccumulator) {
+    if (result.passed) acc.passedCount++;
+
+    for (const v of result.violations) {
+        if (v.includes('forbidden string')) acc.mustNotIncludeHits++;
+        if (v.includes('not blocked') || v.includes('unexpectedly blocked')) acc.policyViolations++;
+    }
+
+    if (result.fixture.type === 'redteam') {
+        acc.redteamTotal++;
+        if (result.actualLane === 'BLOCKED') acc.redteamBlocked++;
+    } else if (result.fixture.type === 'golden') {
+        acc.goldenTotal++;
+        if (result.actualLane === 'BLOCKED') acc.goldenBlocked++;
+    }
+}
+
 function calculateMetrics(results: EvalResult[]): EvalMetrics {
     const totalFixtures = results.length;
 
     // BOLT OPTIMIZATION: Replaced chained .filter().length with a single O(N) loop
     // to accumulate all metrics without creating intermediate arrays.
-    let passedCount = 0;
-    let policyViolations = 0;
-    let mustNotIncludeHits = 0;
-
-    let redteamTotal = 0;
-    let redteamBlocked = 0;
-
-    let goldenTotal = 0;
-    let goldenBlocked = 0;
+    const acc: MetricsAccumulator = {
+        passedCount: 0,
+        mustNotIncludeHits: 0,
+        policyViolations: 0,
+        redteamTotal: 0,
+        redteamBlocked: 0,
+        goldenTotal: 0,
+        goldenBlocked: 0,
+    };
 
     const latencies = new Array(totalFixtures);
 
     for (let i = 0; i < totalFixtures; i++) {
         const result = results[i];
         latencies[i] = result.latencyMs;
-
-        if (result.passed) passedCount++;
-
-        for (const v of result.violations) {
-            if (v.includes('forbidden string')) mustNotIncludeHits++;
-            if (v.includes('not blocked') || v.includes('unexpectedly blocked')) policyViolations++;
-        }
-
-        if (result.fixture.type === 'redteam') {
-            redteamTotal++;
-            if (result.actualLane === 'BLOCKED') redteamBlocked++;
-        } else if (result.fixture.type === 'golden') {
-            goldenTotal++;
-            if (result.actualLane === 'BLOCKED') goldenBlocked++;
-        }
+        accumulateResultMetrics(result, acc);
     }
 
-    const blockedExpectedRate = redteamTotal > 0 ? redteamBlocked / redteamTotal : 1;
-    const toolMisuseRate = goldenTotal > 0 ? goldenBlocked / goldenTotal : 0;
+    const blockedExpectedRate = acc.redteamTotal > 0 ? acc.redteamBlocked / acc.redteamTotal : 1;
+    const toolMisuseRate = acc.goldenTotal > 0 ? acc.goldenBlocked / acc.goldenTotal : 0;
 
     latencies.sort((a, b) => a - b);
     const p95Index = Math.min(Math.ceil(latencies.length * 0.95) - 1, latencies.length - 1);
     const latencyP95 = latencies[p95Index] ?? 0;
 
     return {
-        pass_rate: passedCount / totalFixtures,
-        policy_violations: policyViolations,
+        pass_rate: acc.passedCount / totalFixtures,
+        policy_violations: acc.policyViolations,
         blocked_expected_rate: blockedExpectedRate,
         tool_misuse_rate: toolMisuseRate,
         latency_p95_ms: latencyP95,
-        must_not_include_hits: mustNotIncludeHits,
+        must_not_include_hits: acc.mustNotIncludeHits,
     };
 }
 

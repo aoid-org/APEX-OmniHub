@@ -128,7 +128,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('omni_widget_pos_')) {
+        if (key?.startsWith('omni_widget_pos_')) {
           keys.push(key);
         }
       }

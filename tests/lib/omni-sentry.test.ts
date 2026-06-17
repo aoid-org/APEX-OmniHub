@@ -13,7 +13,7 @@ import {
 
 describe('omni-sentry', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     clearAllData();
     vi.restoreAllMocks();
   });
@@ -21,7 +21,7 @@ describe('omni-sentry', () => {
   afterEach(() => {
     shutdownOmniSentry();
     clearAllData();
-    localStorage.clear();
+    sessionStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -90,13 +90,13 @@ describe('omni-sentry', () => {
     expect(getHealthStatus().metrics.circuitState).toBe('open');
 
     await reportError(new Error('offline-only'), { source: 'offline' });
-    const offline = JSON.parse(localStorage.getItem('omni_sentry_offline') ?? '[]') as unknown[];
+    const offline = JSON.parse(sessionStorage.getItem('omni_sentry_offline') ?? '[]') as unknown[];
     expect(offline).toHaveLength(1);
   });
 
   it('flushes offline errors once circuit is healthy', async () => {
     initializeOmniSentry({ healthCheckIntervalMs: 120_000 });
-    localStorage.setItem(
+    sessionStorage.setItem(
       'omni_sentry_offline',
       JSON.stringify([
         { error: { name: 'Error', message: 'a' }, timestamp: new Date().toISOString() },
@@ -107,11 +107,11 @@ describe('omni-sentry', () => {
     const flushed = await flushOfflineErrors();
     expect(flushed).toBe(2);
     expect(getStoredErrors()).toHaveLength(2);
-    expect(JSON.parse(localStorage.getItem('omni_sentry_offline') ?? '[]')).toEqual([]);
+    expect(JSON.parse(sessionStorage.getItem('omni_sentry_offline') ?? '[]')).toEqual([]);
   });
 
   it('restores persisted circuit state and persists state on shutdown', () => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       'omni_sentry_circuit',
       JSON.stringify({
         state: 'open',
@@ -125,7 +125,7 @@ describe('omni-sentry', () => {
     expect(getHealthStatus().metrics.circuitState).toBe('open');
 
     shutdownOmniSentry();
-    const saved = JSON.parse(localStorage.getItem('omni_sentry_circuit') ?? '{}') as {
+    const saved = JSON.parse(sessionStorage.getItem('omni_sentry_circuit') ?? '{}') as {
       state?: string;
     };
     expect(saved.state).toBe('open');
@@ -138,10 +138,10 @@ describe('omni-sentry', () => {
 
     clearAllData();
     expect(getStoredErrors()).toEqual([]);
-    expect(localStorage.getItem('omni_sentry_errors')).toBeNull();
-    expect(localStorage.getItem('omni_sentry_offline')).toBeNull();
-    expect(localStorage.getItem('omni_sentry_health')).toBeNull();
-    expect(localStorage.getItem('omni_sentry_circuit')).toBeNull();
+    expect(sessionStorage.getItem('omni_sentry_errors')).toBeNull();
+    expect(sessionStorage.getItem('omni_sentry_offline')).toBeNull();
+    expect(sessionStorage.getItem('omni_sentry_health')).toBeNull();
+    expect(sessionStorage.getItem('omni_sentry_circuit')).toBeNull();
     expect(getHealthStatus().metrics.circuitState).toBe('closed');
   });
 });

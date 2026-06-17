@@ -50,9 +50,15 @@ class Settings(BaseSettings):
     supabase_db_url: SecretStr = Field(..., description="Direct Supabase PostgreSQL URL")
 
     # LLM Configuration
-    openai_api_key: SecretStr = Field(default=SecretStr(""), description="OpenAI API key")
-    anthropic_api_key: SecretStr = Field(default=SecretStr(""), description="Anthropic API key")
-    default_llm_model: str = Field(default="gpt-4-turbo-preview", description="Default LLM model")
+    # APEX Policy: Only 'groq' and 'anthropic' are permitted providers.
+    # OPENAI_API_KEY is FORBIDDEN. No GPT model defaults.
+    groq_api_key: SecretStr = Field(default=SecretStr(""), description="Groq key")
+    anthropic_api_key: SecretStr = Field(default=SecretStr(""), description="Anthropic key")
+    default_llm_provider: str = Field(default="anthropic", description="Default provider")
+    default_llm_model: str = Field(
+        default="anthropic/claude-sonnet-4-5",
+        description="Default Anthropic planner model (LiteLLM format: provider/model)",
+    )
     default_llm_temperature: float = Field(default=0.0, description="LLM temperature")
 
     # Semantic Cache Configuration
@@ -100,12 +106,28 @@ class Settings(BaseSettings):
         ):
             raise ValueError("redis_password must be set in production")
 
+        # APEX Policy: default_llm_provider must be 'anthropic' or 'groq'
+        if self.default_llm_provider not in ("anthropic", "groq"):
+            raise ValueError(f"Invalid default_llm_provider: '{self.default_llm_provider}'")
+
+        # APEX Policy: Planner defaults must not be OpenAI/GPT
+        if self.default_llm_model.startswith(("gpt-", "openai/", "text-davinci")):
+            raise ValueError(
+                f"Model '{self.default_llm_model}' is forbidden by APEX policy. "
+                "Use 'anthropic/claude-*' or 'groq/llama-*'."
+            )
+
         if self.environment == "production":
             import os
 
             require_sig = os.environ.get("ORCHESTRATOR_REQUIRE_SIGNATURE", "").lower()
             if require_sig in ("false", "0", "no"):
                 raise ValueError("ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production")
+
+            # In production, require Anthropic key for planner
+            if not self.anthropic_api_key.get_secret_value():
+                raise ValueError("anthropic_api_key must be set in production")
+
         return self
 
 

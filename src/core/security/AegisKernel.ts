@@ -15,6 +15,7 @@ import {
   type DeviceProfile,
   TrustTier,
 } from '../types/index';
+import { supabase } from '../../lib/supabase/client';
 
 /* ------------------------------------------------------------------ */
 /*  Tool → Required Tier mapping                                       */
@@ -71,6 +72,20 @@ export function validateAccess(
   device: DeviceProfile,
 ): boolean {
   if (device.trustTier === TrustTier.GOD_MODE) {
+    // SECURITY NS-M-003: GOD_MODE grants ['all'] capabilities with no secondary confirmation.
+    // An incorrect GOD_MODE assignment gives unrestricted tool access silently.
+    // GOD_MODE is assigned via the keystore record's trustTier field — see SpectreHandshake.ts authenticate().
+
+    void supabase.from('audit_log').insert({
+      action: 'GOD_MODE_ACCESS',
+      actor_id: device.deviceId,
+      tool: toolName,
+      timestamp: new Date().toISOString()
+    }).then(({ error }) => {
+      if (error) console.error('[SECURITY] Failed to write GOD_MODE access to audit_log', error);
+    });
+
+    console.error('[SECURITY] GOD_MODE access — audit_log write required', { deviceId: device.deviceId, tool: toolName });
     return true;
   }
 
