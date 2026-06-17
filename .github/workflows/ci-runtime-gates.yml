@@ -275,6 +275,7 @@ jobs:
         run: |
           test ! -f wrangler.toml
           npm run build
+          bun run verify:cloudflare-pages-contract
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key

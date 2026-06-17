@@ -12,12 +12,14 @@ Each activity follows the standard contract:
 """
 
 import platform
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from temporalio import activity
 
 from core.intent_registry import registry
+
+UTC = timezone.utc
 
 # UTC offset replaced by Zulu suffix for ISO 8601 compliance
 _UTC_OFFSET = "+00:00"

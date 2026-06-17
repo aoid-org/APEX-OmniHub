@@ -4,13 +4,15 @@ MAN Mode notification activity with idempotency.
 Sends push notifications to operators when high-risk actions require approval.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from providers.database.factory import get_database_provider
+
+UTC = timezone.utc
 
 
 @activity.defn(name="notify_man_task")

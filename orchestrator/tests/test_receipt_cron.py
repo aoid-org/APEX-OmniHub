@@ -37,7 +37,7 @@ def cleanup_receipts(receipts: list[Receipt]) -> list[Receipt]:
 
     Returns the list of receipts that would SURVIVE the cleanup.
     """
-    cutoff = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+    cutoff = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(
         days=RETENTION_DAYS,
     )
     return [r for r in receipts if not (r.created_at < cutoff and r.status == "processed")]
@@ -55,7 +55,7 @@ class TestReceiptCronCleanup:
         days_old: int,
         status: str = "processed",
     ) -> Receipt:
-        created = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+        created = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(
             days=days_old,
         )
         return Receipt(receipt_id=f"r-{days_old}-{status}", status=status, created_at=created)

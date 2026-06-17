@@ -4,12 +4,14 @@ This module defines the core data structures for the Manual Approval Node
 safety system that gates high-risk agent actions.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
+
+UTC = timezone.utc
 
 
 class RiskLane(str, Enum):

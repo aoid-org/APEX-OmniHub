@@ -11,13 +11,15 @@ Provides Temporal activities for processing physical-edge telemetry:
 
 import math
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from providers.database.factory import get_database_provider
+
+UTC = timezone.utc
 
 # ── 1. SECURE CLIENT INITIALIZATION ──────────────────────────────────────────
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")

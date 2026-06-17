@@ -1,4 +1,5 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,6 +14,8 @@ from models.audit import (
     audit_logger,
     log_audit_event,
 )
+
+UTC = timezone.utc
 
 
 def test_audit_metadata():

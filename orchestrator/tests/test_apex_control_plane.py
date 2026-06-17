@@ -1,7 +1,8 @@
 import asyncio
 import importlib.util
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,8 @@ from models.execution_envelope import (
     continue_trace_context,
 )
 from security.guardian_fabric import GuardianPolicyRule, evaluate_guardian_policy
+
+UTC = timezone.utc
 
 
 def load_compensation_catalog() -> Any:

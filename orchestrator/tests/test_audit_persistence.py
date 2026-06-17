@@ -4,7 +4,8 @@ Tests for audit log persistence with fallback logging.
 Ensures audit events are never silently lost.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
 from io import StringIO
 from unittest.mock import AsyncMock, patch
 
@@ -17,6 +18,8 @@ from models.audit import (
     AuditResourceType,
     AuditStatus,
 )
+
+UTC = timezone.utc
 
 # Test fixtures for security validation - intentionally fake credentials
 # used to verify they are NOT leaked in audit fallback logs

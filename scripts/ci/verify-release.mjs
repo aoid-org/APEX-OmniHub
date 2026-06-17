@@ -18,6 +18,7 @@ const verifyScripts = [
   { name: "verify:supabase-security", desc: "Supabase table RLS & functions audit" },
   { name: "verify:claim-hygiene",     desc: "Launch badge & public copy alignment" },
   { name: "verify:supply-chain",      desc: "Dependency provenance & lockfile checks" },
+  { name: "verify:cloudflare-pages-contract", desc: "Cloudflare Pages build/output contract" },
 ];
 
 // Allowlist of PATH entries that are safe for subprocess execution.
@@ -33,6 +34,8 @@ const WIN_PATH_ALLOWLIST = [
 ];
 const UNIX_PATH_ALLOWLIST = [
   "/.bun/bin",
+  "/.local/share/mise/",
+  "/.pyenv/",
   "/usr/local/bin",
   "/usr/bin",
   "/bin",
