@@ -1,15 +1,25 @@
 /**
  * Shared LLM Utility Module for OmniLink APEX
- * Provides standardized OpenAI API integration with:
- * - JSON structured output mode
- * - Automatic model fallback
- * - Timeout handling
- * - Tool/Function calling support
+ * @version 2.0.0
+ *
+ * Provider policy: Groq + Anthropic ONLY.
+ * OpenAI REMOVED. No OPENAI_API_KEY. No api.openai.com. No GPT defaults.
+ *
+ * Groq uses OpenAI-compatible wire format ONLY via https://api.groq.com/openai/v1
+ * Anthropic uses native API at https://api.anthropic.com/v1/messages
+ *
+ * Exported function names preserved for backward compatibility:
+ *   callLLM, callLLMJson, classifyYesNo, extractStructured
  */
 
-// Types for LLM interactions
+// ── Provider Types ────────────────────────────────────────────────────────────
+
+export type AllowedProvider = "groq" | "anthropic";
+
+// ── Message Types ─────────────────────────────────────────────────────────────
+
 export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
+  role: "system" | "user" | "assistant" | "tool";
   content: string;
   name?: string;
   tool_call_id?: string;
@@ -18,7 +28,7 @@ export interface LLMMessage {
 
 export interface ToolCall {
   id: string;
-  type: 'function';
+  type: "function";
   function: {
     name: string;
     arguments: string;
@@ -26,7 +36,7 @@ export interface ToolCall {
 }
 
 export interface ToolDefinition {
-  type: 'function';
+  type: "function";
   function: {
     name: string;
     description: string;
@@ -46,36 +56,68 @@ export interface LLMResponse {
 }
 
 export interface LLMOptions {
+  /** Provider to use. Defaults to DEFAULT_LLM_PROVIDER env var, fallback: 'anthropic' */
+  provider?: AllowedProvider;
   model?: string;
   temperature?: number;
   max_tokens?: number;
   json_mode?: boolean;
   tools?: ToolDefinition[];
-  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+  tool_choice?: "auto" | "none" | { type: "function"; function: { name: string } };
   timeout_ms?: number;
 }
 
-// Default configuration
-const DEFAULT_MODEL = 'gpt-4o-2024-08-06';
-const FALLBACK_MODEL = 'gpt-4o-mini';
+// ── Defaults ──────────────────────────────────────────────────────────────────
+
 const DEFAULT_TIMEOUT_MS = 60_000;
-const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_MAX_TOKENS = 4_096;
+
+function getDefaultProvider(): AllowedProvider {
+  const raw = Deno.env.get("DEFAULT_LLM_PROVIDER");
+  if (raw === "groq" || raw === "anthropic") return raw;
+  return "anthropic";
+}
+
+// ── Main callLLM ──────────────────────────────────────────────────────────────
 
 /**
- * Make a completion request to the OpenAI API
+ * Make a completion request to Groq or Anthropic.
+ * Throws a typed error if provider is not allowed.
  */
 export async function callLLM(
   messages: LLMMessage[],
-  options: LLMOptions = {}
+  options: LLMOptions = {},
 ): Promise<LLMResponse> {
-  const openAIKey = Deno.env.get('OPENAI_API_KEY');
+  const provider: AllowedProvider = options.provider ?? getDefaultProvider();
 
-  if (!openAIKey) {
-    throw new Error('OPENAI_API_KEY not configured');
+  if (provider !== "groq" && provider !== "anthropic") {
+    throw new Error(
+      `[LLM] Provider '${provider}' is not allowed by APEX policy. Only 'groq' and 'anthropic' are permitted.`,
+    );
   }
 
+  if (provider === "groq") {
+    return callGroq(messages, options);
+  }
+  return callAnthropic(messages, options);
+}
+
+// ── Groq (OpenAI-compatible wire format via api.groq.com) ────────────────────
+
+async function callGroq(
+  messages: LLMMessage[],
+  options: LLMOptions,
+): Promise<LLMResponse> {
+  const groqApiKey = Deno.env.get("GROQ_API_KEY");
+  if (!groqApiKey) throw new Error("[LLM] GROQ_API_KEY not configured");
+
+  const groqBaseUrl =
+    Deno.env.get("GROQ_BASE_URL") ?? "https://api.groq.com/openai/v1";
+  const defaultModel =
+    Deno.env.get("GROQ_DEFAULT_MODEL") ?? "llama-3.1-8b-instant";
+
   const {
-    model = DEFAULT_MODEL,
+    model = defaultModel,
     temperature = 0.2,
     max_tokens = DEFAULT_MAX_TOKENS,
     json_mode = false,
@@ -84,74 +126,60 @@ export async function callLLM(
     timeout_ms = DEFAULT_TIMEOUT_MS,
   } = options;
 
-  // Build request body
   const requestBody: Record<string, unknown> = {
     model,
-    messages,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
     temperature,
-    max_completion_tokens: max_tokens,
+    max_tokens,
   };
 
+  // Groq supports json_object response format
   if (json_mode) {
-    requestBody.response_format = { type: 'json_object' };
+    requestBody.response_format = { type: "json_object" };
   }
 
   if (tools && tools.length > 0) {
     requestBody.tools = tools;
-    if (tool_choice) {
-      requestBody.tool_choice = tool_choice;
-    }
+    if (tool_choice) requestBody.tool_choice = tool_choice;
   }
 
-  // Set up timeout controller
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeout_ms);
 
   try {
-    let response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch(`${groqBaseUrl}/chat/completions`, {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${groqApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
 
-    // Handle model fallback on 404
-    if (!response.ok && response.status === 404 && model !== FALLBACK_MODEL) {
-      console.warn(`[LLM] Model ${model} not found, falling back to ${FALLBACK_MODEL}`);
-      requestBody.model = FALLBACK_MODEL;
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-    }
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[LLM] API error:', errorText);
-      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+      throw new Error(`[LLM] Groq API error (${response.status}): ${sanitizeApiError(errorText)}`);
     }
 
-    const data = await response.json();
-    const choice = data.choices[0];
-
-    return {
-      content: choice.message.content || '',
-      tool_calls: choice.message.tool_calls,
-      finish_reason: choice.finish_reason,
-      usage: data.usage,
+    const data = await response.json() as {
+      choices?: Array<{
+        message?: { content?: string; tool_calls?: ToolCall[] };
+        finish_reason?: string;
+      }>;
+      usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
     };
 
+    const choice = data.choices?.[0];
+    return {
+      content: choice?.message?.content ?? "",
+      tool_calls: choice?.message?.tool_calls,
+      finish_reason: choice?.finish_reason ?? "stop",
+      usage: data.usage,
+    };
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`LLM request timed out after ${timeout_ms}ms`);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`[LLM] Groq request timed out after ${timeout_ms}ms`);
     }
     throw error;
   } finally {
@@ -159,45 +187,139 @@ export async function callLLM(
   }
 }
 
+// ── Anthropic (native API) ────────────────────────────────────────────────────
+
+async function callAnthropic(
+  messages: LLMMessage[],
+  options: LLMOptions,
+): Promise<LLMResponse> {
+  const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!anthropicApiKey) throw new Error("[LLM] ANTHROPIC_API_KEY not configured");
+
+  const defaultModel =
+    Deno.env.get("ANTHROPIC_DEFAULT_MODEL") ?? "claude-sonnet-4-5";
+
+  const {
+    model = defaultModel,
+    temperature = 0.2,
+    max_tokens = DEFAULT_MAX_TOKENS,
+    json_mode = false,
+    timeout_ms = DEFAULT_TIMEOUT_MS,
+  } = options;
+
+  // Separate system message from chat messages (Anthropic API requirement)
+  const systemMsg = messages.find((m) => m.role === "system");
+  const chatMessages = messages.filter((m) => m.role !== "system");
+
+  // For JSON mode, inject JSON enforcement into system prompt
+  let systemContent = systemMsg?.content ?? "";
+  if (json_mode) {
+    systemContent +=
+      "\n\nYou MUST respond with valid JSON only. No prose, no markdown, just the JSON object.";
+  }
+
+  const requestBody: Record<string, unknown> = {
+    model,
+    max_tokens,
+    temperature,
+    messages: chatMessages.map((m) => ({
+      role: m.role === "tool" ? "user" : m.role,
+      content: m.content,
+    })),
+  };
+
+  if (systemContent) {
+    requestBody.system = systemContent;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeout_ms);
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": anthropicApiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`[LLM] Anthropic API error (${response.status}): ${sanitizeApiError(errorText)}`);
+    }
+
+    const data = await response.json() as {
+      content?: Array<{ text?: string }>;
+      stop_reason?: string;
+      usage?: { input_tokens: number; output_tokens: number };
+    };
+
+    const content = data.content?.[0]?.text ?? "";
+    const usage = data.usage
+      ? {
+          prompt_tokens: data.usage.input_tokens,
+          completion_tokens: data.usage.output_tokens,
+          total_tokens: data.usage.input_tokens + data.usage.output_tokens,
+        }
+      : undefined;
+
+    return {
+      content,
+      finish_reason: data.stop_reason ?? "end_turn",
+      usage,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`[LLM] Anthropic request timed out after ${timeout_ms}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ── Higher-level helpers (backward-compatible exports) ────────────────────────
+
 /**
- * Make a JSON-structured completion request
- * Automatically parses the response as JSON
+ * Make a JSON-structured completion request.
+ * Automatically parses the response as JSON.
  */
 export async function callLLMJson<T = unknown>(
   messages: LLMMessage[],
-  options: Omit<LLMOptions, 'json_mode'> = {}
-): Promise<{ data: T; usage?: LLMResponse['usage'] }> {
+  options: Omit<LLMOptions, "json_mode"> = {},
+): Promise<{ data: T; usage?: LLMResponse["usage"] }> {
   const response = await callLLM(messages, {
     ...options,
     json_mode: true,
-    temperature: options.temperature ?? 0.1, // Lower temp for JSON
+    temperature: options.temperature ?? 0.1,
   });
 
   try {
     const data = JSON.parse(response.content) as T;
     return { data, usage: response.usage };
   } catch {
-    console.error('[LLM] Failed to parse JSON response:', response.content);
-    throw new Error('LLM returned invalid JSON');
+    console.error("[LLM] Failed to parse JSON response:", response.content.substring(0, 200));
+    throw new Error("[LLM] Provider returned invalid JSON");
   }
 }
 
 /**
- * Simple yes/no classification call with low temperature
+ * Simple yes/no classification call with low temperature.
  */
 export async function classifyYesNo(
   systemPrompt: string,
-  content: string
+  content: string,
 ): Promise<{ answer: boolean; reason?: string }> {
   const messages: LLMMessage[] = [
     {
-      role: 'system',
-      content: `${systemPrompt}\n\nRespond with JSON: {"answer": true/false, "reason": "brief explanation"}`
+      role: "system",
+      content: `${systemPrompt}\n\nRespond with JSON: {"answer": true/false, "reason": "brief explanation"}`,
     },
-    {
-      role: 'user',
-      content
-    }
+    { role: "user", content },
   ];
 
   const { data } = await callLLMJson<{ answer: boolean; reason?: string }>(messages, {
@@ -209,22 +331,19 @@ export async function classifyYesNo(
 }
 
 /**
- * Extract structured data from unstructured text
+ * Extract structured data from unstructured text.
  */
 export async function extractStructured<T>(
   systemPrompt: string,
   content: string,
-  schema: Record<string, unknown>
+  schema: Record<string, unknown>,
 ): Promise<T> {
   const messages: LLMMessage[] = [
     {
-      role: 'system',
-      content: `${systemPrompt}\n\nExtract information according to this JSON schema:\n${JSON.stringify(schema, null, 2)}`
+      role: "system",
+      content: `${systemPrompt}\n\nExtract information according to this JSON schema:\n${JSON.stringify(schema, null, 2)}`,
     },
-    {
-      role: 'user',
-      content
-    }
+    { role: "user", content },
   ];
 
   const { data } = await callLLMJson<T>(messages, {
@@ -232,4 +351,14 @@ export async function extractStructured<T>(
   });
 
   return data;
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function sanitizeApiError(raw: string): string {
+  // Never leak tokens, keys, or internal Supabase detail
+  return raw
+    .replace(/Bearer\s+[^\s"]+/gi, "Bearer [REDACTED]")
+    .replace(/sk-[a-zA-Z0-9]+/g, "[REDACTED]")
+    .substring(0, 300);
 }

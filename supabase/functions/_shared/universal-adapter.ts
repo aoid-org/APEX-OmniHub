@@ -1,14 +1,14 @@
 
-import type { 
-  LLMMessage, 
-  LLMResponse, 
-  LLMOptions 
+import type {
+  LLMMessage,
+  LLMResponse,
+  LLMOptions,
 } from "./llm.ts";
 
-// ─── Provider-specific raw response types ───────────────────────────
+// ─── Provider-specific raw response types ────────────────────────────────────
 
-/** Raw response shape from OpenAI-compatible APIs (OpenAI, xAI). */
-interface OpenAIRawResponse {
+/** Raw response shape from OpenAI-compatible APIs (Groq uses this wire format). */
+interface OpenAICompatRawResponse {
   choices?: { message?: { content?: string }; finish_reason?: string; delta?: { content?: string } }[];
   usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
 }
@@ -22,17 +22,12 @@ interface AnthropicRawResponse {
   delta?: { text?: string };
 }
 
-/** Raw response shape from Google Gemini API. */
-interface GoogleRawResponse {
-  candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
-}
-
-// ─── Shared SSE stream reader ───────────────────────────────────────
+// ─── Shared SSE stream reader ─────────────────────────────────────────────────
 
 function parseSSELine(
   line: string,
   skipPatterns: string[],
-  extractContent: (parsed: Record<string, unknown>) => string | undefined
+  extractContent: (parsed: Record<string, unknown>) => string | undefined,
 ): string | undefined {
   const trimmed = line.trim();
   if (!trimmed || skipPatterns.includes(trimmed)) return undefined;
@@ -50,12 +45,12 @@ function parseSSELine(
 
 /**
  * Reads an SSE stream from a ReadableStream and yields parsed JSON data lines.
- * Shared by OpenAI and Anthropic adapters to eliminate code duplication.
+ * Shared by Groq and Anthropic adapters.
  */
 async function* readSSEStream(
   body: ReadableStream<Uint8Array>,
   skipPatterns: string[],
-  extractContent: (parsed: Record<string, unknown>) => string | undefined
+  extractContent: (parsed: Record<string, unknown>) => string | undefined,
 ): AsyncGenerator<string> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -80,40 +75,43 @@ async function* readSSEStream(
   }
 }
 
-// ─── Adapter Interface ──────────────────────────────────────────────
+// ─── Adapter Interface ────────────────────────────────────────────────────────
 
 /**
- * Universal Adapter Interface
- * Standardizes interaction across different LLM providers.
+ * Universal Adapter Interface — Groq + Anthropic ONLY.
+ *
+ * APEX Policy: openai, xai, google are FORBIDDEN runtime providers.
+ * Groq uses OpenAI-compatible wire format but routes to api.groq.com ONLY.
  */
 export interface UniversalAdapter {
-  provider: "openai" | "anthropic" | "google" | "xai";
+  provider: "groq" | "anthropic";
 
   buildRequest(messages: LLMMessage[], options: LLMOptions): unknown;
   parseResponse(raw: unknown): LLMResponse;
-  
+
   stream(
     messages: LLMMessage[],
     options: LLMOptions,
     apiKey: string,
     endpoint: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): AsyncIterable<string>;
 }
 
-// ─── OpenAI-Compatible Adapter ──────────────────────────────────────
+// ─── Groq Adapter (OpenAI-compatible wire, Groq endpoint only) ───────────────
 
 /**
- * OpenAI-Compatible Adapter (OpenAI, xAI, etc.)
+ * GroqAdapter — uses OpenAI-compatible chat completions wire format.
+ * ONLY valid endpoint: https://api.groq.com/openai/v1
+ * Never routes to api.openai.com.
  */
-export class OpenAICompatibleAdapter implements UniversalAdapter {
-  constructor(
-    public readonly provider: "openai" | "xai" = "openai"
-  ) {}
+export class GroqAdapter implements UniversalAdapter {
+  public readonly provider = "groq" as const;
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
+    const defaultModel = "llama-3.1-8b-instant";
     return {
-      model: options.model || (this.provider === "xai" ? "grok-beta" : "gpt-4o"),
+      model: options.model ?? defaultModel,
       messages: messages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -125,16 +123,18 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
   }
 
   public parseResponse(raw: unknown): LLMResponse {
-    const data = raw as OpenAIRawResponse;
+    const data = raw as OpenAICompatRawResponse;
     const content = data.choices?.[0]?.message?.content ?? "";
-    const usage = data.usage ? {
-      prompt_tokens: data.usage.prompt_tokens,
-      completion_tokens: data.usage.completion_tokens,
-      total_tokens: data.usage.total_tokens,
-    } : undefined;
+    const usage = data.usage
+      ? {
+          prompt_tokens: data.usage.prompt_tokens,
+          completion_tokens: data.usage.completion_tokens,
+          total_tokens: data.usage.total_tokens,
+        }
+      : undefined;
 
     return {
-      finish_reason: data.choices?.[0]?.finish_reason ?? "unknown",
+      finish_reason: data.choices?.[0]?.finish_reason ?? "stop",
       content,
       usage,
     };
@@ -145,15 +145,18 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
     options: LLMOptions,
     apiKey: string,
     endpoint: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): AsyncIterable<string> {
+    // Security: validate endpoint is Groq (never api.openai.com)
+    assertGroqEndpoint(endpoint);
+
     const body = this.buildRequest(messages, options);
-    
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
       signal,
@@ -161,42 +164,43 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`${this.provider.toUpperCase()} API Error ${response.status}: ${errorText}`);
+      throw new Error(`Groq API Error ${response.status}: ${errorText.substring(0, 200)}`);
     }
 
-    if (!response.body) throw new Error("No response body");
+    if (!response.body) throw new Error("[GroqAdapter] No response body");
 
     yield* readSSEStream(
       response.body,
       ["data: [DONE]"],
       (parsed) => {
-        const choices = parsed["choices"] as OpenAIRawResponse["choices"];
+        const choices = parsed["choices"] as OpenAICompatRawResponse["choices"];
         return choices?.[0]?.delta?.content;
-      }
+      },
     );
   }
 }
 
-// ─── Anthropic Adapter ──────────────────────────────────────────────
+// ─── Anthropic Adapter ────────────────────────────────────────────────────────
 
 /**
- * Anthropic Adapter
+ * AnthropicAdapter — native Anthropic Messages API.
  */
 export class AnthropicAdapter implements UniversalAdapter {
   public readonly provider = "anthropic" as const;
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
-    const systemMessage = messages.find(m => m.role === "system");
-    const chatMessages = messages.filter(m => m.role !== "system");
+    const systemMessage = messages.find((m) => m.role === "system");
+    const chatMessages = messages.filter((m) => m.role !== "system");
+    const defaultModel = "claude-sonnet-4-5";
 
     return {
-      model: options.model || "claude-3-opus-20240229",
+      model: options.model ?? defaultModel,
       system: systemMessage?.content,
-      messages: chatMessages.map(m => ({
+      messages: chatMessages.map((m) => ({
         role: m.role,
-        content: m.content
+        content: m.content,
       })),
-      max_tokens: options.max_tokens ?? 4096,
+      max_tokens: options.max_tokens ?? 4_096,
       temperature: options.temperature ?? 0.7,
       stream: true,
     };
@@ -206,13 +210,13 @@ export class AnthropicAdapter implements UniversalAdapter {
     const data = raw as AnthropicRawResponse;
     const content = data.content?.[0]?.text ?? "";
     return {
-      finish_reason: data.stop_reason ?? "unknown",
+      finish_reason: data.stop_reason ?? "end_turn",
       content,
       usage: {
         prompt_tokens: data.usage?.input_tokens ?? 0,
         completion_tokens: data.usage?.output_tokens ?? 0,
-        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
-      }
+        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0),
+      },
     };
   }
 
@@ -221,7 +225,7 @@ export class AnthropicAdapter implements UniversalAdapter {
     options: LLMOptions,
     apiKey: string,
     endpoint: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): AsyncIterable<string> {
     const body = this.buildRequest(messages, options);
 
@@ -230,7 +234,7 @@ export class AnthropicAdapter implements UniversalAdapter {
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(body),
       signal,
@@ -238,10 +242,10 @@ export class AnthropicAdapter implements UniversalAdapter {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Anthropic API Error ${response.status}: ${errorText}`);
+      throw new Error(`Anthropic API Error ${response.status}: ${errorText.substring(0, 200)}`);
     }
 
-    if (!response.body) throw new Error("No response body");
+    if (!response.body) throw new Error("[AnthropicAdapter] No response body");
 
     yield* readSSEStream(
       response.body,
@@ -252,89 +256,62 @@ export class AnthropicAdapter implements UniversalAdapter {
           return event.delta.text;
         }
         return undefined;
-      }
+      },
     );
   }
 }
 
-// ─── Google Gemini Adapter ──────────────────────────────────────────
+// ─── Factory ──────────────────────────────────────────────────────────────────
 
 /**
- * Google Gemini Adapter
+ * Create an adapter for the given provider.
+ *
+ * APEX Policy enforced:
+ * - 'groq'      → GroqAdapter (OpenAI-compatible wire via api.groq.com)
+ * - 'anthropic' → AnthropicAdapter
+ * - 'openai'    → throws (FORBIDDEN)
+ * - 'xai'       → throws (FORBIDDEN)
+ * - 'google'    → throws (FORBIDDEN)
+ * - anything else → throws
  */
-export class GoogleAdapter implements UniversalAdapter {
-  public readonly provider = "google" as const;
-
-  public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
-    const contents = messages.map(m => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }]
-    }));
-
-    const systemMsg = messages.find(m => m.role === "system");
-    if (systemMsg) {
-       // logic to merge system prompt not shown for brevity, moving on
-    }
-
-    return {
-      contents,
-      generationConfig: {
-        temperature: options.temperature ?? 0.7,
-        maxOutputTokens: options.max_tokens,
-      }
-    };
-  }
-
-  public parseResponse(raw: unknown): LLMResponse {
-    const data = raw as GoogleRawResponse;
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    return {
-      finish_reason: data.candidates?.[0]?.finishReason ?? "unknown",
-      content,
-    };
-  }
-
-  public async *stream(
-    messages: LLMMessage[],
-    options: LLMOptions,
-    apiKey: string,
-    _endpoint: string,
-    signal?: AbortSignal
-  ): AsyncIterable<string> {
-    const model = options.model || "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    
-    const body = this.buildRequest(messages, options);
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Google API Error ${response.status}: ${errorText}`);
-    }
-
-    const json: unknown = await response.json();
-    const parsed = this.parseResponse(json);
-    
-    if (parsed.content) {
-      yield parsed.content;
-    }
+export function createAdapter(provider: string): UniversalAdapter {
+  switch (provider) {
+    case "groq":
+      return new GroqAdapter();
+    case "anthropic":
+      return new AnthropicAdapter();
+    case "openai":
+    case "xai":
+    case "google":
+    case "gemini":
+      throw new Error(
+        `[universal-adapter] Provider '${provider}' is disabled by APEX policy. ` +
+          `Only 'groq' and 'anthropic' are permitted runtime providers.`,
+      );
+    default:
+      throw new Error(
+        `[universal-adapter] Unknown provider: '${provider}'. ` +
+          `Allowed: 'groq', 'anthropic'.`,
+      );
   }
 }
 
-// ─── Factory ────────────────────────────────────────────────────────
+// ─── Security guard ───────────────────────────────────────────────────────────
 
-export function createAdapter(provider: string): UniversalAdapter {
-  switch (provider) {
-    case "openai": return new OpenAICompatibleAdapter("openai");
-    case "xai": return new OpenAICompatibleAdapter("xai");
-    case "anthropic": return new AnthropicAdapter();
-    case "google": return new GoogleAdapter();
-    default: throw new Error(`Unsupported provider: ${provider}`);
+/**
+ * Assert that the endpoint is a Groq endpoint, never api.openai.com.
+ * Groq uses OpenAI wire protocol but only through api.groq.com.
+ */
+function assertGroqEndpoint(endpoint: string): void {
+  if (endpoint.includes("api.openai.com")) {
+    throw new Error(
+      "[GroqAdapter] SECURITY VIOLATION: Attempted to route to api.openai.com. " +
+        "Groq MUST use https://api.groq.com/openai/v1 only.",
+    );
+  }
+  if (!endpoint.includes("api.groq.com")) {
+    throw new Error(
+      `[GroqAdapter] Invalid Groq endpoint: '${endpoint}'. Must be https://api.groq.com/openai/v1`,
+    );
   }
 }

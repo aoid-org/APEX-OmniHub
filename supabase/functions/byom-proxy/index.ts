@@ -31,7 +31,9 @@ const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 const cockpitCrypto = getCockpitCrypto();
 
-const PROVIDERS = ['openai', 'xai', 'anthropic', 'google', 'groq'] as const;
+// APEX Policy: Only 'anthropic' and 'groq' are permitted runtime providers.
+// openai, xai, google are FORBIDDEN by governance policy.
+const PROVIDERS = ['anthropic', 'groq'] as const;
 const MAX_OUTPUT_BYTES = Number(Deno.env.get('BYOM_PROXY_MAX_OUTPUT_BYTES') ?? '1048576');
 
 const REQUEST_SCHEMA = z.object({
@@ -50,16 +52,18 @@ type Message = z.infer<typeof REQUEST_SCHEMA>['messages'][number];
 
 function resolveProviderEndpoint(provider: Provider): string {
   switch (provider) {
-    case 'openai':
-      return 'https://api.openai.com/v1/chat/completions';
-    case 'xai':
-      return 'https://api.x.ai/v1/chat/completions';
     case 'anthropic':
       return 'https://api.anthropic.com/v1/messages';
-    case 'google':
-      return '';
     case 'groq':
       return 'https://api.groq.com/openai/v1/chat/completions';
+    default: {
+      // Type narrowing exhausted — this branch only reachable if Provider type is widened.
+      const _exhaustive: never = provider;
+      throw new Error(
+        `[byom-proxy] Provider '${_exhaustive}' is disabled by APEX governance policy. ` +
+        `Only 'anthropic' and 'groq' are permitted.`
+      );
+    }
   }
 }
 
@@ -173,6 +177,14 @@ serve(async (req: Request) => {
 
     await RateLimiter.checkLimit(supabase, user.id);
     const tenantId = user.user_metadata?.tenant_id ?? user.id;
+
+    // Governance gate: enforce allowed providers before any registry lookup
+    // This catches stale registry rows for forbidden providers
+    if (provider !== 'anthropic' && provider !== 'groq') {
+      return jsonResponse({
+        error: 'Provider disabled by APEX policy: only groq and anthropic are allowed.',
+      }, 403, corsHeaders);
+    }
 
     // Load registry config
     const providerConfig = await getProviderConfig(tenantId, provider);
