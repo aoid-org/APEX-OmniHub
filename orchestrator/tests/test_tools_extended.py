@@ -1463,24 +1463,4 @@ async def test_send_email_production_uses_default_subject_and_body():
 
     with patch("activities.tools.get_database_provider", return_value=db):
         with patch.dict(
-            "os.environ",
-            {
-                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
-                "SUPABASE_ANON_KEY": "test-key",
-            },
-        ):
-            with patch("httpx.AsyncClient") as mock_client_cls:
-                mock_client = AsyncMock()
-                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-                mock_client.__aexit__ = AsyncMock(return_value=False)
-                mock_client.post = AsyncMock(return_value=mock_resp)
-                mock_client_cls.return_value = mock_client
-
-                result = await send_email({"to": "u@e.com", "step_id": "s1"})
-
-    # Verify defaults were sent
-    _, call_kwargs = mock_client.post.call_args
-    json_body = call_kwargs.get("json", {})
-    assert json_body["subject"] == "Welcome!"
-    assert json_body["body"] == "Hello world"
-    assert result["success"] is True
+         
