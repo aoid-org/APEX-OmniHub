@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from uuid import uuid4
 
@@ -8,25 +8,25 @@ from pydantic import BaseModel, Field
 UTC = timezone.utc
 
 
-class AuthType(StrEnum):
+class AuthType(str, Enum):
     OAUTH = "oauth"
     API_KEY = "api_key"
     DEVICE_CODE = "device_code"
     BASIC = "basic"
 
 
-class VerificationMethod(StrEnum):
+class VerificationMethod(str, Enum):
     PROVIDER_PROFILE = "provider_profile"
     TOKEN_INTROSPECTION = "token_introspection"  # noqa: S105
     SAFE_PING = "safe_ping"
 
 
-class TriforceTier(StrEnum):
+class TriforceTier(str, Enum):
     STANDARD = "standard"
     HIGH = "high"
 
 
-class OmniBoardState(StrEnum):
+class OmniBoardState(str, Enum):
     IDLE_LISTEN = "IDLE_LISTEN"
     APP_IDENTIFICATION = "APP_IDENTIFICATION"
     APP_DISAMBIGUATION = "APP_DISAMBIGUATION"
