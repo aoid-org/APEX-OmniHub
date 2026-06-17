@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     default_llm_provider: str = Field(default="anthropic", description="Default provider")
     default_llm_model: str = Field(
         default="anthropic/claude-sonnet-4-5",
-        description="Default Anthropic planner model (LiteLLM format: provider/model)"
+        description="Default Anthropic planner model (LiteLLM format: provider/model)",
     )
     default_llm_temperature: float = Field(default=0.0, description="LLM temperature")
 
