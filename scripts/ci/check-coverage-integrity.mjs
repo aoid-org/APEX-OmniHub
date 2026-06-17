@@ -27,6 +27,8 @@ const REQUIRED_LCOV_ENTRIES = [
   'src/swInit.ts',
   'apps/omnihub-site/src/hooks/usePWAInstall.ts',
   'apps/omnihub-site/src/components/PWAInstallBanner.tsx',
+  'apps/omnihub-proof/src/App.tsx',
+  'apps/omnihub-proof/src/main.tsx',
 ];
 
 let failed = 0;

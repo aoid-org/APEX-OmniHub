@@ -11,7 +11,7 @@ Design Principles:
 4. Strict validation with no implicit coercion
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -155,7 +155,9 @@ class EventEnvelope(BaseModel):
     event_type: EventType = Field(..., description="Event type: {app}:{domain}.{action}")
     payload: dict[str, Any] = Field(..., description="Event payload (app-specific)")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat().replace(UTC_OFFSET_SUFFIX, "Z"),
+        default_factory=lambda: (
+            datetime.now(timezone.utc).isoformat().replace(UTC_OFFSET_SUFFIX, "Z")
+        ),
         description="ISO 8601 timestamp",
     )
     source: AppName = Field(..., description="Source app that emitted the event")
@@ -212,7 +214,9 @@ class AgentEvent(BaseModel):
 
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(UTC).isoformat().replace(UTC_OFFSET_SUFFIX, "Z")
+        default_factory=lambda: (
+            datetime.now(timezone.utc).isoformat().replace(UTC_OFFSET_SUFFIX, "Z")
+        )
     )
     correlation_id: str = Field(..., description="Links all events in a workflow instance")
 

@@ -18,7 +18,7 @@ Why Activities (not direct calls in workflows):
 3. Timeouts: Activities have start-to-close timeouts
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -146,7 +146,7 @@ async def create_man_task(params: dict[str, Any]) -> dict[str, Any]:
         )
 
         # Calculate expiration (timezone-aware)
-        expires_at = (datetime.now(UTC) + timedelta(hours=timeout_hours)).isoformat()
+        expires_at = (datetime.now(timezone.utc) + timedelta(hours=timeout_hours)).isoformat()
 
         # Get database provider
         db = get_database_provider()
@@ -250,7 +250,7 @@ async def resolve_man_task(params: dict[str, Any]) -> dict[str, Any]:
             updates={
                 "status": new_status,
                 "decision": decision.model_dump(),
-                "decided_at": datetime.now(UTC).isoformat(),
+                "decided_at": datetime.now(timezone.utc).isoformat(),
                 "decided_by": decided_by,
             },
             filters={"id": task_id},

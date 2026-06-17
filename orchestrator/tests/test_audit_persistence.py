@@ -4,7 +4,8 @@ Tests for audit log persistence with fallback logging.
 Ensures audit events are never silently lost.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
 from io import StringIO
 from unittest.mock import AsyncMock, patch
 
@@ -41,7 +42,7 @@ class TestAuditPersistence:
         return AuditLogEntry(
             id="test-id-123",
             correlation_id="corr-123",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             event_sequence=1,
             actor_id="user-123",
             action=AuditAction.DATA_ACCESS,
@@ -155,7 +156,7 @@ class TestAuditLoggerIntegration:
         event = AuditLogEntry(
             id="int-test-123",
             correlation_id="corr-456",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             event_sequence=1,
             actor_id="user-789",
             action=AuditAction.LOGIN,

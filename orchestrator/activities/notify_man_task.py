@@ -4,7 +4,7 @@ MAN Mode notification activity with idempotency.
 Sends push notifications to operators when high-risk actions require approval.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from temporalio import activity
@@ -66,7 +66,7 @@ async def notify_man_task(params: dict[str, Any]) -> dict[str, Any]:
                     "channel": channel,
                     "message": message,
                     "metadata": metadata,
-                    "sent_at": datetime.now(UTC).isoformat(),
+                    "sent_at": datetime.now(timezone.utc).isoformat(),
                     "status": "sent",
                 },
                 conflict_columns=["idempotency_key"],

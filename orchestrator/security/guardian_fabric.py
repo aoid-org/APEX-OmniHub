@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from models.execution_envelope import ApexExecutionEnvelope
@@ -35,7 +35,7 @@ class GuardianPolicyDecisionRecord:
     policy_version: str
     trace_id: str
     correlation_id: str
-    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 def _decision(
@@ -105,7 +105,7 @@ def evaluate_guardian_policy(
     now: datetime | None = None,
 ) -> GuardianPolicyDecisionRecord:
     """Evaluate privileged actions with deterministic rule ordering and explainable denies."""
-    current = now or datetime.now(UTC)
+    current = now or datetime.now(timezone.utc)
     base = {
         "principal": principal,
         "action": action,

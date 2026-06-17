@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any
 from uuid import uuid4
@@ -104,4 +104,4 @@ class FSMEvent(BaseModel):
 
     event_type: str  # e.g., 'USER_INPUT', 'SYSTEM_ERROR', 'PROVIDER_SELECTED'
     payload: dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

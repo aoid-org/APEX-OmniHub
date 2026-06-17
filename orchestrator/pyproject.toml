@@ -7,7 +7,7 @@ name = "apex-orchestrator"
 version = "0.1.0"
 description = "AI Agent Orchestration Platform with Temporal.io, Event Sourcing, and Saga Patterns"
 authors = [{name = "APEX Business Systems"}]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     # Auth
     "authlib>=1.3.0",
@@ -83,7 +83,7 @@ omit = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -133,7 +133,7 @@ disallow_subclassing_any = false
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py310"
 
 [tool.ruff.lint]
 # Enable stricter rules for SonarQube A-grade
@@ -175,4 +175,4 @@ ignore = [
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py310"]

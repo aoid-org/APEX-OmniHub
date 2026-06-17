@@ -4,7 +4,7 @@ This module defines the core data structures for the Manual Approval Node
 safety system that gates high-risk agent actions.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
@@ -78,7 +78,7 @@ class ManTaskDecision(BaseModel):
     reason: str | None = Field(default=None, description="Decision rationale")
     decided_by: str = Field(default="unknown", description="Decision maker identity")
     decided_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), description="Decision timestamp"
+        default_factory=lambda: datetime.now(timezone.utc), description="Decision timestamp"
     )
     metadata: dict[str, Any] | None = Field(default=None, description="Additional context")
 
@@ -112,7 +112,7 @@ class ManTask(BaseModel):
         default=None, description="Human decision (null until decided)"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), description="Creation timestamp"
+        default_factory=lambda: datetime.now(timezone.utc), description="Creation timestamp"
     )
 
 

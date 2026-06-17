@@ -7,7 +7,7 @@ import json
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 APEX_EXECUTION_ENVELOPE_SCHEMA_VERSION = "apex.envelope.v1"
@@ -84,7 +84,7 @@ class ApexExecutionEnvelope:
         )
 
     def assert_fresh(self, now: datetime | None = None) -> None:
-        current = now or datetime.now(UTC)
+        current = now or datetime.now(timezone.utc)
         stale_at = datetime.fromisoformat(self.stale_after.replace("Z", "+00:00"))
         if stale_at <= current:
             raise ValueError("apex_stale_event")
