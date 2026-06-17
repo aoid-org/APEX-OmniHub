@@ -90,3 +90,19 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 # [functions.env] removed — ALLOWED_ORIGINS and PHYSIOMNI_LIVE_ENABLED are
 # set via Supabase Dashboard → Project Settings → Edge Functions → Secrets.
 # The [functions.env] block with arbitrary keys is not valid in CLI ≥2.x.
+
+# OmniLink Port — Browser-facing module-state endpoint
+# verify_jwt = false: Supabase gateway JWT check disabled to allow CORS preflight
+# (OPTIONS requests have no Authorization header). Handler-level auth is preserved
+# in the function code via supabase.auth.getUser() on all non-OPTIONS requests.
+# See: supabase/functions/omnilink-port/index.ts handleModuleState()
+[functions.omnilink-port]
+verify_jwt = false
+
+# APEX Agent — AI orchestration endpoint
+# verify_jwt = false: Same-origin OmniPort Gateway forwards user JWT.
+# apex-agent performs internal supabase.auth.getUser() validation on every request.
+# This allows the CF Pages Function gateway to call apex-agent server-to-server
+# with the forwarded user Bearer token.
+[functions.apex-agent]
+verify_jwt = false
