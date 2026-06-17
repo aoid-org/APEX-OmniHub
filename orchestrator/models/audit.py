@@ -13,13 +13,15 @@ All audit events must be logged using this schema to maintain:
 """
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from providers.database.factory import get_database_provider
+
+UTC = timezone.utc
 
 
 class AuditAction(str, Enum):  # noqa: UP042

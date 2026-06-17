@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from .schema import (
     AuditContext,
@@ -15,6 +15,8 @@ from .schema import (
     VerificationMethod,
 )
 from .service import OmniBoardService
+
+UTC = timezone.utc
 
 logger = logging.getLogger(__name__)
 

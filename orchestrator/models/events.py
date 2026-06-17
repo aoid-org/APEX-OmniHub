@@ -11,12 +11,14 @@ Design Principles:
 4. Strict validation with no implicit coercion
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
+
+UTC = timezone.utc
 
 # Constant for UTC offset string (used in ISO 8601 timestamp parsing)
 UTC_OFFSET_SUFFIX = "+00:00"

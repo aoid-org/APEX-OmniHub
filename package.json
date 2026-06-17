@@ -99,7 +99,8 @@
     "check:pwa": "node scripts/ci/check-pwa-integrity.mjs",
     "check:omnidash": "node scripts/ci/check-omnidash-integrity.mjs",
     "check:coverage-integrity": "node scripts/ci/check-coverage-integrity.mjs",
-    "test:secret-scan": "node tests/ci/secret-scan-fixtures.test.mjs"
+    "test:secret-scan": "node tests/ci/secret-scan-fixtures.test.mjs",
+    "verify:cloudflare-pages-contract": "node scripts/ci/verify-cloudflare-pages-contract.mjs"
   },
   "size-limit": [
     {

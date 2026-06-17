@@ -12,3 +12,9 @@ Validation notes:
 - `npm audit --omit=dev --audit-level=high` passed with 0 vulnerabilities after dependency updates.
 - `bun install --frozen-lockfile --ignore-scripts` passed under Bun 1.3.14 via `npm exec --package=bun@1.3.14`.
 - `cd android && ./gradlew dependencies --write-locks --no-daemon` remains environment/repo-snapshot blocked by missing `android/capacitor-cordova-android-plugins/cordova.variables.gradle`.
+
+Follow-up — 2026-06-17:
+- Replaced Python 3.11-only `datetime.UTC` usage with Python 3.10-compatible `timezone.utc` aliases/usages across orchestrator production/test code while preserving timezone-aware UTC timestamps.
+- Added Vitest coverage for `apps/omnihub-proof/src/App.tsx`, extracted/tested `bootstrapOmniHubProof` in `apps/omnihub-proof/src/main.tsx`, and completed branch coverage for `src/swInit.ts`.
+- Added a fail-closed Cloudflare Pages repo contract verifier and runbook for the observed provider/internal post-CI Pages error; no root `wrangler.toml` was added.
+- Adjusted release verifier PATH allowlist for pyenv/mise runtime shims so `verify:release` can execute Python lint tools in this CI-like environment without weakening gates.

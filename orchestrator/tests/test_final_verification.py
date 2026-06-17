@@ -133,7 +133,9 @@ class TestAuditPersistence:
     @pytest.mark.asyncio
     async def test_audit_log_inserts_to_database(self):
         """Audit events should be inserted into audit_logs table."""
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
+
+        utc = timezone.utc
 
         from models.audit import (
             AuditAction,
@@ -148,7 +150,7 @@ class TestAuditPersistence:
         event = AuditLogEntry(
             id="test-123",
             correlation_id="corr-456",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(utc),
             event_sequence=1,
             actor_id="user-789",
             action=AuditAction.DATA_ACCESS,
@@ -171,7 +173,9 @@ class TestAuditPersistence:
     @pytest.mark.asyncio
     async def test_audit_fallback_on_db_failure(self):
         """Audit should log to stderr on DB failure."""
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
+
+        utc = timezone.utc
         from io import StringIO
 
         from models.audit import (
@@ -187,7 +191,7 @@ class TestAuditPersistence:
         event = AuditLogEntry(
             id="fallback-test",
             correlation_id="corr-123",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(utc),
             event_sequence=1,
             actor_id="user-123",
             action=AuditAction.DATA_DELETE,

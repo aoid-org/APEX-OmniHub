@@ -18,12 +18,14 @@ Why Activities (not direct calls in workflows):
 3. Timeouts: Activities have start-to-close timeouts
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
+
+UTC = timezone.utc
 
 
 class PolicyDecision(BaseModel):

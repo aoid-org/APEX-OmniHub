@@ -7,8 +7,10 @@ import json
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
+
+UTC = timezone.utc
 
 APEX_EXECUTION_ENVELOPE_SCHEMA_VERSION = "apex.envelope.v1"
 APEX_POLICY_VERSION = "apex.policy.v1"
