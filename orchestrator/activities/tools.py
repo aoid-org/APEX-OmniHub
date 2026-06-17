@@ -223,7 +223,7 @@ def _resolve_llm_model(context: dict[str, Any]) -> str:
     APEX Policy:
     - Default provider: Anthropic
     - Forbidden: any gpt-* or openai/* model
-    - Source priority: requested_model > tenant_model > ANTHROPIC_PLANNER_MODEL > ANTHROPIC_DEFAULT_MODEL
+    - Source priority: requested_model > tenant_model > ANTHROPIC_PLANNER
     """
     system_default_model = (
         os.getenv("ANTHROPIC_PLANNER_MODEL")

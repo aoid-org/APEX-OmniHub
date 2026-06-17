@@ -52,9 +52,9 @@ class Settings(BaseSettings):
     # LLM Configuration
     # APEX Policy: Only 'groq' and 'anthropic' are permitted providers.
     # OPENAI_API_KEY is FORBIDDEN. No GPT model defaults.
-    groq_api_key: SecretStr = Field(default=SecretStr(""), description="Groq API key for Guardian classifier")
-    anthropic_api_key: SecretStr = Field(default=SecretStr(""), description="Anthropic API key for planner/executor")
-    default_llm_provider: str = Field(default="anthropic", description="Default LLM provider: 'anthropic' or 'groq'")
+    groq_api_key: SecretStr = Field(default=SecretStr(""), description="Groq key")
+    anthropic_api_key: SecretStr = Field(default=SecretStr(""), description="Anthropic key")
+    default_llm_provider: str = Field(default="anthropic", description="Default provider")
     default_llm_model: str = Field(
         default="anthropic/claude-sonnet-4-5",
         description="Default Anthropic planner model (LiteLLM format: provider/model)"
@@ -108,15 +108,13 @@ class Settings(BaseSettings):
 
         # APEX Policy: default_llm_provider must be 'anthropic' or 'groq'
         if self.default_llm_provider not in ("anthropic", "groq"):
-            raise ValueError(
-                f"default_llm_provider must be 'anthropic' or 'groq', got: '{self.default_llm_provider}'"
-            )
+            raise ValueError(f"Invalid default_llm_provider: '{self.default_llm_provider}'")
 
         # APEX Policy: Planner defaults must not be OpenAI/GPT
         if self.default_llm_model.startswith(("gpt-", "openai/", "text-davinci")):
             raise ValueError(
-                f"default_llm_model '{self.default_llm_model}' is forbidden by APEX provider policy. "
-                "Use 'anthropic/claude-*' or 'groq/llama-*' models only."
+                f"Model '{self.default_llm_model}' is forbidden by APEX policy. "
+                "Use 'anthropic/claude-*' or 'groq/llama-*'."
             )
 
         if self.environment == "production":
