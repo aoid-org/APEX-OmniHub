@@ -8,11 +8,9 @@ title = "APEX-OmniHub Gitleaks Config"
 
 
 
-# Exclude paths with documentation and example files
-
 [allowlist]
 
-description = "Exclude documentation and example files"
+description = "Exclude known synthetic fixture and template files only"
 
 paths = [
 
@@ -22,17 +20,13 @@ paths = [
 
   '''MIGRATION.*\.md''',
 
-  '''docs/.*''',
-
-  '''examples/.*''',
-
   '''.*\.example'''
 
 ]
 
 
 
-# Exclude known safe patterns (Supabase public anon keys are safe)
+# Exclude known safe patterns (Supabase public anon keys are safe to commit)
 
 regexes = [
 
@@ -40,8 +34,6 @@ regexes = [
 
   '''(?i)publishable.*key''',
 
-  '''<your-.*>''',
-
-  '''mock-.*'''
+  '''<your-.*>'''
 
 ]

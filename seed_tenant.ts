@@ -11,6 +11,14 @@ const requiredEnv = (name: string): string => {
 };
 
 async function seed() {
+  if (Deno.env.get("APEX_ALLOW_LIVE_SUPABASE_ADMIN_SCRIPT") !== "true") {
+    console.error(
+      "Refusing to run: APEX_ALLOW_LIVE_SUPABASE_ADMIN_SCRIPT must be set to 'true'. " +
+      "This script performs live privileged Supabase operations using the service-role key."
+    );
+    Deno.exit(1);
+  }
+
   const supabaseUrl = requiredEnv("SUPABASE_URL");
   const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
   const email = requiredEnv("SEED_TENANT_EMAIL");
