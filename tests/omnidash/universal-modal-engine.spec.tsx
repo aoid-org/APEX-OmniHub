@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UniversalModalEngine } from '@/dashboard/components/media/UniversalModalEngine';
-import { useOmniModal } from '@/stores/omniModalStore';
+import { useOmniModal } from '@omnihub/stores/omniModalStore';
 
 // Polyfill window.PointerEvent for Radix UI Dialog
 if (!(globalThis as Record<string, unknown>).PointerEvent) {

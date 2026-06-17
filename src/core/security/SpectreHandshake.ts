@@ -126,7 +126,7 @@ export async function authenticate(
   connectionId: string,
 ): Promise<DeviceProfile> {
   if (!_keyStore) {
-    throw new Error('AegisKeyStore not initialized');
+    throw new SpectreAuthError('SpectreHandshake keystore not initialized', 503);
   }
 
   const auth = getHeader(headers, 'authorization');

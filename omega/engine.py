@@ -71,21 +71,20 @@ class VerificationEngine:
     Data is expected to be pre-sanitized by the dashboard layer.
     """
 
-    def __init__(self, storage_path: str = "/tmp/apex-evidence"):
+    def __init__(self, storage_path: str = "/var/lib/apex-evidence"):
         """
         Initialize verification engine.
 
         Args:
             storage_path: Path to evidence storage directory
-                         Default: /tmp/apex-evidence (development/testing only)
+                         Default: /var/lib/apex-evidence (persistent, restricted)
 
         Security Notes:
-            - /tmp is world-readable and may be cleared on reboot
-            - For production: Use persistent, restricted path:
-              * Linux: /var/lib/apex-evidence (chmod 700)
-              * Docker: Mount volume /data/apex-evidence
-              * Cloud: S3, Azure Blob, or GCS bucket with encryption
+            - NS-H-002: Default changed from /tmp (ephemeral, world-readable) to
+              /var/lib/apex-evidence (persistent across restarts)
             - Ensure proper file permissions (600 for files, 700 for dirs)
+            - For Docker: Mount volume /data/apex-evidence
+            - For Cloud: S3, Azure Blob, or GCS bucket with encryption at rest
             - Consider encryption at rest for sensitive evidence
         """
         self.storage_path = Path(storage_path)

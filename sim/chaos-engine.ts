@@ -135,7 +135,7 @@ class SeededRandom {
    * Generate random integer [min, max)
    */
   nextInt(min: number, max: number): number {
-    return Math.floor(this.next() * (max - min)) + min;
+    return Math.trunc(this.next() * (max - min)) + min;
   }
 
   /**

@@ -118,9 +118,9 @@ nav.scrolled{background:rgba(11,31,46,0.97)}
 .adot.info{background:#60a5fa;box-shadow:0 0 5px rgba(96,165,250,.4)}
 .atxt{color:var(--t1);flex:1;font-size:11px}
 .apill{font-size:8px;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
-.p-auth{background:rgba(74,222,128,.09);color:#4ade80;border:1px solid rgba(74,222,128,.22)}
-.p-log{background:rgba(96,165,250,.09);color:#60a5fa;border:1px solid rgba(96,165,250,.22)}
-.p-block{background:rgba(251,113,133,.09);color:#fb7185;border:1px solid rgba(251,113,133,.22)}
+.p-auth{background:rgba(74,222,128,.09);color:#86efac;border:1px solid rgba(74,222,128,.22)}
+.p-log{background:rgba(96,165,250,.09);color:#93c5fd;border:1px solid rgba(96,165,250,.22)}
+.p-block{background:rgba(251,113,133,.09);color:#fda4af;border:1px solid rgba(251,113,133,.22)}
 /* Policy toggles */
 .prules{display:flex;flex-direction:column;gap:8px}
 .prule{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
@@ -157,7 +157,7 @@ nav.scrolled{background:rgba(11,31,46,0.97)}
 .comp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:44px}
 .comp-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:9px;transition:border-color .2s}
 .comp-card:hover{border-color:rgba(212,133,90,.28)}
-.comp-chk{width:20px;height:20px;border-radius:50%;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);display:flex;align-items:center;justify-content:center;font-size:9px;color:#4ade80}
+.comp-chk{width:20px;height:20px;border-radius:50%;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);display:flex;align-items:center;justify-content:center;font-size:9px;color:#86efac}
 .comp-n{font-size:12.5px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
 .comp-d{font-size:11px;color:var(--t3);line-height:1.5}
 /* CTA section */
@@ -203,7 +203,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);background:#
 .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(9,24,37,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal-card{background:#0F2538;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;width:100%;max-width:480px;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.7);max-height:90vh;overflow-y:auto;margin:16px;}
-.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:20px;line-height:32px;text-align:center;transition:background .2s;font-family:inherit;}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.7);font-size:20px;line-height:32px;text-align:center;transition:background .2s;font-family:inherit;}
 .modal-close:hover{background:rgba(255,255,255,0.14);color:#fff}
 .modal-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:6px}
 .modal-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px}
@@ -211,7 +211,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line);background:#
 .form-label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
 .form-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 14px;font-family:var(--font);font-size:14px;color:#fff;outline:none;transition:border-color .2s;}
 .form-input:focus{border-color:rgba(212,133,90,0.5)}
-.form-input::placeholder{color:rgba(255,255,255,0.25)}
+.form-input::placeholder{color:rgba(255,255,255,0.5)}
 textarea.form-input{resize:vertical;min-height:80px}
 .form-err{font-size:11px;color:#fb7185;margin-top:4px;display:none}
 .form-err.show{display:block}
@@ -223,7 +223,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 .modal-success-txt{font-size:14px;color:rgba(255,255,255,0.5)}
 .modal-form-body{transition:opacity .2s}
 .modal-form-body.hidden{display:none}
-.modal-gen-error{background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#fb7185;margin-bottom:16px;display:none}
+.modal-gen-error{background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#fda4af;margin-bottom:16px;display:none}
 .modal-gen-error.show{display:block}
 .submit-btn-inner{display:flex;align-items:center;gap:8px}
 .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
@@ -572,7 +572,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 
 <!-- REQUEST ACCESS MODAL -->
 <div id="ra-modal" class="modal-overlay" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <dialog class="modal-card" aria-modal="true" aria-labelledby="modal-title" open>
     <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
     <div class="modal-form-body" id="modal-form-body">
       <div class="modal-title" id="modal-title">Request Early Access</div>
@@ -587,12 +587,13 @@ textarea.form-input{resize:vertical;min-height:80px}
         <button type="submit" class="pill" id="form-submit" style="width:100%;justify-content:center;margin-top:8px"><span class="btn-text">Request Access</span><span class="spinner"></span></button>
       </form>
     </div>
+    
     <div class="modal-success" id="modal-success">
-      <div class="modal-success-ico">&#10003;</div>
-      <div class="modal-success-ttl">Request Received</div>
-      <div class="modal-success-txt">We will be in touch shortly.</div>
+      <div class="modal-success-ico">✨</div>
+      <div class="modal-success-ttl">Access Requested</div>
+      <div class="modal-success-txt">Thank you. We will review your application and be in touch soon.</div>
     </div>
-  </div>
+  </dialog>
 </div>
 
 <script>

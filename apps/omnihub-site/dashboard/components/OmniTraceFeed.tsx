@@ -51,7 +51,9 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
       return;
     }
 
-    const supabase = (mockSupabase as ReturnType<typeof createClient>) || createClient(supabaseUrl, supabaseKey);
+    const supabase = mockSupabase
+      ? (mockSupabase as ReturnType<typeof createClient>)
+      : createClient(supabaseUrl, supabaseKey);
     let channel: ReturnType<typeof supabase.channel>;
 
     try {

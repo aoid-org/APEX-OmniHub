@@ -5,6 +5,9 @@ export interface SkillDefinition {
   systemPrompt: string;
 }
 
+// TODO(NS-M-005): FINANCIAL_FIREWALL_PROMPT is TRUNCATED — the "..." is a placeholder,
+// not intentional prose. Replace with the full policy string before shipping.
+// Original source prompt must be retrieved from the author/design doc.
 const FINANCIAL_FIREWALL_PROMPT =
   "\n\nSTRICTLY FORBIDDEN from accessing... financial data";
 

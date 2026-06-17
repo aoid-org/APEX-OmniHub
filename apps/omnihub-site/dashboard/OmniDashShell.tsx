@@ -400,7 +400,8 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
 // ─── Shell: Header ────────────────────────────────────────────────────────────
 const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
-  const [aiProvider, setAiProvider] = useState<string | null>(() => localStorage.getItem('omni_ai_provider'));
+  // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
+  const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
   const pulse = tick % 2 === 0;
 
   const handleOmniSkills = () => {
@@ -430,7 +431,8 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           const selected = items.find(i => i.id === result.selectedId);
           if (selected) {
             setAiProvider(selected.label);
-            localStorage.setItem('omni_ai_provider', selected.label);
+            // NS-H-001: Write to sessionStorage instead of localStorage
+            sessionStorage.setItem('omni_ai_provider', selected.label);
           }
         }
       },
@@ -1002,9 +1004,9 @@ const OmniSlateWidget = () => {
   // Seed / clear demo conversation when demo mode toggles
   useEffect(() => {
     if (demoMode && messages.length === 0) {
-      setMessages([...DEMO_SLATE_MESSAGES]);
+      setTimeout(() => setMessages([...DEMO_SLATE_MESSAGES]), 0);
     } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
-      setMessages([]);
+      setTimeout(() => setMessages([]), 0);
     }
   // messages intentionally excluded — we only seed when the feed is empty
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1416,6 +1418,43 @@ const IntegratedAppsWidget = () => {
   );
 };
 
+function OmniGridTop({ hiddenWidgets, tick, isDesktop }: { hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }) {
+  const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
+  const gridHeight = isDesktop ? 300 : undefined;
+  return (
+    <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
+      {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
+      {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
+      {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
+    </div>
+  );
+}
+
+function M03ObservabilityPanels({ hiddenWidgets }: { hiddenWidgets: readonly string[] }) {
+  if (!(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id))) {
+    return null;
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+      {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
+      {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
+          {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
+        </div>
+      )}
+      {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
+          {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
+        </div>
+      )}
+      {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
+      {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
+    </div>
+  );
+}
+
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
@@ -1456,7 +1495,7 @@ export default function OmniDashShell() {
     // This prevents aggressive re-renders from detaching DOM nodes during test execution.
     if (
       (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (typeof globalThis.window !== 'undefined' && (globalThis.window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
+      (globalThis.window !== undefined && (globalThis.window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
     ) {
       return;
     }
@@ -1466,12 +1505,11 @@ export default function OmniDashShell() {
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
-    if (isDesktop) setDrawerOpen(false);
+    if (isDesktop) setTimeout(() => setDrawerOpen(false), 0);
   }, [isDesktop]);
 
   // Responsive grid columns
-  const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
-  const gridHeight = isDesktop ? 300 : undefined;
+
 
   const layoutContextValue = useMemo(() => ({
     hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions
@@ -1549,40 +1587,14 @@ export default function OmniDashShell() {
           }} />
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-            {/* Primary 3-column grid — fixed height, overflow-isolated cells.
-                FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
-                Each DraggableWidget gets height+overflow:hidden so no child
-                (including OmniSlate chat history) can blow out the row or
-                dislodge sibling tiles. */}
-            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
-              {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
-              {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
-              {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
-            </div>
+            {/* Primary 3-column grid */}
+            <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
 
             {/* Integrated Apps row */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels — only rendered when at least one is visible */}
-            {(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id)) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-              {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
-              {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
-                  {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
-                </div>
-              )}
-              {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
-                  {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
-                </div>
-              )}
-              {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
-              {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
-            </div>
-            )}
+            {/* M-03 Observability Panels */}
+            <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />
 
             {/* APEX-OmniHub wordmark watermark — above grid, below content */}
             <div style={{

@@ -81,8 +81,13 @@ export const onRequestPost: PagesFunction = async (context) => {
   }
 
   // ── 4. Env validation ─────────────────────────────────────────────────────
-  const supabaseUrl = env.SUPABASE_URL;
-  const supabaseAnonKey = env.SUPABASE_PUBLISHABLE_KEY ?? env.SUPABASE_ANON_KEY ?? "";
+  const supabaseUrl = env.SUPABASE_URL ?? env.VITE_SUPABASE_URL;
+  const supabaseAnonKey =
+    env.SUPABASE_PUBLISHABLE_KEY ??
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    env.SUPABASE_ANON_KEY ??
+    env.VITE_SUPABASE_ANON_KEY ??
+    "";
 
   if (!supabaseUrl) {
     console.error("[omniport-gateway] SUPABASE_URL not configured");
