@@ -12,18 +12,17 @@ status: verified
 
 ## Root Cause
 
-Two orchestrator modules used Python 3.11-only standard-library symbols while the orchestrator package declares Python `>=3.10` support:
+The failing CI log included Python 3.11-only standard-library symbols while the orchestrator package declares Python `>=3.10` support. The safe, non-protected code change is limited to `enum.StrEnum` in `orchestrator/omniboard/schema.py`.
 
-- `enum.StrEnum` in `orchestrator/omniboard/schema.py`
-- `datetime.UTC` in `orchestrator/security/guardian_fabric.py`
+`orchestrator/security/guardian_fabric.py` is RSI-protected and must remain untouched; its `datetime.UTC` compatibility is handled by the existing orchestrator-local `sitecustomize.py` shim.
 
 ## Fix
 
 - Replace `StrEnum` inheritance with `class X(str, Enum)` so enum values remain string-compatible on Python 3.10+.
-- Replace `datetime.UTC` with `timezone.utc`.
+- Do not touch protected `orchestrator/security/**` files; rely on the existing `sitecustomize.py` UTC alias shim for `datetime.UTC` on Python 3.10.
 
 ## Validation Notes
 
-- `python -m py_compile orchestrator/omniboard/schema.py orchestrator/security/guardian_fabric.py` passed on local Python 3.12.
-- `ruff check` and `ruff format --check` passed for both touched files.
-- Targeted pytest collection no longer reports the original `StrEnum` or `datetime.UTC` import errors, but this container does not have the complete orchestrator dependency set installed; collection stops later on a local `supabase` package import mismatch.
+- `python -m py_compile orchestrator/omniboard/schema.py orchestrator/sitecustomize.py` passed locally.
+- `ruff check` and `ruff format --check` passed for the non-protected touched orchestrator file.
+- RSI governance must remain green by keeping `orchestrator/security/guardian_fabric.py` identical to the base branch.
