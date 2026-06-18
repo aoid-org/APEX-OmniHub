@@ -41,6 +41,14 @@ import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } f
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
 
+// ─── Layout constants ───
+/**
+ * Single source of truth for BOTH flanking rail widths (left nav + right panel).
+ * One constant guarantees the two sides can never desync, so the central canvas
+ * stays optically centered. Do NOT replace with inline literals.
+ */
+const OMNI_RAIL_WIDTH = 300;
+
 interface AppIconProps {
   idx: number;
   size?: number;
@@ -344,7 +352,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
 
   return (
     <div className="omni-sidebar" style={{
-      width:228, flexShrink:0,
+      width:OMNI_RAIL_WIDTH, flexShrink:0,
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
       display:"flex", flexDirection:"column",
@@ -959,15 +967,6 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
-// APEX INVARIANT: These constants seed the OmniSlate demo conversation and suggestion.
-// Both are required — removing either causes a ReferenceError that crashes OmniDash.
-// Guarded by: scripts/ci/check-omnidash-integrity.mjs
-const DEMO_SLATE_MESSAGES: ReadonlyArray<{ role: string; text: string }> = [
-  { role: 'user',      text: 'HELLO' },
-  { role: 'assistant', text: "Analyzing: 'HELLO' — Guardian audit passed. Agent response queued." },
-];
-const DEMO_TRY_SUGGESTION = "Run a Guardian audit on the last 50 agent actions";
-
 const OmniSlateWidget = () => {
   const { demoMode } = useDemoMode();
   const [input, setInput] = useState<string>("");
@@ -1001,19 +1000,8 @@ const OmniSlateWidget = () => {
     );
   }, []);
 
-  // Seed / clear demo conversation when demo mode toggles
-  useEffect(() => {
-    if (demoMode && messages.length === 0) {
-      setTimeout(() => setMessages([...DEMO_SLATE_MESSAGES]), 0);
-    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
-      setTimeout(() => setMessages([]), 0);
-    }
-  // messages intentionally excluded — we only seed when the feed is empty
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demoMode]);
-
   const fillSuggestion = () => {
-    setInput(demoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
+    setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
   const addContextApp = useCallback(
@@ -1156,24 +1144,6 @@ const OmniSlateWidget = () => {
               {demoMode ? "Starting demo session…" : "Start a session to begin"}
             </span>
           </div>
-        )}
-        {/* TRY chip — visible when demo mode has a seeded conversation */}
-        {demoMode && messages.length > 0 && !loading && (
-          <button
-            type="button"
-            onClick={fillSuggestion}
-            style={{
-              alignSelf:"flex-start",
-              background:`${T.blue}18`,
-              border:`1px solid ${T.blue}44`,
-              borderRadius:20, padding:"5px 12px",
-              color:T.blue, fontSize:11.5, fontWeight:600,
-              cursor:"pointer", transition:"all .15s",
-              whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%",
-            }}
-          >
-            TRY: {DEMO_TRY_SUGGESTION.slice(0, 48)}…
-          </button>
         )}
         {messages.map((m) => (
           <div key={`${m.role}-${m.text.slice(0, 32)}`} style={{
@@ -1384,7 +1354,7 @@ const IntegratedAppsWidget = () => {
       </button>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px, 1fr))", gap:10 }}>
+    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
@@ -1551,7 +1521,7 @@ export default function OmniDashShell() {
           <div
             className="omni-right-panel"
             style={{
-              width: 340, flexShrink: 0,
+              width: OMNI_RAIL_WIDTH, flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
@@ -1623,7 +1593,7 @@ export default function OmniDashShell() {
           <div
             className="omni-right-panel"
             style={{
-              width: 340, flexShrink: 0,
+              width: OMNI_RAIL_WIDTH, flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
