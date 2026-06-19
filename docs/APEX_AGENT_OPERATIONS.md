@@ -94,10 +94,24 @@ Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABA
 | Object | Used by | If missing |
 |---|---|---|
 | `agent_runs` (migration `20251221000001_omnilink_ops_pack.sql`) | gateway insert/poll, worker write-back | whole pipeline breaks |
-| `omni_policies` (**not currently provisioned**) | OmniPolicy `evaluate_policy` | loader degrades to no-policies (default ALLOW) — see §7 note |
+| `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
 
-**Note:** `omni_policies` does **not** exist today; the loader is hardened to tolerate that. A separate `agent_policies` table exists but has a *different* schema and is unrelated to OmniPolicy. To enforce real allow/deny policies later, create + populate `omni_policies` with columns `name, version, priority, match(jsonb), decision, lane, reason, enabled`.
+**Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
+
+**Active policy set (priority asc = evaluated first; first match wins; no match = ALLOW):**
+
+| Priority | Name | Match | Decision |
+|---|---|---|---|
+| 10 | deny_delete_protected_tables | `delete_record` on system/financial tables | DENY |
+| 15 | deny_write_governance_tables | writes to `omni_policies`/`agent_policies`/audit | DENY |
+| 20 | deny_secret_or_credential_data | `data_class` = secret/credential/token/… | DENY |
+| 30 | defer_pii_financial_health_data | `data_class` = pii/financial/health/… | DEFER (MAN) |
+| 40 | defer_record_deletion | any other `delete_record` | DEFER (MAN) |
+| 60 | allow_read_and_conversational | `respond_to_user`/`search_database`/`search_youtube` | ALLOW |
+| 70 | allow_system_internal | lifecycle/system activities | ALLOW |
+
+Normal `create_record` / `send_email` / `call_webhook` have no policy → default ALLOW → MAN-mode risk_triage classifies/audits them (so everyday automation stays unthrottled).
 
 ---
 
@@ -160,12 +174,4 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 
 | Commit(s) | Change | Why |
 |---|---|---|
-| `60b080c` `e28b1da` `4c8d100` | Temporal Cloud **API-key auth** (config.py/main.py/server.py) | code only supported mTLS; account uses API keys |
-| `5c8969d` | declare `slowapi` in `pyproject.toml` | API import crashed (dep only in requirements.txt) |
-| `be04b92` | gate semantic cache behind `SEMANTIC_CACHE_ENABLED` | let worker run in 512 MB (no OOM, no upgrade) |
-| `c058afff` | register `update_agent_run_completion` + `mint_pilot_session` on worker | runs finished but couldn't record → stuck `running` |
-| `b10aaa72` | OmniPolicy loader degrades to no-policies when table absent | missing `omni_policies` crashed every multi-step prompt |
-| `4e92b8a` `310221c` `a7ecf50` `6eaff80` | `respond_to_user` conversational tool (activity, contract, registration, reply-bubbling) | agent could only act, not answer questions |
-| *(staged, review)* | gateway persists terminal `agent_runs` state on upstream failure (`invoke.ts`) + regression test | stop orphan `running` rows |
-
-**Root-cause chain that was resolved:** Upstash archived (429) → orchestrator Render service down (500/502) → Temporal cert-vs-API-key gap → missing `slowapi` → missing env (`SUPABASE_DB_URL`, Redis) → worker OOM → unregistered completion activity → missing `omni_policies` table → no conversational capability.
+| `60b080c` `e28b1da` `4c8d100` | Temporal Cloud **API-key auth** (c
