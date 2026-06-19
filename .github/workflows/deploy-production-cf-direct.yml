@@ -141,8 +141,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Defaults to the REAL project. Never "omnihub".
-          CF_PROJECT_NAME: ${{ vars.CLOUDFLARE_PRODUCTION_PROJECT_NAME || 'apex-omnihub' }}
+          # Pinned: CLOUDFLARE_PRODUCTION_PROJECT_NAME repo var was set to
+          # 'omnihub' (wrong) and overrode the 'apex-omnihub' fallback, causing
+          # code-10000 auth failures targeting a non-existent project.
+          CF_PROJECT_NAME: apex-omnihub
         run: |
           set -euo pipefail
           echo "Deploying dist/ to Cloudflare Pages project: ${CF_PROJECT_NAME}"
