@@ -1,0 +1,2 @@
+-- Migration history repair: this entry exists in the remote schema_migrations table.
+-- Placeholder added to keep local and remote migration histories in sync.
