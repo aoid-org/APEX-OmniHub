@@ -413,12 +413,16 @@ Rules:
 2. Define dependencies (steps that must complete before this one)
 3. Assign compensation activities for reversible actions
 4. Use ONLY the available tools listed below:
+   - respond_to_user
    - search_database
    - create_record
    - delete_record
    - send_email
    - call_webhook
    - search_youtube
+5. For greetings, questions, explanations, summaries, or ANY request that needs no
+   external action, output a SINGLE step using respond_to_user, with input.message
+   set to the complete, final, user-facing answer. Do NOT use other tools for these.
 
 Example:
 Goal: "Create a new integration and notify the team"
@@ -952,6 +956,21 @@ async def search_youtube(params: dict[str, Any]) -> dict[str, Any]:
     ]
 
     return {"success": True, "videos": videos, "total_results": len(videos)}
+
+
+@activity.defn(name="respond_to_user")
+async def respond_to_user(params: dict[str, Any]) -> dict[str, Any]:
+    """Return a direct conversational answer to the user.
+
+    For informational / Q&A / greeting / summary requests that need no external
+    action. The planner writes the complete answer into params["message"]; this
+    activity returns it verbatim as the reply (deterministic, no I/O).
+    """
+    message = str(params.get("message", "")).strip()
+    if not message:
+        message = "I'm online, but I didn't have anything specific to add."
+    activity.logger.info("respond_to_user: returning direct answer")
+    return {"success": True, "reply": message}
 
 
 @activity.defn(name="update_agent_run_completion")
