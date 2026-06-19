@@ -15,7 +15,7 @@
  */
 
 import type { TriggerLambdaResponse } from './router';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 
 // ============================================================================
 // Configuration
