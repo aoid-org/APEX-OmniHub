@@ -31,8 +31,8 @@ vi.mock('@/components/ui/button', () => ({
 }));
 
 vi.mock('dashboard/components/ModuleRenderer', () => ({
-  ModuleRenderer: ({ onClose }: { onClose: () => void }) => (
-    <div data-testid="module-renderer">
+  ModuleRenderer: ({ moduleKey, onClose }: { moduleKey: string; onClose: () => void }) => (
+    <div data-testid="module-renderer" data-module-key={moduleKey}>
       <button onClick={onClose}>close-module</button>
     </div>
   ),
@@ -153,6 +153,14 @@ describe('DialogModeRenderer', () => {
     const modal = makeModal({ type: 'module', contextData: { moduleKey: 'links' } });
     render(<DialogModeRenderer modal={modal} isProcessing={false} onAction={onAction} onClose={onClose} />);
     expect(screen.getByTestId('module-renderer')).toBeTruthy();
+  });
+
+  it('forwards contextData.moduleKey to ModuleRenderer (Connect-a-Link wizard path)', () => {
+    // Contract that LinksModule "Connect a Link" relies on: a type: 'module'
+    // modal must mount ModuleRenderer with the wizard moduleKey, not a sandbox.
+    const modal = makeModal({ type: 'module', contextData: { moduleKey: 'omniboard-wizard' } });
+    render(<DialogModeRenderer modal={modal} isProcessing={false} onAction={onAction} onClose={onClose} />);
+    expect(screen.getByTestId('module-renderer').getAttribute('data-module-key')).toBe('omniboard-wizard');
   });
 
   it('module type uses modal.id as key when no contextData.moduleKey', () => {

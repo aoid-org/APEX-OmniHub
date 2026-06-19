@@ -1,7 +1,6 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useOmniModal } from '@/stores/omniModalStore';
-import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;
@@ -20,16 +19,26 @@ export default function LinksModule({ onClose }: Props) {
 
   const handleAction = async (actionId: string, _selected: string[]) => {
     if (actionId === 'add-link') {
-      // Open OmniBoardWizard via OmniSpatialHost — correct SPA modal pattern
+      // Render the OmniBoard wizard React module inside the dialog host.
+      // type: 'module' routes resolveRenderMode() → 'dialog', which makes
+      // DialogModeRenderer mount <ModuleRenderer moduleKey="omniboard-wizard" />.
+      // (type: 'microfrontend' would resolve to 'sandbox', which reads
+      // entryUrl/htmlContent and ignores moduleKey — opening a blank shell.)
+      //
+      // OmniBoardModule owns its own completion: OmniBoardWizard runs the
+      // connection flow and calls the modal store's close() on success, so the
+      // config-level onComplete below is never reached for module modals. It is
+      // a required field on OmniModalConfig, so we keep a documented no-op.
       useOmniModal.getState().invoke({
         id: 'links-add-connection',
         provider: 'omnidash',
-        type: 'microfrontend',
+        type: 'module',
         title: 'Connect a Link',
         description: 'Identify and authorize a new connection through the OmniLink port.',
         contextData: { moduleKey: 'omniboard-wizard' },
-        onComplete: async (result) => {
-          await supabase.functions.invoke('omnilink-port', { body: result });
+        onComplete: async () => {
+          // No-op: OmniBoardModule/OmniBoardWizard own the connection flow and
+          // close the modal themselves. See note above.
         },
         onCancel: () => {},
       });
