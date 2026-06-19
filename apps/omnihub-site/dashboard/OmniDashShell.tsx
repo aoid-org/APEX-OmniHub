@@ -1519,6 +1519,7 @@ export default function OmniDashShell() {
         {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
+            data-testid="rt_security"
             className="omni-right-panel"
             style={{
               width: OMNI_RAIL_WIDTH, flexShrink: 0,
@@ -1529,7 +1530,7 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <OmniTraceFeed />
+            <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <SentinelPanel />
           </div>
         )}
@@ -1591,6 +1592,7 @@ export default function OmniDashShell() {
         {/* Right Panel — standard layout: right; reversed layout: left (rendered above) */}
         {isDesktop && panelLayout === 'standard' && (
           <div
+            data-testid="rt_security"
             className="omni-right-panel"
             style={{
               width: OMNI_RAIL_WIDTH, flexShrink: 0,
@@ -1601,7 +1603,7 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <OmniTraceFeed />
+            <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <SentinelPanel />
           </div>
         )}
