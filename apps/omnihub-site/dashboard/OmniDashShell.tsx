@@ -1300,7 +1300,7 @@ const EcosystemWidget = () => {
         fontWeight:700, fontSize:15, letterSpacing:"0.01em",
       }}>
         <span style={{
-          width:36, height:36, borderRadius:10,
+          width:34, height:34, borderRadius:10,
           background:`rgba(${ORANGE},0.18)`, border:`1.5px solid rgba(${ORANGE},0.55)`,
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:22, color:T.orange, flexShrink:0,
