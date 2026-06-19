@@ -63,6 +63,7 @@ from activities.tools import (
     delete_record,
     generate_plan_with_llm,
     mint_pilot_session,
+    respond_to_user,
     search_database,
     search_youtube,
     send_email,
@@ -179,6 +180,7 @@ async def start_worker() -> None:
             check_semantic_cache,
             generate_plan_with_llm,
             # Tool execution activities
+            respond_to_user,
             search_database,
             search_youtube,
             create_record,
