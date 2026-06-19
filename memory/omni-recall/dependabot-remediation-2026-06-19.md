@@ -21,3 +21,9 @@ GitHub Dependabot reported open alerts for vulnerable frontend and local-agent d
 - `apps/omnihub-site npm audit --json`: found 0 vulnerabilities after targeted lockfile and override updates.
 - `apps/omnihub-proof npm audit --json`: found 0 vulnerabilities after targeted lockfile updates.
 - `python3 -m pip install --dry-run -r local-agents/requirements.txt`: confirmed aiohttp 3.14.1 resolves.
+## Follow-up — Remaining Python Dependabot Alerts
+
+- Rechecked the remaining GitHub screenshot findings against the repository lockfiles.
+- `aiohttp` is locked at 3.14.1, which is the patched version for the listed <=3.14.0 advisories.
+- Upgraded `orchestrator/uv.lock` PyTorch from 2.10.0 to 2.12.1 with `uv lock --upgrade-package torch==2.12.1` to resolve the torch.jit.script memory corruption alert.
+- Exported the orchestrator lockfile and verified it with `pip-audit`; no known vulnerabilities were found.
