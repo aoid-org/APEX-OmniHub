@@ -142,18 +142,26 @@ async def setup_activities(
     os.environ["SUPABASE_URL"] = supabase_url
     os.environ["SUPABASE_SERVICE_ROLE_KEY"] = supabase_key
 
-    # Initialize semantic cache
-    from infrastructure.cache import SemanticCacheService
+    # Initialize semantic cache (optional). Gated by SEMANTIC_CACHE_ENABLED so
+    # low-memory workers can skip loading the sentence-transformers/torch model
+    # (which OOMs a 512MB instance). Disabling only removes a planning-latency
+    # optimization; correctness is unaffected (check_semantic_cache returns a miss).
+    if os.getenv("SEMANTIC_CACHE_ENABLED", "true").lower() in ("false", "0", "no"):
+        activity.logger.info(
+            "Semantic cache DISABLED (SEMANTIC_CACHE_ENABLED=false) - skipping embedding model load"
+        )
+    else:
+        from infrastructure.cache import SemanticCacheService
 
-    _semantic_cache = SemanticCacheService(
-        redis_url=redis_url,
-        redis_password=redis_password,
-        redis_ssl=redis_ssl,
-        embedding_model=os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
-        similarity_threshold=float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85")),
-    )
-    await _semantic_cache.initialize()
-    activity.logger.info("✓ Semantic cache initialized")
+        _semantic_cache = SemanticCacheService(
+            redis_url=redis_url,
+            redis_password=redis_password,
+            redis_ssl=redis_ssl,
+            embedding_model=os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
+            similarity_threshold=float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85")),
+        )
+        await _semantic_cache.initialize()
+        activity.logger.info("✓ Semantic cache initialized")
 
 
 # ============================================================================
@@ -174,7 +182,8 @@ async def check_semantic_cache(goal: str) -> dict[str, Any] | None:
         → Cache returns plan with "Paris" and "tomorrow" injected
     """
     if not _semantic_cache:
-        raise RuntimeError("Semantic cache not initialized - call setup_activities() first")
+        activity.logger.info("Semantic cache disabled/unavailable - treating as cache miss")
+        return None
 
     activity.logger.info(f"Checking semantic cache for: {goal}")
 
