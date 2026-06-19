@@ -41,6 +41,25 @@ describe('invoke.ts agent_runs insert schema', () => {
   });
 });
 
+describe('invoke.ts insertRes null guard', () => {
+  it('handles insertRes === null as terminal failure before apex-agent fetch', () => {
+    // insertRes === null guard must appear before the apex-agent URL
+    const nullGuardIdx = INVOKE_SRC.indexOf('insertRes === null');
+    const apexAgentIdx = INVOKE_SRC.indexOf('apex-agent');
+    expect(nullGuardIdx).toBeGreaterThan(-1);
+    expect(apexAgentIdx).toBeGreaterThan(-1);
+    expect(nullGuardIdx).toBeLessThan(apexAgentIdx);
+  });
+
+  it('emits agent_run_insert_failed on null insertRes', () => {
+    // The null guard must emit agent_run_insert_failed (not a different error code)
+    const nullGuardIdx = INVOKE_SRC.indexOf('insertRes === null');
+    const apexAgentIdx = INVOKE_SRC.indexOf('apex-agent');
+    const nullBlock = INVOKE_SRC.slice(nullGuardIdx, apexAgentIdx);
+    expect(nullBlock).toMatch(/agent_run_insert_failed/);
+  });
+});
+
 describe('invoke.ts poll select columns', () => {
   it('does not select banned columns: reply, result, error, workflow_id, completed_at', () => {
     const pollIdx = INVOKE_SRC.indexOf('agent_runs?id=eq');

@@ -194,10 +194,16 @@ async function runGateway(options: GatewayOptions): Promise<void> {
       });
     } catch (err) {
       console.error("[omniport-gateway] Network error on agent_run insert:", err);
-      // insertRes stays null — treated as failure below
+      // insertRes stays null — network failure is terminal
     }
 
-    if (insertRes !== null && !insertRes.ok) {
+    if (insertRes === null) {
+      await emit("failed", { traceId, status: "failed", error: "agent_run_insert_failed" });
+      await writer.close();
+      return;
+    }
+
+    if (!insertRes.ok) {
       const rawBody = await insertRes.text().catch(() => "");
       const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.-]/g, "");
       console.error(
