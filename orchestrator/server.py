@@ -100,9 +100,11 @@ async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
         logger.info("Creating goal workflow")
 
         # Connect to Temporal
+        _tk = settings.temporal_api_key.get_secret_value() if settings.temporal_api_key else ""
         client = await Client.connect(
             os.getenv("TEMPORAL_HOST", "localhost:7233"),
             namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
+            **({"tls": True, "api_key": _tk} if _tk else {}),
         )
 
         # Start workflow with unique ID
@@ -183,9 +185,11 @@ async def execute_intent(request: Request) -> dict[str, str]:
         }
 
     try:
+        _tk = settings.temporal_api_key.get_secret_value() if settings.temporal_api_key else ""
         client = await Client.connect(
             os.getenv("TEMPORAL_HOST", "localhost:7233"),
             namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
+            **({"tls": True, "api_key": _tk} if _tk else {}),
         )
 
         workflow_id = f"intent-{correlation_id}"
