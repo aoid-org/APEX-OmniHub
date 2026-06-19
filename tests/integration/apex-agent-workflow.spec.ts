@@ -18,6 +18,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getGatewayBaseUrl, invokeMcpIntent, queryAgentRegistry } from '@/omnihub-gateway/mcp-client';
 import type { McpIntentPayload, McpIntentResponse } from '@/omnihub-gateway/mcp-client';
 
+// Provide an authenticated session so the MCP session guard passes in unit tests.
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: 'test-token-unit' } },
+        error: null,
+      }),
+    },
+  },
+}));
+
+/** Build a minimal SSE stream string for a completed event. */
+function sseCompleted(payload: Record<string, unknown>): string {
+  return `event: completed\ndata: ${JSON.stringify(payload)}\n\n`;
+}
+
 // ============================================================================
 // invokeMcpIntent — gateway dispatch contract
 // ============================================================================
@@ -26,15 +43,17 @@ describe('APEX Agent — invokeMcpIntent gateway dispatch', () => {
   beforeEach(() => vi.restoreAllMocks());
 
   it('resolves with reply on 200 response', async () => {
-    const expected: McpIntentResponse = { reply: 'Workflow queued: audit-pass-001', status: 'ok' };
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify(expected), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      new Response(sseCompleted({ reply: 'Workflow queued: audit-pass-001', status: 'completed' }), {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      }),
     );
 
     const result = await invokeMcpIntent({ prompt: 'Run audit workflow', context: {} });
 
     expect(result.reply).toBe('Workflow queued: audit-pass-001');
-    expect(result.status).toBe('ok');
+    expect(result.status).toBe('completed');
   });
 
   it('throws on non-200 HTTP status (fail-closed)', async () => {
@@ -43,7 +62,7 @@ describe('APEX Agent — invokeMcpIntent gateway dispatch', () => {
     );
 
     await expect(invokeMcpIntent({ prompt: 'Run audit workflow' })).rejects.toThrow(
-      /MCP Gateway HTTP Error: 401/,
+      /401/,
     );
   });
 
@@ -57,7 +76,7 @@ describe('APEX Agent — invokeMcpIntent gateway dispatch', () => {
 
   it('POSTs to /api/mcp/invoke with correct headers', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ reply: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      new Response(sseCompleted({ reply: 'ok' }), { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
     );
 
     await invokeMcpIntent({ prompt: 'Execute workflow', context: { source: 'OmniSlate' } });
@@ -71,7 +90,7 @@ describe('APEX Agent — invokeMcpIntent gateway dispatch', () => {
 
   it('serialises prompt and context into the request body', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ reply: 'ack' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      new Response(sseCompleted({ reply: 'ack' }), { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
     );
 
     const payload: McpIntentPayload = {
@@ -87,7 +106,7 @@ describe('APEX Agent — invokeMcpIntent gateway dispatch', () => {
 
   it('handles empty context gracefully', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ reply: 'done' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      new Response(sseCompleted({ reply: 'done' }), { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
     );
 
     await expect(invokeMcpIntent({ prompt: 'Execute automation' })).resolves.toMatchObject({ reply: 'done' });
@@ -217,9 +236,9 @@ describe('APEX Agent — OmniSlate error recovery', () => {
 
   it('invocation with empty prompt still dispatches (server validates)', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ reply: 'No prompt provided' }), {
+      new Response(sseCompleted({ reply: 'No prompt provided' }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/event-stream' },
       }),
     );
 

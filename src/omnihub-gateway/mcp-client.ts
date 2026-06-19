@@ -127,6 +127,13 @@ export function getGatewayBaseUrl(): string {
   return GATEWAY_BASE_URL;
 }
 
+const DEFAULT_AGENT_REGISTRY: AgentCard[] = [
+  { id: 'claude-mcp', label: 'Claude (Anthropic MCP)', description: 'Connected via OmniHub Gateway' },
+  { id: 'gpt4-mcp', label: 'GPT-4o (OpenAI MCP)', description: 'Connected via OmniHub Gateway' },
+  { id: 'anthropic-apex', label: 'Claude (Anthropic)', description: 'Planner/executor via APEX OmniPort' },
+  { id: 'groq-guardian', label: 'Groq (Guardian + classifier)', description: 'Fast classification via APEX Guardian' },
+];
+
 /**
  * Query agent registry. Returns only approved Groq + Anthropic agents.
  */
@@ -135,19 +142,13 @@ export async function queryAgentRegistry(): Promise<AgentCard[]> {
   try {
     const res = await fetch(`${GATEWAY_URL}/registry`);
     if (!res.ok) {
-      return [
-        { id: 'anthropic-apex', label: 'Claude (Anthropic)', description: 'Planner/executor via APEX OmniPort' },
-        { id: 'groq-guardian', label: 'Groq (Guardian + classifier)', description: 'Fast classification via APEX Guardian' },
-      ];
+      return DEFAULT_AGENT_REGISTRY;
     }
     const data = await res.json() as { agents: AgentCard[] };
     return data.agents;
   } catch (err: unknown) {
     console.error('[MCP Client] Registry query failed:', err);
-    return [
-      { id: 'anthropic-apex', label: 'Claude (Anthropic)', description: 'Planner/executor via APEX OmniPort' },
-      { id: 'groq-guardian', label: 'Groq (Guardian + classifier)', description: 'Fast classification via APEX Guardian' },
-    ];
+    return DEFAULT_AGENT_REGISTRY;
   }
 }
 
