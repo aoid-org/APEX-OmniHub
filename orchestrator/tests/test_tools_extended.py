@@ -433,16 +433,21 @@ async def test_setup_activities_initializes_cache():
 
 
 @pytest.mark.asyncio
-async def test_check_semantic_cache_not_initialized():
-    """Raises RuntimeError when semantic cache not set up."""
+async def test_check_semantic_cache_disabled_returns_none():
+    """Returns None as a clean cache miss when semantic cache is disabled/unavailable.
+
+    SEMANTIC_CACHE_ENABLED=false keeps the 512 MB Render worker alive by skipping
+    the heavy sentence-transformers / PyTorch embedding model. In that state the
+    cache check must be a no-op cache miss, not a RuntimeError.
+    """
     import activities.tools as tools_mod
 
     original = tools_mod._semantic_cache
     tools_mod._semantic_cache = None
 
     try:
-        with pytest.raises(RuntimeError, match="not initialized"):
-            await tools_mod.check_semantic_cache("do something")
+        result = await tools_mod.check_semantic_cache("do something")
+        assert result is None
     finally:
         tools_mod._semantic_cache = original
 

@@ -174,4 +174,45 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 
 | Commit(s) | Change | Why |
 |---|---|---|
-| `60b080c` `e28b1da` `4c8d100` | Temporal Cloud **API-key auth** (c
+| `60b080c` `e28b1da` `4c8d100` | Temporal Cloud **API-key auth** in `config.py`/`main.py`/`server.py` | code only supported mTLS cert; the account uses API keys |
+| `5c8969d` | Declare `slowapi` in `pyproject.toml` | API server import crashed (dep was only in `requirements.txt`) |
+| `be04b92` | Gate semantic cache behind `SEMANTIC_CACHE_ENABLED` | let the worker run in 512 MB without OOM (no extra cost) |
+| `c058afff` | Register `update_agent_run_completion` on the worker | completion activity wasn't registered → runs stuck `running` |
+| `b10aaa72` | Policy-loader resilience (degrade to ALLOW if `omni_policies` unreachable) | a missing policy table must not crash `evaluate_policy` |
+| `4e92b8a` `310221c` `a7ecf50` `6eaff80` | Add `respond_to_user` conversational tool + surface its reply | agent can answer user-facing prompts, not only external tools |
+| `49a8393f` | Provision `omni_policies` (7 tailored policies) | governance source-of-truth for the agent |
+| `f03b423` `74dfce5` | Operations doc | anti-drift source of truth |
+
+---
+
+## 10. Migration history baseline — 2026-06-19
+
+Production Supabase held **live schema objects** (every table/object the migration
+stack would create already existed), but its **migration history was empty/untracked** —
+`supabase_migrations.schema_migrations` showed **0 applied migrations**. Blindly running
+the full migration stack against that database would have been dangerous (re-creating or
+mutating live objects, risking data).
+
+**Correct action taken:** all **89** migrations were **baselined / repaired as applied
+without re-running their SQL** and **without touching any data**. This aligned
+`supabase_migrations.schema_migrations` with the already-live schema. `omni_policies` was
+separately confirmed tracked and live with **7 policies**. (The repo now carries 90
+migration files: the 89 baselined plus `20260619211500_omni_policies.sql`, provisioned the
+same day.)
+
+**DB count verification:** direct query of `supabase_migrations.schema_migrations`
+(`select count(*) …`) is unavailable in this Claude Code session — no DB connection string
+is present and that schema is not exposed via PostgREST. Baseline recorded from the
+restoration session evidence; repo migration-file count (90) verified locally.
+
+**Future rule (do not violate):**
+
+1. **Never** blindly run the full migration stack against production.
+2. When history drift is detected, use migration **repair/baseline** — mark existing
+   migrations as applied; do not re-run their SQL.
+3. Going forward, only apply **new additive/idempotent** migrations.
+4. **Before any `supabase db push`,** verify BOTH that live objects exist AND that
+   migration-history tracking matches the live schema.
+
+> **NEVER** run `supabase db reset`, force-run the migration stack, or disable RLS against
+> production. See §8 Drift-prevention checklist.
