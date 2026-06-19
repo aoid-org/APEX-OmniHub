@@ -30,6 +30,7 @@ import ipaddress
 import json
 import os
 import time
+from datetime import datetime, timezone
 from typing import Any, NoReturn
 from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
@@ -971,10 +972,10 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
         # Get database provider instance
         db = get_database_provider()
 
-        # Prepare update data
+        # Prepare update data — use real ISO UTC timestamp, not the literal string "now()"
         update_data = {
             "status": status,
-            "end_time": "now()",  # Use database function for current timestamp
+            "end_time": datetime.now(timezone.utc).isoformat(),
         }
 
         if status == "completed":
