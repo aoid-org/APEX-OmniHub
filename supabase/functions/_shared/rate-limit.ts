@@ -106,6 +106,18 @@ function getRedisClient(): Redis | null {
 }
 
 /**
+ * Returns true only when BOTH Upstash credentials are present in the
+ * environment. Distinguishes operator misconfiguration (backend never
+ * provisioned) from a runtime outage (configured but unreachable).
+ */
+function isUpstashConfigured(): boolean {
+  return Boolean(
+    Deno.env.get("UPSTASH_REDIS_REST_URL") &&
+      Deno.env.get("UPSTASH_REDIS_REST_TOKEN"),
+  );
+}
+
+/**
  * Get or create a Ratelimit instance for the given config
  */
 function getRatelimiter(config: RateLimitConfig): Ratelimit | null {
@@ -222,6 +234,33 @@ export async function checkRateLimit(
   const limiter = getRatelimiter(config);
 
   if (!limiter) {
+    // Graceful-degradation escape hatch (default OFF - behavior unchanged unless
+    // explicitly enabled). When Upstash was NEVER provisioned the rate-limit
+    // feature is simply absent; failing every request closed turns a missing
+    // optional dependency into a full endpoint outage. Operators may opt into
+    // running unlimited via RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true. Runtime
+    // Upstash errors (configured but unreachable) still fail closed below.
+    if (isUpstashConfigured() === false &&
+        Deno.env.get("RATE_LIMIT_FAIL_OPEN_UNCONFIGURED") === "true") {
+      console.warn(
+        `Rate limiting DISABLED for ${config.keyPrefix}: Upstash not configured and ` +
+          "RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true. Requests are NOT rate limited. " +
+          "Provision UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to restore protection."
+      );
+      return {
+        allowed: true,
+        limit: config.maxRequests,
+        remaining: config.maxRequests,
+        reset: now + config.windowMs,
+        resetIn: config.windowMs,
+        headers: createRateLimitHeaders({
+          limit: config.maxRequests,
+          remaining: config.maxRequests,
+          reset: now + config.windowMs,
+        }),
+      };
+    }
+
     // FAIL-CLOSED: Upstash not configured or initialization failed
     console.error(
       `Rate limiting fail-closed: Upstash not configured for ${config.keyPrefix}. ` +
