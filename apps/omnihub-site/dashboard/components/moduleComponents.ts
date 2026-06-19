@@ -16,6 +16,8 @@ const MODULE_KEYS: ReadonlySet<string> = new Set([
   'billing',
   'settings',
   'translation',
+  'omniboard',
+  'omniboard-wizard',
 ]);
 
 /** Returns true when a lazy-loaded module component exists for the given key. */
