@@ -40,7 +40,7 @@ export const SentinelPanel = memo(function SentinelPanel() {
   } = useDemoMode();
 
   return (
-    <div className="sentinel-section" style={{ paddingBottom: 16 }}>
+    <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 16 }}>
       <div className="sentinel-section-title">Ops Controls</div>
 
       <OpsToggle

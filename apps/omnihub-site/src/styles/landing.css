@@ -224,3 +224,19 @@
 @keyframes spin{to{transform:rotate(360deg)}}
 .landing-root .pill.loading .spinner{display:block}
 .landing-root .pill.loading .btn-text{display:none}
+/* ===== HERO — mobile + tablet (≤ 1024px): SVG as background, text centered ===== */
+@media (max-width:1024px){
+  .landing-root .hero-inner{display:block;position:relative}
+  .landing-root .hero-right{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .landing-root .hero-right.rv,.landing-root .hero-right.rv.in{opacity:0.18;transform:none;transition:opacity 1.2s ease}
+  .landing-root .hero-art-wrap{width:min(480px,95vw);max-width:none}
+  .landing-root .hero-left{position:relative;z-index:1;width:100%;text-align:center;align-items:center}
+  .landing-root .hero-sub{text-align:center;text-indent:0;max-width:100%}
+  .landing-root .hero-h1{filter:drop-shadow(0 0 28px rgba(11,31,46,0.9))}
+  .landing-root .hero-trust{text-align:center}
+}
+/* ===== HERO — responsive nav + layout cleanup for narrow screens ===== */
+@media (max-width:768px){
+  .landing-root nav .nav-links{display:none}
+  .landing-root .hero{padding-top:90px;padding-bottom:60px}
+}

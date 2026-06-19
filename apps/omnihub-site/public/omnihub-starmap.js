@@ -253,7 +253,16 @@
   '.ohsm-sw.ohsm-onsw{background:var(--ohsm-accent)}' +
   '.ohsm-sw.ohsm-onsw::after{left:17px;background:#fff}' +
   '.ohsm-sw:focus-visible{outline:3px solid var(--ohsm-ring);outline-offset:2px}' +
-  '.ohsm-range{width:100%;accent-color:' + TOKENS.orange + ';margin:10px 0 4px}' +
+  '.ohsm-range{width:100%;accent-color:' + TOKENS.orange + ';margin:10px 0 4px;cursor:pointer;touch-action:manipulation}' +
+  '.ohsm-ctrl-row{display:flex;gap:6px;align-items:center;margin:4px 0 6px}' +
+  '.ohsm-ctrl-btn{font-family:"Space Mono",monospace;font-size:12px;background:rgba(255,255,255,0.05);' +
+    'border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--ohsm-text-2);cursor:pointer;' +
+    'min-width:32px;min-height:32px;padding:0 8px;display:flex;align-items:center;justify-content:center;' +
+    'transition:background .15s,border-color .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}' +
+  '.ohsm-ctrl-btn:disabled{opacity:.3;cursor:not-allowed}' +
+  '.ohsm-ctrl-btn:not(:disabled):hover{background:rgba(196,87,28,.15);border-color:rgba(196,87,28,.4);color:var(--ohsm-accent-hi)}' +
+  '.ohsm-ctrl-play{background:rgba(196,87,28,.1);border-color:rgba(196,87,28,.35);color:var(--ohsm-accent-hi);min-width:36px}' +
+  '.ohsm-ctrl-play:not(:disabled):hover{background:rgba(196,87,28,.22)}' +
   '.ohsm-metric{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;' +
     'border-bottom:1px solid rgba(51,65,85,.45)}' +
   '.ohsm-metric:last-of-type{border-bottom:none}' +
@@ -291,13 +300,20 @@
   '@media (max-width:599px){.ohsm-hero-3d.ohsm-ready{opacity:.38}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
   '@media (max-width:760px){' +
     '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
-      'transform:translateY(24px);max-height:60vh}' +
+      'transform:translateY(24px);max-height:65vh;overflow-y:auto}' +
     '.ohsm-panel.ohsm-show{transform:translateY(0)}' +
     '.ohsm-dock{bottom:auto;top:clamp(58px,8.5vh,80px)}' +
     '.ohsm-hintline{display:none}' +
+    '.ohsm-ctrl-btn{min-width:40px;min-height:40px;font-size:14px}' +
+    '.ohsm-range{margin:12px 0 6px}' +
+  '}' +
+  '@media (min-width:761px) and (max-width:1024px){' +
+    '.ohsm-panel{width:min(380px,calc(100vw - 20px));right:clamp(10px,1.8vw,18px);' +
+      'max-height:calc(100vh - 90px)}' +
+    '.ohsm-ctrl-btn{min-width:36px;min-height:36px}' +
   '}' +
   '@media (prefers-reduced-motion:reduce){' +
-    '.ohsm-dot,.ohsm-btn,.ohsm-panel,.ohsm-node{transition-duration:.01ms !important}' +
+    '.ohsm-dot,.ohsm-btn,.ohsm-panel,.ohsm-node,.ohsm-ctrl-btn{transition-duration:.01ms !important}' +
   '}';
 
   /* ============================================================
@@ -320,9 +336,9 @@
   var threePromise = null;
   function loadThree(src) {
     if (window.THREE) return Promise.resolve(window.THREE);
-    var safeSrc = (typeof src === 'string' && /^https:\/\//.test(src)) ? src : '';
+    var safeSrc = (typeof src === 'string' && (/^https:\/\//.test(src) || /^\//.test(src))) ? src : '';
     if (!safeSrc) {
-      return Promise.reject(new Error('three.js src must be an https:// URL'));
+      return Promise.reject(new Error('three.js src must be an https:// or same-origin / URL'));
     }
     if (threePromise) return threePromise;
     threePromise = new Promise(function (res, rej) {
@@ -565,10 +581,10 @@
       return function () { timers.forEach(clearTimeout); };
     },
 
-    /* OmniTrace — scrub the immutable timeline, replay any decision */
+    /* OmniTrace — interactive timeline: scrub, step, play/pause, speed */
     omnitrace: function (root) {
       root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
-      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:6px">Drag the timeline. Replay an agent chain, decision by decision.</div>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:6px">Drag the timeline or use controls to replay any agent decision.</div>'));
       var events = [
         ['09:14:02', 'Directive received', 'operator \u00b7 j.r'],
         ['09:14:03', 'Guardian: policy check passed', 'guardian'],
@@ -578,23 +594,106 @@
         ['09:14:18', 'Write logged immutably (GDPR Art. 30)', 'audit'],
         ['09:14:19', 'Chain sealed and fully reconstructable', 'omnitrace']
       ];
+      var speeds = [1, 2, 5];
+      var speed = 1;
+      var playing = false;
+      var playTimer = null;
+      var playBtn = null;
+      var stepBackBtn = null;
+      var stepFwdBtn = null;
+
       var range = el('input', 'ohsm-range');
       range.type = 'range'; range.min = '0'; range.max = String(events.length - 1); range.value = '0';
       range.setAttribute('aria-label', 'Replay timeline');
+
       var log = el('div', 'ohsm-log');
+
+      function updateBtns() {
+        var cur = parseInt(range.value, 10);
+        if (stepBackBtn) stepBackBtn.disabled = cur === 0;
+        if (stepFwdBtn)  stepFwdBtn.disabled  = cur >= events.length - 1;
+      }
+
       function render() {
         var k = parseInt(range.value, 10);
         log.innerHTML = '';
         for (var i = 0; i <= k; i++) {
           var e = events[i];
-          logLine(log, '<span style="color:' + TOKENS.textMuted + '">' + e[0] + '</span>  ' + esc(e[1]) + '  <span class="ohsm-hi">[' + e[2] + ']</span>');
+          var hi = (i === k) ? ' style="background:rgba(196,87,28,.09);border-radius:4px;padding:1px 3px"' : '';
+          logLine(log, '<span' + hi + '><span style="color:' + TOKENS.textMuted + '">' + e[0] + '</span>  ' + esc(e[1]) + '  <span class="ohsm-hi">[' + e[2] + ']</span></span>');
         }
         logLine(log, '<span style="color:' + TOKENS.textMuted + '">entry ' + (k + 1) + '/' + events.length + ' \u00b7 immutable \u00b7 replayable</span>');
+        updateBtns();
       }
-      range.addEventListener('input', render);
-      root.appendChild(range); root.appendChild(log);
+
+      function stopPlay() {
+        playing = false;
+        if (playTimer) { clearInterval(playTimer); playTimer = null; }
+        if (playBtn) playBtn.textContent = '\u25b6';
+      }
+
+      function startPlay() {
+        stopPlay();
+        playing = true;
+        if (playBtn) playBtn.textContent = '\u23f8';
+        playTimer = setInterval(function () {
+          var cur = parseInt(range.value, 10);
+          if (cur >= events.length - 1) { stopPlay(); return; }
+          range.value = String(cur + 1);
+          render();
+        }, Math.round(700 / speed));
+      }
+
+      /* Controls row */
+      var ctrlRow = el('div', 'ohsm-ctrl-row');
+
+      stepBackBtn = el('button', 'ohsm-ctrl-btn', '\u2039');
+      stepBackBtn.setAttribute('aria-label', 'Step back');
+      stepBackBtn.addEventListener('click', function () {
+        stopPlay();
+        var cur = parseInt(range.value, 10);
+        if (cur > 0) { range.value = String(cur - 1); render(); }
+      });
+
+      playBtn = el('button', 'ohsm-ctrl-btn ohsm-ctrl-play', '\u25b6');
+      playBtn.setAttribute('aria-label', 'Play or pause replay');
+      playBtn.addEventListener('click', function () {
+        if (playing) { stopPlay(); }
+        else {
+          if (parseInt(range.value, 10) >= events.length - 1) { range.value = '0'; render(); }
+          startPlay();
+        }
+      });
+
+      stepFwdBtn = el('button', 'ohsm-ctrl-btn', '\u203a');
+      stepFwdBtn.setAttribute('aria-label', 'Step forward');
+      stepFwdBtn.addEventListener('click', function () {
+        stopPlay();
+        var cur = parseInt(range.value, 10);
+        if (cur < events.length - 1) { range.value = String(cur + 1); render(); }
+      });
+
+      var speedBtn = el('button', 'ohsm-ctrl-btn', '1\u00d7');
+      speedBtn.setAttribute('aria-label', 'Cycle playback speed');
+      speedBtn.style.marginLeft = 'auto';
+      speedBtn.addEventListener('click', function () {
+        var idx = speeds.indexOf(speed);
+        speed = speeds[(idx + 1) % speeds.length];
+        speedBtn.textContent = speed + '\u00d7';
+        if (playing) startPlay();
+      });
+
+      ctrlRow.appendChild(stepBackBtn);
+      ctrlRow.appendChild(playBtn);
+      ctrlRow.appendChild(stepFwdBtn);
+      ctrlRow.appendChild(speedBtn);
+
+      range.addEventListener('input', function () { stopPlay(); render(); });
+      root.appendChild(range);
+      root.appendChild(ctrlRow);
+      root.appendChild(log);
       render();
-      return function () {};
+      return function () { stopPlay(); };
     },
 
     /* MAN Mode — a real approval checkpoint: approve / reject / escalate */

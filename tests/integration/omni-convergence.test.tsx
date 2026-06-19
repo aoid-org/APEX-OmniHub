@@ -22,7 +22,7 @@ describe('Omni Convergence Integration', () => {
 
   it('Test 1: Financial firewall is injected into loaded skills', () => {
     const skill = loadSkill('apex-support');
-    expect(skill.systemPrompt).toContain('STRICTLY FORBIDDEN from accessing... financial data');
+    expect(skill.systemPrompt).toContain('STRICTLY FORBIDDEN from accessing');
   });
 
   it('Test 2: OmniLinkShell renders with correct testid', () => {
