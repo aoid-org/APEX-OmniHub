@@ -69,7 +69,7 @@
     {
       name: 'Policy Enforcement Engine', tag: 'RULES BEFORE ACTIONS',
       lead: 'We apply your governance rules before any action is taken, preventing issues before they occur. Agents never access unauthorized data, and every single write is securely and immutably logged.',
-      chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block'],
+      chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block (GDPR)'],
       demo: 'policy', pos: [-56, -14, -158], size: 1.15
     },
     {
@@ -81,13 +81,13 @@
     {
       name: 'OmniTrace', tag: 'IMMUTABLE AUDIT \u00b7 FORENSIC REPLAY',
       lead: 'Access forensic replay and immutable audit trails to easily meet regulatory compliance. You can fully reconstruct any agent chain and prove every decision your AI has ever made on demand.',
-      chips: ['Immutable Audit Log', 'Forensic decision replay', 'Privacy-record workflows', 'Full chain reconstruction'],
+      chips: ['Immutable Audit Log', 'Forensic decision replay', 'GDPR Art. 30', 'Full chain reconstruction'],
       demo: 'omnitrace', pos: [-40, 22, -266], size: 1.2
     },
     {
       name: 'MAN Mode', tag: 'MANUAL APPROVAL NODE',
       lead: 'High-risk actions automatically pause at an approval checkpoint. Authorized operators can then approve, reject, or escalate the request with full traceability. Your AI works quickly while keeping the biggest decisions in human hands.',
-      chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'Human oversight controls'],
+      chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'EU AI Act Art. 14'],
       demo: 'manmode', pos: [38, -20, -318], size: 1.2
     },
     {
@@ -136,7 +136,9 @@
     'font-family:"Space Grotesk",system-ui,sans-serif;padding:clamp(64px,9vw,120px) clamp(20px,6vw,80px);' +
     'border-top:1px solid ' + TOKENS.borderSubtle + ';border-bottom:1px solid ' + TOKENS.borderSubtle + '}' +
   '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
-  '.ohsm-section .ohsm-inner{position:relative;max-width:1100px;margin:0 auto;display:grid;gap:18px}' +
+  '.ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
+  '.ohsm-hero-3d.ohsm-ready{opacity:1}' +
+  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;display:grid;gap:18px}' +
   '.ohsm-eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--ohsm-accent-hi)}' +
   '.ohsm-section h2{font-weight:700;letter-spacing:-.02em;line-height:1.04;font-size:clamp(30px,4.4vw,52px);max-width:16ch}' +
   '.ohsm-section .ohsm-sub{color:var(--ohsm-text-2);font-size:clamp(15px,1.4vw,17px);line-height:1.65;max-width:54ch}' +
@@ -285,6 +287,8 @@
   '.ohsm-fallback{position:absolute;inset:0;overflow:auto;padding:90px clamp(16px,4vw,48px) 60px;z-index:3}' +
   '.ohsm-fallback .ohsm-fwrap{max-width:760px;margin:0 auto;display:grid;gap:14px}' +
 
+  '@media (max-width:899px){.ohsm-hero-3d.ohsm-ready{opacity:.72}}' +
+  '@media (max-width:599px){.ohsm-hero-3d.ohsm-ready{opacity:.38}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
   '@media (max-width:760px){' +
     '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
       'transform:translateY(24px);max-height:60vh}' +
@@ -478,7 +482,7 @@
         ['Scope Restriction', 'No agent accesses unauthorized data scopes', true],
         ['Audit on Write', 'Each write operation logged immutably', true],
         ['Rollback Window', 'High-risk actions require approval', true],
-        ['Cross-Border Block', 'EU data stays within EEA zones (data residency)', true]
+        ['Cross-Border Block', 'EU data stays within EEA zones (GDPR)', true]
       ];
       var states = rules.map(function (r) { return r[2]; });
       var list = el('div');
@@ -571,7 +575,7 @@
         ['09:14:05', 'Planner: 3-step plan compiled', 'planner'],
         ['09:14:09', 'Executor: step 1, records updated', 'executor'],
         ['09:14:14', 'Executor: step 2, systems notified', 'executor'],
-        ['09:14:18', 'Write logged immutably (Privacy-record workflows)', 'audit'],
+        ['09:14:18', 'Write logged immutably (GDPR Art. 30)', 'audit'],
         ['09:14:19', 'Chain sealed and fully reconstructable', 'omnitrace']
       ];
       var range = el('input', 'ohsm-range');
@@ -608,7 +612,7 @@
           : cls === 'bad'
             ? '<span class="ohsm-bad">\u2715 ' + label + ':</span> ' + line
             : '<span class="ohsm-hi">\u2191 ' + label + ':</span> ' + line);
-        logLine(log, 'Recorded with full traceability: who, what, when, why. (Human oversight controls oversight)');
+        logLine(log, 'Recorded with full traceability: who, what, when, why. (EU AI Act Art. 14 oversight)');
         var again = el('button', 'ohsm-dbtn', 'New request');
         again.addEventListener('click', function () {
           log.innerHTML = ''; again.remove();
@@ -1387,7 +1391,7 @@
       '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
       '<button class="ohsm-btn ohsm-btn-ghost" data-ohsm-replay>START OVER</button>' +
       '</div>' +
-      '<div class="ohsm-proof">SECURITY CONTROLS ALIGNED \u00b7 AI OVERSIGHT CONTROLS \u00b7 PROCESSING ACTIVITY RECORDS<br>DESIGNED FOR ENTERPRISE ENVIRONMENTS</div>' +
+      '<div class="ohsm-proof">SOC 2 ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
       '</div>';
     fin.querySelector('.ohsm-btn-primary').setAttribute('href', safeHref(opts.ctaHref));
     fin.querySelector('.ohsm-btn-ghost').setAttribute('href', safeHref(opts.demoHref));
@@ -1775,6 +1779,149 @@
   };
 
   /* ============================================================
+   * 6.5 HERO 3D MINI-MAP — previews the full starmap in the teaser
+   *     section hero. Loads Three.js (same promise as Overlay), builds
+   *     a compact perspective view of the 12 capability stations along
+   *     their world-space spine, with a scout travelling the path.
+   *     Gracefully falls back to 2D starfield if WebGL/Three.js fails.
+   * ============================================================ */
+  function renderHero3D(canvas, opts) {
+    requestAnimationFrame(function () {   // defer 1 frame so canvas is laid out
+      loadThree(opts.threeSrc).then(function (THREE) {
+        var W = canvas.parentElement ? canvas.parentElement.clientWidth : 900;
+        var H = canvas.parentElement ? canvas.parentElement.clientHeight : 460;
+        if (W < 1) W = 900;
+        if (H < 1) H = 460;
+
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(W, H);
+
+        var scene = new THREE.Scene();
+        var cam   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200);
+        /* Camera offset left so station cluster (biased right) occupies right 55% of frame */
+        cam.position.set(-10, 18, 72);
+        cam.lookAt(18, 0, -38);
+
+        /* material factories — same additive-blend aesthetic as the full overlay */
+        var OG = 0xea7c44, OGD = 0xc4571c, WH = 0xf8fafc;
+        function edgeM(hex, op) {
+          return new THREE.LineBasicMaterial({
+            color: hex, opacity: op, transparent: true,
+            blending: THREE.AdditiveBlending, depthWrite: false
+          });
+        }
+        function fillM(hex, op) {
+          return new THREE.MeshBasicMaterial({
+            color: hex, opacity: op, transparent: true,
+            blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+          });
+        }
+
+        /* scale CAPS world-space positions to hero viewport */
+        var SX = 0.165, SY = 0.22, SZ = 0.135, XBIAS = 18;
+        var stMeshes = [], capV3 = [];
+        CAPS.forEach(function (c, i) {
+          var px = c.pos[0] * SX + XBIAS, py = c.pos[1] * SY, pz = c.pos[2] * SZ;
+          capV3.push(new THREE.Vector3(px, py, pz));
+          var sz = c.size * 1.6;
+          var accent = (i % 3 === 0) || i === 1 || i === 2;
+          var g = new THREE.Group();
+          g.position.set(px, py, pz);
+          var geo = new THREE.IcosahedronGeometry(sz, 1);
+          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 0.9 : 0.45)));
+          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.06 : 0.02)));
+          if (accent) {
+            var hGeo = new THREE.TorusGeometry(sz * 2.0, 0.1, 4, 20);
+            var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.22));
+            halo.rotation.x = Math.PI / 2.5;
+            g.add(halo);
+          }
+          stMeshes.push({ g: g, ph: i * 0.54, accent: accent });
+          scene.add(g);
+        });
+
+        /* smooth spine through all station positions */
+        var spine = new THREE.CatmullRomCurve3(capV3);
+        scene.add(new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(spine.getPoints(100)),
+          edgeM(OGD, 0.2)
+        ));
+
+        /* travelling scout dot */
+        var scoutM = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), fillM(OG, 1.0));
+        var trailM = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), fillM(OGD, 0.45));
+        scene.add(scoutM);
+        scene.add(trailM);
+
+        /* ambient particle field */
+        var PC = 180, pPos = new Float32Array(PC * 3);
+        for (var j = 0; j < PC; j++) {
+          pPos[j * 3]     = (Math.random() - 0.5) * 160;
+          pPos[j * 3 + 1] = (Math.random() - 0.5) * 80;
+          pPos[j * 3 + 2] = (Math.random() - 0.5) * 140 - 40;
+        }
+        var pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+          color: WH, size: 0.45, opacity: 0.32, transparent: true,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })));
+
+        /* animation loop */
+        var rafH, disposed = false, t0 = performance.now();
+        function frame(ts) {
+          if (disposed) return;
+          rafH = requestAnimationFrame(frame);
+          var t = (ts - t0) * 0.001;
+          /* gentle camera drift */
+          cam.position.x = -10 + Math.sin(t * 0.17) * 4;
+          cam.position.y = 18  + Math.cos(t * 0.11) * 3;
+          cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
+          /* station pulse + slow rotation */
+          stMeshes.forEach(function (sm) {
+            sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
+            sm.g.rotation.y = t * 0.28 + sm.ph;
+            sm.g.rotation.z = Math.sin(t * 0.19 + sm.ph) * 0.15;
+          });
+          /* scout travels the spine */
+          var prog = (t * 0.065) % 1;
+          scoutM.position.copy(spine.getPoint(prog));
+          trailM.position.copy(spine.getPoint(Math.max(0, prog - 0.018)));
+          renderer.render(scene, cam);
+        }
+        rafH = requestAnimationFrame(frame);
+        canvas.classList.add('ohsm-ready'); /* triggers CSS fade-in */
+
+        /* responsive resize */
+        function onResize() {
+          if (disposed) return;
+          var nW = canvas.parentElement ? canvas.parentElement.clientWidth : canvas.clientWidth;
+          var nH = canvas.parentElement ? canvas.parentElement.clientHeight : canvas.clientHeight;
+          if (nW < 1 || nH < 1) return;
+          cam.aspect = nW / nH;
+          cam.updateProjectionMatrix();
+          renderer.setSize(nW, nH);
+        }
+        window.addEventListener('resize', onResize);
+
+        /* cleanup when section is removed (SPA navigation) */
+        var mo = new MutationObserver(function () {
+          if (!canvas.isConnected) {
+            disposed = true;
+            cancelAnimationFrame(rafH);
+            renderer.dispose();
+            window.removeEventListener('resize', onResize);
+            mo.disconnect();
+          }
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+
+      }).catch(function () { /* graceful: 2D starfield remains visible */ });
+    });
+  }
+
+  /* ============================================================
    * 7. LANDING-PAGE SECTION (the entry point)
    * ============================================================ */
   function renderSection(host, opts) {
@@ -1830,7 +1977,10 @@
     row.appendChild(launch);
     row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
     inner.appendChild(row);
+    var hero3d = el('canvas', 'ohsm-hero-3d');
+    host.appendChild(hero3d);   /* stacks: starfield \u2192 3D hero \u2192 inner text */
     host.appendChild(inner);
+    renderHero3D(hero3d, opts);
   }
 
   /* ============================================================
