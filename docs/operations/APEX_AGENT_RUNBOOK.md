@@ -202,3 +202,31 @@ Work the chain **front to back**; each symptom maps to one layer.
 | *(staged, not deployed)* | Gateway persists terminal `agent_runs` state on upstream failure (`invoke.ts`) + regression test | stop orphan `running` rows; ship via normal review |
 
 **Root-cause chain resolved today:** Upstash archived (429) → orchestrator Render service down (500/502) → Temporal cert-vs-API-key gap → missing `slowapi` dep → missing env (`SUPABASE_DB_URL`, Redis) → worker OOM on 512 MB.
+
+---
+
+## 11. Migration history baseline — 2026-06-19
+
+Production Supabase had **live schema objects** while its **migration history was
+empty/untracked**: `supabase_migrations.schema_migrations` showed **0 applied migrations**
+even though the objects from every migration already existed in the live database. Blindly
+running all migrations against production would have been dangerous.
+
+**Action taken:** all **89** migrations were **baselined as applied without re-running
+SQL** and **without touching any data**. This aligned
+`supabase_migrations.schema_migrations` with the live schema. `omni_policies` was confirmed
+tracked and live with **7 policies**. (The repo now holds 90 migration files — the 89
+baselined plus `20260619211500_omni_policies.sql`, provisioned the same day.)
+
+**DB count verification:** unavailable in this Claude Code session (no DB connection string;
+`supabase_migrations` is not exposed via PostgREST). Baseline recorded from restoration
+session evidence; repo migration-file count (90) verified locally.
+
+**Future rule — do not violate:**
+
+- **Never** blindly run the full migration stack against production.
+- Use migration **repair/baseline** when history drift is detected (mark applied; do not
+  re-run SQL).
+- Only apply **new additive/idempotent** migrations going forward.
+- **Before any `supabase db push`,** verify BOTH live objects AND migration-history
+  tracking. Never `supabase db reset` or disable RLS against production.
