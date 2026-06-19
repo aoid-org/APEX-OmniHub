@@ -133,6 +133,7 @@
 
   /* ---- landing-page section (entry point) ---- */
   '.ohsm-section{position:relative;background:var(--ohsm-bg);color:var(--ohsm-text);overflow:hidden;' +
+    'min-height:clamp(520px,72vh,820px);contain:layout paint;' +
     'font-family:"Space Grotesk",system-ui,sans-serif;padding:clamp(64px,9vw,120px) clamp(20px,6vw,80px);' +
     'border-top:1px solid ' + TOKENS.borderSubtle + ';border-bottom:1px solid ' + TOKENS.borderSubtle + '}' +
   '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
@@ -1399,6 +1400,10 @@
   /* ============================================================
    * 6. OVERLAY (the map experience)
    * ============================================================ */
+  function scheduleStarmapWork(work) {
+    requestAnimationFrame(function () { work(); });
+  }
+
   function Overlay(opts) {
     var self = this;
     this.opts = opts;
@@ -2081,7 +2086,15 @@
       'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works about two minutes, end to end.'));
     var row = el('div', 'ohsm-row');
     var launch = el('button', 'ohsm-btn ohsm-btn-primary', 'EXPLORE THE MAP \u25b8');
-    launch.addEventListener('click', function () { new Overlay(opts); });
+    launch.addEventListener('click', function () {
+      launch.setAttribute('aria-busy', 'true');
+      launch.classList.add('ohsm-loading');
+      scheduleStarmapWork(function () {
+        launch.removeAttribute('aria-busy');
+        launch.classList.remove('ohsm-loading');
+        new Overlay(opts);
+      });
+    });
     row.appendChild(launch);
     row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
     inner.appendChild(row);

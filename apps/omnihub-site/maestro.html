@@ -13,10 +13,14 @@
   <link rel="icon" type="image/svg+xml" href="/apex-badge.svg?v=20260118" />
   <link rel="canonical" href="https://apexomnihub.icu/maestro.html" />
   <title>Maestro | APEX OmniHub</title>
+  <style>
+    html, body, #root.maestro-root-shell { min-height: 100vh; }
+    #root.maestro-root-shell { display: block; background: #ffffff; }
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root" class="maestro-root-shell"></div>
   <script type="module" src="/src/maestro.tsx"></script>
 </body>
 

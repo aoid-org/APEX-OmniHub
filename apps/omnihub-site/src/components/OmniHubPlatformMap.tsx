@@ -87,7 +87,7 @@ export default function OmniHubPlatformMap({
     <section
       ref={ref}
       id={id}
-      className={className}
+      className={`omnihub-platform-map-host ${className}`.trim()}
       style={style}
       aria-label="Platform capability map"
     />

@@ -2353,3 +2353,14 @@ body {
     border-radius: var(--border-radius-md);
   }
 }
+
+/* Web Vitals: keep the standalone Maestro route stable while React mounts. */
+#root.maestro-root-shell,
+.maestro-page,
+[data-page="maestro"] {
+  min-height: 100vh;
+}
+
+.maestro-page {
+  contain: layout paint;
+}
