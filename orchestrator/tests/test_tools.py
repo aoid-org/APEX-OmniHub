@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,6 +14,7 @@ from activities.tools import (
     send_email,
     update_agent_run_completion,
 )
+from providers.database.base import NotFoundError
 
 
 @pytest.fixture(autouse=True)
@@ -216,6 +218,73 @@ async def test_update_agent_run_completion():
         _, kwargs = db.update.call_args
         assert kwargs["table"] == "agent_runs"
         assert kwargs["updates"]["status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_update_agent_run_completion_writes_iso_end_time_and_response():
+    """end_time must be a real ISO-8601 timestamp, not the literal 'now()',
+    and a completed run must persist agent_response as JSON."""
+    params = {
+        "trace_id": "trace-iso",
+        "status": "completed",
+        "agent_response": {"status": "success", "goal": "hello"},
+    }
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = MagicMock()
+        db.update = AsyncMock(return_value={"id": "trace-iso"})
+        mock_provider.return_value = db
+
+        result = await update_agent_run_completion(params)
+
+        assert result["success"] is True
+        _, kwargs = db.update.call_args
+        updates = kwargs["updates"]
+        assert kwargs["filters"] == {"id": "trace-iso"}
+        assert updates["end_time"] != "now()"
+        datetime.fromisoformat(updates["end_time"])
+        assert "agent_response" in updates
+        assert "error_message" not in updates
+
+
+@pytest.mark.asyncio
+async def test_update_agent_run_completion_failed_writes_error_message():
+    params = {
+        "trace_id": "trace-fail",
+        "status": "failed",
+        "agent_response": {"error": "boom"},
+    }
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = MagicMock()
+        db.update = AsyncMock(return_value={"id": "trace-fail"})
+        mock_provider.return_value = db
+
+        result = await update_agent_run_completion(params)
+
+        assert result["success"] is True
+        _, kwargs = db.update.call_args
+        updates = kwargs["updates"]
+        assert updates["status"] == "failed"
+        assert updates["error_message"] == "boom"
+        assert "agent_response" not in updates
+        datetime.fromisoformat(updates["end_time"])
+
+
+@pytest.mark.asyncio
+async def test_update_agent_run_completion_not_found_returns_explicit_error():
+    params = {"trace_id": "missing", "status": "completed", "agent_response": {}}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = MagicMock()
+        db.update = AsyncMock(side_effect=NotFoundError("no rows"))
+        mock_provider.return_value = db
+
+        result = await update_agent_run_completion(params)
+
+        assert result["success"] is False
+        assert result["error"] == "agent_run_not_found"
+        assert result["trace_id"] == "missing"
 
 
 @pytest.mark.asyncio
