@@ -526,8 +526,21 @@ class AgentWorkflow:
     # =========================================================================
 
     def _get_trace_id(self) -> str:
-        """Get trace_id from context or fallback to workflow_id."""
-        return str(self.workflow_context.get("trace_id", workflow.info().workflow_id))
+        """Get trace_id from workflow context (set by server.py), or fall back to
+        the workflow_id with the ``goal-`` prefix stripped.
+
+        server.py starts the workflow as ``goal-<trace_id>`` and passes
+        ``{"trace_id": <trace_id>}`` as the workflow context, so the context is
+        authoritative. The fallback derives the raw agent_runs.id (a UUID) from
+        the workflow_id so the completion update filter still matches the row.
+        """
+        trace_id = self.workflow_context.get("trace_id")
+        if trace_id:
+            return str(trace_id)
+        workflow_id = workflow.info().workflow_id
+        if workflow_id.startswith("goal-"):
+            return workflow_id[len("goal-") :]
+        return workflow_id
 
     async def _execute_omnitrace_activity(
         self, activity_name: str, args: dict[str, Any], timeout_seconds: int = 5
@@ -1280,24 +1293,8 @@ class AgentWorkflow:
             "results": self.step_results,
         }
 
-        # Extract trace_id from workflow context if available
-        trace_id = (
-            workflow.info().search_attributes.get("trace_id", [""])[0]
-            if hasattr(workflow.info(), "search_attributes")
-            else ""
-        )
-
-        if trace_id:
-            try:
-                await workflow.execute_activity(
-                    "update_agent_run_completion",
-                    args=[{"trace_id": trace_id, "status": "completed", "agent_response": result}],
-                    start_to_close_timeout=timedelta(seconds=10),
-                    retry_policy=RetryPolicy(maximum_attempts=2),
-                )
-                workflow.logger.info(f"✓ Updated agent_runs for trace_id: {trace_id}")
-            except Exception as e:
-                workflow.logger.warning(f"Failed to update agent_runs: {e!s}")
+        # Notify UI via agent_runs completion (trace_id from workflow context).
+        await self._update_agent_run_terminal("completed", result)
 
         await self._append_event(
             WorkflowCompleted(
@@ -1355,10 +1352,39 @@ class AgentWorkflow:
             )
         )
 
+        # Notify UI via agent_runs completion so the gateway receives a terminal
+        # state on failure too (not just success).
+        await self._update_agent_run_terminal("failed", result)
+
         # OmniTrace: Record run failure (best-effort)
         await self._omnitrace_record_run_complete(result, "failed")
 
         return result
+
+    async def _update_agent_run_terminal(
+        self, status: str, result: dict[str, Any]
+    ) -> None:
+        """Best-effort update of agent_runs to a terminal state for the UI.
+
+        Resolves trace_id from the workflow context (see ``_get_trace_id``) and
+        invokes the ``update_agent_run_completion`` activity. Never raises — UI
+        notification must not fail the workflow.
+        """
+        trace_id = self._get_trace_id()
+        if not trace_id:
+            return
+        try:
+            await workflow.execute_activity(
+                "update_agent_run_completion",
+                args=[{"trace_id": trace_id, "status": status, "agent_response": result}],
+                start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+            workflow.logger.info(
+                f"✓ Updated agent_runs ({status}) for trace_id: {trace_id}"
+            )
+        except Exception as e:
+            workflow.logger.warning(f"Failed to update agent_runs ({status}): {e!s}")
 
     async def _append_event(self, event: AgentEvent) -> None:
         """
