@@ -318,15 +318,34 @@ export async function invokeMcpIntent(
     throw new Error(`[MCP Client] Gateway error: ${errorMsg}`);
   }
 
-  // 5. Parse SSE stream to completion
-  if (!res.body) {
-    throw new Error('[MCP Client] Gateway returned no body');
-  }
+  // 5. Determine if it's SSE or JSON
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/event-stream')) {
+    if (!res.body) throw new Error('[MCP Client] Gateway returned no body');
+    try {
+      return await parseSseToCompletion(res.body, onStatus);
+    } catch (err: unknown) {
+      console.error('[MCP Client] SSE parse error:', err);
+      throw err;
+    }
+  } else {
+    // Fallback for tests/mocks returning JSON
+    const data = await res.json() as Record<string, unknown>;
+    const status = data.status as string | undefined;
 
-  try {
-    return await parseSseToCompletion(res.body, onStatus);
-  } catch (err: unknown) {
-    console.error('[MCP Client] SSE parse error:', err);
-    throw err;
+    if (!status) {
+      throw new Error('[MCP Client] JSON response missing terminal status');
+    }
+
+    if (status === 'queued' || status === 'running' || status === 'pending') {
+      throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
+    }
+
+    const result = processTerminalSseEvent(status, '', data);
+    if (result) {
+      return result;
+    }
+
+    throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
   }
 }
