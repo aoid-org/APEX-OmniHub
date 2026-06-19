@@ -153,7 +153,7 @@ export default function SettingsModule({ onClose }: Props) {
   }
 
   return (
-    <div className="py-3 flex flex-col gap-4">
+    <div className="py-3 flex flex-col gap-4" data-testid="module-shell">
       {/* State indicator */}
       <div className="flex items-center gap-2">
         <p className="text-sm text-muted-foreground flex-1">{state.headline}</p>
