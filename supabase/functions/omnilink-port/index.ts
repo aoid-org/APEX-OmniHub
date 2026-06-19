@@ -459,11 +459,19 @@ async function resolveSettings(
     updated_at: string;
   } | null;
 
+  // Defaults from migration 20260205000001: demo_mode=false, anonymize_kpis=true,
+  // freeze_mode=false, show_connected_ecosystem=false.
+  const SETTINGS_LABELS: Record<string, string> = {
+    demo_mode:                'Demo Mode',
+    anonymize_kpis:           'Anonymize KPIs',
+    freeze_mode:              'Freeze Mode',
+    show_connected_ecosystem: 'Show Connected Ecosystem',
+  };
   const items = s ? [
-    { key: 'demo_mode', enabled: s.demo_mode },
-    { key: 'anonymize_kpis', enabled: s.anonymize_kpis },
-    { key: 'freeze_mode', enabled: s.freeze_mode },
-    { key: 'show_connected_ecosystem', enabled: s.show_connected_ecosystem },
+    { id: 'demo_mode',                label: SETTINGS_LABELS['demo_mode'],                status: s.demo_mode                ? 'active' : 'inactive' },
+    { id: 'anonymize_kpis',           label: SETTINGS_LABELS['anonymize_kpis'],           status: s.anonymize_kpis           ? 'active' : 'inactive' },
+    { id: 'freeze_mode',              label: SETTINGS_LABELS['freeze_mode'],              status: s.freeze_mode              ? 'active' : 'inactive' },
+    { id: 'show_connected_ecosystem', label: SETTINGS_LABELS['show_connected_ecosystem'], status: s.show_connected_ecosystem ? 'active' : 'inactive' },
   ] : [];
 
   return {
@@ -1312,12 +1320,16 @@ async function handleServeRequest(req: Request): Promise<Response> {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
 
-  if (!OMNILINK_ENABLED) {
-    return corsErrorResponse('omnilink_disabled', 'OmniLink port is disabled', 503, requestOrigin);
-  }
-
+  // ── CORS preflight — MUST be first. OPTIONS carries no Authorization header
+  // and must return 2xx + CORS headers before the browser sends the real POST.
+  // Any guard placed above this returns a non-2xx that the browser treats as
+  // "preflight failed", silently blocking every subsequent cross-origin fetch.
   if (req.method === 'OPTIONS') {
     return handlePreflight(req);
+  }
+
+  if (!OMNILINK_ENABLED) {
+    return corsErrorResponse('omnilink_disabled', 'OmniLink port is disabled', 503, requestOrigin);
   }
 
   if (!isOriginAllowed(requestOrigin)) {
