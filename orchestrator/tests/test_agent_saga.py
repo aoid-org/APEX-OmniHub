@@ -257,3 +257,110 @@ def test_continue_as_new_snapshot(agent_workflow):
             assert passed_args[0] == "test"
             snapshot = passed_args[2]
             assert snapshot["step_count"] == 500
+
+
+# ============================================================================
+# Trace-ID extraction regression tests
+# ============================================================================
+
+
+def test_get_trace_id_uses_workflow_context(agent_workflow):
+    """_get_trace_id must read from workflow_context, not search_attributes."""
+    agent_workflow.workflow_context = {"trace_id": "ctx-trace-abc"}
+
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="goal-something-else")
+        result = agent_workflow._get_trace_id()
+
+    assert result == "ctx-trace-abc", "Should use workflow_context trace_id, not workflow_id"
+
+
+def test_get_trace_id_strips_goal_prefix_when_context_missing(agent_workflow):
+    """_get_trace_id must strip 'goal-' prefix from workflow_id as fallback."""
+    agent_workflow.workflow_context = {}
+
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="goal-my-trace-uuid")
+        result = agent_workflow._get_trace_id()
+
+    assert result == "my-trace-uuid"
+
+
+def test_get_trace_id_returns_raw_workflow_id_if_no_prefix(agent_workflow):
+    """Fallback to raw workflow_id when no trace_id in context and no goal- prefix."""
+    agent_workflow.workflow_context = {}
+
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="bare-workflow-id")
+        result = agent_workflow._get_trace_id()
+
+    assert result == "bare-workflow-id"
+
+
+@pytest.mark.asyncio
+async def test_handle_success_calls_update_agent_run(agent_workflow):
+    """_handle_success must call update_agent_run_completion with context trace_id."""
+    agent_workflow.workflow_context = {"trace_id": "handle-success-trace"}
+    agent_workflow.goal = "test goal"
+    agent_workflow.plan_id = "plan-99"
+    agent_workflow.step_results = {}
+    agent_workflow.plan_steps = []
+    agent_workflow.start_time = 0.0
+
+    captured_args: list = []
+
+    async def fake_execute(activity_name, args, **_kwargs):
+        captured_args.append((activity_name, args))
+
+    with (
+        patch("workflows.agent_saga.workflow.execute_activity", side_effect=fake_execute),
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+        patch("workflows.agent_saga.workflow.logger"),
+        patch("workflows.agent_saga.workflow.now") as mock_now,
+    ):
+        mock_info.return_value = MagicMock(workflow_id="goal-handle-success-trace")
+        mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=1.0))
+        with patch.object(agent_workflow, "_append_event", new_callable=AsyncMock):
+            with patch.object(
+                agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock
+            ):
+                await agent_workflow._handle_success()
+
+    update_calls = [c for c in captured_args if c[0] == "update_agent_run_completion"]
+    assert len(update_calls) == 1, "Must call update_agent_run_completion exactly once"
+    call_params = update_calls[0][1][0]
+    assert call_params["trace_id"] == "handle-success-trace"
+    assert call_params["status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_calls_update_agent_run(agent_workflow):
+    """_handle_failure must call update_agent_run_completion with failed status."""
+    agent_workflow.workflow_context = {"trace_id": "handle-failure-trace"}
+    agent_workflow.plan_id = "plan-99"
+    agent_workflow.failed_step_id = "step-1"
+    agent_workflow.saga = MagicMock()
+    agent_workflow.saga.rollback = AsyncMock(return_value=[])
+
+    captured_args: list = []
+
+    async def fake_execute(activity_name, args, **_kwargs):
+        captured_args.append((activity_name, args))
+
+    with (
+        patch("workflows.agent_saga.workflow.execute_activity", side_effect=fake_execute),
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+        patch("workflows.agent_saga.workflow.logger"),
+    ):
+        mock_info.return_value = MagicMock(workflow_id="goal-handle-failure-trace")
+        with patch.object(agent_workflow, "_append_event", new_callable=AsyncMock):
+            with patch.object(
+                agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock
+            ):
+                await agent_workflow._handle_failure("something broke")
+
+    update_calls = [c for c in captured_args if c[0] == "update_agent_run_completion"]
+    assert len(update_calls) == 1, "Must call update_agent_run_completion on failure"
+    call_params = update_calls[0][1][0]
+    assert call_params["trace_id"] == "handle-failure-trace"
+    assert call_params["status"] == "failed"
