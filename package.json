@@ -281,7 +281,7 @@
     "picomatch@^2.0.0": "2.3.2",
     "picomatch@^4.0.0": "4.0.4",
     "tar": "^7.5.11",
-    "undici": "^6.24.0",
+    "undici": "^6.27.0",
     "hono": "^4.12.25",
     "serialize-javascript": "^7.0.5",
     "rollup": "^4.59.0",
