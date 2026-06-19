@@ -30,7 +30,7 @@ describe('SystemHealthRow', () => {
 
   it('renders zero events tracked in demo mode', () => {
     render(<SystemHealthRow demoMode={true} kpi={kpiWithIncidents} />);
-    expect(screen.getByText('Events Tracked')).toBeTruthy();
+    expect(screen.getByText('Events Tracked (Simulated)')).toBeTruthy();
   });
 
   it('renders real event count in live mode', () => {
@@ -40,7 +40,7 @@ describe('SystemHealthRow', () => {
 
   it('renders guardian loops label', () => {
     render(<SystemHealthRow demoMode={true} kpi={EMPTY_KPI_SUMMARY} />);
-    expect(screen.getByText('Guardian Loops')).toBeTruthy();
+    expect(screen.getByText('Guardian Loops (Simulated)')).toBeTruthy();
   });
 
   it('renders stale checks as Clean when 0', () => {
