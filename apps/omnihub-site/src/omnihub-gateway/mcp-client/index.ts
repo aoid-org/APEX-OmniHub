@@ -1,9 +1,11 @@
 /**
  * OmniHub Gateway MCP-Client API
  *
- * Routes APEX Agent intent invocations through the Supabase apex-agent
- * Edge Function with authenticated session headers. Falls back to the
- * Cloudflare gateway proxy (/api/mcp/invoke) when Supabase is not configured.
+ * Routes APEX Agent intent invocations to the Cloudflare Pages gateway proxy 
+ * (/api/mcp/invoke) using same-origin POST with authenticated session headers.
+ * The Cloudflare gateway sits in front of the Supabase apex-agent Edge Function.
+ * The browser does NOT directly call Supabase functions/v1/apex-agent. There is no
+ * fallback to direct Supabase browser POST.
  *
  * APEX STANDARDS ENFORCED:
  * - Auth-first: Every agent call carries the Supabase JWT
@@ -169,6 +171,22 @@ export async function invokeMcpIntent(payload: McpIntentPayload, onStatus?: (sta
     return await parseSseToCompletion(res.body, onStatus);
   } else {
     // Fallback for tests/mocks returning JSON
-    return res.json() as Promise<McpIntentResponse>;
+    const data = await res.json() as Record<string, unknown>;
+    const status = data.status as string | undefined;
+
+    if (!status) {
+      throw new Error('[MCP Client] JSON response missing terminal status');
+    }
+
+    if (status === 'queued' || status === 'running' || status === 'pending') {
+      throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
+    }
+
+    const result = processTerminalSseEvent(status, '', data);
+    if (result) {
+      return result;
+    }
+
+    throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
   }
 }
