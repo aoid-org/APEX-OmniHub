@@ -226,6 +226,88 @@ async def test_handle_failure(agent_workflow):
         assert result["compensation_results"] == {"comp1": "success"}
 
 
+def test_get_trace_id_prefers_workflow_context(agent_workflow):
+    """trace_id must come from the workflow context set by server.py."""
+    agent_workflow.workflow_context = {"trace_id": "ctx-trace-id"}
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="goal-should-not-be-used")
+        assert agent_workflow._get_trace_id() == "ctx-trace-id"
+
+
+def test_get_trace_id_fallback_strips_goal_prefix(agent_workflow):
+    """With no context, fall back to workflow_id with the goal- prefix stripped."""
+    agent_workflow.workflow_context = {}
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="goal-uuid-123")
+        assert agent_workflow._get_trace_id() == "uuid-123"
+
+
+@pytest.mark.asyncio
+async def test_handle_success_uses_context_trace_id_not_search_attributes(agent_workflow):
+    """_handle_success must resolve trace_id from self.workflow_context, NOT from
+    workflow.info().search_attributes (which server.py never sets)."""
+    agent_workflow.goal = "hello"
+    agent_workflow.plan_id = "plan-1"
+    agent_workflow.step_results = {"step1": {"success": True}}
+    agent_workflow.plan_steps = [{"id": "step1"}]
+    agent_workflow.workflow_context = {"trace_id": "ctx-trace-id"}
+
+    with (
+        patch(
+            "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
+        ) as mock_execute,
+        patch("workflows.agent_saga.workflow.logger"),
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+        patch("workflows.agent_saga.workflow.now") as mock_now,
+    ):
+        mock_info.return_value = MagicMock(
+            workflow_id="goal-ctx-trace-id",
+            search_attributes={"trace_id": ["WRONG-from-search-attrs"]},
+        )
+        mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=123.0))
+
+        await agent_workflow._handle_success()
+
+        completion_calls = [
+            c for c in mock_execute.call_args_list
+            if c.args and c.args[0] == "update_agent_run_completion"
+        ]
+        assert len(completion_calls) == 1, "must update agent_runs exactly once on success"
+        payload = completion_calls[0].kwargs["args"][0]
+        assert payload["trace_id"] == "ctx-trace-id"
+        assert payload["status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_updates_agent_run_terminal(agent_workflow):
+    """Failure path must also notify agent_runs with status=failed."""
+    agent_workflow.plan_id = "plan-1"
+    agent_workflow.failed_step_id = "step1"
+    agent_workflow.workflow_context = {"trace_id": "ctx-trace-id"}
+    agent_workflow.saga = AsyncMock()
+    agent_workflow.saga.rollback.return_value = {"comp1": "success"}
+
+    with (
+        patch(
+            "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
+        ) as mock_execute,
+        patch("workflows.agent_saga.workflow.logger"),
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+    ):
+        mock_info.return_value = MagicMock(workflow_id="goal-ctx-trace-id")
+
+        await agent_workflow._handle_failure("boom")
+
+        completion_calls = [
+            c for c in mock_execute.call_args_list
+            if c.args and c.args[0] == "update_agent_run_completion"
+        ]
+        assert len(completion_calls) == 1, "must update agent_runs on failure"
+        payload = completion_calls[0].kwargs["args"][0]
+        assert payload["trace_id"] == "ctx-trace-id"
+        assert payload["status"] == "failed"
+
+
 def test_continue_as_new_snapshot(agent_workflow):
     agent_workflow.goal = "test"
     agent_workflow.plan_id = "plan-1"
