@@ -219,6 +219,72 @@ async def test_update_agent_run_completion():
 
 
 @pytest.mark.asyncio
+async def test_update_agent_run_completion_uses_iso_end_time():
+    """end_time must be a real ISO-8601 UTC timestamp, not the literal string 'now()'."""
+    from datetime import datetime
+
+    params = {"trace_id": "trace-iso", "status": "completed", "agent_response": {"result": "ok"}}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        await update_agent_run_completion(params)
+
+        _, kwargs = db.update.call_args
+        end_time = kwargs["updates"]["end_time"]
+
+        assert end_time != "now()", "end_time must not be the literal string 'now()'"
+        # Must be parseable as ISO-8601
+        parsed = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
+        assert parsed is not None
+        # Must be timezone-aware (UTC)
+        assert parsed.tzinfo is not None
+
+
+@pytest.mark.asyncio
+async def test_update_agent_run_completion_sets_agent_response_for_completed():
+    """Completed status must write agent_response, not error_message."""
+    params = {
+        "trace_id": "trace-2",
+        "status": "completed",
+        "agent_response": {"status": "success", "goal": "hello"},
+    }
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        result = await update_agent_run_completion(params)
+        assert result["success"] is True
+
+        _, kwargs = db.update.call_args
+        assert "agent_response" in kwargs["updates"]
+        assert "error_message" not in kwargs["updates"]
+
+
+@pytest.mark.asyncio
+async def test_update_agent_run_completion_sets_error_message_for_failed():
+    """Failed status must write error_message, not agent_response."""
+    params = {
+        "trace_id": "trace-3",
+        "status": "failed",
+        "agent_response": {"error": "Something broke", "status": "failed"},
+    }
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        result = await update_agent_run_completion(params)
+        assert result["success"] is True
+
+        _, kwargs = db.update.call_args
+        assert "error_message" in kwargs["updates"]
+        assert "agent_response" not in kwargs["updates"]
+
+
+@pytest.mark.asyncio
 async def test_mint_pilot_session_success():
     params = {
         "user_id": "user-1",

@@ -1261,25 +1261,10 @@ const EcosystemWidget = () => {
     invoke({
       id: 'ecosystem-add-apex-app',
       provider: 'omnidash',
-      type: 'selection',
-      title: 'Connect APEX App',
-      description: 'Select an APEX module to activate in your ecosystem.',
-      schema: {
-        items: [
-          { id: 'omnihub', label: 'APEX-OmniHub', category: 'platform' },
-          { id: 'aspiral', label: 'aSpiral', category: 'crm' },
-          { id: 'tradeline', label: 'TradeLine 24/7', category: 'finance' },
-          { id: 'armageddon', label: 'Armageddon Test Suite', category: 'testing' },
-        ],
-      },
-      onComplete: async (result: Record<string, unknown>) => {
-        const selectedId = (result.data as Record<string, string>)?.selectedId;
-        if (selectedId) {
-          toast.info(`Provisioning ${selectedId} is currently disabled in this environment.`);
-        } else {
-          toast.info('APEX App installation cancelled.');
-        }
-      },
+      type: 'module',
+      title: 'Connect App',
+      contextData: { moduleKey: 'omniboard-wizard' },
+      onComplete: async () => {},
       onCancel: () => {},
     });
   };

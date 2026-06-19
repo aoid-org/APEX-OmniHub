@@ -1,26 +1,27 @@
 /**
  * OmniPort Gateway — Cloudflare Pages Function
  * Route: /api/mcp/invoke
- * Version: 1.0.0
+ * Version: 2.0.0
  *
  * Same-origin gateway for APEX Agent invocation.
  * - Requires POST + Authorization Bearer (Supabase user JWT)
- * - Inserts agent_run with status=queued
+ * - Inserts agent_run with migration-defined schema (thread_id, user_message, status=running)
  * - Forwards to Supabase apex-agent with user JWT (not service-role)
- * - Polls agent_runs for terminal state
- * - Streams SSE: queued → running → completed/failed/timeout
+ * - Polls agent_runs for terminal state using migration-defined columns
+ * - Streams SSE: queued (browser-only) → running → completed/failed/timeout
  *
  * NON-NEGOTIABLES:
  * - Never uses service-role key for user-scoped reads
  * - Never leaks secrets or stack traces
  * - RLS preserved via user JWT forwarded to Supabase
+ * - DB status values match migration CHECK constraint: running/completed/failed/timeout
  */
 
 export const onRequestPost: PagesFunction = async (context) => {
   const req = context.request;
   const env = context.env as Record<string, string>;
 
-  // ── CORS headers (same-origin gateway; browsers still send Origin on POST) ──
+  // ── CORS headers ──────────────────────────────────────────────────────────
   const origin = req.headers.get("Origin") ?? "";
   const corsHeaders: Record<string, string> = {
     "Access-Control-Allow-Origin": origin,
@@ -56,13 +57,11 @@ export const onRequestPost: PagesFunction = async (context) => {
     return jsonError("bad_request: prompt must be a string 1–20000 chars", 400, corsHeaders);
   }
 
-  // Validate optional fields
   const context_ = body.context ?? {};
   if (typeof context_ !== "object" || Array.isArray(context_)) {
     return jsonError("bad_request: context must be a plain object", 400, corsHeaders);
   }
 
-  // Generate or validate traceId
   let traceId: string;
   if (typeof body.traceId === "string" && isValidUUID(body.traceId)) {
     traceId = body.traceId;
@@ -70,14 +69,14 @@ export const onRequestPost: PagesFunction = async (context) => {
     traceId = crypto.randomUUID();
   }
 
-  // Validate optional providerPreference (hint only, never authoritative)
+  // Silently ignore unsupported providerPreference (hint only, never authoritative)
   const providerPreference = body.providerPreference;
   if (
     providerPreference !== undefined &&
     providerPreference !== "groq" &&
     providerPreference !== "anthropic"
   ) {
-    // Silently ignore unsupported provider preference
+    // Ignored
   }
 
   // ── 4. Env validation ─────────────────────────────────────────────────────
@@ -94,30 +93,7 @@ export const onRequestPost: PagesFunction = async (context) => {
     return jsonError("server_error", 500, corsHeaders);
   }
 
-  // ── 5. Insert agent_run as 'queued' before calling apex-agent ─────────────
-  // Uses user JWT so RLS is enforced. Only inserts if row doesn't exist.
-  try {
-    await fetch(`${supabaseUrl}/rest/v1/agent_runs`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${userJwt}`,
-        "apikey": supabaseAnonKey,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=ignore-duplicates",
-      },
-      body: JSON.stringify({
-        id: traceId,
-        status: "queued",
-        query: prompt,
-        created_at: new Date().toISOString(),
-      }),
-    });
-  } catch (err) {
-    console.error("[omniport-gateway] Failed to insert agent_run:", err);
-    // Non-fatal — apex-agent may create the row or it may already exist
-  }
-
-  // ── 6. SSE response setup ─────────────────────────────────────────────────
+  // ── 5. SSE response setup ─────────────────────────────────────────────────
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
   const enc = new TextEncoder();
@@ -132,7 +108,7 @@ export const onRequestPost: PagesFunction = async (context) => {
     },
   });
 
-  // ── 7. Async orchestration (fire-and-forget into background) ─────────────
+  // ── 6. Async orchestration (fire-and-forget into background) ─────────────
   runGateway({
     writer,
     enc,
@@ -150,7 +126,7 @@ export const onRequestPost: PagesFunction = async (context) => {
   return sseResponse;
 };
 
-// ── OPTIONS preflight ────────────────────────────────────────────────────────
+// ── OPTIONS preflight ─────────────────────────────────────────────────────────
 
 export const onRequestOptions: PagesFunction = async (context) => {
   const origin = context.request.headers.get("Origin") ?? "";
@@ -166,7 +142,7 @@ export const onRequestOptions: PagesFunction = async (context) => {
   });
 };
 
-// ── Gateway orchestration logic ──────────────────────────────────────────────
+// ── Gateway orchestration logic ───────────────────────────────────────────────
 
 interface GatewayOptions {
   writer: WritableStreamDefaultWriter<Uint8Array>;
@@ -181,6 +157,7 @@ interface GatewayOptions {
 
 async function runGateway(options: GatewayOptions): Promise<void> {
   const { writer, enc, traceId, prompt, ctx, userJwt, supabaseUrl, supabaseAnonKey } = options;
+
   const emit = async (event: string, data: Record<string, unknown>) => {
     try {
       await writer.write(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
@@ -190,10 +167,54 @@ async function runGateway(options: GatewayOptions): Promise<void> {
   };
 
   try {
-    // Emit queued
+    // Notify browser immediately — "queued" is browser-only; DB constraint forbids it
     await emit("status", { traceId, status: "queued" });
 
-    // Forward to apex-agent
+    // ── Insert agent_run using migration-defined schema ──────────────────────
+    const now = new Date().toISOString();
+    let insertRes: Response | null = null;
+    try {
+      insertRes = await fetch(`${supabaseUrl}/rest/v1/agent_runs`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${userJwt}`,
+          "apikey": supabaseAnonKey,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=ignore-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          id: traceId,
+          thread_id: traceId,
+          status: "running",
+          user_message: prompt,
+          start_time: now,
+          created_at: now,
+          metadata: { source: "omniport_gateway", context: ctx },
+        }),
+      });
+    } catch (err) {
+      console.error("[omniport-gateway] Network error on agent_run insert:", err);
+      // insertRes stays null — network failure is terminal
+    }
+
+    if (insertRes === null) {
+      await emit("failed", { traceId, status: "failed", error: "agent_run_insert_failed" });
+      await writer.close();
+      return;
+    }
+
+    if (!insertRes.ok) {
+      const rawBody = await insertRes.text().catch(() => "");
+      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.-]/g, "");
+      console.error(
+        `[omniport-gateway] agent_run insert failed (${insertRes.status}): ${sanitized}`,
+      );
+      await emit("failed", { traceId, status: "failed", error: "agent_run_insert_failed" });
+      await writer.close();
+      return;
+    }
+
+    // ── Forward to apex-agent ─────────────────────────────────────────────────
     const apexAgentUrl = `${supabaseUrl}/functions/v1/apex-agent`;
     let agentResponse: Response;
     try {
@@ -234,7 +255,6 @@ async function runGateway(options: GatewayOptions): Promise<void> {
       return;
     }
 
-    // Parse agent response to get workflowId
     let agentData: Record<string, unknown> = {};
     try {
       agentData = await agentResponse.json();
@@ -244,21 +264,16 @@ async function runGateway(options: GatewayOptions): Promise<void> {
 
     const workflowId = typeof agentData.workflowId === "string" ? agentData.workflowId : undefined;
 
-    // Emit running
     await emit("status", { traceId, status: "running", workflowId });
 
-    // ── Poll agent_runs for terminal state ───────────────────────────────────
-    await pollAgentRuns(traceId, userJwt, supabaseUrl, supabaseAnonKey, workflowId, emit);
+    // ── Poll agent_runs for terminal state ────────────────────────────────────
+    await pollAgentRuns(traceId, prompt, userJwt, supabaseUrl, supabaseAnonKey, workflowId, emit);
 
     await writer.close();
   } catch (err) {
     console.error("[omniport-gateway] runGateway error:", err);
     try {
-      await emit("failed", {
-        traceId,
-        status: "failed",
-        error: "internal_gateway_error",
-      });
+      await emit("failed", { traceId, status: "failed", error: "internal_gateway_error" });
       await writer.close();
     } catch {
       // Already closed
@@ -268,11 +283,12 @@ async function runGateway(options: GatewayOptions): Promise<void> {
 
 async function pollAgentRuns(
   traceId: string,
+  prompt: string,
   userJwt: string,
   supabaseUrl: string,
   supabaseAnonKey: string,
   workflowId: string | undefined,
-  emit: (event: string, data: Record<string, unknown>) => Promise<void>
+  emit: (event: string, data: Record<string, unknown>) => Promise<void>,
 ): Promise<void> {
   const POLL_INTERVAL_MS = 750;
   const TIMEOUT_MS = 90_000;
@@ -281,24 +297,37 @@ async function pollAgentRuns(
   while (Date.now() - startTime < TIMEOUT_MS) {
     await sleep(POLL_INTERVAL_MS);
 
+    // Only select migration-defined columns
+    const pollRes = await fetch(
+      `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,agent_response,error_message,end_time,metadata`,
+      {
+        headers: {
+          "Authorization": `Bearer ${userJwt}`,
+          "apikey": supabaseAnonKey,
+          "Accept": "application/json",
+        },
+      },
+    ).catch((err) => {
+      console.warn("[omniport-gateway] poll network error:", err);
+      return null;
+    });
+
+    if (pollRes === null) continue; // transient network error — keep polling
+
+    if (!pollRes.ok) {
+      const rawBody = await pollRes.text().catch(() => "");
+      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.-]/g, "");
+      console.error(`[omniport-gateway] poll failed (${pollRes.status}): ${sanitized}`);
+      await emit("failed", { traceId, status: "failed", error: "agent_run_poll_failed" });
+      return;
+    }
+
     let rows: Array<Record<string, unknown>> = [];
     try {
-      const pollRes = await fetch(
-        `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,result,reply,error,workflow_id,completed_at`,
-        {
-          headers: {
-            "Authorization": `Bearer ${userJwt}`,
-            "apikey": supabaseAnonKey,
-            "Accept": "application/json",
-          },
-        },
-      );
-      if (pollRes.ok) {
-        rows = (await pollRes.json()) as Array<Record<string, unknown>>;
-      }
+      rows = (await pollRes.json()) as Array<Record<string, unknown>>;
     } catch (err) {
-      console.warn("[omniport-gateway] poll error:", err);
-      // Continue polling — transient network error
+      console.warn("[omniport-gateway] poll JSON parse error:", err);
+      continue;
     }
 
     const row = rows?.[0];
@@ -307,16 +336,23 @@ async function pollAgentRuns(
     const status = row.status as string | undefined;
 
     if (status === "completed") {
-      const reply =
-        (row.reply as string | undefined) ??
-        (row.result as string | undefined) ??
-        "";
+      const reply = buildReplyFromAgentResponse(row.agent_response, prompt);
+      let parsedResult: unknown = {};
+      if (typeof row.agent_response === "string") {
+        try {
+          parsedResult = JSON.parse(row.agent_response);
+        } catch {
+          parsedResult = row.agent_response;
+        }
+      } else if (row.agent_response != null) {
+        parsedResult = row.agent_response;
+      }
       await emit("completed", {
         traceId,
         status: "completed",
         reply,
-        result: row.result ?? {},
-        workflowId: row.workflow_id ?? workflowId,
+        result: parsedResult,
+        workflowId,
       });
       return;
     }
@@ -325,24 +361,51 @@ async function pollAgentRuns(
       await emit("failed", {
         traceId,
         status: "failed",
-        error: sanitizeError(row.error),
-        workflowId: row.workflow_id ?? workflowId,
+        error: sanitizeError(row.error_message),
+        workflowId,
       });
       return;
     }
 
-    // status is queued/running — keep polling
+    // status is running — keep polling
   }
 
   // Timeout
-  await emit("timeout", {
-    traceId,
-    status: "timeout",
-    workflowId,
-  });
+  await emit("timeout", { traceId, status: "timeout", workflowId });
 }
 
-// ── Utilities ────────────────────────────────────────────────────────────────
+// ── Exported helpers (also used in tests) ────────────────────────────────────
+
+/**
+ * Build a human-readable reply string from an agent_response column value.
+ * agent_response may be a JSON string, a plain string, or an object.
+ */
+export function buildReplyFromAgentResponse(agentResponse: unknown, prompt: string): string {
+  if (typeof agentResponse === "string" && agentResponse.length > 0) {
+    try {
+      const parsed = JSON.parse(agentResponse) as Record<string, unknown>;
+      if (typeof parsed.reply === "string" && parsed.reply) return parsed.reply;
+      if (typeof parsed.message === "string" && parsed.message) return parsed.message;
+      if (typeof parsed.result === "string" && parsed.result) return parsed.result;
+      if (typeof parsed.goal === "string" && parsed.goal) {
+        return `APEX Agent completed the workflow for: "${parsed.goal}".`;
+      }
+    } catch {
+      // Not JSON — return as-is if short enough
+      if (agentResponse.length <= 500) return agentResponse;
+    }
+  }
+  if (typeof agentResponse === "object" && agentResponse !== null) {
+    const obj = agentResponse as Record<string, unknown>;
+    if (typeof obj.reply === "string" && obj.reply) return obj.reply;
+    if (typeof obj.goal === "string" && obj.goal) {
+      return `APEX Agent completed the workflow for: "${obj.goal}".`;
+    }
+  }
+  return `APEX Agent completed the workflow for: "${prompt}".`;
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -354,7 +417,6 @@ function isValidUUID(s: string): boolean {
 
 function sanitizeError(err: unknown): string {
   if (typeof err === "string") {
-    // Remove any stack trace or secret patterns
     return err.replace(/^\s*at\s+.*$/gm, "").substring(0, 200).trim();
   }
   return "agent_execution_failed";
