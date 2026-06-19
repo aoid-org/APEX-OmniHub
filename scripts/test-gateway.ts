@@ -1,9 +1,26 @@
+/**
+ * OmniPort Gateway — production smoke test
+ *
+ * Exercises the REAL browser-equivalent invocation path:
+ *   Supabase auth → POST https://apexomnihub.icu/api/mcp/invoke (same-origin)
+ *   → SSE stream → terminal `completed` | `failed` | `timeout`.
+ *
+ * This does NOT call /functions/v1/apex-agent directly — that bypasses the
+ * Cloudflare Pages gateway, RLS, agent_runs insert/poll, and SSE contract that
+ * production OmniSlate actually depends on.
+ *
+ * Required .env: SUPABASE_URL (or VITE_SUPABASE_URL), SUPABASE_ANON_KEY
+ * (or VITE_SUPABASE_ANON_KEY), E2E_USER_EMAIL, PASSWORD.
+ * Optional: GATEWAY_INVOKE_URL (defaults to production).
+ *
+ * OWNED BY: APEX Business Systems Ltd.
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Load .env explicitly
 const envPath = path.resolve(process.cwd(), '.env');
 if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
@@ -13,88 +30,121 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const TEST_EMAIL = process.env.E2E_USER_EMAIL;
 const TEST_PASSWORD = process.env.PASSWORD;
+const GATEWAY_INVOKE_URL =
+  process.env.GATEWAY_INVOKE_URL || 'https://apexomnihub.icu/api/mcp/invoke';
 
-async function testGateway() {
+// The exact failure string OmniSlate renders when the gateway path is broken.
+const OMNISLATE_SYSTEM_ERROR =
+  '[System Error]: Failed to contact APEX Agent. Guardian audit logged.';
+
+const TERMINAL_EVENTS = new Set(['completed', 'failed', 'timeout']);
+
+interface SseEvent {
+  event: string;
+  data: Record<string, unknown>;
+}
+
+function fail(msg: string): never {
+  console.error(`❌ FAILED: ${msg}`);
+  process.exit(1);
+}
+
+async function main(): Promise<void> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TEST_EMAIL || !TEST_PASSWORD) {
-    console.error("Missing credentials in .env. Required: SUPABASE_URL, SUPABASE_ANON_KEY, and TEST_USER_EMAIL/PASSWORD.");
-    process.exit(1);
+    fail(
+      'Missing credentials in .env. Required: SUPABASE_URL, SUPABASE_ANON_KEY, E2E_USER_EMAIL, PASSWORD.',
+    );
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  console.log("Logging into Supabase to get a valid JWT...");
-  
+  console.log('Authenticating test user with Supabase...');
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
   });
-
   if (authError || !authData.session) {
-    console.error("Failed to authenticate test user:", authError?.message);
-    process.exit(1);
+    fail(`Failed to authenticate test user: ${authError?.message ?? 'no session'}`);
   }
-
   const token = authData.session.access_token;
-  console.log("Authenticated. JWT acquired.");
+  console.log('Authenticated. JWT acquired.');
 
-  // Test the apex-agent function deployed on Supabase edge
-  const edgeUrl = `${SUPABASE_URL}/functions/v1/apex-agent`;
-  
-  const payload = {
-    messages: [
-      { role: "user", content: "Hello! This is an automated OmniPort Gateway smoke test. Reply strictly with: OMNIPORT_GATEWAY_ONLINE" }
-    ],
-    mcp_tools_enabled: false,
-    system_prompt: "You are the APEX-OmniHub AI. Respond strictly according to user instructions."
-  };
+  console.log(`POST ${GATEWAY_INVOKE_URL} (same-origin gateway path)...`);
+  const response = await fetch(GATEWAY_INVOKE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ prompt: 'HELLO', context: { source: 'smoke-test' } }),
+  });
 
-  console.log(`Sending POST request to ${edgeUrl}...`);
-  try {
-    const response = await fetch(edgeUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    console.log("Response status:", response.status, response.statusText);
-    
-    if (response.ok) {
-      if (response.headers.get("content-type")?.includes("text/event-stream")) {
-         console.log("Received SSE Stream! Reading chunks...");
-         const reader = response.body?.getReader();
-         const decoder = new TextDecoder("utf-8");
-         let fullText = "";
-         if (reader) {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              const chunk = decoder.decode(value, { stream: true });
-              fullText += chunk;
-            }
-         }
-         console.log("\n--- STREAM OUTPUT ---");
-         console.log(fullText.substring(0, 500) + (fullText.length > 500 ? "..." : ""));
-         console.log("---------------------\n");
-         if (fullText.includes("OMNIPORT_GATEWAY_ONLINE")) {
-           console.log("✅ SUCCESS: Agent successfully replied through the OmniPort edge function!");
-         } else {
-           console.log("⚠️ WARNING: Agent responded, but output did not match expected test string.");
-         }
-      } else {
-         const text = await response.text();
-         console.log("Response Body (Not SSE):", text);
-      }
-    } else {
-      console.error("❌ FAILED: Gateway returned error:", await response.text());
-      process.exit(1);
-    }
-
-  } catch (err) {
-    console.error("❌ FAILED: Fetch exception:", err);
-    process.exit(1);
+  console.log('Response status:', response.status, response.statusText);
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!response.ok) {
+    fail(`Gateway returned non-200: ${response.status} — ${await response.text()}`);
   }
+  if (!contentType.includes('text/event-stream')) {
+    fail(`Expected text/event-stream, got "${contentType}". Body: ${await response.text()}`);
+  }
+
+  // ── Read SSE until a terminal event ───────────────────────────────────────
+  const reader = response.body?.getReader();
+  if (!reader) fail('No response body stream.');
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let raw = '';
+  let terminal: SseEvent | null = null;
+
+  outer: while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const text = decoder.decode(value, { stream: true });
+    raw += text;
+    buffer += text;
+
+    const blocks = buffer.split('\n\n');
+    buffer = blocks.pop() ?? '';
+    for (const block of blocks) {
+      const evMatch = block.match(/^event:\s*(.+)$/m);
+      const dataMatch = block.match(/^data:\s*(.+)$/m);
+      if (!evMatch) continue;
+      const event = evMatch[1].trim();
+      let data: Record<string, unknown> = {};
+      if (dataMatch) {
+        try {
+          data = JSON.parse(dataMatch[1]);
+        } catch {
+          /* tolerate non-JSON keepalive */
+        }
+      }
+      console.log(`  SSE event: ${event} ${JSON.stringify(data)}`);
+      if (TERMINAL_EVENTS.has(event)) {
+        terminal = { event, data };
+        break outer;
+      }
+    }
+  }
+
+  // ── Assertions ────────────────────────────────────────────────────────────
+  if (raw.includes(OMNISLATE_SYSTEM_ERROR)) {
+    fail(`Response contained the OmniSlate generic system error.`);
+  }
+  if (!terminal) {
+    fail('Stream ended with no terminal event (completed | failed | timeout).');
+  }
+  if (terminal.event === 'timeout') {
+    fail('Gateway timed out before reaching completed/failed.');
+  }
+  if (terminal.event === 'failed') {
+    fail(`Gateway returned terminal failure: ${JSON.stringify(terminal.data)}`);
+  }
+
+  // completed
+  const reply = terminal.data.reply;
+  if (typeof reply !== 'string' || reply.length === 0) {
+    fail(`Completed event missing a non-empty reply: ${JSON.stringify(terminal.data)}`);
+  }
+  console.log(`\n✅ SUCCESS: gateway completed with reply: "${reply}"`);
 }
 
-testGateway();
+main().catch((err) => fail(`Unhandled exception: ${err instanceof Error ? err.message : err}`));
