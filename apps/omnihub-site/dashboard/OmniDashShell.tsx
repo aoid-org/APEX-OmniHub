@@ -1668,9 +1668,9 @@ export default function OmniDashShell() {
         <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
           <span>Edmonton, AB</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE</span>
+          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE (Simulated)</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON</span>
+          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON (Simulated)</span>
         </div>
       </div>
 

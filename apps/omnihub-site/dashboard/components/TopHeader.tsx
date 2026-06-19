@@ -60,9 +60,10 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               type="search"
-              className="h-9 w-full rounded-md border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-100 outline-none ring-orange-500/40 focus:ring"
-              placeholder="Search workflows, connectors, traces..."
+              className="h-9 w-full rounded-md border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-100 outline-none ring-orange-500/40 focus:ring opacity-50 cursor-not-allowed"
+              placeholder="Search Unavailable (Not Implemented)"
               data-testid="global-search-input"
+              disabled
             />
           </label>
 

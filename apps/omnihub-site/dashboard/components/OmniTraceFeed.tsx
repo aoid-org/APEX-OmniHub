@@ -328,7 +328,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
   let traceText = 'Connecting';
 
   if (isDemo) {
-    traceText = 'Demo';
+    traceText = 'Demo (Simulated)';
   } else if (status === 'SUBSCRIBED') {
     traceColor = '#34d399';
     traceBg = 'rgba(52,211,153,0.08)';

@@ -49,12 +49,12 @@ export const SystemHealthRow = memo(function SystemHealthRow({
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard
           value={eventsTracked}
-          label="Events Tracked"
+          label={`Events Tracked${demoMode ? ' (Simulated)' : ''}`}
           valueColor="var(--od-text-primary)"
         />
         <MetricCard
           value={systemHealth}
-          label="System Health"
+          label={`System Health${demoMode ? ' (Simulated)' : ''}`}
           valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>
@@ -62,12 +62,12 @@ export const SystemHealthRow = memo(function SystemHealthRow({
       <div className="sentinel-metric-row">
         <MetricCard
           value={`${guardianLoops} loop`}
-          label="Guardian Loops"
+          label={`Guardian Loops${demoMode ? ' (Simulated)' : ''}`}
           valueColor="var(--od-accent)"
         />
         <MetricCard
           value={staleChecks === 0 ? 'Clean' : String(staleChecks)}
-          label="Stale Checks"
+          label={`Stale Checks${demoMode ? ' (Simulated)' : ''}`}
           valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>
