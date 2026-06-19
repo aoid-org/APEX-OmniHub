@@ -5,10 +5,11 @@
  *
  * Same-origin gateway for APEX Agent invocation.
  * - Requires POST + Authorization Bearer (Supabase user JWT)
- * - Inserts agent_run with status=queued
+ * - Inserts agent_run with status=running (migration-defined schema)
  * - Forwards to Supabase apex-agent with user JWT (not service-role)
- * - Polls agent_runs for terminal state
+ * - Polls agent_runs for terminal state (agent_response/error_message/end_time)
  * - Streams SSE: queued → running → completed/failed/timeout
+ *   (the browser-facing 'queued' event is cosmetic; DB status is 'running')
  *
  * NON-NEGOTIABLES:
  * - Never uses service-role key for user-scoped reads
@@ -94,28 +95,10 @@ export const onRequestPost: PagesFunction = async (context) => {
     return jsonError("server_error", 500, corsHeaders);
   }
 
-  // ── 5. Insert agent_run as 'queued' before calling apex-agent ─────────────
-  // Uses user JWT so RLS is enforced. Only inserts if row doesn't exist.
-  try {
-    await fetch(`${supabaseUrl}/rest/v1/agent_runs`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${userJwt}`,
-        "apikey": supabaseAnonKey,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=ignore-duplicates",
-      },
-      body: JSON.stringify({
-        id: traceId,
-        status: "queued",
-        query: prompt,
-        created_at: new Date().toISOString(),
-      }),
-    });
-  } catch (err) {
-    console.error("[omniport-gateway] Failed to insert agent_run:", err);
-    // Non-fatal — apex-agent may create the row or it may already exist
-  }
+  // ── 5. agent_run insert happens inside runGateway ─────────────────────────
+  // The insert is performed at the start of runGateway so that an insert
+  // failure can be surfaced to the browser as a terminal SSE `failed` event
+  // (no writer/stream exists yet at this point in onRequestPost).
 
   // ── 6. SSE response setup ─────────────────────────────────────────────────
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
@@ -190,7 +173,56 @@ async function runGateway(options: GatewayOptions): Promise<void> {
   };
 
   try {
-    // Emit queued
+    // ── Insert agent_run using the canonical migration schema ───────────────
+    // Columns per supabase/migrations/20251221000001_omnilink_ops_pack.sql:
+    //   id, thread_id (NOT NULL), status CHECK(running|completed|failed|timeout),
+    //   user_message, start_time, created_at, metadata. NO `query` column.
+    // user_id defaults to auth.uid() under the user JWT (RLS insert policy).
+    let insertRes: Response;
+    try {
+      const nowIso = new Date().toISOString();
+      insertRes = await fetch(`${supabaseUrl}/rest/v1/agent_runs`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${userJwt}`,
+          "apikey": supabaseAnonKey,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=ignore-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          id: traceId,
+          thread_id: traceId,
+          status: "running",
+          user_message: prompt,
+          start_time: nowIso,
+          created_at: nowIso,
+          metadata: { source: "omniport_gateway", context: ctx },
+        }),
+      });
+    } catch (err) {
+      console.error("[omniport-gateway] agent_run insert fetch failed:", err);
+      await emit("failed", { traceId, status: "failed", error: "agent_run_insert_failed" });
+      await writer.close();
+      return;
+    }
+
+    if (!insertRes.ok) {
+      // Read a sanitized body for logs; never leak it to the client.
+      let detail = "";
+      try {
+        detail = sanitizeError(await insertRes.text());
+      } catch {
+        // ignore body read failure
+      }
+      console.error(
+        `[omniport-gateway] agent_run insert returned ${insertRes.status}: ${detail}`,
+      );
+      await emit("failed", { traceId, status: "failed", error: "agent_run_insert_failed" });
+      await writer.close();
+      return;
+    }
+
+    // Emit queued (browser-facing event only; DB status is 'running')
     await emit("status", { traceId, status: "queued" });
 
     // Forward to apex-agent
@@ -248,7 +280,7 @@ async function runGateway(options: GatewayOptions): Promise<void> {
     await emit("status", { traceId, status: "running", workflowId });
 
     // ── Poll agent_runs for terminal state ───────────────────────────────────
-    await pollAgentRuns(traceId, userJwt, supabaseUrl, supabaseAnonKey, workflowId, emit);
+    await pollAgentRuns(traceId, prompt, userJwt, supabaseUrl, supabaseAnonKey, workflowId, emit);
 
     await writer.close();
   } catch (err) {
@@ -268,6 +300,7 @@ async function runGateway(options: GatewayOptions): Promise<void> {
 
 async function pollAgentRuns(
   traceId: string,
+  prompt: string,
   userJwt: string,
   supabaseUrl: string,
   supabaseAnonKey: string,
@@ -281,10 +314,12 @@ async function pollAgentRuns(
   while (Date.now() - startTime < TIMEOUT_MS) {
     await sleep(POLL_INTERVAL_MS);
 
+    // Select ONLY migration-defined columns. Never select result/reply/error/
+    // workflow_id/completed_at — those columns do not exist in agent_runs.
     let rows: Array<Record<string, unknown>> = [];
     try {
       const pollRes = await fetch(
-        `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,result,reply,error,workflow_id,completed_at`,
+        `${supabaseUrl}/rest/v1/agent_runs?id=eq.${encodeURIComponent(traceId)}&select=id,status,agent_response,error_message,end_time,metadata`,
         {
           headers: {
             "Authorization": `Bearer ${userJwt}`,
@@ -293,45 +328,58 @@ async function pollAgentRuns(
           },
         },
       );
-      if (pollRes.ok) {
-        rows = (await pollRes.json()) as Array<Record<string, unknown>>;
+      if (!pollRes.ok) {
+        // Do not silently poll forever on a hard error — surface and close.
+        let detail = "";
+        try {
+          detail = sanitizeError(await pollRes.text());
+        } catch {
+          // ignore
+        }
+        console.error(
+          `[omniport-gateway] agent_runs poll returned ${pollRes.status}: ${detail}`,
+        );
+        await emit("failed", { traceId, status: "failed", error: "agent_run_poll_failed" });
+        return;
       }
+      rows = (await pollRes.json()) as Array<Record<string, unknown>>;
     } catch (err) {
-      console.warn("[omniport-gateway] poll error:", err);
+      console.warn("[omniport-gateway] poll network error (transient):", err);
       // Continue polling — transient network error
+      continue;
     }
 
     const row = rows?.[0];
     if (!row) continue;
 
     const status = row.status as string | undefined;
+    const metaWorkflowId = extractWorkflowId(row.metadata) ?? workflowId;
 
     if (status === "completed") {
-      const reply =
-        (row.reply as string | undefined) ??
-        (row.result as string | undefined) ??
-        "";
+      const parsed = parseAgentResponse(row.agent_response);
+      const reply = buildReply(parsed, prompt);
       await emit("completed", {
         traceId,
         status: "completed",
         reply,
-        result: row.result ?? {},
-        workflowId: row.workflow_id ?? workflowId,
+        result: parsed ?? {},
+        workflowId: metaWorkflowId,
       });
       return;
     }
 
-    if (status === "failed") {
+    // DB 'timeout' is a terminal state too — treat as failed to avoid hanging.
+    if (status === "failed" || status === "timeout") {
       await emit("failed", {
         traceId,
         status: "failed",
-        error: sanitizeError(row.error),
-        workflowId: row.workflow_id ?? workflowId,
+        error: sanitizeError(row.error_message),
+        workflowId: metaWorkflowId,
       });
       return;
     }
 
-    // status is queued/running — keep polling
+    // status is running — keep polling
   }
 
   // Timeout
@@ -350,6 +398,47 @@ function sleep(ms: number): Promise<void> {
 
 function isValidUUID(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
+/** Safely parse agent_response: JSON text → object, plain text → string. */
+function parseAgentResponse(raw: unknown): unknown {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === "object") return raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return trimmed; // not JSON — treat as a plain reply string
+    }
+  }
+  return raw;
+}
+
+/**
+ * Build a human-readable reply from a parsed agent_response.
+ * Never returns "[object Object]". Falls back to a deterministic template.
+ */
+function buildReply(parsed: unknown, fallbackPrompt: string): string {
+  if (typeof parsed === "string" && parsed.trim()) return parsed.trim();
+  if (parsed && typeof parsed === "object") {
+    const obj = parsed as Record<string, unknown>;
+    for (const key of ["reply", "message", "response", "summary", "text", "output"]) {
+      const v = obj[key];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+  }
+  return `APEX Agent completed the workflow for: "${fallbackPrompt}".`;
+}
+
+/** Extract workflow_id from the metadata jsonb column, if present. */
+function extractWorkflowId(metadata: unknown): string | undefined {
+  if (metadata && typeof metadata === "object") {
+    const wid = (metadata as Record<string, unknown>).workflow_id;
+    if (typeof wid === "string" && wid) return wid;
+  }
+  return undefined;
 }
 
 function sanitizeError(err: unknown): string {
