@@ -199,7 +199,7 @@ async function runGateway(options: GatewayOptions): Promise<void> {
 
     if (insertRes !== null && !insertRes.ok) {
       const rawBody = await insertRes.text().catch(() => "");
-      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.\-]/g, "");
+      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.-]/g, "");
       console.error(
         `[omniport-gateway] agent_run insert failed (${insertRes.status}): ${sanitized}`,
       );
@@ -310,7 +310,7 @@ async function pollAgentRuns(
 
     if (!pollRes.ok) {
       const rawBody = await pollRes.text().catch(() => "");
-      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.\-]/g, "");
+      const sanitized = rawBody.substring(0, 200).replace(/[^\w\s{}:"',.-]/g, "");
       console.error(`[omniport-gateway] poll failed (${pollRes.status}): ${sanitized}`);
       await emit("failed", { traceId, status: "failed", error: "agent_run_poll_failed" });
       return;

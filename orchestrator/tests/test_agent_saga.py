@@ -309,9 +309,8 @@ async def test_handle_success_calls_update_agent_run(agent_workflow):
 
     captured_args: list = []
 
-    async def fake_execute(activity_name, args, **kwargs):
+    async def fake_execute(activity_name, args, **_kwargs):
         captured_args.append((activity_name, args))
-        return None
 
     with (
         patch("workflows.agent_saga.workflow.execute_activity", side_effect=fake_execute),
@@ -343,9 +342,8 @@ async def test_handle_failure_calls_update_agent_run(agent_workflow):
 
     captured_args: list = []
 
-    async def fake_execute(activity_name, args, **kwargs):
+    async def fake_execute(activity_name, args, **_kwargs):
         captured_args.append((activity_name, args))
-        return None
 
     with (
         patch("workflows.agent_saga.workflow.execute_activity", side_effect=fake_execute),

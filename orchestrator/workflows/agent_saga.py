@@ -1350,7 +1350,7 @@ class AgentWorkflow:
                 start_to_close_timeout=timedelta(seconds=10),
                 retry_policy=RetryPolicy(maximum_attempts=2),
             )
-            workflow.logger.info(f"✓ Updated agent_runs with failed status for trace_id: {trace_id}")
+            workflow.logger.info(f"✓ agent_runs updated: failed, trace_id={trace_id}")
         except Exception as e:
             workflow.logger.warning(f"Failed to update agent_runs on failure: {e!s}")
 
