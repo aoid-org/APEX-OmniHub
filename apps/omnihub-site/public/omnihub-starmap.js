@@ -1972,22 +1972,31 @@
         function frame(ts) {
           if (disposed) return;
           rafH = requestAnimationFrame(frame);
-          var t = (ts - t0) * 0.001;
-          /* gentle camera drift */
-          cam.position.x = -10 + Math.sin(t * 0.17) * 4;
-          cam.position.y = 18  + Math.cos(t * 0.11) * 3;
-          cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
-          /* station pulse + slow rotation */
-          stMeshes.forEach(function (sm) {
-            sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
-            sm.g.rotation.y = t * 0.28 + sm.ph;
-            sm.g.rotation.z = Math.sin(t * 0.19 + sm.ph) * 0.15;
-          });
-          /* scout travels the spine */
-          var prog = (t * 0.065) % 1;
-          scoutM.position.copy(spine.getPoint(prog));
-          trailM.position.copy(spine.getPoint(Math.max(0, prog - 0.018)));
-          renderer.render(scene, cam);
+          try {
+            var t = (ts - t0) * 0.001;
+            /* gentle camera drift */
+            cam.position.x = -10 + Math.sin(t * 0.17) * 4;
+            cam.position.y = 18  + Math.cos(t * 0.11) * 3;
+            cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
+            /* station pulse + slow rotation */
+            stMeshes.forEach(function (sm) {
+              sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
+              sm.g.rotation.y = t * 0.28 + sm.ph;
+              sm.g.rotation.z = Math.sin(t * 0.19 + sm.ph) * 0.15;
+            });
+            /* scout travels the spine */
+            var prog = (t * 0.065) % 1;
+            var sp  = spine.getPoint(prog);
+            var sp2 = spine.getPoint(Math.max(0, prog - 0.018));
+            if (sp)  scoutM.position.copy(sp);
+            if (sp2) trailM.position.copy(sp2);
+            renderer.render(scene, cam);
+          } catch (e) {
+            /* renderer threw (e.g. WebGL context lost in headless env) — stop loop, keep 2D starfield */
+            disposed = true;
+            cancelAnimationFrame(rafH);
+            try { renderer.dispose(); } catch (_) {}
+          }
         }
         rafH = requestAnimationFrame(frame);
         canvas.classList.add('ohsm-ready'); /* triggers CSS fade-in */
