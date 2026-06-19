@@ -220,21 +220,27 @@ const scanLine = `@keyframes scanLine {
 // isActive = brighter border + stronger glow only.
 const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
   const [hov, setHov] = useState<boolean>(false);
-    const borderColors = {
-      active: `${T.orange}66`,
-      hover: `${T.orange}44`,
-      base: `${T.orange}28`
-    };
-    const bgOpacities = {
-      active: "20",
-      hover: "16",
-      base: "10"
+    // Apple-quality orange glassmorph tile. Explicit rgba() is used (not `${T.orange}xx`)
+    // because appending hex alpha to a CSS variable — e.g. `var(--omni-orange)28` — is
+    // invalid CSS and silently paints a transparent, borderless tile.
+    const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
+
+    const resolveTileBackground = (active: boolean, hover: boolean) => {
+      if (active) return `linear-gradient(135deg, rgba(${ORANGE},0.22) 0%, rgba(${ORANGE},0.06) 100%)`;
+      if (hover)  return `linear-gradient(135deg, rgba(${ORANGE},0.16) 0%, rgba(${ORANGE},0.05) 100%)`;
+      return `linear-gradient(135deg, rgba(${ORANGE},0.10) 0%, rgba(${ORANGE},0.03) 100%)`;
     };
 
-    const resolveShadow = (isActive: boolean, hov: boolean) => {
-      if (isActive) return `0 0 0 1px ${T.orange}22, 0 4px 16px ${T.orange}28, 0 2px 6px rgba(0,0,0,.5)`;
-      if (hov) return `0 0 0 1px ${T.orange}18, 0 4px 14px ${T.orange}20, 0 2px 4px rgba(0,0,0,.4)`;
-      return `0 0 0 1px ${T.orange}10, 0 2px 10px ${T.orange}14, 0 1px 3px rgba(0,0,0,.35)`;
+    const resolveTileBorder = (active: boolean, hover: boolean) => {
+      if (active) return `1px solid rgba(${ORANGE},0.60)`;
+      if (hover)  return `1px solid rgba(${ORANGE},0.40)`;
+      return `1px solid rgba(${ORANGE},0.22)`;
+    };
+
+    const resolveTileShadow = (active: boolean, hover: boolean) => {
+      if (active) return `0 0 18px rgba(${ORANGE},0.30), 0 2px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)`;
+      if (hover)  return `0 0 14px rgba(${ORANGE},0.22), 0 2px 6px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06)`;
+      return `0 1px 3px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)`;
     };
 
     const resolveBorder = (isActive: boolean, hov: boolean) => {
@@ -244,15 +250,9 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     };
 
     const resolveFilter = (isActive: boolean, hov: boolean) => {
-      if (isActive) return `drop-shadow(0 0 4px ${T.orange}bb) brightness(1.15)`;
-      if (hov) return `drop-shadow(0 0 2px ${T.orange}55) brightness(1.05)`;
-      return `drop-shadow(0 0 1px ${T.orange}55) brightness(0.9)`;
-    };
-
-    const resolveState = (active: boolean, hover: boolean, map: { active: string; hover: string; base: string }) => {
-      if (active) return map.active;
-      if (hover) return map.hover;
-      return map.base;
+      if (isActive) return `drop-shadow(0 0 4px rgba(${ORANGE},0.73)) brightness(1.15)`;
+      if (hov) return `drop-shadow(0 0 2px rgba(${ORANGE},0.45)) brightness(1.05)`;
+      return `drop-shadow(0 0 1px rgba(${ORANGE},0.40)) brightness(0.9)`;
     };
   return (
     <button
@@ -273,11 +273,13 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
-        background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
+        border: resolveTileBorder(isActive, hov),
+        background: resolveTileBackground(isActive, hov),
+        backdropFilter: "blur(10px) saturate(140%)",
+        WebkitBackdropFilter: "blur(10px) saturate(140%)",
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
-        boxShadow: resolveShadow(isActive, hov),
+        boxShadow: resolveTileShadow(isActive, hov),
       }}>
 
   {/* Icon badge — iOS-style white frame, orange glow on active */}
@@ -1282,8 +1284,12 @@ const EcosystemWidget = () => {
     });
   };
 
+  // Explicit rgba() — appending hex alpha to a CSS var (e.g. `${T.orange}22`) is
+  // invalid CSS and silently drops the orange fill/border/glow.
+  const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
+
   return (
-  <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+  <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
     <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
@@ -1295,18 +1301,20 @@ const EcosystemWidget = () => {
         onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
         width:"100%",
-        background:`linear-gradient(135deg, ${T.orange}22 0%, ${T.orange}0c 100%)`,
-        border:`1px solid ${T.orange}77`,
-        boxShadow:`0 0 28px ${T.orange}30, 0 0 8px ${T.orange}18, inset 0 1px 0 ${T.orange}30`,
+        background:`linear-gradient(135deg, rgba(${ORANGE},0.20) 0%, rgba(${ORANGE},0.05) 100%)`,
+        border:`1px solid rgba(${ORANGE},0.55)`,
+        boxShadow:`0 0 28px rgba(${ORANGE},0.22), 0 0 8px rgba(${ORANGE},0.12), inset 0 1px 0 rgba(255,255,255,0.06)`,
+        backdropFilter:"blur(10px) saturate(140%)",
+        WebkitBackdropFilter:"blur(10px) saturate(140%)",
         color:T.orange,
         fontWeight:700, fontSize:15, letterSpacing:"0.01em",
       }}>
         <span style={{
           width:36, height:36, borderRadius:10,
-          background:`${T.orange}28`, border:`1.5px solid ${T.orange}88`,
+          background:`rgba(${ORANGE},0.18)`, border:`1.5px solid rgba(${ORANGE},0.55)`,
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:22, color:T.orange, flexShrink:0,
-          boxShadow:`0 0 14px ${T.orange}55`,
+          boxShadow:`0 0 14px rgba(${ORANGE},0.35)`,
         }}>+</span>
         {' '}Add APEX App
       </button>
