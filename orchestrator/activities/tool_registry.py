@@ -113,6 +113,22 @@ TOOL_REGISTRY: dict[str, ToolContract] = {
         input_schema={"type": "object", "properties": {"query": {"type": "string"}}},
         output_schema={},
     ),
+    "respond_to_user": ToolContract(
+        canonical_name="respond_to_user",
+        aliases=("answer", "respond", "reply", "respond_directly"),
+        side_effect=False,
+        idempotency_required=False,
+        compensable=False,
+        compensation_tools_allowed=(),
+        default_lane="GREEN",
+        policy_tags=("conversational",),
+        input_schema={
+            "type": "object",
+            "properties": {"message": {"type": "string"}},
+            "required": ["message"],
+        },
+        output_schema={},
+    ),
     "update_agent_run_completion": ToolContract(
         canonical_name="update_agent_run_completion",
         aliases=(),
