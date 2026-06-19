@@ -2,7 +2,12 @@
  * Distributed Rate Limiting for Supabase Edge Functions
  *
  * Uses Upstash Redis REST API for persistent rate limiting across serverless instances.
- * Fails closed (deny requests) if Upstash is unavailable.
+ * Fails closed by default. Operators may explicitly fail open only when Upstash is
+ * entirely unconfigured (both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+ * absent) AND RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true. Partial Upstash configuration
+ * (one var present, one absent) always fails closed — that is a misconfiguration, not
+ * an intentional "not provisioned" state. The opt-in may be scoped to specific key
+ * prefixes via RATE_LIMIT_FAIL_OPEN_UNCONFIGURED_PREFIXES (comma-separated list).
  *
  * Author: OmniLink APEX
  * Date: 2026-01-21
@@ -105,16 +110,20 @@ function getRedisClient(): Redis | null {
   }
 }
 
+type UpstashConfigState = "absent" | "partial" | "configured";
+
 /**
- * Returns true only when BOTH Upstash credentials are present in the
- * environment. Distinguishes operator misconfiguration (backend never
- * provisioned) from a runtime outage (configured but unreachable).
+ * Classifies the Upstash credential state into three cases so the rate limiter
+ * can distinguish "never provisioned" from "misconfigured" — only the former
+ * may fail open under an explicit operator opt-in.
  */
-function isUpstashConfigured(): boolean {
-  return Boolean(
-    Deno.env.get("UPSTASH_REDIS_REST_URL") &&
-      Deno.env.get("UPSTASH_REDIS_REST_TOKEN"),
-  );
+function getUpstashConfigState(): UpstashConfigState {
+  const hasUrl = Boolean(Deno.env.get("UPSTASH_REDIS_REST_URL"));
+  const hasToken = Boolean(Deno.env.get("UPSTASH_REDIS_REST_TOKEN"));
+
+  if (!hasUrl && !hasToken) return "absent";
+  if (hasUrl && hasToken) return "configured";
+  return "partial";
 }
 
 /**
@@ -226,7 +235,15 @@ export async function checkRateLimit(
       };
     } catch (error) {
       console.error("Rate limit clientOverride error:", error);
-      // Fall through to normal behavior
+      // FAIL-CLOSED: limiter runtime error must not fail open regardless of flag.
+      return {
+        allowed: false,
+        limit: config.maxRequests,
+        remaining: 0,
+        reset: now + config.windowMs,
+        resetIn: config.windowMs,
+        headers: new Headers(),
+      };
     }
   }
 
@@ -234,14 +251,51 @@ export async function checkRateLimit(
   const limiter = getRatelimiter(config);
 
   if (!limiter) {
-    // Graceful-degradation escape hatch (default OFF - behavior unchanged unless
-    // explicitly enabled). When Upstash was NEVER provisioned the rate-limit
-    // feature is simply absent; failing every request closed turns a missing
-    // optional dependency into a full endpoint outage. Operators may opt into
-    // running unlimited via RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true. Runtime
-    // Upstash errors (configured but unreachable) still fail closed below.
-    if (isUpstashConfigured() === false &&
-        Deno.env.get("RATE_LIMIT_FAIL_OPEN_UNCONFIGURED") === "true") {
+    const configState = getUpstashConfigState();
+
+    // Partial config: one credential present, the other missing — misconfiguration,
+    // not an intentional "never provisioned" state. Always fail closed.
+    if (configState === "partial") {
+      console.error(
+        `Rate limiting fail-closed: partial Upstash configuration for ${config.keyPrefix}. ` +
+          "Both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required."
+      );
+      return {
+        allowed: false,
+        limit: config.maxRequests,
+        remaining: 0,
+        reset: now + config.windowMs,
+        resetIn: config.windowMs,
+        headers: new Headers(),
+      };
+    }
+
+    // Absent config: neither credential is present (backend never provisioned).
+    // Operators may opt in to fail open via RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true,
+    // optionally scoped to specific key prefixes via RATE_LIMIT_FAIL_OPEN_UNCONFIGURED_PREFIXES.
+    if (
+      configState === "absent" &&
+      Deno.env.get("RATE_LIMIT_FAIL_OPEN_UNCONFIGURED") === "true"
+    ) {
+      const prefixesRaw = Deno.env.get("RATE_LIMIT_FAIL_OPEN_UNCONFIGURED_PREFIXES");
+      if (prefixesRaw) {
+        const allowedPrefixes = new Set(prefixesRaw.split(",").map((p) => p.trim()));
+        if (!allowedPrefixes.has(config.keyPrefix)) {
+          console.error(
+            `Rate limiting fail-closed: Upstash absent for ${config.keyPrefix}. ` +
+              "Not in RATE_LIMIT_FAIL_OPEN_UNCONFIGURED_PREFIXES allowlist."
+          );
+          return {
+            allowed: false,
+            limit: config.maxRequests,
+            remaining: 0,
+            reset: now + config.windowMs,
+            resetIn: config.windowMs,
+            headers: new Headers(),
+          };
+        }
+      }
+
       console.warn(
         `Rate limiting DISABLED for ${config.keyPrefix}: Upstash not configured and ` +
           "RATE_LIMIT_FAIL_OPEN_UNCONFIGURED=true. Requests are NOT rate limited. " +
@@ -261,7 +315,7 @@ export async function checkRateLimit(
       };
     }
 
-    // FAIL-CLOSED: Upstash not configured or initialization failed
+    // FAIL-CLOSED: absent without opt-in flag, configured but init failed, or any other state.
     console.error(
       `Rate limiting fail-closed: Upstash not configured for ${config.keyPrefix}. ` +
         "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable distributed rate limiting."
