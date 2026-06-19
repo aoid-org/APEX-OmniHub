@@ -188,14 +188,21 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // If orchestrator returned workflowId, update it
+    // If orchestrator returned workflowId, persist it into metadata jsonb.
+    // NOTE: agent_runs has no `workflow_id` column (see canonical migration
+    // 20251221000001_omnilink_ops_pack.sql) — store it under metadata instead.
     if (data.workflowId && typeof data.workflowId === 'string') {
       const { error: updateErr } = await supabase
         .from("agent_runs")
-        .update({ workflow_id: data.workflowId })
+        .update({
+          metadata: {
+            workflow_id: data.workflowId,
+            orchestrator_status: typeof data.status === 'string' ? data.status : "started",
+          },
+        })
         .eq("id", traceId);
       if (updateErr) {
-        console.error(`[apex-agent] Failed to update workflow_id for run ${traceId}:`, updateErr.message);
+        console.error(`[apex-agent] Failed to update metadata for run ${traceId}:`, updateErr.message);
       }
     }
 
