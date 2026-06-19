@@ -63,6 +63,7 @@ class TestAllowedTools:
             "send_email",
             "call_webhook",
             "search_youtube",
+            "respond_to_user",
             "update_agent_run_completion",
             "mint_pilot_session",
         }

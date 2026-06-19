@@ -434,15 +434,20 @@ async def test_setup_activities_initializes_cache():
 
 @pytest.mark.asyncio
 async def test_check_semantic_cache_not_initialized():
-    """Raises RuntimeError when semantic cache not set up."""
+    """Treats an uninitialized cache as a miss (returns None), not an error.
+
+    The semantic cache is an optimization layer; when it is unavailable the
+    agent must fail open to a cache miss rather than crash planning. See the
+    fail-open contract in activities.tools.check_semantic_cache.
+    """
     import activities.tools as tools_mod
 
     original = tools_mod._semantic_cache
     tools_mod._semantic_cache = None
 
     try:
-        with pytest.raises(RuntimeError, match="not initialized"):
-            await tools_mod.check_semantic_cache("do something")
+        result = await tools_mod.check_semantic_cache("do something")
+        assert result is None
     finally:
         tools_mod._semantic_cache = original
 
