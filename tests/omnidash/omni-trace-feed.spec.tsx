@@ -44,7 +44,7 @@ describe('OmniTraceFeed', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
 
     render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
-    expect(screen.getByText('Demo')).toBeTruthy();
+    expect(screen.getByText('Demo (Simulated)')).toBeTruthy();
 
     vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
@@ -87,7 +87,7 @@ describe('OmniTraceFeed', () => {
       render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     await waitFor(() => {
-      const badges = screen.getAllByText(/Demo|Connecting/);
+      const badges = screen.getAllByText(/Demo \(Simulated\)|Connecting/);
       expect(badges.length).toBeGreaterThan(0);
     });
   });

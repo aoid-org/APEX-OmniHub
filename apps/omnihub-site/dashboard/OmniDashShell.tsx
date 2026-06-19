@@ -602,7 +602,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
             boxShadow:`0 0 ${pulse?8:4}px ${T.green}`,
             transition:"box-shadow .5s",
           }} />
-          Zero Trust Active
+          Zero Trust Active (Simulated)
         </div>
 
         {/* Connect AI */}
@@ -982,7 +982,10 @@ const OmniSlateWidget = () => {
     setMessages(m => [...m, {role:"user", text:q}]);
     
     try {
-      const res = await invokeMcpIntent({ prompt: q, context: {} });
+      const res = await invokeMcpIntent({ 
+        prompt: q, 
+        context: { apps: contextApps.map(a => a.id) } 
+      });
       setMessages(m => [...m, {role:"assistant", text: res.reply }]);
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
@@ -990,7 +993,7 @@ const OmniSlateWidget = () => {
     } finally {
       setLoading(false);
     }
-  }, [input]);
+  }, [input, contextApps]);
 
   const stop = useCallback(() => {
     setLoading(false);
@@ -1267,7 +1270,14 @@ const EcosystemWidget = () => {
           { id: 'armageddon', label: 'Armageddon Test Suite', category: 'testing' },
         ],
       },
-      onComplete: async (_result: Record<string, unknown>) => {},
+      onComplete: async (result: Record<string, unknown>) => {
+        const selectedId = (result.data as Record<string, string>)?.selectedId;
+        if (selectedId) {
+          toast.info(`Provisioning ${selectedId} is currently disabled in this environment.`);
+        } else {
+          toast.info('APEX App installation cancelled.');
+        }
+      },
       onCancel: () => {},
     });
   };
@@ -1330,7 +1340,14 @@ const IntegratedAppsWidget = () => {
       title: 'Connect Integration',
       description: 'Choose a third-party application to connect to your APEX workspace.',
       schema: { items: INTEGRATIONS },
-      onComplete: async (_result: Record<string, unknown>) => {},
+      onComplete: async (result: Record<string, unknown>) => {
+        const selectedId = (result.data as Record<string, string>)?.selectedId;
+        if (selectedId) {
+          toast.info(`Integration ${selectedId} setup requires administrator privileges.`);
+        } else {
+          toast.info('Integration setup cancelled.');
+        }
+      },
       onCancel: () => {},
     });
   };
@@ -1651,9 +1668,9 @@ export default function OmniDashShell() {
         <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
           <span>Edmonton, AB</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE</span>
+          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE (Simulated)</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON</span>
+          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON (Simulated)</span>
         </div>
       </div>
 
