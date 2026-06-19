@@ -82,9 +82,7 @@ class OmniPolicyEvaluator:
             )
             return rows or []
         except Exception as e:  # noqa: BLE001 - policy load must never crash execution
-            logger.warning(
-                "OmniPolicy: could not load policies (%s); proceeding with none", e
-            )
+            logger.warning("OmniPolicy: could not load policies (%s); proceeding with none", e)
             return []
 
     async def _get_policies(self) -> list[PolicyRecord]:
