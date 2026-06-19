@@ -38,7 +38,9 @@ describe('production domain alignment', () => {
     expect(existsSync(rootWranglerToml)).toBe(false);
 
     // 2. production deploy workflow targets the canonical Cloudflare Pages project and output:
-    expect(productionDeployWorkflow).toContain("vars.CLOUDFLARE_PRODUCTION_PROJECT_NAME || 'apex-omnihub'");
+    // Project name is now pinned (not driven by the misconfigured repo var that was set to 'omnihub'):
+    expect(productionDeployWorkflow).toContain('CF_PROJECT_NAME: apex-omnihub');
+    expect(productionDeployWorkflow).not.toContain('CF_PROJECT_NAME: omnihub');
     expect(productionDeployWorkflow).toContain('npx --yes --ignore-scripts wrangler@latest pages deploy dist');
     expect(productionDeployWorkflow).toContain('--project-name="${CF_PROJECT_NAME}"');
 
