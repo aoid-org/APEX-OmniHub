@@ -321,7 +321,9 @@ async def test_handle_success_calls_update_agent_run(agent_workflow):
         mock_info.return_value = MagicMock(workflow_id="goal-handle-success-trace")
         mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=1.0))
         with patch.object(agent_workflow, "_append_event", new_callable=AsyncMock):
-            with patch.object(agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock):
+            with patch.object(
+                agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock
+            ):
                 await agent_workflow._handle_success()
 
     update_calls = [c for c in captured_args if c[0] == "update_agent_run_completion"]
@@ -352,7 +354,9 @@ async def test_handle_failure_calls_update_agent_run(agent_workflow):
     ):
         mock_info.return_value = MagicMock(workflow_id="goal-handle-failure-trace")
         with patch.object(agent_workflow, "_append_event", new_callable=AsyncMock):
-            with patch.object(agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock):
+            with patch.object(
+                agent_workflow, "_omnitrace_record_run_complete", new_callable=AsyncMock
+            ):
                 await agent_workflow._handle_failure("something broke")
 
     update_calls = [c for c in captured_args if c[0] == "update_agent_run_completion"]
