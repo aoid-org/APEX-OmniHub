@@ -33,8 +33,11 @@ jobs:
       - name: Repair Migration History
         # Fix: Mark old migration as reverted after file rename
         # The migration was renamed from 20260109 to 20260109120000 to avoid version collision
+        # Fix: 20260226000001 exists in remote schema_migrations but db push re-attempts INSERT
+        # (duplicate key). Revert clears the stale entry; db push re-inserts cleanly via empty file.
         run: |
           supabase migration repair --status reverted 20260109 || echo "Migration 20260109 already handled or does not exist"
+          supabase migration repair --status reverted 20260226000001 || echo "Migration 20260226000001 already handled or does not exist"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
