@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     )
     temporal_tls_cert: str = Field(default="", description="Path to Temporal TLS client cert")
     temporal_tls_key: str = Field(default="", description="Path to Temporal TLS client key")
+    temporal_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="Temporal Cloud API key (alternative to mTLS; takes precedence when set)",
+    )
     temporal_max_workflow_tasks: int = Field(
         default=10, description="Max concurrent workflow tasks for worker"
     )
