@@ -62,10 +62,12 @@ from activities.tools import (
     create_record,
     delete_record,
     generate_plan_with_llm,
+    mint_pilot_session,
     search_database,
     search_youtube,
     send_email,
     setup_activities,
+    update_agent_run_completion,
 )
 from activities.universal_intents import (
     system_echo,
@@ -195,6 +197,9 @@ async def start_worker() -> None:
             verify_deductive_path,
             # DLQ alert activity (permanently failed workflows)
             send_dlq_alert,
+            # Agent run lifecycle: terminal state write-back + BYOM session mint
+            update_agent_run_completion,
+            mint_pilot_session,
             # OmniTrace activities
             *get_omnitrace_activities(),
             # Intent resolution (replay-safe registry lookup)
