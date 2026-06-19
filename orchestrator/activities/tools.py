@@ -30,6 +30,7 @@ import ipaddress
 import json
 import os
 import time
+from datetime import datetime, timezone
 from typing import Any, NoReturn
 from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
@@ -42,7 +43,7 @@ from temporalio import activity
 
 from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
-from providers.database.base import DatabaseError
+from providers.database.base import DatabaseError, NotFoundError
 from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 from security.ssrf import validate_url_with_dns_pin_async
@@ -971,10 +972,12 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
         # Get database provider instance
         db = get_database_provider()
 
-        # Prepare update data
-        update_data = {
+        # Prepare update data. Use a real ISO-8601 UTC timestamp computed in
+        # Python — passing the literal string "now()" would be stored verbatim
+        # by the database provider rather than evaluated as a SQL function.
+        update_data: dict[str, Any] = {
             "status": status,
-            "end_time": "now()",  # Use database function for current timestamp
+            "end_time": datetime.now(timezone.utc).isoformat(),
         }
 
         if status == "completed":
@@ -982,7 +985,7 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
         elif status == "failed":
             update_data["error_message"] = str(agent_response.get("error", "Unknown error"))
 
-        # Update the agent_run record
+        # Update the agent_run record (filter on primary key id == trace_id)
         await db.update(table="agent_runs", updates=update_data, filters={"id": trace_id})
 
         activity.logger.info(f"✓ Updated agent_run {trace_id} with status {status}")
@@ -993,6 +996,14 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
             "status": status,
         }
 
+    except NotFoundError:
+        # No row matched id == trace_id — surface explicitly (best-effort, no raise).
+        activity.logger.error(f"agent_run not found for trace_id {trace_id}")
+        return {
+            "success": False,
+            "error": "agent_run_not_found",
+            "trace_id": trace_id,
+        }
     except Exception as e:
         error_msg = str(e)
         activity.logger.error(f"Failed to update agent_run completion: {error_msg}")
@@ -1104,16 +1115,4 @@ async def mint_pilot_session(params: dict[str, Any]) -> dict[str, Any]:
 # DISTRIBUTED RELIABILITY - Using Temporal's Built-in Mechanisms
 # ============================================================================
 
-# NOTE: Manual distributed locking removed. Use Temporal's built-in workflow
-# serialization and Signals for critical sections instead of Redis-based locks.
-# This eliminates race conditions and simplifies the architecture.
-
-# For critical sections requiring serialization:
-# 1. Use Workflow Signals to coordinate between workflow instances
-# 2. Use Temporal's built-in workflow mutexes for resource locking
-# 3. Leverage Saga patterns for compensation-based error handling
-
-# Example: Instead of manual locking, use workflow signals:
-# await workflow.wait_condition(lambda: workflow_state.is_ready)
-# signal = workflow.get_external_signal("resource_available")
-# await signal
+# NOTE: Manual distributed locking removed. Use Tempor
