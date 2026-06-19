@@ -17,6 +17,23 @@ import type {
   ModuleAction,
 } from "@/dashboard/components/ModuleRegistry";
 
+/**
+ * Hard ceiling for any single backend round-trip. Guarantees `loading`
+ * always resolves: if auth or the edge function hangs (no server reply),
+ * the module degrades to its UNAVAILABLE/demo state instead of spinning
+ * forever.
+ */
+const MODULE_FETCH_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("omni_module_timeout")), ms),
+    ),
+  ]);
+}
+
 export interface OmniModuleState {
   readonly moduleKey: string;
   readonly headline: string;
@@ -85,7 +102,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
       try {
         const {
           data: { user },
-        } = await supabase.auth.getUser();
+        } = await withTimeout(supabase.auth.getUser(), MODULE_FETCH_TIMEOUT_MS);
 
         if (!user || cancelled) {
           safeSetLiveState({
@@ -96,11 +113,14 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke(
-          "omnilink-port/module-state",
-          {
-            body: { module_key: appKey },
-          }
+        const { data, error } = await withTimeout(
+          supabase.functions.invoke(
+            "omnilink-port/module-state",
+            {
+              body: { module_key: appKey },
+            }
+          ),
+          MODULE_FETCH_TIMEOUT_MS
         );
 
         if (cancelled) {
