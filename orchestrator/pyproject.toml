@@ -14,6 +14,8 @@ dependencies = [
     # Web framework (required by main.py API server)
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
+    # Rate limiting for the API server (server.py)
+    "slowapi>=0.1.9",
 
     # Temporal.io workflow engine
     "temporalio>=1.22.0",
