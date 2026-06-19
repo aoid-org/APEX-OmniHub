@@ -66,14 +66,26 @@ class OmniPolicyEvaluator:
         self._lock = asyncio.Lock()
 
     async def _load_from_db(self) -> list[dict[str, Any]]:
-        """Load enabled policies from DB."""
+        """Load enabled policies from DB.
+
+        Degrades gracefully: if the policy table is absent (not provisioned) or the
+        database is unreachable, return no policies (permissive default) so a missing
+        table never crashes every agent step. Dangerous actions remain gated by the
+        separate MAN-mode risk_triage step.
+        """
         db = get_database_provider()
-        rows = await db.select(
-            table="omni_policies",
-            filters={"enabled": True},
-            select_fields="name, version, priority, match, decision, lane, reason",
-        )
-        return rows or []
+        try:
+            rows = await db.select(
+                table="omni_policies",
+                filters={"enabled": True},
+                select_fields="name, version, priority, match, decision, lane, reason",
+            )
+            return rows or []
+        except Exception as e:  # noqa: BLE001 - policy load must never crash execution
+            logger.warning(
+                "OmniPolicy: could not load policies (%s); proceeding with none", e
+            )
+            return []
 
     async def _get_policies(self) -> list[PolicyRecord]:
         """Return cached policies, refreshing on TTL expiry."""
