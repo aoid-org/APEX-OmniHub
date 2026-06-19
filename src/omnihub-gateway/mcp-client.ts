@@ -253,6 +253,67 @@ async function parseSseToCompletion(
 // Primary: invokeMcpIntent — same-origin gateway ONLY
 // ============================================================================
 
+async function fetchGatewayStream(
+  payload: McpIntentPayload, 
+  token: string, 
+  providerPref: string | null
+): Promise<Response> {
+  const requestBody: Record<string, unknown> = {
+    prompt: payload.prompt,
+    context: payload.context ?? {},
+  };
+  if (providerPref) {
+    requestBody.providerPreference = providerPref;
+  }
+
+  try {
+    return await fetch('/api/mcp/invoke', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } catch (err: unknown) {
+    console.error('[MCP Client] Gateway fetch failed:', err);
+    throw new Error(`[MCP Client] Gateway unreachable: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+async function handleGatewayErrorResponse(res: Response): Promise<never> {
+  if (res.status === 401) {
+    throw new Error('[MCP Client] Gateway returned 401 — session may have expired');
+  }
+
+  let errorMsg = `HTTP ${res.status}`;
+  try {
+    const body = await res.json() as { error?: string };
+    if (body.error) errorMsg = body.error;
+  } catch { /* ignore */ }
+  throw new Error(`[MCP Client] Gateway error: ${errorMsg}`);
+}
+
+async function handleJsonResponse(res: Response): Promise<McpIntentResponse> {
+  const data = await res.json() as Record<string, unknown>;
+  const status = data.status as string | undefined;
+
+  if (!status) {
+    throw new Error('[MCP Client] JSON response missing terminal status');
+  }
+
+  if (status === 'queued' || status === 'running' || status === 'pending') {
+    throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
+  }
+
+  const result = processTerminalSseEvent(status, '', data);
+  if (result) {
+    return result;
+  }
+
+  throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
+}
+
 /**
  * Invoke the APEX Agent via the same-origin OmniPort Gateway.
  *
@@ -280,48 +341,21 @@ export async function invokeMcpIntent(
   // 2. Read + sanitize provider preference
   const providerPreference = getCleanProviderPreference();
 
-  // 3. Build request body
-  const requestBody: Record<string, unknown> = {
-    prompt: payload.prompt,
-    context: payload.context ?? {},
-  };
-  if (providerPreference) {
-    requestBody.providerPreference = providerPreference;
-  }
+  // 3. Perform fetch
+  const res = await fetchGatewayStream(payload, token, providerPreference);
 
-  // 4. Call same-origin gateway ONLY
-  let res: Response;
-  try {
-    res = await fetch('/api/mcp/invoke', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } catch (err: unknown) {
-    console.error('[MCP Client] Gateway fetch failed:', err);
-    throw new Error(`[MCP Client] Gateway unreachable: ${err instanceof Error ? err.message : String(err)}`);
-  }
-
-  if (res.status === 401) {
-    throw new Error('[MCP Client] Gateway returned 401 — session may have expired');
-  }
-
+  // 4. Handle errors
   if (!res.ok) {
-    let errorMsg = `HTTP ${res.status}`;
-    try {
-      const body = await res.json() as { error?: string };
-      if (body.error) errorMsg = body.error;
-    } catch { /* ignore */ }
-    throw new Error(`[MCP Client] Gateway error: ${errorMsg}`);
+    return handleGatewayErrorResponse(res);
+  }
+
+  if (!res.body) {
+    throw new Error('[MCP Client] Gateway returned no body');
   }
 
   // 5. Determine if it's SSE or JSON
   const contentType = res.headers.get('content-type') || '';
   if (contentType.includes('text/event-stream')) {
-    if (!res.body) throw new Error('[MCP Client] Gateway returned no body');
     try {
       return await parseSseToCompletion(res.body, onStatus);
     } catch (err: unknown) {
@@ -329,23 +363,6 @@ export async function invokeMcpIntent(
       throw err;
     }
   } else {
-    // Fallback for tests/mocks returning JSON
-    const data = await res.json() as Record<string, unknown>;
-    const status = data.status as string | undefined;
-
-    if (!status) {
-      throw new Error('[MCP Client] JSON response missing terminal status');
-    }
-
-    if (status === 'queued' || status === 'running' || status === 'pending') {
-      throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
-    }
-
-    const result = processTerminalSseEvent(status, '', data);
-    if (result) {
-      return result;
-    }
-
-    throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
+    return handleJsonResponse(res);
   }
 }
