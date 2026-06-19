@@ -332,9 +332,9 @@
   var threePromise = null;
   function loadThree(src) {
     if (window.THREE) return Promise.resolve(window.THREE);
-    var safeSrc = (typeof src === 'string' && /^https:\/\//.test(src)) ? src : '';
+    var safeSrc = (typeof src === 'string' && (/^https:\/\//.test(src) || /^\//.test(src))) ? src : '';
     if (!safeSrc) {
-      return Promise.reject(new Error('three.js src must be an https:// URL'));
+      return Promise.reject(new Error('three.js src must be an https:// or same-origin / URL'));
     }
     if (threePromise) return threePromise;
     threePromise = new Promise(function (res, rej) {

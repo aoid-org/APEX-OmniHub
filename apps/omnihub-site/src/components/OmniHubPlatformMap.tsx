@@ -63,7 +63,7 @@ export default function OmniHubPlatformMap({
   id = 'platform-map',
   ctaHref  = '/request-access',
   demoHref = '/demo',
-  threeSrc = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+  threeSrc = '/vendor/three.min.js',
   className = '',
   style,
 }: Readonly<OmniHubPlatformMapProps>) {
