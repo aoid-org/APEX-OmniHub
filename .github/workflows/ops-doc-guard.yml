@@ -1,0 +1,31 @@
+name: Ops Doc Guard
+
+# Hard CI enforcement of the operational source-of-truth rule:
+# any PR changing a deployed service, env var, DB table/migration, or start
+# command must update docs/APEX_AGENT_OPERATIONS.md in the same PR.
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  ops-doc-drift:
+    name: Operations doc drift guard
+    runs-on: ubuntu-22.04
+    timeout-minutes: 2
+    steps:
+      - name: Checkout (full history for base diff)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '20'
+
+      - name: Check operations-doc drift
+        run: node scripts/ci/check-ops-doc-drift.mjs
