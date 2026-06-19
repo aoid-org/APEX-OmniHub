@@ -44,7 +44,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   const healthIsGreen = systemHealth === '100%';
 
   return (
-    <div className="sentinel-section" style={{ paddingBottom: 12 }}>
+    <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12 }}>
       {/* Row 1 — Events + Health */}
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard
