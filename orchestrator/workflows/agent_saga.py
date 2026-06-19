@@ -1286,6 +1286,13 @@ class AgentWorkflow:
             "results": self.step_results,
         }
 
+        # Surface a direct conversational reply (e.g. from respond_to_user) so the
+        # gateway renders a human answer instead of a generic completion template.
+        for _res in self.step_results.values():
+            if isinstance(_res, dict) and isinstance(_res.get("reply"), str) and _res["reply"].strip():
+                result["reply"] = _res["reply"].strip()
+                break
+
         # Update agent_runs using trace_id from workflow context (never search attributes)
         trace_id = self._get_trace_id()
         try:
