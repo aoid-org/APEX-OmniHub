@@ -32,3 +32,6 @@ status: verified
 ## 2026-06-12 - O(N) array search inside object traversal is a major bottleneck
 **Learning:** Calling `Object.entries()` inside loops (e.g. for detranslating values based on reverse lookup) is highly inefficient due to array allocations and O(N) searching for reverse key lookups.
 **Action:** Use a pre-calculated `REVERSE_DICTIONARY` with a direct lookup utilizing `Object.prototype.hasOwnProperty.call` to prevent prototype pollution and achieve O(1) direct property access instead.
+## 2026-06-19 - O(N) array allocation and search inside validation functions
+**Learning:** Calling `Object.values(Enum).includes(value)` inside validation functions that are called frequently allocates a new array and performs an O(N) search on every invocation. This is highly inefficient for hot paths like data ingestion validation.
+**Action:** Pre-calculate `new Set(Object.values(Enum))` outside the function scope and use `.has()` for O(1) lookups. This significantly improves performance and reduces memory allocations.
