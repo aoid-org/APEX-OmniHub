@@ -3,8 +3,9 @@ import { Layout, Section, SectionHeader, BulletItem, BulletList } from '@/compon
 export function MaestroPage() {
   return (
     <Layout title="Maestro">
-      <Section>
-        <SectionHeader title="Maestro" subtitle="Turns intent into monitored, reversible workflows" />
+      <div data-page="maestro" className="maestro-page">
+        <Section>
+          <SectionHeader title="Maestro" subtitle="Turns intent into monitored, reversible workflows" />
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>
@@ -139,7 +140,8 @@ export function MaestroPage() {
             <a href="/demo" className="btn btn--primary">Watch Maestro Demo</a>
           </div>
         </div>
-      </Section>
+        </Section>
+      </div>
     </Layout>
   );
 }

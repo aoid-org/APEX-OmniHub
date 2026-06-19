@@ -240,3 +240,16 @@
   .landing-root nav .nav-links{display:none}
   .landing-root .hero{padding-top:90px;padding-bottom:60px}
 }
+
+/* Web Vitals: reserve the starmap slot before /omnihub-starmap.js injects content. */
+.landing-root .omnihub-platform-map-host {
+  display: block;
+  min-height: clamp(520px, 72vh, 820px);
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 720px;
+}
+
+.landing-root .omnihub-platform-map-host.ohsm-section {
+  min-height: clamp(520px, 72vh, 820px);
+}
