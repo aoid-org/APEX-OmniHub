@@ -101,6 +101,19 @@ def _build_temporal_tls_config() -> TLSConfig | bool:
     return TLSConfig(client_cert=client_cert, client_private_key=client_private_key)
 
 
+def _temporal_connect_kwargs() -> dict:
+    """Build Client.connect auth kwargs.
+
+    Temporal Cloud API-key auth (TEMPORAL_API_KEY) takes precedence and implies
+    TLS. Falls back to mTLS / plaintext per the TEMPORAL_TLS_* settings when no
+    API key is configured (e.g. self-hosted/local Temporal).
+    """
+    api_key = settings.temporal_api_key.get_secret_value() if settings.temporal_api_key else ""
+    if api_key:
+        return {"tls": True, "api_key": api_key}
+    return {"tls": _build_temporal_tls_config()}
+
+
 async def start_worker() -> None:
     """
     Start Temporal worker.
@@ -150,7 +163,7 @@ async def start_worker() -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
-        tls=_build_temporal_tls_config(),
+        **_temporal_connect_kwargs(),
     )
     logger.info("✓ Connected to Temporal")
 
@@ -228,7 +241,7 @@ async def submit_workflow(goal: str, user_id: str = "test-user") -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
-        tls=_build_temporal_tls_config(),
+        **_temporal_connect_kwargs(),
     )
 
     # Start workflow
