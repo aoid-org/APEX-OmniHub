@@ -63,6 +63,7 @@ class TestAllowedTools:
             "send_email",
             "call_webhook",
             "search_youtube",
+            "respond_to_user",
             "update_agent_run_completion",
             "mint_pilot_session",
         }
@@ -71,6 +72,12 @@ class TestAllowedTools:
     def test_webhook_alias_resolves(self):
         tools = _load_tools()
         assert tools.resolve_tool_name("webhook") == "call_webhook"
+
+    def test_respond_to_user_alias_resolves(self):
+        """Conversational tool resolves from its aliases to the canonical name."""
+        tools = _load_tools()
+        assert tools.resolve_tool_name("answer") == "respond_to_user"
+        assert tools.resolve_tool_name("reply") == "respond_to_user"
 
     def test_unknown_tool_not_in_allowed(self):
         tools = _load_tools()
