@@ -47,7 +47,16 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_14.md
 | `ad545fb3` | 2026-06-19 | docs: record APEX Agent migration-history baseline (2026-06-19) | #1435 |
 | `0eff5a6c` | 2026-06-19 | ci: guard APEX Agent operations-doc drift (PR branch tip) | #1435 |
 | `4bbd3e5b` | 2026-06-19 | ops: APEX Agent restoration — runbook, evidence, tag + ops-doc PR law (#1435 squash-merge to `main`) | #1435 |
-| `6f859ec8` | 2026-06-19 | fix(omnidash): repair widget modal contracts and action endpoint UX — **current `main` HEAD** | #1436 |
+| `6f859ec8` | 2026-06-19 | fix(omnidash): repair widget modal contracts and action endpoint UX | #1436 |
+| `0020ba6b` | 2026-06-20 | fix(omnidash): canonical widget rescue and global drift guards — **current `main` HEAD** | #1439 |
+
+## OmniDash Canonical Widget Rescue (2026-06-20)
+
+To definitively cure recurring "widget drift" and integration hallucinations, a massive repo-wide sweep was executed and codified into global guards:
+- **Absolute Product Truth Enforced:** OmniBoard is officially codified as the ONE AND ONLY user-facing UI endpoint for third-party application integration. Links is strictly an independent widget for collecting URLs.
+- **Drift Guards:** `tests/omnidash/global-drift-guards.spec.tsx` permanently asserts that Links does not invoke or import OmniBoardWizard.
+- **Action Gating:** `moduleActionCapabilities.ts` was deployed to centrally map and whitelist allowed module actions. Any hallucinated backend commands (like `manage_bundles`) are structurally rejected by the UI shell before networking occurs.
+- **Visual Purity:** Strict adherence to APEX dark glass/orange aesthetics across all refactors.
 
 ## APEX Agent Restoration (2026-06-19 — Landmark Event)
 
@@ -72,7 +81,8 @@ OmniSlate UI → Cloudflare Pages Function /api/mcp/invoke
 - `docs/operations/APEX_AGENT_RUNBOOK.md` — full operations runbook
 - `docs/operations/APEX_AGENT_RESTORATION_EVIDENCE.md` — restoration evidence + trace IDs
 
-**PR #1435 merged 2026-06-19** (squash-merge `4bbd3e5b`) — CI: 43 success / 3 skipped / 0 failed (46 total check runs). Includes stale-test fixes, migration-history baseline documentation, and real CI enforcement of the ops-doc rule (`scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml`). **PR #1436 merged 2026-06-19** (`6f859ec8`, current `main` HEAD) — CI: 46 success / 3 skipped / 0 failed (49 total) — repaired OmniDash widget modal contracts + action-endpoint UX (frontend + test files only; no runtime-contract, migration, or workflow change).
+**PR #1435 merged 2026-06-19** (squash-merge `4bbd3e5b`) — CI: 43 success / 3 skipped / 0 failed (46 total check runs). Includes stale-test fixes, migration-history baseline documentation, and real CI enforcement of the ops-doc rule (`scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml`). **PR #1436 merged 2026-06-19** (`6f859ec8`) — CI: 46 success / 3 skipped / 0 failed (49 total) — repaired OmniDash widget modal contracts + action-endpoint UX (frontend + test files only; no runtime-contract, migration, or workflow change).
+**PR #1439 merged 2026-06-20** (`0020ba6b`, current `main` HEAD) — Canonical Widget Rescue completed and documented.
 
 ## Repo Stats (Verified 2026-06-20)
 
@@ -98,10 +108,11 @@ Production Supabase had live schema objects while `supabase_migrations.schema_mi
 | #1434 (ruff/format) | `73d23da3` | ✅ merged green | |
 | #1435 (agent restoration ops) | `4bbd3e5b` (tip `0eff5a6c`) | ✅ **ALL GREEN** — 43 success / 3 skipped / 0 failed (46 total) | `build-and-test`, `Operations doc drift guard`, SonarCloud QG passed |
 | #1436 (omnidash modal contracts) | `6f859ec8` | ✅ **ALL GREEN** — 46 success / 3 skipped / 0 failed (49 total) | `build-and-test`, `Quality Gates`, `Security Gates`, SonarCloud QG passed |
+| #1439 (canonical widget rescue) | `0020ba6b` | ✅ **ALL GREEN** | `build-and-test`, SonarCloud QG passed |
 
 CI results verified via GitHub check-runs API 2026-06-20.
 
-**`main` is GREEN as of `6f859ec8`.**
+**`main` is GREEN as of `0020ba6b`.**
 
 ## Infrastructure State (2026-06-20)
 

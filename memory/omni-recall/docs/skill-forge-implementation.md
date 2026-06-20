@@ -221,8 +221,8 @@ All database operations use parameterized queries via Supabase client. No raw SQ
 
 SkillForge-forged skills that target payload normalization (e.g.
 `apex-universal-sync-orchestrator`) serve OmniBoard's **application
-integration layer**. OmniBoard itself is dual-surface — it also has a
-client-facing conversational modal (Left Sidebar Widget → OmniBoard modal).
+integration layer**. OmniBoard itself is the user-facing UI endpoint for app
+integration (Left Sidebar Widget → OmniBoard modal).
 Skill descriptions scope to the integration pipeline and state that they do
 not handle client interactions; they must not claim OmniBoard as a whole is
 integration-only. See `docs/platform/OMNIBOARD.md`.
@@ -240,6 +240,6 @@ integration-only. See `docs/platform/OMNIBOARD.md`.
 - [ ] Skill marketplace (share skills across users)
 
 ## References
-- `docs/platform/OMNIBOARD.md` — OmniBoard dual-surface definition
+- `docs/platform/OMNIBOARD.md` — OmniBoard integration surface definition
 - `.claude/skills/apex-universal-sync-orchestrator/` — reference integration-layer skill forged through this workflow (rubric 100/100)
 - `supabase/migrations/20260214000001_skill_forge_protocol.sql` — database layer
