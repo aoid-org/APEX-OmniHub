@@ -1,6 +1,6 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-14
+version: 1.2.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -354,3 +354,48 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - sonar_round2_status: Quality Gates ✅ PASSED (run 27591927063)
 - cloudflare_b503aba_apex: `https://b9661674.apex-omnihub.pages.dev`
 - cloudflare_b503aba_shadow: `https://a7ce662b.apex-omnihub-shadow.pages.dev`
+
+## Session (2026-06-20) — APEX Agent Production Restoration + PR #1435 + Anti-Drift Audit
+- branch: `ops/agent-production-restored-2026-06-19` → merged to `main` via PR #1435; docs committed on `claude/laughing-brown-knodfm`
+- scope: Fixed two red CI tests (stale test expectations), documented migration-history baseline, wired honest ops-doc drift enforcement in CI, then performed full anti-drift documentation audit.
+
+### PR #1435 — All Green (merged 2026-06-20)
+- CI result: **43 success / 3 skipped / 0 failed**
+- Fixes: `test_canonical_tools_defined` (added `respond_to_user` to expected set), `test_check_semantic_cache_not_initialized` → `test_check_semantic_cache_disabled_returns_none` (cache returns None, not RuntimeError)
+- New workflow: `ops-doc-guard.yml` — fails PRs that change runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`
+- New script: `scripts/ci/check-ops-doc-drift.mjs` (deterministic Node.js, no network deps)
+- New doc: `docs/APEX_AGENT_OPERATIONS.md` — canonical anti-drift ops reference
+- New docs: `docs/operations/APEX_AGENT_RUNBOOK.md`, `docs/operations/APEX_AGENT_RESTORATION_EVIDENCE.md`
+
+### APEX Agent — LIVE (landmark, 2026-06-19)
+- Full end-to-end path verified with real LLM reply: OmniSlate UI → CF Pages Function → Supabase `apex-agent` → Render `apex-orchestrator-api` → Temporal Cloud (ns `apex-omnihub-temporal.i7ero`, ca-central-1) → Render worker → `agent_runs` completed → SSE → UI rendered LLM answer
+- Verified trace IDs: `61ce8dce`, `861d9f0c`, `da6e7fe5` (completed + LLM reply), `512eb247` (failed diagnostic — exposed missing `omni_policies` table)
+- Root cause chain resolved: Upstash archived (429) → orchestrator Render service down → Temporal cert-vs-API-key gap → missing `slowapi` dep → missing env vars → worker OOM on 512 MB
+- `omni_policies` table provisioned with 7 tailored APEX governance policies
+- `SEMANTIC_CACHE_ENABLED=false` — worker stays live on 512 MB Starter; `check_semantic_cache()` returns `None` (clean miss)
+
+### Tool Registry (2026-06-19)
+- `respond_to_user` added to `TOOL_REGISTRY` with aliases `("answer", "respond", "reply", "respond_directly")`, `default_lane="GREEN"`, `policy_tags=("conversational",)`
+- Total tools: 9 (`search_database`, `create_record`, `delete_record`, `send_email`, `call_webhook`, `search_youtube`, `respond_to_user`, `update_agent_run_completion`, `mint_pilot_session`)
+
+### Migration History Baseline (2026-06-19)
+- Production had live schema objects while `supabase_migrations.schema_migrations` showed 0 applied migrations
+- 89 migrations baselined as applied without re-running SQL; no data touched
+- `omni_policies` provisioned as migration 90 same day
+- Future rule: never blindly run full migration stack against production; use `supabase migration repair` on drift; only apply new additive/idempotent migrations forward
+
+### Verified Runtime Facts (2026-06-20)
+- last_verified_date: 2026-06-20
+- last_verified_commit: `0eff5a6c` (ci: guard APEX Agent operations-doc drift — PR #1435, HEAD main)
+- package_version: `1.7.1` (root package.json); app version `1.3.10`
+- workflows: 23 (added `ops-doc-guard.yml`)
+- migrations: 90 files
+- python_orchestrator_files: 103
+- src_ts_tsx_files: 326
+- supabase_edge_function_dirs: 32 (31 + `_shared`)
+- apex_agent_status: **LIVE — demo-ready**
+- apex_orchestrator_api: ✅ Running (Render, `/health` 200)
+- apex_orchestrator_worker: ✅ Running (`SEMANTIC_CACHE_ENABLED=false`, 512 MB Starter)
+- temporal_cloud: ✅ Connected (ns `apex-omnihub-temporal.i7ero`, ca-central-1, API-key auth)
+- ops_doc_guard_ci: ✅ Active — fails PRs that change runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`
+- docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_20.md (new), DOCUMENTATION_RELEASE_INDEX.md, PRODUCTION_CERTIFICATION_STATUS.md
