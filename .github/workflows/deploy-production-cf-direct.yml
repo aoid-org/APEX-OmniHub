@@ -138,7 +138,7 @@ jobs:
           # CF Pages dashboard var is IGNORED on direct (`wrangler pages deploy`)
           # uploads, so it must be supplied here. Override via repo Variable
           # VITE_ORCHESTRATOR_URL; falls back to the public orchestrator API.
-          VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://api.apexomnihub.icu' }}
+          VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}
         run: bun run build
 
       - name: Deploy to Cloudflare Pages (production)

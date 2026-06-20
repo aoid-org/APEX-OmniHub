@@ -98,7 +98,7 @@ jobs:
           # Direct (`wrangler pages deploy`) uploads do NOT read CF Pages
           # dashboard vars, so supply it here. Override via repo Variable
           # VITE_ORCHESTRATOR_URL; falls back to the public orchestrator API.
-          VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://api.apexomnihub.icu' }}
+          VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}
         run: |
           echo "Building frontend for shadow deployment..."
           bun run build
