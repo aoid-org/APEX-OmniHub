@@ -433,12 +433,12 @@ async def test_setup_activities_initializes_cache():
 
 
 @pytest.mark.asyncio
-async def test_check_semantic_cache_disabled_returns_none():
-    """Returns None as a clean cache miss when semantic cache is disabled/unavailable.
+async def test_check_semantic_cache_not_initialized():
+    """Treats an uninitialized cache as a miss (returns None), not an error.
 
-    SEMANTIC_CACHE_ENABLED=false keeps the 512 MB Render worker alive by skipping
-    the heavy sentence-transformers / PyTorch embedding model. In that state the
-    cache check must be a no-op cache miss, not a RuntimeError.
+    The semantic cache is an optimization layer; when it is unavailable the
+    agent must fail open to a cache miss rather than crash planning. See the
+    fail-open contract in activities.tools.check_semantic_cache.
     """
     import activities.tools as tools_mod
 

@@ -189,6 +189,11 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
  *
  * Calls the trigger-workflow Edge Function to execute a Temporal saga
  * for the given module and action.
+ *
+ * Every round-trip (auth + invoke) is wrapped in the same hard timeout as
+ * module-state fetching so an action button can never spin forever — on a hang
+ * it resolves to a visible "timed out" message instead. The return is always a
+ * structured { success, message } so the UI never silently succeeds or no-ops.
  */
 export async function triggerModuleAction(
   moduleKey: string,
@@ -205,7 +210,7 @@ export async function triggerModuleAction(
   try {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await withTimeout(supabase.auth.getUser(), MODULE_FETCH_TIMEOUT_MS);
     if (!user) {
       return {
         success: false,
@@ -213,9 +218,8 @@ export async function triggerModuleAction(
       };
     }
 
-    const { data, error } = await supabase.functions.invoke(
-      "trigger-workflow",
-      {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke("trigger-workflow", {
         body: {
           kind: "module_action",
           module_key: moduleKey,
@@ -224,7 +228,8 @@ export async function triggerModuleAction(
           trace_id: crypto.randomUUID(),
           idempotency_key: crypto.randomUUID(),
         },
-      }
+      }),
+      MODULE_FETCH_TIMEOUT_MS
     );
 
     if (error) {
@@ -242,6 +247,12 @@ export async function triggerModuleAction(
         `Workflow ${result?.workflow_id ?? actionId} dispatched successfully.`,
     };
   } catch (err: unknown) {
+    if (err instanceof Error && err.message === "omni_module_timeout") {
+      return {
+        success: false,
+        message: `Action "${actionId}" timed out — the backend did not respond. Please try again.`,
+      };
+    }
     const msg = err instanceof Error ? err.message : "Unknown error";
     return { success: false, message: `Action failed: ${msg}` };
   }

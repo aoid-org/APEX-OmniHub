@@ -134,6 +134,47 @@ describe('OmniSpatialHost', () => {
     expect(screen.queryByTestId('omni-dialog')).toBeNull();
   });
 
+  it('shows an honest missing-payload state when sandbox has no entryUrl/htmlContent', () => {
+    // A microfrontend modal carrying only moduleKey (the old LinksModule bug)
+    // resolves to sandbox but has nothing to host — it must fail visibly.
+    const modal = makeModal({
+      type: 'microfrontend',
+      provider: 'omnidash',
+      contextData: { moduleKey: 'omniboard-wizard' },
+    });
+    vi.mocked(useOmniModal).mockReturnValue({
+      activeModal: modal,
+      isOpen: true,
+      close: vi.fn(),
+      abortModal: vi.fn(),
+    } as ReturnType<typeof useOmniModal>);
+    vi.mocked(resolveRenderMode).mockReturnValue('sandbox');
+
+    act(() => {
+      render(<OmniSpatialHost />);
+    });
+    expect(screen.getByTestId('omni-sandbox-missing-payload')).toBeTruthy();
+  });
+
+  it('does not show the missing-payload state when sandbox has an entryUrl', () => {
+    const modal = makeModal({
+      type: 'microfrontend',
+      contextData: { entryUrl: 'https://example.com' },
+    });
+    vi.mocked(useOmniModal).mockReturnValue({
+      activeModal: modal,
+      isOpen: true,
+      close: vi.fn(),
+      abortModal: vi.fn(),
+    } as ReturnType<typeof useOmniModal>);
+    vi.mocked(resolveRenderMode).mockReturnValue('sandbox');
+
+    act(() => {
+      render(<OmniSpatialHost />);
+    });
+    expect(screen.queryByTestId('omni-sandbox-missing-payload')).toBeNull();
+  });
+
   it('renders with a portal root element', () => {
     const portalRoot = document.getElementById('omni-portal-root');
     expect(portalRoot).toBeTruthy();

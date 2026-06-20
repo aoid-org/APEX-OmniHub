@@ -141,12 +141,16 @@ describe('LinksModule', () => {
     expect(screen.getByText('Unkn')).toBeTruthy();
   });
 
-  it('fires add-link action and calls useOmniModal.getState().invoke', () => {
+  it('fires add-link action and routes the wizard through a module modal', () => {
     render(<LinksModule onClose={vi.fn()} />);
     fireEvent.click(screen.getByTestId('trigger-add-link'));
+    // Must be type: 'module' (not 'microfrontend') so resolveRenderMode() →
+    // 'dialog' and DialogModeRenderer mounts ModuleRenderer for the moduleKey.
     expect(omniInvoke).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'links-add-connection', type: 'microfrontend' }),
+      expect.objectContaining({ id: 'links-add-connection', type: 'module' }),
     );
+    const call = omniInvoke.mock.calls[0][0];
+    expect(call.contextData.moduleKey).toBe('omniboard-wizard');
   });
 
   it('fires test-all action without throwing', () => {

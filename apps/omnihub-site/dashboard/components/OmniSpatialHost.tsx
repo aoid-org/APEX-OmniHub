@@ -361,10 +361,18 @@ export function OmniSpatialHost() {
   const renderSandboxMode = () => {
     if (!activeModal || renderMode !== 'sandbox') return null;
 
+    const entryUrl = activeModal.contextData?.entryUrl;
+    const htmlContent = activeModal.contextData?.htmlContent;
+    // Sandbox is only meaningful with a payload to host. A modal that resolved to
+    // sandbox without entryUrl/htmlContent (e.g. a moduleKey-only config that
+    // should have used type: 'module') would otherwise render a blank/misleading
+    // shell. Fail honestly instead.
+    const hasPayload = Boolean(entryUrl) || Boolean(htmlContent);
+
     const sandboxConfig = JSON.stringify({
       title: activeModal.title,
-      entryUrl: activeModal.contextData?.entryUrl,
-      htmlContent: activeModal.contextData?.htmlContent,
+      entryUrl,
+      htmlContent,
     });
 
     return (
@@ -448,11 +456,38 @@ export function OmniSpatialHost() {
             </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            {/* @ts-expect-error — Custom element not in JSX.IntrinsicElements */}
-            <omni-app-shell
-              data-config={sandboxConfig}
-              style={{ width: '100%', height: '100%', display: 'block' }}
-            />
+            {hasPayload ? (
+              <>
+                {/* @ts-expect-error — Custom element not in JSX.IntrinsicElements */}
+                <omni-app-shell
+                  data-config={sandboxConfig}
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                />
+              </>
+            ) : (
+              <div
+                data-testid="omni-sandbox-missing-payload"
+                style={{
+                  width: '100%', height: '100%',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  gap: 8, padding: 24, textAlign: 'center',
+                  color: '#fca5a5',
+                }}
+              >
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#ef4444', margin: 0 }}>
+                  Microfrontend payload missing
+                </h3>
+                <p style={{ fontSize: 13, color: 'rgba(224,231,255,0.6)', maxWidth: 420, margin: 0 }}>
+                  This sandbox modal was invoked without an <code>entryUrl</code> or{' '}
+                  <code>htmlContent</code>, so there is nothing to render. A module-backed
+                  view should use <code>type: "module"</code> instead.
+                </p>
+                <p style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(224,231,255,0.4)', margin: 0 }}>
+                  id:{activeModal.id} · provider:{activeModal.provider} · type:{activeModal.type}
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
