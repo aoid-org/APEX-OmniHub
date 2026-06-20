@@ -18,6 +18,75 @@ import type {
 } from "@/dashboard/components/ModuleRegistry";
 
 /**
+ * Normalize live module-state actions into valid ModuleAction objects.
+ * The omnilink-port/module-state edge contract returns `actions` as string[]
+ * action ids; ModuleShell renders action.id/action.label. Passing raw strings
+ * through made those undefined, so handleAction received undefined, no module
+ * could intercept its own id, and every button fell through to trigger-workflow
+ * with action_id null. Normalizing here keeps state.actions as ModuleAction[].
+ */
+export function humanizeActionId(actionId: string): string {
+  return actionId
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function normalizeLiveActions(
+  rawActions: unknown,
+  baselineActions: readonly ModuleAction[],
+): readonly ModuleAction[] | undefined {
+  if (!Array.isArray(rawActions)) {
+    return undefined;
+  }
+
+  const baselineById = new Map(
+    baselineActions.map((action) => [action.id, action] as const),
+  );
+
+  return rawActions
+    .map((raw): ModuleAction | null => {
+      if (typeof raw === "string") {
+        const baseline = baselineById.get(raw);
+        return (
+          baseline ?? {
+            id: raw,
+            label: humanizeActionId(raw),
+            variant: "secondary",
+          }
+        );
+      }
+
+      if (
+        raw &&
+        typeof raw === "object" &&
+        "id" in raw &&
+        typeof (raw as { id: unknown }).id === "string"
+      ) {
+        const candidate = raw as Partial<ModuleAction> & { id: string };
+        const baseline = baselineById.get(candidate.id);
+        return {
+          id: candidate.id,
+          label:
+            typeof candidate.label === "string" && candidate.label.length > 0
+              ? candidate.label
+              : baseline?.label ?? humanizeActionId(candidate.id),
+          variant:
+            candidate.variant === "primary" ||
+            candidate.variant === "secondary" ||
+            candidate.variant === "destructive"
+              ? candidate.variant
+              : baseline?.variant ?? "secondary",
+        };
+      }
+
+      return null;
+    })
+    .filter((action): action is ModuleAction => action !== null);
+}
+
+/**
  * Hard ceiling for any single backend round-trip. Guarantees `loading`
  * always resolves: if auth or the edge function hangs (no server reply),
  * the module degrades to its UNAVAILABLE/demo state instead of spinning
@@ -141,7 +210,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           headline: live.headline,
           stats: live.stats,
           items: live.items,
-          actions: live.actions,
+          actions: normalizeLiveActions(live.actions, baselineState.actions),
           loading: false,
           error: null,
           stateKind: "live",
@@ -160,7 +229,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     return () => {
       cancelled = true;
     };
-  }, [appKey, baselineState.stateKind]);
+  }, [appKey, baselineState.stateKind, baselineState.actions]);
 
   if (liveState.key !== appKey) {
     return baselineState;
