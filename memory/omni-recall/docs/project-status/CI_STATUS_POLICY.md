@@ -1,6 +1,6 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-14
+version: 1.2.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -36,7 +36,20 @@ https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/<workflow
 Static `img.shields.io/badge/...` badges are forbidden for CI/security/test status claims.
 The License badge is exempt (it is not a CI claim).
 
-## Current CI State (verified 2026-06-14)
+## Current CI State (verified 2026-06-20 via GitHub check-runs API)
+
+`main` HEAD is `6f859ec8` (PR #1436 — fix(omnidash): repair widget modal contracts and action endpoint UX, merged 2026-06-19). `main` is GREEN.
+
+| PR | Merge commit | Check-runs result |
+|---|---|---|
+| #1435 (APEX Agent restoration) | `4bbd3e5b` (squash; PR tip `0eff5a6c`) | 43 success / 3 skipped / 0 failed (46 total) |
+| #1436 (omnidash modal contracts) | `6f859ec8` | 46 success / 3 skipped / 0 failed (49 total) |
+
+Key checks passed on both: `build-and-test`, `Operations doc drift guard`, `Quality Gates`, `Security Gates`, SonarCloud Code Analysis, `rls-posture-gate`, all orchestrator gates. The 3 skipped on each were `Generate Readiness Report`, `sbom-gate`, `sonarcloud-gate`.
+
+Verdict: `NOT_CERTIFIED_NO_RELEASE_CUT` (package is `1.7.1`, version bump only — no release cut yet).
+
+### Prior CI State (2026-06-14, preserved)
 
 Run #906 (ID `27500918710`) on SHA `873de83c` — **conclusion: success**. All 5 `verify:release` gates green:
 - `verify:ci-integrity` ✅
@@ -45,16 +58,24 @@ Run #906 (ID `27500918710`) on SHA `873de83c` — **conclusion: success**. All 5
 - `verify:build` ✅
 - `verify:claim-hygiene` ✅ (new gate — 0 unproven claims)
 
-Verdict: `NOT_CERTIFIED_NO_RELEASE_CUT` (expected — HEAD is fix commit, not version bump).
+## Workflow Registry (updated 2026-06-20)
 
-## Workflow Registry (verified 2026-05-20)
-
-The repository has 22 active GitHub Actions workflows (21 + `rsi-governance.yml` added). RSI-related workflows:
+The repository has **23** active GitHub Actions workflows. Notable additions since 2026-05-20:
 - `rsi-governance.yml` — **active RSI governance workflow (live mode)**
 - `rsi-governance-gate.yml` — pass-through placeholder (not the live gate)
+- `ops-doc-guard.yml` — **Ops Doc Drift Guard** — added PR #1435 (2026-06-20); fails PRs that change runtime-contract paths without updating `docs/APEX_AGENT_OPERATIONS.md`
 
-## Coverage Thresholds (updated 2026-05-20)
+## Coverage Thresholds (verified 2026-06-20 against `vitest.config.ts` on `main`)
 
-Current Vitest coverage thresholds (vitest.config.ts):
+Current Vitest coverage thresholds (the `coverage.thresholds` block in `vitest.config.ts`):
 
-| Metric | Threshold
+| Metric | Threshold |
+|---|---|
+| Statements | 70% |
+| Branches | 63% |
+| Functions | 72% |
+| Lines | 71% |
+
+> These are the enforced vitest gates (raised 2026-05-20 from measured actuals). **80%** is the
+> separate SonarCloud quality-gate north-star target, not the vitest threshold — do not conflate them.
+> Coverage runs opt-in only via `VITEST_COVERAGE=true` (`npm run test:coverage`).

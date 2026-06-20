@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -14,7 +14,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 > **Version:** 2.3.0<br>
 > **Last updated:** 2026-05-31<br>
 > **Status:** Canonical (source of truth)
-> **Current-state addendum:** 2026-06-01 audit verified HEAD `86bc14a`; see `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for git-history assessment, counts, and drift-control rules.
+> **Current-state addendum (audited 2026-06-20):** `main` HEAD `6f859ec8` (PR #1436 — OmniDash modal-contract repair, merged 2026-06-19). APEX Agent LIVE (demo-ready) since the prior landmark PR #1435 (`4bbd3e5b`, merged 2026-06-19). Package `1.7.1`. 90 forward migrations (89 baselined + `omni_policies`) + 4 rollback scripts. 23 workflows (`ops-doc-guard.yml` added). See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the full drift-control snapshot.
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
 
@@ -54,8 +54,9 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 - **Production Supabase project:** `rtopreovkywofgwgmozi` (ca-central-1, ACTIVE_HEALTHY). All public-schema tables have RLS enabled as of 2026-05-04. All SECURITY DEFINER functions have pinned `search_path = public` and revoked `anon` EXECUTE access. OmniBridge persistence layer (`omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit`) is live since v1.6.1. See `docs/infrastructure/SUPABASE_SETUP.md` for the full security posture and `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md` for the audit record.
 - **Documentation authority:** `docs/DOCUMENTATION_RELEASE_INDEX.md` is the current entry point for maps, READMEs, status records, audits, and runbooks.
 - **RSI governance:** `policy/rsi-policy.yaml` is `mode: live`; `.github/workflows/rsi-governance.yml` is the active RSI workflow, while `.github/workflows/rsi-governance-gate.yml` is a pass-through placeholder. See `docs/rsi/BRANCH_PROTECTION_REQUIRED.md`.
-- **APEX Agent** (`apex-agent`): canonical AI orchestration endpoint at `supabase/functions/apex-agent/`. OmniSlate routes to it via `invokeMcpIntent → ${SUPABASE_URL}/functions/v1/apex-agent`. `apex-assistant` returns 410 Gone and redirects to `apex-agent`.
-- **Migrations (2026-05-27 through 2026-06-01):** The current tree includes AEGIS/CHRONOS, PhysiOmni RLS, OmniConnect Vault, OmniHub files/module-state, and subscription activation hardening migrations. Confirm live application status before claiming a migration has been applied to production.
+- **APEX Agent** (`apex-agent`): canonical AI orchestration endpoint at `supabase/functions/apex-agent/`. OmniSlate routes to it via `invokeMcpIntent → ${SUPABASE_URL}/functions/v1/apex-agent`. `apex-assistant` returns 410 Gone and redirects to `apex-agent`. **LIVE as of 2026-06-19** — full end-to-end path verified with real LLM reply. Orchestrator (`apex-orchestrator-api` + `apex-orchestrator-worker`) runs on Render. Temporal Cloud ns `apex-omnihub-temporal.i7ero` (ca-central-1, API-key auth). Operations reference: `docs/APEX_AGENT_OPERATIONS.md`.
+- **Ops Doc Drift Guard** (`ops-doc-guard.yml`): CI workflow added 2026-06-20 (PR #1435). Fails PRs that change runtime-contract paths without updating `docs/APEX_AGENT_OPERATIONS.md`. Script: `scripts/ci/check-ops-doc-drift.mjs`.
+- **Migrations (2026-05-27 through 2026-06-19):** 90 migration files. First 89 were baselined as applied 2026-06-19 without re-running SQL (production had live schema with empty migration history). Migration 90 = `omni_policies` table (7 tailored APEX governance policies). **Future rule:** never blindly run full migration stack against production; use `supabase migration repair` on drift. See `docs/APEX_AGENT_OPERATIONS.md §10`.
 
 ---
 

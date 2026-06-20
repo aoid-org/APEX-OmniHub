@@ -1,21 +1,21 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-14
+version: 1.2.0
+last_audited: 2026-06-20
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.6-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-14 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.7-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-20 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.8.0
-- **Platform Version:** 1.7.0
-- **Last Updated:** 2026-06-14
+- **Document Version:** 2.9.0
+- **Platform Version:** 1.7.1
+- **Last Updated:** 2026-06-20
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-14](CURRENT_PLATFORM_STATE_2026_06_14.md)
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-20](CURRENT_PLATFORM_STATE_2026_06_20.md) (HEAD `6f859ec8`; APEX Agent LIVE)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -301,8 +301,8 @@ docs/
 
 ---
 
-**Last Updated:** June 10, 2026
-**Release:** v1.7.0
+**Last Updated:** June 20, 2026
+**Release:** v1.7.1
 
 ## Documentation Governance
 

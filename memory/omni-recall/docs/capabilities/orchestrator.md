@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -54,6 +54,43 @@ This page documents the concrete modules and behaviors present in the codebase.
 - `orchestrator/main.py` is the CLI entry point for running a worker or submitting workflows.
 
 ---
+
+## Tool Registry (as of 2026-06-20)
+
+Nine tools are registered in `orchestrator/activities/tool_registry.py`:
+
+| Tool | Aliases |
+|---|---|
+| `search_database` | — |
+| `create_record` | — |
+| `delete_record` | — |
+| `send_email` | — |
+| `call_webhook` | `webhook` |
+| `search_youtube` | — |
+| `respond_to_user` | `answer`, `respond`, `reply`, `respond_directly` |
+| `update_agent_run_completion` | — |
+| `mint_pilot_session` | — |
+
+`respond_to_user` was added 2026-06-19 as the canonical conversational tool (`default_lane="GREEN"`, `policy_tags=("conversational",)`).
+
+## APEX Agent (live as of 2026-06-19)
+
+The full end-to-end path is verified demo-ready:
+
+```
+OmniSlate UI → CF Pages Function /api/mcp/invoke
+  → Supabase apex-agent edge function
+    → Render apex-orchestrator-api
+      → Temporal Cloud (ns apex-omnihub-temporal.i7ero, ca-central-1)
+        → Render apex-orchestrator-worker
+          → agent_runs (completed) → SSE → UI rendered LLM answer
+```
+
+Key runtime facts:
+- `SEMANTIC_CACHE_ENABLED=false` — keeps 512 MB Render worker alive; `check_semantic_cache()` returns `None` (clean miss)
+- `omni_policies` table live with 7 tailored APEX governance policies
+- Operations reference: `docs/APEX_AGENT_OPERATIONS.md` (canonical, CI-enforced)
+- Runbook: `docs/operations/APEX_AGENT_RUNBOOK.md`
 
 ## Related UI pages
 

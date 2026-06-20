@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -32,6 +32,7 @@ Gate logic lives in the workflow YAML files. This document is an operator guide.
 | `.github/workflows/orchestrator-ci.yml` | rls-posture-gate, ruff-gate, legal-drift-gate, claims-proof-gate |
 | `.github/workflows/secret-scanning.yml` | Standalone secret scan |
 | `.github/workflows/lighthouse.yml` | Lighthouse performance audit |
+| `.github/workflows/ops-doc-guard.yml` | **Ops Doc Drift Guard** — fails PRs that change runtime-contract paths without updating `docs/APEX_AGENT_OPERATIONS.md` (added PR #1435, 2026-06-20) |
 
 ---
 
