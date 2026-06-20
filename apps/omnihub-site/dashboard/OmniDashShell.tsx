@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState, useEffect, useRef, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
@@ -38,15 +38,8 @@ import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
 
-// ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
+import type { CSSProperties, Dispatch, SetStateAction } from "react";
 
-// ─── Layout constants ───
-/**
- * Single source of truth for BOTH flanking rail widths (left nav + right panel).
- * One constant guarantees the two sides can never desync, so the central canvas
- * stays optically centered. Do NOT replace with inline literals.
- */
 const OMNI_RAIL_WIDTH = 300;
 
 interface AppIconProps {
@@ -61,9 +54,6 @@ interface IconBadgeProps {
   style?: CSSProperties;
 }
 
-
-
-
 type NavEntry = OmniDashSidebarWidget;
 
 interface NavItemProps {
@@ -72,18 +62,13 @@ interface NavItemProps {
   onClick: () => void;
 }
 
-
 import type { DashboardNavSection } from "./types/dashboard.types";
 
-// OmniDash is visually dense and uses high-performance particle flows as a background.
-const VisualEffect = memo(function VisualEffect({ _canvasRef }: { _canvasRef?: React.RefObject<HTMLCanvasElement | null> }) {
-  return null;
-});
+
 
 interface OmniDashSidebarProps {
   activeNav: string;
   setActiveNav: Dispatch<SetStateAction<string>>;
-  canvasRef: RefObject<HTMLDivElement>;
 }
 
 interface OmniDashHeaderProps {
@@ -321,7 +306,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -1445,6 +1430,7 @@ export default function OmniDashShell() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+
   const { demoMode } = useDemoMode();
   const isDemoMode = ops.demo;
 
@@ -1525,7 +1511,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
-        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
             data-testid="rt_security"
@@ -1618,7 +1604,7 @@ export default function OmniDashShell() {
         )}
 
         {/* Sidebar — reversed layout: right side */}
-        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
