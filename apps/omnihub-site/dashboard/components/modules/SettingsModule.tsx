@@ -31,6 +31,13 @@ const SETTING_DEFAULTS: Record<string, boolean> = {
   show_connected_ecosystem: false,
 };
 
+const SETTING_LABELS: Record<string, string> = {
+  demo_mode: 'Demo Mode',
+  anonymize_kpis: 'Anonymize KPIs',
+  freeze_mode: 'Freeze Mode',
+  show_connected_ecosystem: 'Show Connected Ecosystem',
+};
+
 const STATE_KIND_STYLES: Readonly<Record<string, { background: string; color: string; border: string }>> = {
   live:        { background: 'rgba(52,211,153,0.1)',  color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' },
   demo:        { background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' },
@@ -138,8 +145,11 @@ export default function SettingsModule({ onClose }: Props) {
   }, []);
 
   const stateStyle = STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE;
-  const total = state.items.length;
-  const enabled = state.items.filter(i => effectiveStatus(i.id, i.status)).length;
+  const total = Object.keys(SETTING_LABELS).length;
+  const enabled = Object.keys(SETTING_LABELS).filter(id => {
+    const backendStatus = state.items.find(i => i.id === id)?.status ?? (SETTING_DEFAULTS[id] ? 'active' : 'inactive');
+    return effectiveStatus(id, backendStatus);
+  }).length;
   const allValidated = total > 0 && state.items.every(i => i.status !== 'error');
   const versionStat = state.stats.find(s => s.label === 'Version');
 
@@ -184,25 +194,26 @@ export default function SettingsModule({ onClose }: Props) {
       {/* ── Section A: Platform Settings (backend-persisted) ── */}
       <div className="flex flex-col gap-2">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Platform Settings</p>
-        {total === 0 && state.stateKind !== 'live' && (
+        {state.stateKind === 'unavailable' && (
           <p className="text-xs text-muted-foreground">Settings unavailable — sign in with a paid account to manage platform settings.</p>
         )}
-        {state.items.map(item => {
-          const isActive = effectiveStatus(item.id, item.status);
-          const isSaving = saving === item.id;
+        {Object.entries(SETTING_LABELS).map(([itemId, label]) => {
+          const backendStatus = state.items.find(i => i.id === itemId)?.status ?? (SETTING_DEFAULTS[itemId] ? 'active' : 'inactive');
+          const isActive = effectiveStatus(itemId, backendStatus);
+          const isSaving = saving === itemId;
           return (
             <div
-              key={item.id}
+              key={itemId}
               className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border/30 bg-card"
             >
-              <span className="text-sm text-foreground">{item.label}</span>
+              <span className="text-sm text-foreground">{label}</span>
               <button
                 type="button"
                 role="switch"
                 aria-checked={isActive}
-                aria-label={`Toggle ${item.label}`}
+                aria-label={`Toggle ${label}`}
                 disabled={isSaving || saving === '__reset__'}
-                onClick={() => void handleToggle(item.id, isActive)}
+                onClick={() => void handleToggle(itemId, isActive)}
                 className={[
                   'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',

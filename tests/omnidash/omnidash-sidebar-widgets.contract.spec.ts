@@ -43,11 +43,8 @@ describe('OmniDash sidebar widget contract', () => {
     }
   });
 
-  it('uses null moduleKey only for OmniBoard and non-empty moduleKey for every module widget', () => {
-    const omniBoard = OMNIDASH_SIDEBAR_WIDGETS.find(widget => widget.id === 'omniboard');
-    expect(omniBoard?.moduleKey).toBeNull();
-
-    for (const widget of OMNIDASH_SIDEBAR_WIDGETS.filter(widget => widget.id !== 'omniboard')) {
+  it('uses non-empty moduleKey for every module widget', () => {
+    for (const widget of OMNIDASH_SIDEBAR_WIDGETS) {
       expect(widget.moduleKey).toBeTruthy();
       expect(widget.moduleKey).toBe(widget.id);
     }

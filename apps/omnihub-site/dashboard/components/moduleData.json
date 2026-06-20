@@ -206,45 +206,33 @@
     ],
     [
       [
-        "lnk-sf",
-        "Salesforce CRM",
+        "lnk-doc1",
+        "https://github.com/apexbusiness-systems/docs",
         "active",
-        "Synced 2m ago | 48 records/hr"
+        "Repo context active"
       ],
       [
-        "lnk-qb",
-        "QuickBooks Online",
+        "lnk-doc2",
+        "https://stripe.com/docs/api",
         "active",
-        "Synced 5m ago | 12 invoices queued"
+        "Stripe API context"
       ],
       [
-        "lnk-slack",
-        "Slack Workspace",
+        "lnk-doc3",
+        "https://linear.app/apex/project",
         "active",
-        "Synced 1m ago | 230 events/hr"
-      ],
-      [
-        "lnk-gh",
-        "GitHub Enterprise",
-        "active",
-        "Synced 3m ago | Webhooks active"
-      ],
-      [
-        "lnk-stripe",
-        "Stripe Payments",
-        "error",
-        "Token expired — re-authorize required"
+        "Linear board context"
       ]
     ],
     [
       [
         "add-link",
-        "Add Connection",
+        "Add Link",
         "primary"
       ],
       [
-        "test-all",
-        "Test All Links",
+        "send-to-omnislate",
+        "Send to OmniSlate",
         "secondary"
       ]
     ],

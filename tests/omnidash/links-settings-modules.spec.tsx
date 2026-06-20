@@ -95,9 +95,9 @@ describe('LinksModule', () => {
     expect(screen.getByTestId('module-shell')).toBeTruthy();
   });
 
-  it('does not render connection health section when items is empty', () => {
+  it('does not render context links section when items is empty', () => {
     render(<LinksModule onClose={vi.fn()} />);
-    expect(screen.queryByText('Connection Health')).toBeNull();
+    expect(screen.queryByText('Context Links')).toBeNull();
   });
 
   it('renders connection health chips when items present', () => {
@@ -112,9 +112,9 @@ describe('LinksModule', () => {
     } as ReturnType<typeof useOmniModuleState>);
 
     render(<LinksModule onClose={vi.fn()} />);
-    expect(screen.getByText('Connection Health')).toBeTruthy();
-    expect(screen.getByText('Stri')).toBeTruthy();
-    expect(screen.getByText('HubS')).toBeTruthy();
+    expect(screen.getByText('Context Links')).toBeTruthy();
+    expect(screen.getByText('Stripe Connect')).toBeTruthy();
+    expect(screen.getByText('HubSpot API')).toBeTruthy();
   });
 
   it('does not render chips during loading', () => {
@@ -125,7 +125,7 @@ describe('LinksModule', () => {
     } as ReturnType<typeof useOmniModuleState>);
 
     render(<LinksModule onClose={vi.fn()} />);
-    expect(screen.queryByText('Connection Health')).toBeNull();
+    expect(screen.queryByText('Context Links')).toBeNull();
   });
 
   it('handles unknown status with inactive fallback color', () => {
@@ -138,19 +138,14 @@ describe('LinksModule', () => {
     } as ReturnType<typeof useOmniModuleState>);
 
     render(<LinksModule onClose={vi.fn()} />);
-    expect(screen.getByText('Unkn')).toBeTruthy();
+    expect(screen.getByText('Unknown Status')).toBeTruthy();
   });
 
-  it('fires add-link action and routes the wizard through a module modal', () => {
+  it('fires add-link action and enters URL staging mode', () => {
     render(<LinksModule onClose={vi.fn()} />);
     fireEvent.click(screen.getByTestId('trigger-add-link'));
-    // Must be type: 'module' (not 'microfrontend') so resolveRenderMode() →
-    // 'dialog' and DialogModeRenderer mounts ModuleRenderer for the moduleKey.
-    expect(omniInvoke).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'links-add-connection', type: 'module' }),
-    );
-    const call = omniInvoke.mock.calls[0][0];
-    expect(call.contextData.moduleKey).toBe('omniboard-wizard');
+    // We now stage a URL inside the module rather than calling omniboard-wizard
+    expect(screen.getByText('Stage URL Context')).toBeTruthy();
   });
 
   it('fires test-all action without throwing', () => {
@@ -175,10 +170,8 @@ describe('SettingsModule', () => {
     expect(screen.getByTestId('widget-settings-panel')).toBeTruthy();
   });
 
-  it('does not render config health when items is empty', () => {
-    render(<SettingsModule onClose={vi.fn()} />);
-    expect(screen.queryByText('Configuration Health')).toBeNull();
-  });
+  // Settings are now hardcoded to 4 items, so this test is obsolete
+  // it('does not render config health when items is empty', () => ...
 
   it('renders config health when items are present', () => {
     vi.mocked(useOmniModuleState).mockReturnValue({
@@ -192,7 +185,7 @@ describe('SettingsModule', () => {
 
     render(<SettingsModule onClose={vi.fn()} />);
     expect(screen.getByText('Configuration Health')).toBeTruthy();
-    expect(screen.getByText('1 of 2 settings enabled')).toBeTruthy();
+    expect(screen.getByText('1 of 4 settings enabled')).toBeTruthy();
   });
 
   it('shows version stat when present', () => {

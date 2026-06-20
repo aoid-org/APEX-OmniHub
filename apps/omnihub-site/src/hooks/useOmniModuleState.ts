@@ -27,7 +27,7 @@ import type {
  */
 export function humanizeActionId(actionId: string): string {
   return actionId
-    .split("-")
+    .split(/[-_]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");

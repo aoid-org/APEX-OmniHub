@@ -36,7 +36,7 @@ interface WizardProps {
 
 export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   const [context, setContext] = useState<FSMContext | null>(null);
-  const [message, setMessage] = useState<string>('What app would you like to connect?');
+  const [message, setMessage] = useState<string>('Tell OmniBoard what app or provider you want to connect.');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,12 +61,16 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!res.ok) throw new Error(`FSM start failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
       const ctx: FSMContext = await res.json();
       setContext(ctx);
-      setMessage('What app would you like to connect? (e.g. "Connect Salesforce", "Connect Stripe")');
+      setMessage('Tell OmniBoard what app or provider you want to connect.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session');
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to start session');
+      }
     } finally {
       setLoading(false);
     }
@@ -81,7 +85,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_type: 'user_input', payload: { text: input.trim() } }),
       });
-      if (!res.ok) throw new Error(`FSM turn failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
       const { context: newCtx, message: newMsg, connection_spec } = await res.json() as {
         context: FSMContext;
         message: string;
@@ -94,7 +98,11 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
         onComplete(connection_spec);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process turn');
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to process turn');
+      }
     } finally {
       setLoading(false);
     }
@@ -107,7 +115,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border border-border/40 max-w-md w-[400px]">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — Connect App</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
         <button type="button" onClick={handleDismiss} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
       </div>
       {error && <p className="text-xs text-red-400">{error}</p>}

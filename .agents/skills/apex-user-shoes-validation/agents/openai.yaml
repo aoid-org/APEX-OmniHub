@@ -1,0 +1,5 @@
+interface:
+  display_name: "APEX User-Shoes Validation"
+  short_description: "Validate product surfaces as a real user, preserving visual quality and blocking drift."
+  icon: "shoe"
+  accent_color: "#d4621f"
