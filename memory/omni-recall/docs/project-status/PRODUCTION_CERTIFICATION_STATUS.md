@@ -247,12 +247,16 @@ Verified in this documentation pass:
 - The current documentation index is `docs/DOCUMENTATION_RELEASE_INDEX.md`.
 - Current RSI repository evidence is live mode in `policy/rsi-policy.yaml` with `.github/workflows/rsi-governance.yml` present.
 
-## Platform Facts
+## Platform Facts — 2026-06-14 (snapshot)
+
+> Point-in-time snapshot from the 2026-06-14 certification pass. For current
+> platform facts see the **2026-06-20 Addendum** at the top of this document and
+> `CURRENT_PLATFORM_STATE_2026_06_20.md` (HEAD `6f859ec8`, package `1.7.1`).
 
 | Field | Value |
 |---|---|
 | Package version | 1.7.0 (from package.json) |
-| Latest main HEAD | `873de83c` — fix(ci): add approved-claims.json to pass verify:claim-hygiene gate (#1399) — 2026-06-14 |
+| main HEAD (2026-06-14) | `873de83c` — fix(ci): add approved-claims.json to pass verify:claim-hygiene gate (#1399) |
 | `chore: version packages` on main | `959a8fd6` — June 5, 2026 |
 | Repo | apexbusiness-systems/APEX-OmniHub |
 | CI gate verification | 2026-06-14 — Run #906 all 5 gates green; 2,660 tests passing |
