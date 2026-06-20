@@ -1,6 +1,6 @@
 ---
-version: 1.3.0
-last_audited: 2026-06-16
+version: 1.4.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -8,7 +8,36 @@ status: verified
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-06-16T03:27Z
+> Last updated: 2026-06-20T00:00Z
+
+## 2026-06-20 Addendum — APEX Agent LIVE + PR #1435 Merged (All CI Green)
+
+**HEAD:** `0eff5a6c` on `main`
+**PR #1435:** `ops/agent-production-restored-2026-06-19` → `main` — **MERGED**
+**CI Result:** **43 success / 3 skipped / 0 failed — ALL GREEN**
+
+### What changed
+
+| Area | Change |
+|---|---|
+| APEX Agent runtime | **LIVE / demo-ready** — full end-to-end verified 2026-06-19 |
+| Stale tests fixed | `respond_to_user` added to canonical tool set; `check_semantic_cache` disabled → `None` (not `RuntimeError`) |
+| Ops-doc CI guard | `ops-doc-guard.yml` active; PRs changing runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md` now fail CI |
+| Migration baseline | 89 migrations baselined as applied 2026-06-19; `omni_policies` provisioned (90 total) |
+| Package version | `1.7.1` (was `1.7.0` at 2026-06-16 snapshot) |
+
+**Verified APEX Agent traces (2026-06-19, live/authenticated):**
+
+| traceId | Result |
+|---|---|
+| `61ce8dce` | completed — first full end-to-end success |
+| `861d9f0c` | completed — first real LLM reply |
+| `da6e7fe5` | completed — verified WITH omni_policies enforcing |
+| `512eb247` | failed (diagnostic — exposed missing omni_policies table) |
+
+See `docs/APEX_AGENT_OPERATIONS.md` for the full operations reference.
+
+---
 
 ## 2026-06-16 Active PR — #1405 CI Remediation (Round 2 SonarQube cleared)
 

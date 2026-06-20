@@ -1,31 +1,34 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-14
+version: 1.2.0
+last_audited: 2026-06-20
 status: verified
 ---
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-14 (CI green campaign — PRs #1391, #1392, #1393 merged). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_14.md`.
+> Current repo-truth index refreshed 2026-06-20 (APEX Agent restoration + PR #1435 merged — ops docs, stale-test fixes, ops-doc CI guard). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_20.md`.
 
-## Current Repo Facts Verified in This Pass
+## Current Repo Facts Verified in This Pass (2026-06-20)
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | Current docs tree includes this 2026-06-06 platform-state snapshot; historical audit docs remain point-in-time evidence |
-| GitHub workflow files | 22 files in `.github/workflows/` |
-| Release/package versions | Root `package.json` declares `1.7.0`; app package `apps/omnihub-site/package.json` declares `1.3.10` |
+| HEAD | `0eff5a6c` — ci: guard APEX Agent operations-doc drift |
+| GitHub workflow files | **23** files in `.github/workflows/` (`ops-doc-guard.yml` added by PR #1435) |
+| Release/package versions | Root `package.json` declares **`1.7.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
+| SQL migrations | **90** files (89 baselined 2026-06-19 + `omni_policies` provisioned same day) |
+| Edge function dirs | **32** (including `_shared`) |
+| Python orchestrator files | **103** |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` — verdict `NOT_CERTIFIED_NO_RELEASE_CUT`; CI run #900 in progress with all blockers resolved (PRs #1391/1392/1393) |
+| APEX Agent | **LIVE / demo-ready** — verified end-to-end 2026-06-19; traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed |
+| `omni_policies` | Provisioned 2026-06-19 — 7 tailored policies active |
+| Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| `chore: version packages` | Merged to main at `959a8fd6` on 2026-06-05 |
-| CI green campaign | PRs #1391 (routing-flip), #1392 (pyOpenSSL), #1393 (SSRF) merged 2026-06-14. Main was red #878–#897. Run #900 in_progress. |
-| `TF_TOKEN_app_terraform_io` | Set in GitHub Actions Secrets — 2026-06-14 |
+| Main CI | ✅ GREEN — PR #1435 CI: 43 success / 3 skipped / 0 failed |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_06.md` is now historical.)
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_14.md` is now historical.)
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -43,7 +46,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` _(current — supersedes 2026-06-06 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` _(current — supersedes 2026-06-14 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical — 2026-06-14 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical — 2026-06-06 snapshot)_
 - `README.md`
 - `docs/README.md`
@@ -53,6 +57,7 @@ status: verified
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(historical release-readiness point-in-time report — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
+- `docs/APEX_AGENT_OPERATIONS.md` _(APEX Agent anti-drift operations reference — added 2026-06-19)_
 
 ## Current maps
 
@@ -142,7 +147,7 @@ status: verified
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 9 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_06.md`, `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 12 Markdown file(s): `AOID.md`, `APEX_AGENT_OPERATIONS.md` _(NEW 2026-06-19)_, `CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_20.md` _(current)_, `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
@@ -172,6 +177,34 @@ status: verified
 - `docs/sim/` — 9 Markdown file(s): `ARCHITECTURE.md`, `CHAOS_SIMULATION_DELIVERY.md`, `CHAOTIC_CLIENT_SIMULATION_REPORT.md`, `CHAOTIC_CLIENT_STORY.md`, `INVENTORY.md`, `RESULTS_REPORT.md`, `RUNBOOK.md`, `SANDBOX_TEST_RESULTS_TEMPLATE.md`, `TEST_EXECUTION_REPORT.md`
 - `docs/testing/` — 4 Markdown file(s): `ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`, `E2E_TEST_RESULTS.md`, `README.md`, `worldwide-wildcard-tests.md`
 - `docs/valuation/` — 1 Markdown file(s): `PLATFORM_VALUATION_BRIEF.md`
+
+## 2026-06-20 Platform-State Documentation Sync (APEX Agent Restoration)
+
+Full drift audit performed against `main` @ `0eff5a6c`. PR #1435 merged and CI verified fully green (43 success / 3 skipped / 0 failed). APEX Agent confirmed LIVE.
+
+| File | Change |
+|---|---|
+| `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` | **NEW** — supersedes 2026-06-14 snapshot; full restoration event record, repo counts, CI state |
+| `docs/APEX_AGENT_OPERATIONS.md` | **NEW** — canonical anti-drift operations reference for APEX Agent (service inventory, env contract, DB objects, runbook, migration-baseline rule) |
+| `docs/operations/APEX_AGENT_RUNBOOK.md` | **NEW** — full production runbook (architecture, components, env vars, deploy, smoke test, incident response, logs, secrets, migration-baseline §11) |
+| `docs/operations/APEX_AGENT_RESTORATION_EVIDENCE.md` | **NEW** — restoration evidence, trace IDs, migration-baseline documentation |
+| `scripts/ci/check-ops-doc-drift.mjs` | **NEW** — deterministic guard: fails PRs that change runtime-contract paths without updating `docs/APEX_AGENT_OPERATIONS.md` |
+| `.github/workflows/ops-doc-guard.yml` | **NEW** — CI workflow wiring the ops-doc drift guard on all PRs to `main` |
+| `.github/pull_request_template.md` | Updated — wording changed from "LAW — required" to "CI-enforced" with workflow pointer |
+| `orchestrator/tests/test_tool_validation.py` | Updated — `respond_to_user` added to canonical tool set; alias resolution test added |
+| `orchestrator/tests/test_tools_extended.py` | Updated — stale `RuntimeError` test replaced with `test_check_semantic_cache_disabled_returns_none` (disabled cache returns `None`) |
+| `README.md` | Stats snapshot updated to 2026-06-20 counts; canonical state link updated to 2026-06-20 doc; release line updated to `1.7.1` |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — canonical start point updated to 2026-06-20 snapshot; new ops docs added |
+
+### APEX Agent restoration summary (2026-06-19)
+
+Full end-to-end verified: OmniSlate → Cloudflare Pages → Supabase `apex-agent` → Render `apex-orchestrator-api` → Temporal Cloud → Render `apex-orchestrator-worker` → `agent_runs` terminal → SSE `completed` → UI answer. Traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed with real LLM answers. `omni_policies` provisioned with 7 tailored governance policies.
+
+### Migration history baseline (2026-06-19)
+
+Production had live schema objects while `schema_migrations` showed 0 applied. All 89 migrations baselined as applied without re-running SQL. `omni_policies` provisioned same day. Repo now holds 90 migration files.
+
+---
 
 ## 2026-06-06 Platform-State Documentation Sync
 

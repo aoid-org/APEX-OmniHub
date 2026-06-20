@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-20
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-06-06
+**Release line:** 1.7.1 | **package.json version:** 1.7.1 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-06-20
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -32,7 +32,7 @@ status: verified
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_06.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_20.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -54,21 +54,21 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-06)
+## Platform Statistics (Repository Snapshot 2026-06-20)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 317 TypeScript/TSX files                          |
+| **Source Files (`src/`)**                        | 326 TypeScript/TSX files                          |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 29 function directories including `_shared`       |
-| **Database Migrations (`supabase/migrations/`)** | 88 SQL migration files                            |
-| **CI/CD Workflows (`.github/workflows/`)**       | 22 workflow files                                 |
+| **Edge Functions (`supabase/functions/`)**       | 32 function directories including `_shared`       |
+| **Database Migrations (`supabase/migrations/`)** | 90 SQL migration files                            |
+| **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
 | **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 319 spec/test source files; latest pass counts are recorded in certification status |
 | **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 101 files (Temporal workers, activities, security) |
+| **Orchestrator (Python)**                        | 103 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** HEAD `c8d753c5` (June 5, 2026) — ⚡ Bolt O(N*M)→O(1) Set optimization in TriforceGuardian + SemanticRouter (#1334). `chore: version packages` (`959a8fd6`) is on main; release workflow execution is the final step to `CERTIFIED`. See `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` for the full assessment.
+**Latest repo-history note:** HEAD `0eff5a6c` (June 20, 2026) — ci: guard APEX Agent operations-doc drift. PR #1435 merged: APEX Agent is LIVE and demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the full assessment.
 
 ---
 
@@ -135,7 +135,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ---
 
-## Edge Functions (22 Directories in Repository)
+## Edge Functions (32 Directories in Repository, including `_shared`)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -160,17 +160,17 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 ## Repository Layout
 
 ```
-/src                 - Core frontend/domain source tree (346 files)
+/src                 - Core frontend/domain source tree (326 files)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
-/supabase/migrations - Database schema (77 versioned SQL migrations)
-/supabase/functions  - Edge functions (27 serverless endpoints)
-/orchestrator        - Temporal workers and orchestration services (95 Python files)
+/supabase/migrations - Database schema (90 versioned SQL migrations)
+/supabase/functions  - Edge functions (31 function directories + _shared)
+/orchestrator        - Temporal workers and orchestration services (103 Python files)
 /tests               - Automated test suite
-/.github/workflows   - CI/CD workflows (21 workflow files)
+/.github/workflows   - CI/CD workflows (23 workflow files)
 ```
 
 ---
@@ -263,7 +263,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
