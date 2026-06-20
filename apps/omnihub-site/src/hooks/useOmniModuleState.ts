@@ -229,7 +229,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     return () => {
       cancelled = true;
     };
-  }, [appKey, baselineState.stateKind]);
+  }, [appKey, baselineState.stateKind, baselineState.actions]);
 
   if (liveState.key !== appKey) {
     return baselineState;
