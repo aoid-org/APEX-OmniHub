@@ -55,42 +55,14 @@ This page documents the concrete modules and behaviors present in the codebase.
 
 ---
 
-## Tool Registry (as of 2026-06-20)
+## Production deployment & browser wiring (verified 2026-06-20)
 
-Nine tools are registered in `orchestrator/activities/tool_registry.py`:
-
-| Tool | Aliases |
-|---|---|
-| `search_database` | — |
-| `create_record` | — |
-| `delete_record` | — |
-| `send_email` | — |
-| `call_webhook` | `webhook` |
-| `search_youtube` | — |
-| `respond_to_user` | `answer`, `respond`, `reply`, `respond_directly` |
-| `update_agent_run_completion` | — |
-| `mint_pilot_session` | — |
-
-`respond_to_user` was added 2026-06-19 as the canonical conversational tool (`default_lane="GREEN"`, `policy_tags=("conversational",)`).
-
-## APEX Agent (live as of 2026-06-19)
-
-The full end-to-end path is verified demo-ready:
-
-```
-OmniSlate UI → CF Pages Function /api/mcp/invoke
-  → Supabase apex-agent edge function
-    → Render apex-orchestrator-api
-      → Temporal Cloud (ns apex-omnihub-temporal.i7ero, ca-central-1)
-        → Render apex-orchestrator-worker
-          → agent_runs (completed) → SSE → UI rendered LLM answer
-```
-
-Key runtime facts:
-- `SEMANTIC_CACHE_ENABLED=false` — keeps 512 MB Render worker alive; `check_semantic_cache()` returns `None` (clean miss)
-- `omni_policies` table live with 7 tailored APEX governance policies
-- Operations reference: `docs/APEX_AGENT_OPERATIONS.md` (canonical, CI-enforced)
-- Runbook: `docs/operations/APEX_AGENT_RUNBOOK.md`
+- **Hosting:** Render, not Cloudflare. Two services, both `rootDir: orchestrator`, Docker, branch `main`, region Ohio:
+  - `apex-orchestrator-api` (`srv-d8qpsi7avr4c73dmb4ig`) — web service, `python main.py api`, public URL `https://apex-orchestrator-api.onrender.com`.
+  - `apex-orchestrator-worker` — background worker, `python main.py worker`.
+- **Front-end → orchestrator:** the OmniBoard wizard (`apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, `.../modules/OmniBoardModule.tsx`) reads `import.meta.env.VITE_ORCHESTRATOR_URL`, which Vite **inlines at build time** (= `https://apex-orchestrator-api.onrender.com`). Production builds ship via GitHub Actions `wrangler pages deploy` (direct upload), which runs **no Cloudflare build** — so the CF Pages dashboard var is ignored and the value is wired into the build env of `release.yml` and `deploy-production-cf-direct.yml`. Unset at build time → empty string → wizard falls into its "contact your admin" error branch.
+- **CORS:** `orchestrator/server.py` reads `CORS_ALLOWED_ORIGINS` (default `https://apexomnihub.icu,https://www.apexomnihub.icu`); now set **explicitly** on `apex-orchestrator-api` to pin the allowlist. `allow_credentials=true`; preflight verified GO for both apex origins, rejected for unknown origins.
+- Canonical operations references: `docs/operations/APEX_AGENT_RUNBOOK.md` §3.2–3.3, `docs/APEX_AGENT_OPERATIONS.md` §3.
 
 ## Related UI pages
 

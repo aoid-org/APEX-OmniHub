@@ -84,8 +84,14 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `ENVIRONMENT` | `production` | |
 | `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker | `true`/unset needs ≥2 GB (PyTorch model) |
 | `API_HOST` / `API_PORT` | `0.0.0.0` / `10000` | **API service only** |
+| `CORS_ALLOWED_ORIGINS` | `https://apexomnihub.icu,https://www.apexomnihub.icu` (comma-sep, no spaces) | **API only** — browser origins allowed to call the API cross-origin |
 
 Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL` always; `REDIS_PASSWORD`, `ANTHROPIC_API_KEY`, `ORCHESTRATOR_REQUIRE_SIGNATURE!=false` in production.
+
+**CORS:** `orchestrator/server.py` reads `CORS_ALLOWED_ORIGINS` (default `https://apexomnihub.icu,https://www.apexomnihub.icu` if unset); now **set explicitly** on `apex-orchestrator-api` to pin the allowlist. `allow_credentials=true`; methods `GET,POST,PUT,DELETE,OPTIONS`. The production site calls the orchestrator cross-origin, so add any new front-end origin here and redeploy the service.
+
+### 3.3 Front-end (UI) build-time env
+`VITE_ORCHESTRATOR_URL` (= `https://apex-orchestrator-api.onrender.com`) is **inlined by Vite at build time** for the OmniBoard wizard. Direct `wrangler pages deploy` uploads run no Cloudflare build, so the CF Pages dashboard var is ignored — the value is wired into the GitHub Actions build (`release.yml`, `deploy-production-cf-direct.yml`) as `${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}`. Unset at build time → empty string → wizard shows "contact your admin". Changing it requires a **UI rebuild + redeploy**.
 
 ---
 
