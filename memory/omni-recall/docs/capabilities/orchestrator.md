@@ -55,6 +55,15 @@ This page documents the concrete modules and behaviors present in the codebase.
 
 ---
 
+## Production deployment & browser wiring (verified 2026-06-20)
+
+- **Hosting:** Render, not Cloudflare. Two services, both `rootDir: orchestrator`, Docker, branch `main`, region Ohio:
+  - `apex-orchestrator-api` (`srv-d8qpsi7avr4c73dmb4ig`) — web service, `python main.py api`, public URL `https://apex-orchestrator-api.onrender.com`.
+  - `apex-orchestrator-worker` — background worker, `python main.py worker`.
+- **Front-end → orchestrator:** the OmniBoard wizard (`apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, `.../modules/OmniBoardModule.tsx`) reads `import.meta.env.VITE_ORCHESTRATOR_URL`, which Vite **inlines at build time** (= `https://apex-orchestrator-api.onrender.com`). Production builds ship via GitHub Actions `wrangler pages deploy` (direct upload), which runs **no Cloudflare build** — so the CF Pages dashboard var is ignored and the value is wired into the build env of `release.yml` and `deploy-production-cf-direct.yml`. Unset at build time → empty string → wizard falls into its "contact your admin" error branch.
+- **CORS:** `orchestrator/server.py` reads `CORS_ALLOWED_ORIGINS` (default `https://apexomnihub.icu,https://www.apexomnihub.icu`); now set **explicitly** on `apex-orchestrator-api` to pin the allowlist. `allow_credentials=true`; preflight verified GO for both apex origins, rejected for unknown origins.
+- Canonical operations references: `docs/operations/APEX_AGENT_RUNBOOK.md` §3.2–3.3, `docs/APEX_AGENT_OPERATIONS.md` §3.
+
 ## Related UI pages
 
 - `apps/omnihub-site/src/pages/Orchestrator.tsx`

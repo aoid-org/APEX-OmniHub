@@ -98,8 +98,17 @@
 | `ENVIRONMENT` | `production` | yes |
 | `SEMANTIC_CACHE_ENABLED` | `false` on a 512 MB worker to avoid the embedding-model OOM; `true` (or unset) when ≥2 GB | optional |
 | `API_HOST` / `API_PORT` | `0.0.0.0` / `10000` — **API service only** | API only |
+| `CORS_ALLOWED_ORIGINS` | `https://apexomnihub.icu,https://www.apexomnihub.icu` (comma-separated, no spaces) — browser origins allowed to call the API cross-origin | **API only** |
 
 > Config validator (`orchestrator/config.py`) **hard-requires** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL` always; and `REDIS_PASSWORD` + `ANTHROPIC_API_KEY` + `ORCHESTRATOR_REQUIRE_SIGNATURE!=false` in production. A missing one = instant `pydantic ValidationError` crash on boot.
+
+> **CORS:** `orchestrator/server.py` reads `CORS_ALLOWED_ORIGINS` (split on `,`) and falls back to `https://apexomnihub.icu,https://www.apexomnihub.icu` if unset. It is now **set explicitly** on `apex-orchestrator-api` so the allowlist is pinned regardless of code defaults. `allow_credentials=true`; methods `GET,POST,PUT,DELETE,OPTIONS`. The browser calls the orchestrator cross-origin from the production site, so any new front-end origin must be added here **and** the service redeployed.
+
+### 3.3 Front-end (UI) build-time env — `VITE_ORCHESTRATOR_URL`
+The OmniBoard wizard reads `import.meta.env.VITE_ORCHESTRATOR_URL`, which Vite **inlines at build time**. Production value: `https://apex-orchestrator-api.onrender.com`. Notes:
+- Direct `wrangler pages deploy` uploads run **no Cloudflare build**, so the Cloudflare Pages dashboard var is **ignored** — the value must reach the GitHub Actions build step. It is wired into `release.yml` and `deploy-production-cf-direct.yml` as `${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}`. Set repo Variable `VITE_ORCHESTRATOR_URL` to override the fallback.
+- If unset at build time the bundle inlines `''` and the wizard shows its "contact your admin" error state.
+- After changing it you must **rebuild and redeploy the UI** (env change alone does nothing for an already-built bundle).
 
 ---
 
