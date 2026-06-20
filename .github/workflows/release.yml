@@ -94,6 +94,11 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_CONNECT_AI_ENABLED: 'true'
+          # Build-time orchestrator URL — inlined by Vite into the shadow bundle.
+          # Direct (`wrangler pages deploy`) uploads do NOT read CF Pages
+          # dashboard vars, so supply it here. Override via repo Variable
+          # VITE_ORCHESTRATOR_URL; falls back to the public orchestrator API.
+          VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://api.apexomnihub.icu' }}
         run: |
           echo "Building frontend for shadow deployment..."
           bun run build
