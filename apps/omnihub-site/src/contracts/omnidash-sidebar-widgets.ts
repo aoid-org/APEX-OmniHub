@@ -9,7 +9,6 @@ export type OmniDashSidebarWidgetId =
   | 'billing'
   | 'settings';
 
-export type OmniDashSidebarModuleKey = OmniDashSidebarWidgetId;
 
 export type OmniDashSidebarWidgetLabel =
   | 'OmniBoard'
@@ -26,7 +25,7 @@ export interface OmniDashSidebarWidget {
   readonly id: OmniDashSidebarWidgetId;
   readonly label: OmniDashSidebarWidgetLabel;
   readonly iconIdx: number;
-  readonly moduleKey: OmniDashSidebarModuleKey;
+  readonly moduleKey: OmniDashSidebarWidgetId;
 }
 
 export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9;
@@ -54,6 +53,6 @@ export const FORBIDDEN_OMNIDASH_SIDEBAR_LABELS = [
 
 export function getOmniDashSidebarModuleKey(
   id: OmniDashSidebarWidgetId,
-): OmniDashSidebarModuleKey {
-  return OMNIDASH_SIDEBAR_WIDGETS.find(widget => widget.id === id)?.moduleKey as OmniDashSidebarModuleKey;
+): OmniDashSidebarWidgetId {
+  return OMNIDASH_SIDEBAR_WIDGETS.find(widget => widget.id === id)?.moduleKey as OmniDashSidebarWidgetId;
 }

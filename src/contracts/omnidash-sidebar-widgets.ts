@@ -1,6 +1,6 @@
 // Root-package stub; tests mock this via vi.mock('@/contracts/omnidash-sidebar-widgets')
 export type OmniDashSidebarWidgetId = string;
-export type OmniDashSidebarModuleKey = string;
+
 export type OmniDashSidebarWidgetLabel = string;
 export interface OmniDashSidebarWidget {
   readonly id: string;
