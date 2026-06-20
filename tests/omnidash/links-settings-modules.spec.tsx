@@ -59,8 +59,11 @@ vi.mock('dashboard/components/modules/ModuleShell', () => ({
     <div data-testid="module-shell">
       <span data-testid="module-title">{state.title}</span>
       <button onClick={onClose} data-testid="module-close">close</button>
-      <button data-testid="trigger-add-link" onClick={() => onAction?.('add-link', [])}>Add Link</button>
-      <button data-testid="trigger-test-all" onClick={() => onAction?.('test-all', [])}>Test All</button>
+      {/* Button text intentionally differs from the staging panel's "Add Link"
+          submit button so tests can target each unambiguously. */}
+      <button data-testid="trigger-add-link" onClick={() => onAction?.('add-link', [])}>Trigger Add Link</button>
+      <button data-testid="trigger-test-all" onClick={() => onAction?.('test-all', [])}>Trigger Test All</button>
+      <button data-testid="trigger-send-omnislate" onClick={() => onAction?.('send-to-omnislate', [])}>Trigger Send To OmniSlate</button>
       {!state.loading && children}
     </div>
   ),
@@ -146,6 +149,55 @@ describe('LinksModule', () => {
     fireEvent.click(screen.getByTestId('trigger-add-link'));
     // We now stage a URL inside the module rather than calling omniboard-wizard
     expect(screen.getByText('Stage URL Context')).toBeTruthy();
+  });
+
+  it('add-link with a valid URL stages it locally and shows the staged-locally notice', () => {
+    render(<LinksModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('trigger-add-link'));
+
+    const input = screen.getByLabelText('URL to stage as context') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'https://example.com/doc' } });
+
+    // The submit button (distinct text "Add Link") is enabled for a valid URL.
+    const addButton = screen.getByRole('button', { name: 'Add Link' }) as HTMLButtonElement;
+    expect(addButton.disabled).toBe(false);
+
+    fireEvent.click(addButton);
+
+    expect(
+      screen.getByText('Links are staged locally until link-context persistence is connected.'),
+    ).toBeTruthy();
+    expect(screen.getByText('• https://example.com/doc')).toBeTruthy();
+  });
+
+  it('Add Link button is NOT permanently disabled and rejects invalid URLs with validation copy', () => {
+    render(<LinksModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('trigger-add-link'));
+
+    const input = screen.getByLabelText('URL to stage as context') as HTMLInputElement;
+    const addButton = screen.getByRole('button', { name: 'Add Link' }) as HTMLButtonElement;
+
+    // Invalid URL → button disabled + validation copy.
+    fireEvent.change(input, { target: { value: 'not-a-url' } });
+    fireEvent.blur(input);
+    expect(addButton.disabled).toBe(true);
+    expect(screen.getByText('Enter a valid URL starting with http:// or https://.')).toBeTruthy();
+
+    // Entering a valid URL re-enables the button — it is never permanently disabled.
+    fireEvent.change(input, { target: { value: 'https://valid.example' } });
+    expect(addButton.disabled).toBe(false);
+  });
+
+  it('send-to-omnislate shows the not-connected handoff copy and never stages a link', () => {
+    render(<LinksModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('trigger-send-omnislate'));
+    expect(screen.getByText('OmniSlate context handoff is not connected yet.')).toBeTruthy();
+  });
+
+  it('never references OmniBoard (the wizard is the app-integration surface, not Links)', () => {
+    const { container } = render(<LinksModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('trigger-add-link'));
+    expect(container.innerHTML).not.toMatch(/omniboard/i);
   });
 
   it('fires test-all action without throwing', () => {

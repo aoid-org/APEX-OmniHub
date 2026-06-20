@@ -33,6 +33,27 @@ export function humanizeActionId(actionId: string): string {
     .join(" ");
 }
 
+/**
+ * Resolve the human label for a live action. A backend "label" that is just the
+ * raw action id, or still carries underscores (e.g. `create_workflow`), is a
+ * machine token — not user copy — so we humanize it. Prettier copy must never
+ * imply an unsupported action is wired; humanizing only fixes presentation.
+ */
+export function normalizeActionLabel(
+  rawLabel: string | undefined,
+  actionId: string,
+  fallbackLabel: string,
+): string {
+  const label = typeof rawLabel === "string" ? rawLabel.trim() : "";
+  if (label.length === 0) {
+    return fallbackLabel;
+  }
+  if (label === actionId || label.includes("_")) {
+    return humanizeActionId(label);
+  }
+  return label;
+}
+
 export function normalizeLiveActions(
   rawActions: unknown,
   baselineActions: readonly ModuleAction[],
@@ -68,10 +89,11 @@ export function normalizeLiveActions(
         const baseline = baselineById.get(candidate.id);
         return {
           id: candidate.id,
-          label:
-            typeof candidate.label === "string" && candidate.label.length > 0
-              ? candidate.label
-              : baseline?.label ?? humanizeActionId(candidate.id),
+          label: normalizeActionLabel(
+            candidate.label,
+            candidate.id,
+            baseline?.label ?? humanizeActionId(candidate.id),
+          ),
           variant:
             candidate.variant === "primary" ||
             candidate.variant === "secondary" ||

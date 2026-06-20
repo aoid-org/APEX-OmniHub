@@ -11,7 +11,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 import { triggerModuleAction } from '@/hooks/useOmniModuleState';
-import { isActionSupported } from '../../contracts/moduleActionCapabilities';
+import { getModuleActionCapability } from '../../contracts/moduleActionCapabilities';
 
 const STATUS_COLORS: Readonly<Record<string, string>> = {
   active: '#34d399',
@@ -100,8 +100,11 @@ export const ModuleShell = memo(function ModuleShell({
         handled = await onAction(actionId, [...selectedItems]) === true;
       }
       if (!handled) {
-        if (!isActionSupported(actionId)) {
-          setActionStatus(`Action "${actionId}" is not connected to the backend pipeline yet.`);
+        const capability = getModuleActionCapability(state.moduleKey, actionId);
+        if (!capability.supported) {
+          // Module-specific copy — and we never call trigger-workflow for an
+          // action we can't vouch for.
+          setActionStatus(capability.copy);
           return;
         }
 

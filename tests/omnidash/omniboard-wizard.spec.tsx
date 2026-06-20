@@ -154,4 +154,28 @@ describe('OmniBoardWizard', () => {
 
     await waitFor(() => expect(screen.getByText('Connection service rejected the request: HTTP 503.')).toBeTruthy());
   });
+
+  it('surfaces an explicit timeout error when the connection service does not respond', async () => {
+    // Simulate the AbortController firing: fetch rejects with an AbortError.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new DOMException('The operation was aborted.', 'AbortError')),
+    );
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Connection service timed out\./),
+      ).toBeTruthy(),
+    );
+  });
+
+  it('surfaces an unreachable/CORS error when the fetch fails outright', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/Connection service unreachable\./)).toBeTruthy(),
+    );
+  });
 });

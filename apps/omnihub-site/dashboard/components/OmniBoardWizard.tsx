@@ -20,6 +20,50 @@ import {
 // The orchestrator URL — must be set via VITE_ORCHESTRATOR_URL in .env
 const ORCHESTRATOR_URL = import.meta.env.VITE_ORCHESTRATOR_URL ?? '';
 
+// Hard ceiling for any orchestrator round-trip. Without this a hung connection
+// service leaves the wizard spinning forever; on timeout we surface an explicit
+// "timed out" error rather than faking progress or a successful connection.
+const OMNIBOARD_REQUEST_TIMEOUT_MS = 15000;
+
+/** A configured orchestrator URL must be an absolute http(s) URL. */
+function isValidAbsoluteUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OMNIBOARD_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const UNREACHABLE_COPY =
+  'Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.';
+const TIMEOUT_COPY =
+  'Connection service timed out. The OmniBoard app-integration service did not respond. Check orchestrator URL, gateway routing, and CORS.';
+
+/** Map a thrown fetch error to explicit, honest connection-error copy. */
+function describeConnectionError(err: unknown, fallback: string): string {
+  if (err instanceof DOMException && err.name === 'AbortError') {
+    return TIMEOUT_COPY;
+  }
+  if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+    return UNREACHABLE_COPY;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
+
 interface FSMContext {
   session_id: string;
   tenant_id: string;
@@ -52,12 +96,18 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   }, [onDismiss, stopVoice]);
 
   const startSession = useCallback(async () => {
+    // Invalid (but present) orchestrator URL → explicit config error, no fetch.
+    if (ORCHESTRATOR_URL && !isValidAbsoluteUrl(ORCHESTRATOR_URL)) {
+      setError('OmniBoard orchestrator URL is invalid. Set a valid absolute VITE_ORCHESTRATOR_URL (https://…).');
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError('Authentication required'); return; }
 
     setLoading(true);
     try {
-      const res = await fetch(`${ORCHESTRATOR_URL}/omniboard/start?tenant_id=${user.id}&trace_id=${crypto.randomUUID()}`, {
+      const res = await fetchWithTimeout(`${ORCHESTRATOR_URL}/omniboard/start?tenant_id=${user.id}&trace_id=${crypto.randomUUID()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -66,11 +116,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
       setContext(ctx);
       setMessage('Tell OmniBoard what app or provider you want to connect.');
     } catch (err) {
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        setError('Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to start session');
-      }
+      setError(describeConnectionError(err, 'Failed to start session'));
     } finally {
       setLoading(false);
     }
@@ -80,7 +126,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     if (!context || !input.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${ORCHESTRATOR_URL}/omniboard/${context.session_id}/next`, {
+      const res = await fetchWithTimeout(`${ORCHESTRATOR_URL}/omniboard/${context.session_id}/next`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_type: 'user_input', payload: { text: input.trim() } }),
@@ -98,11 +144,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
         onComplete(connection_spec);
       }
     } catch (err) {
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        setError('Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to process turn');
-      }
+      setError(describeConnectionError(err, 'Failed to process turn'));
     } finally {
       setLoading(false);
     }

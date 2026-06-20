@@ -186,22 +186,22 @@
   ],
   [
     "links",
-    "Connected services and integration endpoints.",
+    "URLs and reference sources collected for OmniSlate and agent context.",
     [
       [
-        "Active Links",
-        "14",
-        "up"
+        "Saved Links",
+        "3",
+        "stable"
       ],
       [
-        "Throughput",
-        "8.2K/hr",
-        "up"
+        "Context Sources",
+        "3",
+        "stable"
       ],
       [
-        "Error Rate",
-        "0.02%",
-        "down"
+        "Staged Locally",
+        "0",
+        "stable"
       ]
     ],
     [
@@ -209,19 +209,19 @@
         "lnk-doc1",
         "https://github.com/apexbusiness-systems/docs",
         "active",
-        "Repo context active"
+        "Reference URL for agent context"
       ],
       [
         "lnk-doc2",
-        "https://stripe.com/docs/api",
+        "https://platform.openai.com/docs",
         "active",
-        "Stripe API context"
+        "Reference URL for agent context"
       ],
       [
         "lnk-doc3",
-        "https://linear.app/apex/project",
+        "https://react.dev/reference/react",
         "active",
-        "Linear board context"
+        "Reference URL for agent context"
       ]
     ],
     [

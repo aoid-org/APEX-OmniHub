@@ -6,6 +6,11 @@ interface Props {
   readonly onClose: () => void;
 }
 
+interface StagedLink {
+  readonly id: string;
+  readonly url: string;
+}
+
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   active:   { bg: 'rgba(52,211,153,0.1)',  text: '#34d399' },
   pending:  { bg: 'rgba(250,204,21,0.1)',   text: '#facc15' },
@@ -13,25 +18,68 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   inactive: { bg: 'rgba(107,114,128,0.1)', text: '#6b7280' },
 };
 
+/** Accepts only absolute http(s) URLs — link context is for real, fetchable URLs. */
+function isValidHttpUrl(value: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+}
+
 export default function LinksModule({ onClose }: Props) {
   const state = useOmniModuleState('links');
   const chips = state.items.slice(0, 6);
   const [isStaging, setIsStaging] = useState(false);
   const [url, setUrl] = useState('');
+  const [touched, setTouched] = useState(false);
+  const [stagedLinks, setStagedLinks] = useState<StagedLink[]>([]);
+  const [omniSlateBlocked, setOmniSlateBlocked] = useState(false);
 
+  const trimmedUrl = url.trim();
+  const urlIsValid = isValidHttpUrl(trimmedUrl);
+  const showValidationError = touched && trimmedUrl.length > 0 && !urlIsValid;
+
+  // Links collect URL/context — they are NOT app integrations and must never
+  // reach OmniBoard or trigger-workflow. add-link/send-to-omnislate are handled
+  // entirely in local component state here (return true so ModuleShell does not
+  // dispatch them to the backend).
   const handleAction = async (actionId: string, _selected: string[]) => {
-    if (actionId === 'add-link') {
+    if (actionId === 'add-link' || actionId === 'add_link') {
+      setOmniSlateBlocked(false);
       setIsStaging(true);
       return true;
     }
-    if (actionId === 'send-to-omnislate') {
-      // Future wire-up to context pipeline
+    if (actionId === 'send-to-omnislate' || actionId === 'send_to_omnislate') {
+      setOmniSlateBlocked(true);
       return true;
     }
+    return false;
+  };
+
+  const handleStageLink = () => {
+    if (!urlIsValid) {
+      setTouched(true);
+      return;
+    }
+    setStagedLinks((prev) => [
+      ...prev,
+      { id: `staged-${Date.now()}-${prev.length}`, url: trimmedUrl },
+    ]);
+    setUrl('');
+    setTouched(false);
   };
 
   return (
     <ModuleShell state={state} onClose={onClose} onAction={handleAction}>
+      {omniSlateBlocked && (
+        <div className="rounded-lg border border-red-400/30 px-3 py-2 bg-red-400/5 text-[11px] text-red-400">
+          OmniSlate context handoff is not connected yet.
+        </div>
+      )}
+
       {isStaging ? (
         <div className="flex flex-col gap-3 rounded-lg border border-border/30 px-3 py-3 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -41,24 +89,62 @@ export default function LinksModule({ onClose }: Props) {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            onBlur={() => setTouched(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleStageLink();
+              }
+            }}
             placeholder="https://..."
+            aria-label="URL to stage as context"
             className="bg-background border border-border/40 rounded px-2 py-1 text-xs text-foreground outline-none focus:border-primary/60"
           />
-          <div className="text-[10px] text-red-400">
-            OmniSlate context handoff is not connected yet.
-          </div>
+
+          {showValidationError && (
+            <div className="text-[10px] text-red-400">
+              Enter a valid URL starting with http:// or https://.
+            </div>
+          )}
+
+          {stagedLinks.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-amber-400">
+                Links are staged locally until link-context persistence is connected.
+              </div>
+              {stagedLinks.map((link) => (
+                <div
+                  key={link.id}
+                  title={link.url}
+                  className="text-[10px] text-muted-foreground truncate"
+                >
+                  • {link.url}
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
-              onClick={() => setIsStaging(false)}
+              onClick={() => {
+                setIsStaging(false);
+                setOmniSlateBlocked(false);
+              }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Cancel
             </button>
             <button
               type="button"
-              disabled
-              className="px-3 py-1 rounded bg-primary/50 text-primary-foreground text-xs font-bold cursor-not-allowed"
+              onClick={handleStageLink}
+              disabled={!urlIsValid}
+              className={[
+                'px-3 py-1 rounded text-primary-foreground text-xs font-bold',
+                urlIsValid
+                  ? 'bg-primary hover:bg-primary/90 cursor-pointer'
+                  : 'bg-primary/50 cursor-not-allowed',
+              ].join(' ')}
             >
               Add Link
             </button>

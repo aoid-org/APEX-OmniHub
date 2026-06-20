@@ -239,38 +239,22 @@ async function resolveAudits(
   };
 }
 
-async function resolveLinks(
-  anonClient: ReturnType<typeof createAnonClient>
-): Promise<ModuleStateResponse> {
-  // Table: integrations — confirmed FK parent for all omnilink_* tables
-  // (20260111000000_omnilink_universal_port.sql) — RLS: user_id = auth.uid()
-  const { data, error } = await anonClient
-    .from('integrations')
-    .select('id, name, type, status, config, created_at, updated_at');
-
-  if (error) throw new Error('links_query_failed');
-
-  const rows = (data ?? []) as Array<{
-    id: string;
-    name: string;
-    type: string;
-    status: string | null;
-    config: Record<string, unknown> | null;
-    created_at: string;
-    updated_at: string;
-  }>;
-
+function resolveLinks(
+  _anonClient: ReturnType<typeof createAnonClient>
+): ModuleStateResponse {
+  // Links collect URLs/reference sources for OmniSlate & agent context — they
+  // are NOT app integrations. There is intentionally no link-context
+  // persistence table yet (no migration is created here; that is gated on JR
+  // approval), so reading the integrations table would hydrate Links as app
+  // integrations and is forbidden. We return an honest, empty link-context
+  // state with safe actions only — no integration-only verbs. add-link and
+  // send-to-omnislate are handled locally in LinksModule and never dispatched
+  // to trigger-workflow.
   return {
     State: 'Online',
-    items: rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      type: r.type,
-      status: r.status ?? 'unknown',
-      updated_at: r.updated_at,
-    })),
-    actions: ['add-link', 'test-all'],
-    count: rows.length,
+    items: [],
+    actions: ['add-link', 'send-to-omnislate'],
+    count: 0,
   };
 }
 
