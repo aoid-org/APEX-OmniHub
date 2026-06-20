@@ -10,11 +10,12 @@ status: verified
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
 > Last updated: 2026-06-20T00:00Z
 
-## 2026-06-20 Addendum — APEX Agent LIVE + PR #1435 Merged (All CI Green)
+## 2026-06-20 Addendum — APEX Agent LIVE + PR #1435 & #1436 Merged (All CI Green)
 
-**HEAD:** `0eff5a6c` on `main`
-**PR #1435:** `ops/agent-production-restored-2026-06-19` → `main` — **MERGED**
-**CI Result:** **43 success / 3 skipped / 0 failed — ALL GREEN**
+**HEAD:** `6f859ec8` on `main` (PR #1436 — OmniDash modal-contract repair, merged 2026-06-19)
+**PR #1435:** `ops/agent-production-restored-2026-06-19` → `main` — **MERGED** as `4bbd3e5b` (squash; PR branch tip `0eff5a6c`), 2026-06-19
+**PR #1436:** OmniDash widget modal contracts + action-endpoint UX → `main` — **MERGED** as `6f859ec8`, 2026-06-19
+**CI Result (verified via GitHub check-runs API 2026-06-20):** #1435 — **43 success / 3 skipped / 0 failed** (46 total); #1436 — **46 success / 3 skipped / 0 failed** (49 total). Both **ALL GREEN.**
 
 ### What changed
 
@@ -23,7 +24,8 @@ status: verified
 | APEX Agent runtime | **LIVE / demo-ready** — full end-to-end verified 2026-06-19 |
 | Stale tests fixed | `respond_to_user` added to canonical tool set; `check_semantic_cache` disabled → `None` (not `RuntimeError`) |
 | Ops-doc CI guard | `ops-doc-guard.yml` active; PRs changing runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md` now fail CI |
-| Migration baseline | 89 migrations baselined as applied 2026-06-19; `omni_policies` provisioned (90 total) |
+| Migration baseline | 89 migrations baselined as applied 2026-06-19; `omni_policies` provisioned (90 forward migrations total; + 4 rollback scripts) |
+| OmniDash modals (#1436) | Widget modal contracts + action-endpoint UX repaired (frontend + tests only; no runtime-contract / migration / workflow change) |
 | Package version | `1.7.1` (was `1.7.0` at 2026-06-16 snapshot) |
 
 **Verified APEX Agent traces (2026-06-19, live/authenticated):**

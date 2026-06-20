@@ -6,13 +6,13 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-20 (APEX Agent restoration + PR #1435 merged — ops docs, stale-test fixes, ops-doc CI guard). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_20.md`.
+> Current repo-truth index refreshed 2026-06-20 (APEX Agent restoration via PR #1435 + OmniDash modal-contract repair via PR #1436, both merged 2026-06-19; ops docs, stale-test fixes, ops-doc CI guard). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_20.md`.
 
 ## Current Repo Facts Verified in This Pass (2026-06-20)
 
 | Fact | Current repo evidence |
 |---|---|
-| HEAD | `0eff5a6c` — ci: guard APEX Agent operations-doc drift |
+| HEAD | `6f859ec8` — fix(omnidash): repair widget modal contracts and action endpoint UX (#1436); APEX Agent restoration landed just prior in #1435 (`4bbd3e5b`) |
 | GitHub workflow files | **23** files in `.github/workflows/` (`ops-doc-guard.yml` added by PR #1435) |
 | Release/package versions | Root `package.json` declares **`1.7.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | SQL migrations | **90** files (89 baselined 2026-06-19 + `omni_policies` provisioned same day) |
@@ -180,7 +180,7 @@ status: verified
 
 ## 2026-06-20 Platform-State Documentation Sync (APEX Agent Restoration)
 
-Full drift audit performed against `main` @ `0eff5a6c`. PR #1435 merged and CI verified fully green (43 success / 3 skipped / 0 failed). APEX Agent confirmed LIVE.
+Full drift audit performed against `main` @ `6f859ec8` (PR #1436). PR #1435 (`4bbd3e5b`, APEX Agent restoration) and PR #1436 (`6f859ec8`, OmniDash modal contracts) both merged 2026-06-19 and CI verified fully green via the GitHub check-runs API (#1435: 43 success / 3 skipped / 0 failed; #1436: 46 success / 3 skipped / 0 failed). APEX Agent confirmed LIVE.
 
 | File | Change |
 |---|---|

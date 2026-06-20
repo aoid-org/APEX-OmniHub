@@ -1,14 +1,16 @@
 ---
-version: 1.0.0
+version: 1.1.0
 created: 2026-06-20
 last_audited: 2026-06-20
 status: verified
-supersedes: docs/CURRENT_PLATFORM_STATE_2026_06_14.md
+supersedes: CURRENT_PLATFORM_STATE_2026_06_14.md
 ---
 
 # Current Platform State — 2026-06-20
 
-> **Canonical drift-control snapshot for `main` HEAD as of 2026-06-20.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_14.md`. Historical docs remain valid as point-in-time evidence only where they do not conflict with this snapshot, `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`.
+> **Canonical drift-control snapshot taken 2026-06-20 against `main` HEAD `6f859ec8`.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_14.md`. Historical docs remain valid as point-in-time evidence only where they do not conflict with this snapshot, `project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `architecture/ARCHITECTURE_CANONICAL_MAP.md`.
+>
+> **Date note:** the snapshot/audit was performed 2026-06-20; the PR #1435 and #1436 merge *events* all landed 2026-06-19 (per git commit timestamps). Event dates below use the verified git dates.
 
 ## Verification Metadata
 
@@ -16,7 +18,8 @@ supersedes: docs/CURRENT_PLATFORM_STATE_2026_06_14.md
 |---|---|
 | Snapshot date | 2026-06-20 |
 | Branch inspected | `main` |
-| HEAD at snapshot | `0eff5a6c` — ci: guard APEX Agent operations-doc drift |
+| HEAD at snapshot | `6f859ec8` — fix(omnidash): repair widget modal contracts and action endpoint UX (#1436) |
+| Prior landmark | `4bbd3e5b` — ops: APEX Agent restoration (#1435 squash-merge; PR branch tip `0eff5a6c`) |
 | Prior HEAD (2026-06-14 snapshot) | `16f06b6f` — fix(ssrf): evaluate IPv4-mapped IPv6 via embedded IPv4 rules (#1393) |
 | Package version | `1.7.1` (root `package.json`) |
 | App package version | `1.3.10` (`apps/omnihub-site/package.json`) |
@@ -40,9 +43,11 @@ supersedes: docs/CURRENT_PLATFORM_STATE_2026_06_14.md
 | `9eb10b3c` | 2026-06-19 | docs(ops): restoration smoke evidence + trace IDs | — |
 | `41575282` | 2026-06-19 | docs(ops): promote APEX Agent runbook to official path | — |
 | `767c9105` | 2026-06-19 | chore(governance): make 'update APEX_AGENT_OPERATIONS.md' a required PR check | — |
-| `bb98fa50` | 2026-06-20 | test: align agent restoration gates with live runtime contracts | #1435 |
-| `ad545fb3` | 2026-06-20 | docs: record APEX Agent migration-history baseline (2026-06-19) | #1435 |
-| `0eff5a6c` | 2026-06-20 | ci: guard APEX Agent operations-doc drift | #1435 |
+| `bb98fa50` | 2026-06-19 | test: align agent restoration gates with live runtime contracts | #1435 |
+| `ad545fb3` | 2026-06-19 | docs: record APEX Agent migration-history baseline (2026-06-19) | #1435 |
+| `0eff5a6c` | 2026-06-19 | ci: guard APEX Agent operations-doc drift (PR branch tip) | #1435 |
+| `4bbd3e5b` | 2026-06-19 | ops: APEX Agent restoration — runbook, evidence, tag + ops-doc PR law (#1435 squash-merge to `main`) | #1435 |
+| `6f859ec8` | 2026-06-19 | fix(omnidash): repair widget modal contracts and action endpoint UX — **current `main` HEAD** | #1436 |
 
 ## APEX Agent Restoration (2026-06-19 — Landmark Event)
 
@@ -67,7 +72,7 @@ OmniSlate UI → Cloudflare Pages Function /api/mcp/invoke
 - `docs/operations/APEX_AGENT_RUNBOOK.md` — full operations runbook
 - `docs/operations/APEX_AGENT_RESTORATION_EVIDENCE.md` — restoration evidence + trace IDs
 
-**PR #1435 merged 2026-06-20** — CI: 43 success / 3 skipped / 0 failed. Includes stale-test fixes, migration-history baseline documentation, and real CI enforcement of the ops-doc rule (`scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml`).
+**PR #1435 merged 2026-06-19** (squash-merge `4bbd3e5b`) — CI: 43 success / 3 skipped / 0 failed (46 total check runs). Includes stale-test fixes, migration-history baseline documentation, and real CI enforcement of the ops-doc rule (`scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml`). **PR #1436 merged 2026-06-19** (`6f859ec8`, current `main` HEAD) — CI: 46 success / 3 skipped / 0 failed (49 total) — repaired OmniDash widget modal contracts + action-endpoint UX (frontend + test files only; no runtime-contract, migration, or workflow change).
 
 ## Repo Stats (Verified 2026-06-20)
 
@@ -75,25 +80,28 @@ OmniSlate UI → Cloudflare Pages Function /api/mcp/invoke
 |---|---|
 | Source files under `src/` | 326 TypeScript/TSX |
 | Supabase Edge Function directories | 32 (incl. `_shared`); 31 function dirs + 1 shared library |
-| Supabase SQL migrations | 90 files (89 baselined as applied 2026-06-19 + `omni_policies` provisioned same day) |
+| Supabase SQL migrations | 90 forward files (89 baselined as applied 2026-06-19 + `omni_policies` provisioned same day) + 4 rollback scripts under `migrations/rollback/` = 94 total `.sql` |
 | GitHub workflow files | 23 (`ops-doc-guard.yml` added by PR #1435) |
 | Python orchestrator files | 103 |
 | Apps/omnihub-site package version | `1.3.10` |
 
 ## Migration History Baseline (2026-06-19)
 
-Production Supabase had live schema objects while `supabase_migrations.schema_migrations` showed 0 applied migrations. All **89** migrations were **baselined as applied without re-running SQL** and without touching data. `omni_policies` provisioned the same day with 7 tailored policies. Repo now holds 90 migration files.
+Production Supabase had live schema objects while `supabase_migrations.schema_migrations` showed 0 applied migrations. All **89** migrations were **baselined as applied without re-running SQL** and without touching data. `omni_policies` provisioned the same day with 7 tailored policies. Repo now holds **90 forward migration files** (plus 4 rollback scripts under `migrations/rollback/`).
 
 **Future rule:** never blindly run the full migration stack against production; use `supabase migration repair` on drift; only apply new additive/idempotent migrations forward. See `docs/APEX_AGENT_OPERATIONS.md §10` and `docs/operations/APEX_AGENT_RUNBOOK.md §11`.
 
 ## CI State (2026-06-20)
 
-| PR | CI result | Key checks |
-|---|---|---|
-| #1434 (ruff/format) | ✅ merged green | |
-| #1435 (agent restoration ops) | ✅ **ALL GREEN** — 43 success / 3 skipped / 0 failed | `build-and-test`, `Operations doc drift guard`, SonarCloud QG passed |
+| PR | Merge commit | CI result | Key checks |
+|---|---|---|---|
+| #1434 (ruff/format) | `73d23da3` | ✅ merged green | |
+| #1435 (agent restoration ops) | `4bbd3e5b` (tip `0eff5a6c`) | ✅ **ALL GREEN** — 43 success / 3 skipped / 0 failed (46 total) | `build-and-test`, `Operations doc drift guard`, SonarCloud QG passed |
+| #1436 (omnidash modal contracts) | `6f859ec8` | ✅ **ALL GREEN** — 46 success / 3 skipped / 0 failed (49 total) | `build-and-test`, `Quality Gates`, `Security Gates`, SonarCloud QG passed |
 
-**`main` is GREEN as of `0eff5a6c`.**
+CI results verified via GitHub check-runs API 2026-06-20.
+
+**`main` is GREEN as of `6f859ec8`.**
 
 ## Infrastructure State (2026-06-20)
 

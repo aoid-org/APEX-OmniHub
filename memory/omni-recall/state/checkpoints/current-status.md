@@ -359,8 +359,8 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - branch: `ops/agent-production-restored-2026-06-19` → merged to `main` via PR #1435; docs committed on `claude/laughing-brown-knodfm`
 - scope: Fixed two red CI tests (stale test expectations), documented migration-history baseline, wired honest ops-doc drift enforcement in CI, then performed full anti-drift documentation audit.
 
-### PR #1435 — All Green (merged 2026-06-20)
-- CI result: **43 success / 3 skipped / 0 failed**
+### PR #1435 — All Green (merged 2026-06-19, squash `4bbd3e5b`, PR tip `0eff5a6c`)
+- CI result: **43 success / 3 skipped / 0 failed** (46 total check runs; verified via GitHub check-runs API 2026-06-20)
 - Fixes: `test_canonical_tools_defined` (added `respond_to_user` to expected set), `test_check_semantic_cache_not_initialized` → `test_check_semantic_cache_disabled_returns_none` (cache returns None, not RuntimeError)
 - New workflow: `ops-doc-guard.yml` — fails PRs that change runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`
 - New script: `scripts/ci/check-ops-doc-drift.mjs` (deterministic Node.js, no network deps)
@@ -384,12 +384,18 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - `omni_policies` provisioned as migration 90 same day
 - Future rule: never blindly run full migration stack against production; use `supabase migration repair` on drift; only apply new additive/idempotent migrations forward
 
-### Verified Runtime Facts (2026-06-20)
-- last_verified_date: 2026-06-20
-- last_verified_commit: `0eff5a6c` (ci: guard APEX Agent operations-doc drift — PR #1435, HEAD main)
+### PR #1436 — All Green (merged 2026-06-19, `6f859ec8`, current main HEAD)
+- scope: fix(omnidash) — repair widget modal contracts + action-endpoint UX. Frontend (`OmniSpatialHost.tsx`, `LinksModule.tsx`, `useOmniModuleState.ts`) + test files only. No runtime-contract, migration, or workflow change.
+- note: renamed `test_check_semantic_cache_disabled_returns_none` → `test_check_semantic_cache_not_initialized` but KEPT the same fail-open behavior (returns `None`, not `RuntimeError`) — documented runtime contract unchanged.
+- CI result: **46 success / 3 skipped / 0 failed** (49 total check runs; verified via GitHub check-runs API 2026-06-20)
+
+### Verified Runtime Facts (audited 2026-06-20; events landed 2026-06-19)
+- audit_date: 2026-06-20
+- last_verified_commit: `6f859ec8` (fix(omnidash): repair widget modal contracts — PR #1436, current main HEAD)
+- apex_agent_restoration_commit: `4bbd3e5b` (PR #1435 squash-merge; PR branch tip `0eff5a6c`)
 - package_version: `1.7.1` (root package.json); app version `1.3.10`
 - workflows: 23 (added `ops-doc-guard.yml`)
-- migrations: 90 files
+- migrations: 90 forward files (+ 4 rollback scripts under `migrations/rollback/`; 94 total `.sql`)
 - python_orchestrator_files: 103
 - src_ts_tsx_files: 326
 - supabase_edge_function_dirs: 32 (31 + `_shared`)

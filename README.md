@@ -68,7 +68,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 103 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** HEAD `0eff5a6c` (June 20, 2026) — ci: guard APEX Agent operations-doc drift. PR #1435 merged: APEX Agent is LIVE and demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the full assessment.
+**Latest repo-history note:** `main` HEAD `6f859ec8` (June 19, 2026) — fix(omnidash): repair widget modal contracts and action endpoint UX (PR #1436). The prior landmark PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_20.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md) for the full assessment.
 
 ---
 

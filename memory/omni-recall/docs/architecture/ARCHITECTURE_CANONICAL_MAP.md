@@ -14,7 +14,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 > **Version:** 2.3.0<br>
 > **Last updated:** 2026-05-31<br>
 > **Status:** Canonical (source of truth)
-> **Current-state addendum (2026-06-20):** HEAD `0eff5a6c` — APEX Agent LIVE (demo-ready). Package `1.7.1`. 90 migrations (89 baselined + `omni_policies`). 23 workflows (`ops-doc-guard.yml` added). See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for full drift-control snapshot.
+> **Current-state addendum (audited 2026-06-20):** `main` HEAD `6f859ec8` (PR #1436 — OmniDash modal-contract repair, merged 2026-06-19). APEX Agent LIVE (demo-ready) since the prior landmark PR #1435 (`4bbd3e5b`, merged 2026-06-19). Package `1.7.1`. 90 forward migrations (89 baselined + `omni_policies`) + 4 rollback scripts. 23 workflows (`ops-doc-guard.yml` added). See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the full drift-control snapshot.
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
 
