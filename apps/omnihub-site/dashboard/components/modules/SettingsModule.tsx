@@ -31,6 +31,13 @@ const SETTING_DEFAULTS: Record<string, boolean> = {
   show_connected_ecosystem: false,
 };
 
+const EXPLICIT_SETTINGS = [
+  { id: 'demo_mode', label: 'Demo Mode', description: 'Enable mock data generation for demonstrations.' },
+  { id: 'anonymize_kpis', label: 'Anonymize KPIs', description: 'Mask sensitive financial and operational metrics.' },
+  { id: 'freeze_mode', label: 'Freeze Mode', description: 'Prevent all system configuration changes.' },
+  { id: 'show_connected_ecosystem', label: 'Show Connected Ecosystem', description: 'Display external integrations and their health.' },
+];
+
 const STATE_KIND_STYLES: Readonly<Record<string, { background: string; color: string; border: string }>> = {
   live:        { background: 'rgba(52,211,153,0.1)',  color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' },
   demo:        { background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' },
@@ -137,10 +144,16 @@ export default function SettingsModule({ onClose }: Props) {
     }
   }, []);
 
+  const getBackendStatus = (itemId: string) => {
+    const item = state.items.find(i => i.id === itemId);
+    if (item) return item.status;
+    return SETTING_DEFAULTS[itemId] ? 'active' : 'inactive';
+  };
+
   const stateStyle = STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE;
-  const total = state.items.length;
-  const enabled = state.items.filter(i => effectiveStatus(i.id, i.status)).length;
-  const allValidated = total > 0 && state.items.every(i => i.status !== 'error');
+  const total = EXPLICIT_SETTINGS.length;
+  const enabled = EXPLICIT_SETTINGS.filter(s => effectiveStatus(s.id, getBackendStatus(s.id))).length;
+  const allValidated = EXPLICIT_SETTINGS.every(s => getBackendStatus(s.id) !== 'error');
   const versionStat = state.stats.find(s => s.label === 'Version');
 
   if (state.loading) {
@@ -187,22 +200,26 @@ export default function SettingsModule({ onClose }: Props) {
         {total === 0 && state.stateKind !== 'live' && (
           <p className="text-xs text-muted-foreground">Settings unavailable — sign in with a paid account to manage platform settings.</p>
         )}
-        {state.items.map(item => {
-          const isActive = effectiveStatus(item.id, item.status);
-          const isSaving = saving === item.id;
+        {EXPLICIT_SETTINGS.map(setting => {
+          const backendStatus = getBackendStatus(setting.id);
+          const isActive = effectiveStatus(setting.id, backendStatus);
+          const isSaving = saving === setting.id;
           return (
             <div
-              key={item.id}
+              key={setting.id}
               className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border/30 bg-card"
             >
-              <span className="text-sm text-foreground">{item.label}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">{setting.label}</span>
+                <span className="text-xs text-muted-foreground">{setting.description}</span>
+              </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={isActive}
-                aria-label={`Toggle ${item.label}`}
+                aria-label={`Toggle ${setting.label}`}
                 disabled={isSaving || saving === '__reset__'}
-                onClick={() => void handleToggle(item.id, isActive)}
+                onClick={() => void handleToggle(setting.id, isActive)}
                 className={[
                   'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',

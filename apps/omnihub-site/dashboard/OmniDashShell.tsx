@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { memo, useMemo, useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
@@ -74,6 +74,11 @@ interface NavItemProps {
 
 
 import type { DashboardNavSection } from "./types/dashboard.types";
+
+// OmniDash is visually dense and uses high-performance particle flows as a background.
+const VisualEffect = memo(function VisualEffect({ _canvasRef }: { _canvasRef?: React.RefObject<HTMLCanvasElement | null> }) {
+  return null;
+});
 
 interface OmniDashSidebarProps {
   activeNav: string;
@@ -332,12 +337,6 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
 
   const handleNav = (widget: OmniDashSidebarWidget) => {
     setActiveNav(widget.label);
-
-    if (!widget.moduleKey) {
-      // OmniBoard — scroll canvas to top, stay on main dashboard
-      canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
 
     // All modules open as modal overlays over the persistent OmniBoard canvas.
     // Non-reactive: getState().invoke() so this handler never subscribes to modal state.

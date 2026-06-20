@@ -18,7 +18,7 @@ import {
 } from '../../src/hooks/useSpeechRecognition';
 
 // The orchestrator URL — must be set via VITE_ORCHESTRATOR_URL in .env
-const ORCHESTRATOR_URL = import.meta.env.VITE_ORCHESTRATOR_URL ?? '';
+const getOrchestratorUrl = () => import.meta.env.VITE_ORCHESTRATOR_URL ?? '';
 
 interface FSMContext {
   session_id: string;
@@ -52,21 +52,31 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   }, [onDismiss, stopVoice]);
 
   const startSession = useCallback(async () => {
+    const orchestratorUrl = getOrchestratorUrl();
+    if (!orchestratorUrl) {
+      setError('Connection service is not configured. Set VITE_ORCHESTRATOR_URL.');
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError('Authentication required'); return; }
 
     setLoading(true);
     try {
-      const res = await fetch(`${ORCHESTRATOR_URL}/omniboard/start?tenant_id=${user.id}&trace_id=${crypto.randomUUID()}`, {
+      const res = await fetch(`${orchestratorUrl}/omniboard/start?tenant_id=${user.id}&trace_id=${crypto.randomUUID()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!res.ok) throw new Error(`FSM start failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
       const ctx: FSMContext = await res.json();
       setContext(ctx);
       setMessage('What app would you like to connect? (e.g. "Connect Salesforce", "Connect Stripe")');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session');
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Connection service is unreachable from the browser. Check orchestrator URL/CORS or route through the OmniHub gateway.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to start session');
+      }
     } finally {
       setLoading(false);
     }
@@ -76,12 +86,12 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     if (!context || !input.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${ORCHESTRATOR_URL}/omniboard/${context.session_id}/next`, {
+      const res = await fetch(`${getOrchestratorUrl()}/omniboard/${context.session_id}/next`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_type: 'user_input', payload: { text: input.trim() } }),
       });
-      if (!res.ok) throw new Error(`FSM turn failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
       const { context: newCtx, message: newMsg, connection_spec } = await res.json() as {
         context: FSMContext;
         message: string;
@@ -94,7 +104,11 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
         onComplete(connection_spec);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process turn');
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Connection service is unreachable from the browser. Check orchestrator URL/CORS or route through the OmniHub gateway.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to process turn');
+      }
     } finally {
       setLoading(false);
     }

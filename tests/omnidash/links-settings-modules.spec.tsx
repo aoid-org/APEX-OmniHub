@@ -175,9 +175,9 @@ describe('SettingsModule', () => {
     expect(screen.getByTestId('widget-settings-panel')).toBeTruthy();
   });
 
-  it('does not render config health when items is empty', () => {
+  it('renders config health even if items is empty because of explicit settings', () => {
     render(<SettingsModule onClose={vi.fn()} />);
-    expect(screen.queryByText('Configuration Health')).toBeNull();
+    expect(screen.queryByText('Configuration Health')).toBeTruthy();
   });
 
   it('renders config health when items are present', () => {
@@ -192,7 +192,7 @@ describe('SettingsModule', () => {
 
     render(<SettingsModule onClose={vi.fn()} />);
     expect(screen.getByText('Configuration Health')).toBeTruthy();
-    expect(screen.getByText('1 of 2 settings enabled')).toBeTruthy();
+    expect(screen.getByText('1 of 4 settings enabled')).toBeTruthy();
   });
 
   it('shows version stat when present', () => {

@@ -9,7 +9,7 @@ export type OmniDashSidebarWidgetId =
   | 'billing'
   | 'settings';
 
-export type OmniDashSidebarModuleKey = Exclude<OmniDashSidebarWidgetId, 'omniboard'>;
+export type OmniDashSidebarModuleKey = OmniDashSidebarWidgetId;
 
 export type OmniDashSidebarWidgetLabel =
   | 'OmniBoard'
@@ -32,7 +32,7 @@ export interface OmniDashSidebarWidget {
 export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9;
 
 export const OMNIDASH_SIDEBAR_WIDGETS = [
-  { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: null },
+  { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: 'omniboard' },
   { id: 'physiomni', label: 'PhysiOmni', iconIdx: 5, moduleKey: 'physiomni' },
   { id: 'audits', label: 'Audits', iconIdx: 1, moduleKey: 'audits' },
   { id: 'links', label: 'Links', iconIdx: 4, moduleKey: 'links' },

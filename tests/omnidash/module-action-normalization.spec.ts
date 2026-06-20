@@ -54,8 +54,10 @@ describe('normalizeLiveActions (D-1 production binding fix)', () => {
     expect(normalizeLiveActions('add-link', LINKS_BASELINE)).toBeUndefined();
   });
 
-  it('humanizeActionId formats kebab ids', () => {
+  it('humanizeActionId formats kebab and snake ids', () => {
     expect(humanizeActionId('add-link')).toBe('Add Link');
     expect(humanizeActionId('test-all')).toBe('Test All');
+    expect(humanizeActionId('create_workflow')).toBe('Create Workflow');
+    expect(humanizeActionId('upload_file')).toBe('Upload File');
   });
 });

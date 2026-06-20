@@ -11,6 +11,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 import { triggerModuleAction } from '@/hooks/useOmniModuleState';
+import { getActionCapability } from '../../contracts/moduleActionCapabilities';
 
 const STATUS_COLORS: Readonly<Record<string, string>> = {
   active: '#34d399',
@@ -99,6 +100,12 @@ export const ModuleShell = memo(function ModuleShell({
         handled = await onAction(actionId, [...selectedItems]) === true;
       }
       if (!handled) {
+        const capability = getActionCapability(actionId);
+        if (capability.status !== 'implemented') {
+          setActionStatus(capability.message || 'This action is not supported.');
+          return;
+        }
+
         const result = await triggerModuleAction(
           state.moduleKey,
           actionId,
@@ -208,17 +215,27 @@ export const ModuleShell = memo(function ModuleShell({
         <Button variant="outline" onClick={onClose}>
           Close
         </Button>
-        {state.actions.map((action) => (
+        {state.actions.map((action) => {
+          const cap = getActionCapability(action.id);
+          const isUnsupported = cap.status !== 'implemented';
+          // Ensure we don't accidentally swallow local overrides if the parent provides an onAction that handles it.
+          // Wait, if it's unsupported but handled locally, should we disable it?
+          // If onAction is passed, it *might* handle it. The problem is `test-all` is 'backend_unavailable' but LinksModule handles it?
+          // Actually, if it's handled locally, LinksModule provides its own buttons OR intercepts. If we disable the button here, LinksModule can't intercept it if we disable it!
+          // BUT the prompt explicitly says: "Links test-all: Link health checks are not connected yet." which implies it should NOT be handled locally either, or if it is handled locally, the prompt is overriding it and saying we MUST disable/intercept it here with this message.
+          return (
           <Button
             key={action.id}
             variant={action.variant === 'destructive' ? 'destructive' : 'default'}
-            disabled={processing}
+            disabled={processing || isUnsupported}
             onClick={() => handleAction(action.id)}
+            title={isUnsupported ? cap.message : undefined}
           >
             {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {action.label}
           </Button>
-        ))}
+          );
+        })}
       </DialogFooter>
     </div>
   );

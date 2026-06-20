@@ -45,6 +45,7 @@ describe('OmniBoardWizard', () => {
   beforeEach(() => {
     FakeSpeechRecognition.instances = [];
     vi.stubGlobal('fetch', mockStartFetch());
+    vi.stubEnv('VITE_ORCHESTRATOR_URL', 'http://localhost');
   });
 
   afterEach(() => {
@@ -152,6 +153,6 @@ describe('OmniBoardWizard', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText('FSM start failed: 503')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Connection service rejected the request: HTTP 503.')).toBeTruthy());
   });
 });
