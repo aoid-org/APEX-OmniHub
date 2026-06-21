@@ -1,7 +1,9 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
-status: verified
+last_audited: 2026-04-07
+status: archived
+archived_date: 2026-06-21
+note: Point-in-time repo assessment from 2026-04-07. Superseded by ongoing audits through Q2 2026. See memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md for current state.
 ---
 
 # APEX OmniHub Repository Assessment Report

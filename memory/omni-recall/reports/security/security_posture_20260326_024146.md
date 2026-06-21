@@ -1,7 +1,9 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
-status: verified
+last_audited: 2026-03-26
+status: archived
+archived_date: 2026-06-21
+note: Security posture report from Q1 2026. Refer to current governance/ and policy/ directories for active security posture.
 ---
 
 # APEX OmniHub Security Posture Report
