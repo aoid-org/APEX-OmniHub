@@ -25,11 +25,11 @@ status: verified
 4. Simulated Kahn cycle detection (false on linear DAG, true with back-edge)
    and Saga rollback (LIFO dispatch, concurrent via asyncio.gather, proven by
    completion-order inversion at ~101ms wall).
-5. Applied the OmniBoard dual-surface correction (see
+5. Applied the OmniBoard widget correction (see
    `wiki/corrections/004-omniboard-dual-surface-scoping.md`) and re-ran the
    entire workflow; skill rebuilt with function-boundary scoping.
 6. Documentation audit + sync (this commit): `docs/platform/OMNIBOARD.md`
-   reworked to dual-surface; `docs/skill-forge-implementation.md` corrected
+   reworked to integration modal; `docs/skill-forge-implementation.md` corrected
    (UUID skill names, live Anthropic generation, `/launch/skillforge` route,
    all three UI surfaces, optimistic entitlement increment);
    `CANONICAL_TRUTH.md` facts 19–20 added; `docs/README.md` row updated.
@@ -44,4 +44,4 @@ status: verified
 - saga_rollback: `reversed(compensation_stack)` → `asyncio.gather` — LIFO dispatch, concurrent, best-effort (`agent_saga.py:221-222`)
 - cycle_error: `'Workflow contains a cycle. DAG must be acyclic.'` (`workflow-api.ts:136`)
 - policy_gate_gotcha: `apex_policy_check.py` accepts FILE paths only — a directory arg silently scans 0 files and exits 0; always enumerate files
-- omniboard: dual-surface (client modal + integration layer) — correction 004
+- omniboard: integration surface (client modal for integrations)

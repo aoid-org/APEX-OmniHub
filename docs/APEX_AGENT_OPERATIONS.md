@@ -191,6 +191,22 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 
 ---
 
+## 9.1 Change history — 2026-06-20 OmniDash widget rescue (PR #1441)
+
+| Commit(s) | Change | Why |
+|---|---|---|
+| `84a4c627` | **`omnilink-port/module-state` Links resolver** no longer reads the `integrations` table; returns an honest **empty link-context state** (`items: []`, actions `add-link`/`send-to-omnislate`, no `test-all`) | Links collect URL/reference context for OmniSlate/agent context — they are **not** app integrations, and must not hydrate from the integrations table |
+
+**Operational contract note (edge fn `omnilink-port`):** the `links` branch of
+`module-state` is now a **read-free, no-op resolver** — it queries **no table**
+and creates **no migration**. A real link-context persistence table is
+intentionally **deferred (gated on JR approval)**; until then Links are staged
+client-side only. App integrations remain owned exclusively by the OmniBoard
+wizard surface. No env var, secret, start command, or deployed-service topology
+changed in this PR.
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration

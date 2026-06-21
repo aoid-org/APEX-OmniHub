@@ -57,7 +57,7 @@ Core platform components with dedicated documentation:
 | **OmniPort**      | Ingress engine & API            | [OMNIPORT_API_REFERENCE.md](platform/OMNIPORT_API_REFERENCE.md)   |
 | **OmniDash**      | Executive dashboard + 9-widget sidebar rail contract | [OMNIDASH.md](platform/OMNIDASH.md)                               |
 | **OmniLink**      | Integration bus                 | [OMNILINK_MANIFESTO_LITE.md](platform/OMNILINK_MANIFESTO_LITE.md) |
-| **OmniBoard**     | Dual-surface: client-facing modal + app integration layer | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
+| **OmniBoard**     | Client-facing modal for app integration onboarding | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
 | **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |
 | **OmniSentry**    | Health & monitoring system      | [OMNISENTRY.md](platform/OMNISENTRY.md)                           |
 | **Connector Kit** | Integration adapters            | [CONNECTOR_KIT.md](platform/CONNECTOR_KIT.md)                     |

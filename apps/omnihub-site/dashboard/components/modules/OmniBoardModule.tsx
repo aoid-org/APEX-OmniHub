@@ -33,11 +33,12 @@ export default function OmniBoardModule({ onClose }: Props) {
     return (
       <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border border-border/40 max-w-md w-[400px]">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — Connect App</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
           <button type="button" onClick={handleDismiss} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
         </div>
         <p className="text-xs text-red-400">
-          App connection requires the OmniHub orchestrator — contact your admin.
+          Connection service is not configured.<br />
+          Set VITE_ORCHESTRATOR_URL or route OmniBoard through the authenticated OmniHub gateway.
         </p>
       </div>
     );

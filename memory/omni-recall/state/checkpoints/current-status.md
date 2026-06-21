@@ -81,8 +81,8 @@ status: verified
 
 ## Latest session (2026-06-10) — OmniSkills/SkillForge/DAG E2E + OmniBoard scoping + doc sync
 - branch: claude/friendly-goodall-6bb4uc
-- scope: 20-criteria E2E execution across OmniSkills UI → SkillForge backend → DAG/Saga framework; forged and installed `.claude/skills/apex-universal-sync-orchestrator` (rubric 100/100, policy gate pass); applied OmniBoard dual-surface correction and re-ran the full workflow; audited and synced repo docs.
-- key outcome: skill v1.0.0 committed (`9b911dc`), scoping fix (`e747507`); `docs/platform/OMNIBOARD.md` reworked to dual-surface; `docs/skill-forge-implementation.md` drift fixed (UUID names, live Anthropic generation, `/launch/skillforge`, three UI surfaces); `CANONICAL_TRUTH.md` facts 19–20 added; correction 004 logged.
+- scope: 20-criteria E2E execution across OmniSkills UI → SkillForge backend → DAG/Saga framework; forged and installed `.claude/skills/apex-universal-sync-orchestrator` (rubric 100/100, policy gate pass); applied OmniBoard widget rescue and re-ran the full workflow; audited and synced repo docs.
+- key outcome: skill v1.0.0 committed (`9b911dc`), scoping fix (`e747507`); `docs/platform/OMNIBOARD.md` reworked to integration modal; `docs/skill-forge-implementation.md` drift fixed (UUID names, live Anthropic generation, `/launch/skillforge`, three UI surfaces); `CANONICAL_TRUTH.md` facts 19–20 added; correction 004 logged.
 - verification: forge lint 0/0, rubric 100/100 (twice — /tmp and installed path), pack ok, sync engine live-tested (valid + 3 violation scenarios + empty payload), Kahn cycle detection and LIFO-concurrent Saga rollback simulated and asserted, `apex_policy_check.py` pass on 11 enumerated files.
 - detail: state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md
 
@@ -108,7 +108,7 @@ status: verified
 - last_verified_commit: c0a9517 (feat: close TOCTOU race, fix edge function naming, add voice input, register /launch/skillforge route)
 - active_branch: claude/friendly-goodall-6bb4uc (pushed)
 - main_head: ef0f337 (fix(omnidash): OmniDash Full Restore Implementation (#1347))
-- omniboard_definition: dual-surface — client-facing modal (Left Sidebar Widget → OmniBoardWizard, typed prompts + voice) + application integration layer (connect FSM → Connection Spec; payload normalization via apex-universal-sync-orchestrator). "Never client-facing" claim is retired (correction 004).
+- omniboard_definition: The ONE AND ONLY client-facing modal (Left Sidebar Widget → OmniBoardWizard, typed prompts + voice) for third-party application integration (connect FSM → Connection Spec). "Never client-facing" claim is retired.
 - skillforge_route: /launch/skillforge — protected, registered in App.tsx
 - skillforge_voice: Web Speech Recognition toggle on full-page SkillForge.tsx and OmniBoardWizard.tsx
 - skillforge_generation: live Anthropic claude-3-5-haiku-20241022 (not mocked); skill names skill_${crypto.randomUUID()}; `generatedSkill` variable (no longer `mockedSkill`)

@@ -175,6 +175,17 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 
 ---
 
+## Canonical UI Boundaries & Widget Truth
+
+To maintain strict architecture safety and prevent "widget drift" across the platform, the following product laws apply globally to OmniDash and must **never** be violated:
+
+✅ **OmniBoard**: The **ONE AND ONLY** user-facing UI endpoint for third-party application integration and onboarding. It connects 3rd-party apps and AI models deterministically via the `apex-universal-sync-orchestrator`.
+❌ **Links**: An independent widget **strictly** for collecting URLs to pass as context. It must **never** route to OmniBoard, and must **never** perform app integrations.
+✅ **Module Boundaries**: All OmniDash sidebar modules must load as distinct modal overlays using the `useOmniModal` state store. No widget may silently mount another widget's FSM (e.g. Links cannot mount OmniBoardWizard).
+✅ **Action Gating**: Action execution across modules is centrally whitelisted by `moduleActionCapabilities.ts`. Unsupported backend actions (e.g. `manage_bundles`, `trigger_workflow` when unauthorized) fail-closed gracefully at the UI shell level before a network request is even attempted.
+
+---
+
 ## Quick Start (Local)
 
 ### Prerequisites

@@ -39,7 +39,7 @@ import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
+import type { CSSProperties, Dispatch, SetStateAction } from "react";
 
 // ─── Layout constants ───
 /**
@@ -78,7 +78,6 @@ import type { DashboardNavSection } from "./types/dashboard.types";
 interface OmniDashSidebarProps {
   activeNav: string;
   setActiveNav: Dispatch<SetStateAction<string>>;
-  canvasRef: RefObject<HTMLDivElement>;
 }
 
 interface OmniDashHeaderProps {
@@ -316,7 +315,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -333,11 +332,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
   const handleNav = (widget: OmniDashSidebarWidget) => {
     setActiveNav(widget.label);
 
-    if (!widget.moduleKey) {
-      // OmniBoard — scroll canvas to top, stay on main dashboard
-      canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+
 
     // All modules open as modal overlays over the persistent OmniBoard canvas.
     // Non-reactive: getState().invoke() so this handler never subscribes to modal state.
@@ -1526,7 +1521,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
-        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
             data-testid="rt_security"
@@ -1619,7 +1614,7 @@ export default function OmniDashShell() {
         )}
 
         {/* Sidebar — reversed layout: right side */}
-        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (

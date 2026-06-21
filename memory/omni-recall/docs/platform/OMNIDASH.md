@@ -66,6 +66,18 @@ The following product/platform surfaces must **not** be added to the left sideba
    npx tsx scripts/omnidash-blast-radius.ts
    ```
 
+## Module Action Boundaries & Gating
+
+To prevent hallucinations and widget drift, backend actions across all OmniDash modules are strictly gated by a central capability map.
+
+- **`moduleActionCapabilities.ts`**: This file is the absolute source of truth for which backend endpoints are allowed per module. Any unsupported action (like `manage_bundles` or an unauthorized `trigger_workflow`) will be structurally rejected by `OmniDashShell` and `handleModuleAction`, preventing broken UI states and phantom backend requests.
+- **Module Modal Overlays**: All modules load via the `useOmniModal` state store. Modules do not share FSMs and cannot secretly mount other module FSMs.
+
+## OmniBoard vs. Links (Canonical Definition)
+
+- **OmniBoard**: The **ONE AND ONLY** user-facing UI endpoint for third-party application integration and onboarding. It connects apps via `apex-universal-sync-orchestrator`.
+- **Links**: An independent widget **strictly** for collecting URLs to pass as context. It MUST NOT perform app integrations and MUST NOT open the `OmniBoardWizard` or any integration flows.
+
 ## Setup
 - Ensure Supabase env vars are configured (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - Apply migrations: `supabase db push` (or deploy via your CI pipeline).

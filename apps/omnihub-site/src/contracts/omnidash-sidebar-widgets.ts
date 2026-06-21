@@ -9,7 +9,6 @@ export type OmniDashSidebarWidgetId =
   | 'billing'
   | 'settings';
 
-export type OmniDashSidebarModuleKey = Exclude<OmniDashSidebarWidgetId, 'omniboard'>;
 
 export type OmniDashSidebarWidgetLabel =
   | 'OmniBoard'
@@ -26,13 +25,13 @@ export interface OmniDashSidebarWidget {
   readonly id: OmniDashSidebarWidgetId;
   readonly label: OmniDashSidebarWidgetLabel;
   readonly iconIdx: number;
-  readonly moduleKey: OmniDashSidebarModuleKey | null;
+  readonly moduleKey: OmniDashSidebarWidgetId;
 }
 
 export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9;
 
 export const OMNIDASH_SIDEBAR_WIDGETS = [
-  { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: null },
+  { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: 'omniboard' },
   { id: 'physiomni', label: 'PhysiOmni', iconIdx: 5, moduleKey: 'physiomni' },
   { id: 'audits', label: 'Audits', iconIdx: 1, moduleKey: 'audits' },
   { id: 'links', label: 'Links', iconIdx: 4, moduleKey: 'links' },
@@ -54,6 +53,6 @@ export const FORBIDDEN_OMNIDASH_SIDEBAR_LABELS = [
 
 export function getOmniDashSidebarModuleKey(
   id: OmniDashSidebarWidgetId,
-): OmniDashSidebarModuleKey | null {
-  return OMNIDASH_SIDEBAR_WIDGETS.find(widget => widget.id === id)?.moduleKey ?? null;
+): OmniDashSidebarWidgetId {
+  return OMNIDASH_SIDEBAR_WIDGETS.find(widget => widget.id === id)?.moduleKey as OmniDashSidebarWidgetId;
 }

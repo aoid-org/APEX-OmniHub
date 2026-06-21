@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeLiveActions,
   humanizeActionId,
+  normalizeActionLabel,
 } from '../../apps/omnihub-site/src/hooks/useOmniModuleState';
 import type { ModuleAction } from '../../apps/omnihub-site/dashboard/components/ModuleRegistry';
 
@@ -57,5 +58,31 @@ describe('normalizeLiveActions (D-1 production binding fix)', () => {
   it('humanizeActionId formats kebab ids', () => {
     expect(humanizeActionId('add-link')).toBe('Add Link');
     expect(humanizeActionId('test-all')).toBe('Test All');
+  });
+
+  it('humanizes a backend-supplied label that is just the raw underscored id', () => {
+    // Backend hands us label === id with underscores — that is a machine token,
+    // not user copy, so it must be humanized rather than shown verbatim.
+    const result = normalizeLiveActions(
+      [{ id: 'create_workflow', label: 'create_workflow', variant: 'primary' }],
+      [],
+    );
+    expect(result).toEqual([
+      { id: 'create_workflow', label: 'Create Workflow', variant: 'primary' },
+    ]);
+  });
+
+  it('normalizeActionLabel humanizes underscore/id-equal labels, keeps real copy', () => {
+    // Underscored token → humanized.
+    expect(normalizeActionLabel('trigger_run', 'trigger_run', 'Fallback')).toBe('Trigger Run');
+    expect(normalizeActionLabel('upload_file', 'upload_file', 'Fallback')).toBe('Upload File');
+    expect(normalizeActionLabel('delete_file', 'delete_file', 'Fallback')).toBe('Delete File');
+    // Label equal to a kebab id → humanized.
+    expect(normalizeActionLabel('create-workflow', 'create-workflow', 'Fallback')).toBe('Create Workflow');
+    // Genuine human copy is preserved untouched.
+    expect(normalizeActionLabel('New Workflow', 'create-workflow', 'Fallback')).toBe('New Workflow');
+    // Empty/missing → fallback.
+    expect(normalizeActionLabel('', 'create-workflow', 'Fallback')).toBe('Fallback');
+    expect(normalizeActionLabel(undefined, 'create-workflow', 'Fallback')).toBe('Fallback');
   });
 });

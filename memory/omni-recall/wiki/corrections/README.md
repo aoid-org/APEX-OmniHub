@@ -34,18 +34,13 @@ Each correction should capture:
 
 ### 2026-06-10 — OmniBoard "integration-only" scoping (project-wide, permanent)
 
-- **Original wrong assumption:** "OmniBoard is strictly for application integration and
-  onboarding — not for clients" was treated as a platform-wide rule; skill files repeated
-  "OmniBoard is never client-facing."
-- **Corrected state:** OmniBoard is dual-surface — a client-facing conversational modal
-  (Left Sidebar Widget → `OmniBoardWizard.tsx`, typed prompt input) and an application
-  integration layer (connect FSM → Connection Spec; payload normalization via
-  `apex-universal-sync-orchestrator`). Integration-pipeline skills scope to their function
+- **Original wrong assumption:** "OmniBoard is strictly for application integration and is never client-facing."
+- **Corrected state:** OmniBoard is the ONE and ONLY user-facing UI endpoint for third-party application integration and onboarding. The conversational modal (Left Sidebar Widget → `OmniBoardWizard.tsx`, typed prompt input) guides the user through app connections, producing a verified Connection Spec for the `apex-universal-sync-orchestrator`. Integration-pipeline skills scope to their function
   boundary; product descriptions present both surfaces.
 - **Scope:** project-wide.
 - **Affected pages:** `.claude/skills/apex-universal-sync-orchestrator/`,
   `docs/platform/OMNIBOARD.md`, `docs/skill-forge-implementation.md`,
   `docs/architecture/CANONICAL_TRUTH.md` (fact 19), `docs/README.md`.
 - **Promotion decision:** canonical fact + ledger entry
-  (`004-omniboard-dual-surface-scoping.md`).
+  (`004-omniboard-dual-surface-scoping.md` has been superseded by the 2026-06-20 Canonical Widget Rescue).
 - **Permanent:** yes.

@@ -186,65 +186,53 @@
   ],
   [
     "links",
-    "Connected services and integration endpoints.",
+    "URLs and reference sources collected for OmniSlate and agent context.",
     [
       [
-        "Active Links",
-        "14",
-        "up"
+        "Saved Links",
+        "3",
+        "stable"
       ],
       [
-        "Throughput",
-        "8.2K/hr",
-        "up"
+        "Context Sources",
+        "3",
+        "stable"
       ],
       [
-        "Error Rate",
-        "0.02%",
-        "down"
+        "Staged Locally",
+        "0",
+        "stable"
       ]
     ],
     [
       [
-        "lnk-sf",
-        "Salesforce CRM",
+        "lnk-doc1",
+        "https://github.com/apexbusiness-systems/docs",
         "active",
-        "Synced 2m ago | 48 records/hr"
+        "Reference URL for agent context"
       ],
       [
-        "lnk-qb",
-        "QuickBooks Online",
+        "lnk-doc2",
+        "https://platform.openai.com/docs",
         "active",
-        "Synced 5m ago | 12 invoices queued"
+        "Reference URL for agent context"
       ],
       [
-        "lnk-slack",
-        "Slack Workspace",
+        "lnk-doc3",
+        "https://react.dev/reference/react",
         "active",
-        "Synced 1m ago | 230 events/hr"
-      ],
-      [
-        "lnk-gh",
-        "GitHub Enterprise",
-        "active",
-        "Synced 3m ago | Webhooks active"
-      ],
-      [
-        "lnk-stripe",
-        "Stripe Payments",
-        "error",
-        "Token expired — re-authorize required"
+        "Reference URL for agent context"
       ]
     ],
     [
       [
         "add-link",
-        "Add Connection",
+        "Add Link",
         "primary"
       ],
       [
-        "test-all",
-        "Test All Links",
+        "send-to-omnislate",
+        "Send to OmniSlate",
         "secondary"
       ]
     ],

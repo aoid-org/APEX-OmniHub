@@ -56,7 +56,7 @@ describe('OmniBoardWizard', () => {
 
   it('starts an FSM session on mount and renders the input row', async () => {
     await renderWizard();
-    expect(screen.getByText(/OmniBoard — Connect App/)).toBeTruthy();
+    expect(screen.getByText(/OmniBoard — App Integration/)).toBeTruthy();
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/omniboard/start?tenant_id=tenant-1'),
       expect.objectContaining({ method: 'POST' }),
@@ -152,6 +152,30 @@ describe('OmniBoardWizard', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText('FSM start failed: 503')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Connection service rejected the request: HTTP 503.')).toBeTruthy());
+  });
+
+  it('surfaces an explicit timeout error when the connection service does not respond', async () => {
+    // Simulate the AbortController firing: fetch rejects with an AbortError.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new DOMException('The operation was aborted.', 'AbortError')),
+    );
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Connection service timed out\./),
+      ).toBeTruthy(),
+    );
+  });
+
+  it('surfaces an unreachable/CORS error when the fetch fails outright', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/Connection service unreachable\./)).toBeTruthy(),
+    );
   });
 });
