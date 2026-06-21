@@ -1,8 +1,9 @@
 
-import type {
-  LLMMessage,
-  LLMResponse,
-  LLMOptions,
+import {
+  llmTextOf,
+  type LLMMessage,
+  type LLMResponse,
+  type LLMOptions,
 } from "./llm.ts";
 
 // ─── Provider-specific raw response types ────────────────────────────────────
@@ -112,9 +113,11 @@ export class GroqAdapter implements UniversalAdapter {
     const defaultModel = "llama-3.1-8b-instant";
     return {
       model: options.model ?? defaultModel,
+      // Groq (OpenAI wire) is text-only in this contract: collapse any
+      // multimodal blocks to their text so image attachments degrade safely.
       messages: messages.map((m) => ({
         role: m.role,
-        content: m.content,
+        content: llmTextOf(m.content),
       })),
       temperature: options.temperature ?? 0.7,
       max_tokens: options.max_tokens,
@@ -195,7 +198,11 @@ export class AnthropicAdapter implements UniversalAdapter {
 
     return {
       model: options.model ?? defaultModel,
-      system: systemMessage?.content,
+      // System is always a plain string for Anthropic; collapse defensively.
+      system: systemMessage ? llmTextOf(systemMessage.content) : undefined,
+      // Chat messages pass through unchanged — Anthropic natively accepts both a
+      // plain string and an ordered array of text/image content blocks. This is
+      // the multimodal ("Eyes") path: image blocks reach the vision model intact.
       messages: chatMessages.map((m) => ({
         role: m.role,
         content: m.content,

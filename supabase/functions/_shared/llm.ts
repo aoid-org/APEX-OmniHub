@@ -18,12 +18,36 @@ export type AllowedProvider = "groq" | "anthropic";
 
 // ── Message Types ─────────────────────────────────────────────────────────────
 
+/**
+ * A multimodal content block (Anthropic-native shape). `content` on an
+ * {@link LLMMessage} may be a plain string (text-only, all providers) or an
+ * ordered array of these blocks for vision-capable models.
+ */
+export type LLMContentBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "image";
+      source: { type: "base64"; media_type: string; data: string };
+    };
+
 export interface LLMMessage {
   role: "system" | "user" | "assistant" | "tool";
-  content: string;
+  content: string | LLMContentBlock[];
   name?: string;
   tool_call_id?: string;
   tool_calls?: ToolCall[];
+}
+
+/**
+ * Collapse a message's content to plain text, whether it is a string or a
+ * block array. Image bytes are dropped (never represented in the text view).
+ */
+export function llmTextOf(content: string | LLMContentBlock[]): string {
+  if (typeof content === "string") return content;
+  return content
+    .filter((b): b is { type: "text"; text: string } => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
 }
 
 export interface ToolCall {
@@ -128,7 +152,7 @@ async function callGroq(
 
   const requestBody: Record<string, unknown> = {
     model,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    messages: messages.map((m) => ({ role: m.role, content: llmTextOf(m.content) })),
     temperature,
     max_tokens,
   };
@@ -212,7 +236,7 @@ async function callAnthropic(
   const chatMessages = messages.filter((m) => m.role !== "system");
 
   // For JSON mode, inject JSON enforcement into system prompt
-  let systemContent = systemMsg?.content ?? "";
+  let systemContent = systemMsg ? llmTextOf(systemMsg.content) : "";
   if (json_mode) {
     systemContent +=
       "\n\nYou MUST respond with valid JSON only. No prose, no markdown, just the JSON object.";
