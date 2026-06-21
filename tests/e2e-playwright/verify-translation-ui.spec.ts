@@ -81,12 +81,20 @@ async function selectLocale(
   page: import("@playwright/test").Page,
   label: string
 ) {
-  await page
-    .getByRole("button", {
-      name: /select site language|seleccionar|choisir|seitensprache|サイト言語|选择网站|selecionar|اختر|साइट भाषा/i,
-    })
-    .first()
-    .click();
+  const selectorLocator = page.getByRole("button", {
+    name: /select site language|seleccionar|choisir|seitensprache|サイト言語|选择网站|selecionar|اختر|साइट भाषा/i,
+  });
+
+  // On mobile the desktop language selector is CSS-hidden (.language-selector--desktop
+  // has display:none in the mobile breakpoint). Open the hamburger drawer first so the
+  // mobile LanguageSelector is rendered and visible before we try to click it.
+  if (!(await selectorLocator.first().isVisible())) {
+    await page.getByRole("button", { name: /open menu/i }).first().click();
+  }
+
+  // .last() resolves to the mobile selector (inside the drawer) when both exist in the
+  // DOM, and to the single desktop selector otherwise — correct in both viewport cases.
+  await selectorLocator.last().click();
   await page.getByRole("button", { name: label }).click();
 }
 
