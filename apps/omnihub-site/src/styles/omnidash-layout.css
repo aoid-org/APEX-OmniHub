@@ -1081,25 +1081,43 @@
   margin-top: 0;
   position: relative;
   z-index: 10;
+  align-items: stretch;
+  min-width: 0;
 }
 
-/* Small tile: 25% — fixed height anchors layout; overflow hidden keeps content inside */
+/*
+ * Adaptive interaction contract:
+ * Wrapper classes (on flex items / canvasRef divs) control adaptive width distribution.
+ * Side panes compress first (lower flex-grow, higher flex-shrink).
+ * OmniSlate has highest flex-grow and protected min-width so it shrinks last.
+ * Tile classes (on motion.div) control internal height and overflow.
+ */
+.apex-hero-tile-wrapper--sm {
+  flex: 1 2 clamp(132px, 18vw, 300px);
+  min-width: 132px;
+  max-width: 320px;
+}
+
+.apex-hero-tile-wrapper--lg {
+  flex: 4 1 clamp(420px, 52vw, 820px);
+  min-width: min(100%, 420px);
+}
+
+/* Small tile — fills wrapper, adaptive height */
 .apex-hero-tile--sm {
-  width: calc(25% - 10px);
-  min-width: calc(25% - 10px);
-  height: 420px;
+  width: 100%;
+  min-width: 0;
+  height: clamp(320px, 45dvh, 420px);
   overflow: hidden;
-  flex-shrink: 0;
   will-change: transform;
 }
 
-/* Large tile: 50% — fixed height anchors layout; overflow hidden keeps content inside */
+/* Large tile (OmniSlate) — fills wrapper, adaptive height, internal flex column */
 .apex-hero-tile--lg {
-  width: calc(50% - 20px);
-  min-width: calc(50% - 20px);
-  height: 420px;
+  width: 100%;
+  min-width: 0;
+  height: clamp(360px, 50dvh, 420px);
   overflow: hidden;
-  flex-shrink: 0;
   will-change: transform;
 }
 
@@ -1374,14 +1392,69 @@
     width: 130px;
     height: 130px;
   }
-  .apex-hero-tile--sm {
-    width: calc(50% - 10px);
-    min-width: calc(50% - 10px);
+  .apex-hero-row {
+    gap: 14px;
   }
-  .apex-hero-tile--lg {
-    width: 100%;
+  .apex-hero-tile-wrapper--sm {
+    flex-basis: 140px;
+    min-width: 116px;
+    max-width: 200px;
+  }
+  .apex-hero-tile-wrapper--lg {
+    flex: 5 1 440px;
+    min-width: min(100%, 400px);
+  }
+}
+
+/* Medium desktop: OmniSlate dominates, side panes compact */
+@media (max-width: 1180px) {
+  .apex-hero-row {
+    gap: 12px;
+  }
+  .apex-hero-tile-wrapper--sm {
+    flex-basis: 132px;
+    min-width: 116px;
+    max-width: 170px;
+  }
+  .apex-hero-tile-wrapper--lg {
+    flex: 5 1 440px;
+    min-width: min(100%, 420px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — Narrow Desktop (≤960px)
+   Hero row wraps: OmniSlate full-width on top, side panes side-by-side below.
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 960px) {
+  .apex-hero-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .apex-hero-tile-wrapper--lg {
+    order: 1;
+    flex: 1 1 100%;
     min-width: 100%;
-    order: -1;
+  }
+
+  .apex-hero-tile-wrapper--sm {
+    order: 2;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    max-width: none;
+  }
+
+  .apex-hero-tile--lg {
+    height: auto;
+    min-height: 340px;
+  }
+
+  .apex-hero-tile--sm {
+    height: auto;
+    min-height: 220px;
   }
 }
 
@@ -1446,22 +1519,29 @@
     height: 32px;
   }
 
-  /* Grid → 2-column */
+  /* Grid → OmniSlate first, side panes side by side */
   .apex-hero-row {
     flex-wrap: wrap;
   }
 
+  .apex-hero-tile-wrapper--lg {
+    order: -1;
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .apex-hero-tile-wrapper--sm {
+    flex: 1 1 calc(50% - 7px);
+    min-width: 0;
+    max-width: none;
+  }
+
   .apex-hero-tile--sm {
-    width: calc(50% - 10px);
-    min-width: calc(50% - 10px);
-    height: 340px;
+    height: 260px;
   }
 
   .apex-hero-tile--lg {
-    width: 100%;
-    min-width: 100%;
     height: 340px;
-    order: -1;
   }
 
   .apex-app-tile {
@@ -1518,10 +1598,20 @@
     height: 110px;
   }
 
+  .apex-hero-tile-wrapper--sm,
+  .apex-hero-tile-wrapper--lg {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
+    order: unset;
+  }
+
+  .apex-hero-tile-wrapper--lg {
+    order: -1;
+  }
+
   .apex-hero-tile--sm,
   .apex-hero-tile--lg {
-    width: 100%;
-    min-width: 100%;
     height: 300px;
   }
 
@@ -1621,7 +1711,7 @@
 
   .apex-hero-tile--sm,
   .apex-hero-tile--lg {
-    height: 280px;
+    height: 260px;
   }
 
   /* Footer — minimal on mobile */
