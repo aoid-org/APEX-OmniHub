@@ -157,7 +157,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
   };
 
   return (
-    <div ref={canvasRef} style={{ position: 'relative', height: '100%' }}>
+    <div ref={canvasRef} className="apex-hero-tile-wrapper--lg" data-testid="omnislate-pane" style={{ position: 'relative' }}>
       <motion.div
         data-testid="framer-motion-div"
         initial={{ y: 20, opacity: 0 }}
@@ -235,6 +235,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               type="button"
               onClick={onToggleGlobalInsight}
               title="View health insights"
+              data-testid="omnislate-insights-button"
               style={{
                 width: 28,
                 height: 28,
@@ -319,11 +320,13 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           )}
 
           <div
+            data-testid="omnislate-prompt-row"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 10,
               marginTop: 'auto',
+              flexShrink: 0,
             }}
           >
             <input
@@ -343,6 +346,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
                   'rgba(255,255,255,0.03)';
               }}
               placeholder="Ask APEX Agent"
+              data-testid="omnislate-prompt-input"
               style={PROMPT_STYLE_BASE}
             />
             <RecordButton
