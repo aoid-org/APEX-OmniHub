@@ -6,36 +6,56 @@ const locales = [
     label: "Français",
     hero: "L'Orchestrateur",
     nav: "Spécifications techniques",
+    dir: "ltr",
   },
   {
     code: "es-ES",
     label: "Español",
     hero: "Orquestador",
     nav: "Especificaciones técnicas",
+    dir: "ltr",
   },
   {
     code: "de-DE",
     label: "Deutsch",
     hero: "Orchestrierer",
     nav: "Technische Daten",
+    dir: "ltr",
   },
   {
     code: "ja-JP",
     label: "日本語",
     hero: "オーケストレーター",
     nav: "技術仕様",
+    dir: "ltr",
   },
   {
     code: "zh-CN",
     label: "简体中文",
     hero: "编排器",
     nav: "技术规格",
+    dir: "ltr",
   },
   {
     code: "pt-BR",
     label: "Português (Brasil)",
     hero: "Orquestrador",
     nav: "Especificações técnicas",
+    dir: "ltr",
+  },
+  {
+    code: "ar",
+    label: "العربية",
+    hero: "المنسق",
+    nav: "المواصفات التقنية",
+    dir: "rtl",
+  },
+  {
+    code: "hi-IN",
+    label: "हिन्दी",
+    hero: "समन्वयक",
+    nav: "तकनीकी विशिष्टताएँ",
+    dir: "ltr",
   },
 ];
 
@@ -63,7 +83,7 @@ async function selectLocale(
 ) {
   await page
     .getByRole("button", {
-      name: /select site language|seleccionar|choisir|seitensprache|サイト言語|选择网站|selecionar/i,
+      name: /select site language|seleccionar|choisir|seitensprache|サイト言語|选择网站|selecionar|اختر|साइट भाषा/i,
     })
     .first()
     .click();
@@ -97,6 +117,7 @@ test.describe.serial("public language switcher", () => {
 
       await expect(page.getByText(locale.label).first()).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
+      await expect(page.locator("html")).toHaveAttribute("dir", locale.dir);
       await expect(
         page.getByText(locale.hero, { exact: false }).first()
       ).toBeVisible();
@@ -108,6 +129,7 @@ test.describe.serial("public language switcher", () => {
 
       await page.reload();
       await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
+      await expect(page.locator("html")).toHaveAttribute("dir", locale.dir);
       await expect(page.getByText(locale.label).first()).toBeVisible();
 
       for (const route of translatedPublicRoutes) {

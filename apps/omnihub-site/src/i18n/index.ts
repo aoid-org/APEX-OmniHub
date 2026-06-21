@@ -10,6 +10,8 @@ import deDE from "./locales/de-DE.json";
 import jaJP from "./locales/ja-JP.json";
 import zhCN from "./locales/zh-CN.json";
 import ptBR from "./locales/pt-BR.json";
+import ar from "./locales/ar.json";
+import hiIN from "./locales/hi-IN.json";
 
 import {
   DEFAULT_LOCALE,
@@ -49,6 +51,8 @@ void i18n
       "ja-JP": { translation: jaJP },
       "zh-CN": { translation: zhCN },
       "pt-BR": { translation: ptBR },
+      ar: { translation: ar },
+      "hi-IN": { translation: hiIN },
     },
     supportedLngs,
     fallbackLng: DEFAULT_LOCALE,

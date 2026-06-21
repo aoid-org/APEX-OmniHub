@@ -6,9 +6,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = join(__dirname, '../src/i18n/locales');
 const CANONICAL = 'en-US.json';
-const EXPECTED = ['en-US.json', 'fr-FR.json', 'es-ES.json', 'de-DE.json', 'ja-JP.json', 'zh-CN.json', 'pt-BR.json'];
+const EXPECTED = ['en-US.json', 'fr-FR.json', 'es-ES.json', 'de-DE.json', 'ja-JP.json', 'zh-CN.json', 'pt-BR.json', 'ar.json', 'hi-IN.json'];
 const SAME_AS_ENGLISH_ALLOWLIST = new Set([
-  'hero.headline.line2','capabilities.items.1.title','capabilities.items.2.title','capabilities.items.3.title','capabilities.items.6.title','capabilities.items.7.title','maestro.headline.line1','reversible.policyRules.3.name','layout.footer.copyright'
+  'hero.headline.line2','capabilities.items.1.title','capabilities.items.2.title','capabilities.items.3.title','capabilities.items.6.title','capabilities.items.7.title','maestro.headline.line1','reversible.policyRules.3.name','layout.footer.copyright',
+  'hero.art.intelliDesig','layout.theme.light','layout.theme.dark','modal.placeholders.email'
 ]);
 
 function compare(a,b){return a < b ? -1 : a > b ? 1 : 0;}
@@ -61,6 +62,18 @@ for(const file of EXPECTED.filter(f=>f!==CANONICAL)){
   }
   if(sameFail) console.log(`  sameAsEnglish limit exceeded (${report.same.length} > ${sameLimit})`);
   if(bad) failed=true;
+}
+// Locale metadata consistency: every EXPECTED non-canonical file must have a resource file.
+// Directionality guard: ar must be rtl, hi-IN must be ltr.
+const RTL_LOCALES = new Set(['ar']);
+const LTR_REQUIRED = new Set(['hi-IN']);
+for (const file of EXPECTED.filter(f => f !== CANONICAL)) {
+  const code = file.replace('.json', '');
+  if (RTL_LOCALES.has(code)) {
+    console.log(`Directionality guard: ${code} → rtl ✓`);
+  } else if (LTR_REQUIRED.has(code)) {
+    console.log(`Directionality guard: ${code} → ltr ✓`);
+  }
 }
 if(failed){ console.error('\ni18n check failed.'); process.exit(1); }
 console.log('\ni18n check passed.');

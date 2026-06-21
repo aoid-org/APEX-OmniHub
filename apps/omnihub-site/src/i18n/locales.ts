@@ -5,7 +5,9 @@ export type LangCode =
   | "de-DE"
   | "ja-JP"
   | "zh-CN"
-  | "pt-BR";
+  | "pt-BR"
+  | "ar"
+  | "hi-IN";
 
 export interface LocaleInfo {
   code: LangCode;
@@ -34,6 +36,8 @@ export const SUPPORTED_LOCALES: readonly LocaleInfo[] = [
     nativeLabel: "Português (Brasil)",
     dir: "ltr",
   },
+  { code: "ar", label: "Arabic", nativeLabel: "العربية", dir: "rtl" },
+  { code: "hi-IN", label: "Hindi", nativeLabel: "हिन्दी", dir: "ltr" },
 ];
 
 const BASE_LANGUAGE_MATCHES: Readonly<Record<string, LangCode>> = {
@@ -45,6 +49,8 @@ const BASE_LANGUAGE_MATCHES: Readonly<Record<string, LangCode>> = {
   zh: "zh-CN",
   "zh-hans": "zh-CN",
   pt: "pt-BR",
+  ar: "ar",
+  hi: "hi-IN",
 };
 
 export function isSupportedLocale(code: string): code is LangCode {
