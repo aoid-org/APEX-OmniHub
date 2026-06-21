@@ -137,9 +137,15 @@
     'font-family:"Space Grotesk",system-ui,sans-serif;padding:clamp(64px,9vw,120px) clamp(20px,6vw,80px);' +
     'border-top:1px solid ' + TOKENS.borderSubtle + ';border-bottom:1px solid ' + TOKENS.borderSubtle + '}' +
   '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
-  '.ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
+  '.ohsm-hero-3d{pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
   '.ohsm-hero-3d.ohsm-ready{opacity:1}' +
-  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:min(600px,50%);margin:0;display:grid;gap:18px}' +
+  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:grid;' +
+    'grid-template-columns:minmax(0,.95fr) minmax(360px,1.05fr);gap:clamp(24px,4vw,64px);align-items:center}' +
+  '.ohsm-copy{display:grid;gap:18px;min-width:0;max-width:600px}' +
+  '.ohsm-stage-3d{position:relative;min-height:clamp(360px,48vh,560px);width:100%;overflow:visible;pointer-events:none}' +
+  '.ohsm-stage-3d .ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;' +
+    'background:radial-gradient(ellipse at 52% 50%,rgba(234,124,68,.16),rgba(234,124,68,.07) 30%,transparent 62%);' +
+    'filter:drop-shadow(0 0 22px rgba(234,124,68,.58))}' +
   '.ohsm-eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--ohsm-accent-hi)}' +
   '.ohsm-section h2{font-weight:700;letter-spacing:-.02em;line-height:1.04;font-size:clamp(30px,4.4vw,52px);max-width:16ch}' +
   '.ohsm-section .ohsm-sub{color:var(--ohsm-text-2);font-size:clamp(15px,1.4vw,17px);line-height:1.65;max-width:54ch}' +
@@ -297,8 +303,8 @@
   '.ohsm-fallback{position:absolute;inset:0;overflow:auto;padding:90px clamp(16px,4vw,48px) 60px;z-index:3}' +
   '.ohsm-fallback .ohsm-fwrap{max-width:760px;margin:0 auto;display:grid;gap:14px}' +
 
-  '@media (max-width:899px){.ohsm-hero-3d.ohsm-ready{opacity:.6}.ohsm-section .ohsm-inner{max-width:none}}' +
-  '@media (max-width:599px){.ohsm-hero-3d.ohsm-ready{opacity:.38}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
+  '@media (max-width:899px){.ohsm-section .ohsm-inner{max-width:none;grid-template-columns:1fr}.ohsm-stage-3d{min-height:clamp(260px,42vh,420px);order:-1}.ohsm-hero-3d.ohsm-ready{opacity:.72}}' +
+  '@media (max-width:599px){.ohsm-stage-3d{min-height:clamp(220px,34vh,340px)}.ohsm-hero-3d.ohsm-ready{opacity:.52}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
   '@media (max-width:760px){' +
     '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
       'transform:translateY(24px);max-height:65vh;overflow-y:auto}' +
@@ -1902,10 +1908,12 @@
         renderer.setSize(W, H);
 
         var scene = new THREE.Scene();
-        var cam   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200);
-        /* Camera offset left so station cluster (biased right) occupies right 55% of frame */
-        cam.position.set(-10, 18, 72);
-        cam.lookAt(18, 0, -38);
+        var heroRoot = new THREE.Group();
+        scene.add(heroRoot);
+        var cam   = new THREE.PerspectiveCamera(46, W / H, 0.1, 1200);
+        /* Stage-centered camera: canvas is already constrained to the right split stage. */
+        cam.position.set(0, 11, 72);
+        cam.lookAt(0, 0, 0);
 
         /* material factories — same additive-blend aesthetic as the full overlay */
         var OG = 0xea7c44, OGD = 0xc4571c, WH = 0xf8fafc;
@@ -1923,40 +1931,58 @@
         }
 
         /* scale CAPS world-space positions to hero viewport */
-        var SX = 0.165, SY = 0.22, SZ = 0.135, XBIAS = 18;
+        var SX = 0.18, SY = 0.46, SZ = 0.052, XBIAS = 0;
         var stMeshes = [], capV3 = [];
         CAPS.forEach(function (c, i) {
           var px = c.pos[0] * SX + XBIAS, py = c.pos[1] * SY, pz = c.pos[2] * SZ;
           capV3.push(new THREE.Vector3(px, py, pz));
-          var sz = c.size * 1.6;
+          var sz = c.size * 5.2;
           var accent = (i % 3 === 0) || i === 1 || i === 2;
           var g = new THREE.Group();
           g.position.set(px, py, pz);
           var geo = new THREE.IcosahedronGeometry(sz, 1);
-          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 0.9 : 0.45)));
-          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.06 : 0.02)));
+          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 1.0 : 0.82)));
+          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.22 : 0.11)));
           if (accent) {
-            var hGeo = new THREE.TorusGeometry(sz * 2.0, 0.1, 4, 20);
-            var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.22));
+            var hGeo = new THREE.TorusGeometry(sz * 2.35, 0.16, 5, 28);
+            var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.45));
             halo.rotation.x = Math.PI / 2.5;
             g.add(halo);
           }
           stMeshes.push({ g: g, ph: i * 0.54, accent: accent });
-          scene.add(g);
+          heroRoot.add(g);
         });
 
         /* smooth spine through all station positions */
         var spine = new THREE.CatmullRomCurve3(capV3);
-        scene.add(new THREE.Line(
+        heroRoot.add(new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(spine.getPoints(100)),
-          edgeM(OGD, 0.2)
+          edgeM(OGD, 0.9)
         ));
 
+        var orbitalA = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(22, 0.18, 8, 72)), edgeM(OG, 0.72));
+        orbitalA.rotation.x = Math.PI / 2.7;
+        heroRoot.add(orbitalA);
+        var orbitalB = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(15, 0.14, 8, 60)), edgeM(WH, 0.42));
+        orbitalB.rotation.y = Math.PI / 3.2;
+        orbitalB.rotation.x = Math.PI / 2.2;
+        heroRoot.add(orbitalB);
+
+        var coreBeacon = new THREE.Mesh(new THREE.IcosahedronGeometry(7.5, 2), new THREE.MeshBasicMaterial({
+          color: OG, opacity: 0.28, transparent: true,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        heroRoot.add(coreBeacon);
+
+        var bounds = new THREE.Box3().setFromObject(heroRoot);
+        var center = bounds.getCenter(new THREE.Vector3());
+        heroRoot.position.sub(center);
+
         /* travelling scout dot */
-        var scoutM = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), fillM(OG, 1.0));
-        var trailM = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), fillM(OGD, 0.45));
-        scene.add(scoutM);
-        scene.add(trailM);
+        var scoutM = new THREE.Mesh(new THREE.SphereGeometry(1.05, 12, 12), fillM(OG, 1.0));
+        var trailM = new THREE.Mesh(new THREE.SphereGeometry(0.65, 8, 8), fillM(OGD, 0.55));
+        heroRoot.add(scoutM);
+        heroRoot.add(trailM);
 
         /* ambient particle field */
         var PC = 180, pPos = new Float32Array(PC * 3);
@@ -1967,8 +1993,8 @@
         }
         var pGeo = new THREE.BufferGeometry();
         pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-          color: WH, size: 0.45, opacity: 0.32, transparent: true,
+        heroRoot.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+          color: WH, size: 0.95, opacity: 0.72, transparent: true,
           blending: THREE.AdditiveBlending, depthWrite: false
         })));
 
@@ -1980,9 +2006,13 @@
           try {
             var t = (ts - t0) * 0.001;
             /* gentle camera drift */
-            cam.position.x = -10 + Math.sin(t * 0.17) * 4;
-            cam.position.y = 18  + Math.cos(t * 0.11) * 3;
-            cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
+            cam.position.x = Math.sin(t * 0.17) * 2.2;
+            cam.position.y = 11  + Math.cos(t * 0.11) * 1.4;
+            cam.lookAt(Math.sin(t * 0.09) * 1.2, Math.cos(t * 0.07) * 0.8, 0);
+            orbitalA.rotation.z = t * 0.16;
+            orbitalB.rotation.z = -t * 0.12;
+            coreBeacon.rotation.x = t * 0.22;
+            coreBeacon.rotation.y = -t * 0.18;
             /* station pulse + slow rotation */
             stMeshes.forEach(function (sm) {
               sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
@@ -1991,8 +2021,9 @@
             });
             /* scout travels the spine */
             var prog = (t * 0.065) % 1;
-            var sp  = spine.getPoint(prog);
-            var sp2 = spine.getPoint(Math.max(0, prog - 0.018));
+            var safeProg = Math.max(0.001, Math.min(0.999, prog));
+            var sp  = spine.getPoint(safeProg);
+            var sp2 = spine.getPoint(Math.max(0.001, safeProg - 0.018));
             if (sp)  scoutM.position.copy(sp);
             if (sp2) trailM.position.copy(sp2);
             renderer.render(scene, cam);
@@ -2080,9 +2111,10 @@
 
     // section content — feature-section copy, no hero repetition
     var inner = el('div', 'ohsm-inner');
-    inner.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
-    inner.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
-    inner.appendChild(el('p', 'ohsm-sub',
+    var copy = el('div', 'ohsm-copy');
+    copy.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
+    copy.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
+    copy.appendChild(el('p', 'ohsm-sub',
       'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works about two minutes, end to end.'));
     var row = el('div', 'ohsm-row');
     var launch = el('button', 'ohsm-btn ohsm-btn-primary', 'EXPLORE THE MAP \u25b8');
@@ -2097,10 +2129,13 @@
     });
     row.appendChild(launch);
     row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
-    inner.appendChild(row);
+    copy.appendChild(row);
+    var stage3d = el('div', 'ohsm-stage-3d');
     var hero3d = el('canvas', 'ohsm-hero-3d');
-    host.appendChild(hero3d);   /* stacks: starfield \u2192 3D hero \u2192 inner text */
-    host.appendChild(inner);
+    stage3d.appendChild(hero3d);
+    inner.appendChild(copy);
+    inner.appendChild(stage3d);
+    host.appendChild(inner);   /* stacks: starfield \u2192 split copy/stage */
     renderHero3D(hero3d, opts);
   }
 
