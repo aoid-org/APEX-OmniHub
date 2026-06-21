@@ -6,6 +6,8 @@ status: verified
 
 # Python 3.10 Orchestrator Compatibility Fix — 2026-06-17
 
+> **Superseded 2026-06-21.** Release CI now pins Python 3.11 (see RFC_2026_06_19_RELEASE_CI_PYTHON_VERSION.md). The Python 3.10 compatibility shim is no longer needed for CI — the pin is the canonical fix.
+
 ## Context
 
 `ERRORS.md` captured release verification failures in GitHub Actions on Python 3.10.12 during `cd orchestrator && python -m pytest -q` collection.

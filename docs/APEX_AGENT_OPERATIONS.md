@@ -267,6 +267,27 @@ as critical-path edits.
 
 ---
 
+## 9.5 Terraform module bundling fix — 2026-06-21 (HCP remote plan: `../../modules` not uploaded)
+
+**Root cause:** `terraform/environments/production/main.tf` referenced shared modules via
+`../../modules/cloudflare` and `../../modules/upstash`. HCP Terraform's remote plan executor
+only receives files within the working directory (`terraform/environments/production/`);
+relative paths escaping the upload root (`../../`) are never included in the configuration
+archive. The remote runner's `terraform init` therefore fails with
+`lstat ../../modules: no such file or directory`.
+
+**Fix:**
+- Copied `terraform/modules/cloudflare/` → `terraform/environments/production/cloudflare/`
+- Copied `terraform/modules/upstash/` → `terraform/environments/production/upstash/`
+- Updated module sources in `main.tf` to `./cloudflare` and `./upstash` (self-relative, within upload root)
+- Canonical shared modules in `terraform/modules/` retained for staging and future environments
+
+**Operational impact:** Terraform plan and apply paths unblocked. No infrastructure state,
+deployed topology, env vars, secrets, or DB objects changed. Staging (`cd-staging.yml`)
+continues to use `../../modules/` (local-backend compatible; no HCP Terraform remote runs).
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration

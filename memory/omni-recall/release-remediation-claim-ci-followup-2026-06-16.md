@@ -1,3 +1,8 @@
+---
+status: completed
+completed_date: 2026-06-21
+---
+
 # Release Remediation Follow-up — Claim Hygiene, CI Integrity, Secret Scan
 
 Date: 2026-06-16
@@ -16,3 +21,5 @@ Actions taken:
 - Added retry/backoff around mobile workflow `npm ci` installs to reduce transient registry `ECONNRESET` failures without masking build failures.
 
 Remaining operator requirement: do not add externally certified/compliant claims back to public copy unless separate certification evidence artifacts are committed and referenced by the claim hygiene allowlist.
+
+> **Resolved 2026-06-21.** Python 3.11 pinned in release.yml (RFC_2026_06_19). CI green as of PR #1445.

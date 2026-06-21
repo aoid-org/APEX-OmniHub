@@ -108,6 +108,22 @@ def _get_changed_files_local(base_ref: str | None, head_ref: str | None) -> list
     return [p for p in result.stdout.strip().splitlines() if p]
 
 
+def _get_pr_body() -> str:
+    event_path = os.getenv("GITHUB_EVENT_PATH")
+    if event_path and Path(event_path).exists():
+        try:
+            import json
+            with open(event_path, "r", encoding="utf-8") as file_obj:
+                event = json.load(file_obj)
+            if "pull_request" in event:
+                return event["pull_request"].get("body", "") or ""
+        except Exception:
+            pass
+    local_path = ARTIFACT_DIR / "pr_body.txt"
+    if local_path.exists():
+        return local_path.read_text(encoding="utf-8")
+    return ""
+
 def _get_diff_stats(changed_files: list[str]) -> dict[str, int]:
     if not changed_files:
         return {"total_files_changed": 0, "insertions": 0, "deletions": 0}
@@ -280,6 +296,7 @@ def build_evidence(
         "manifests_touched": manifests_touched,
         "workflows_touched": workflows_touched,
         "candidate_test_plan": candidate_tests,
+        "pr_body": _get_pr_body(),
     }
 
     out_path = ARTIFACT_DIR / "evidence.json"

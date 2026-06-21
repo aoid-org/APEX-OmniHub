@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-21
+status: active
+---
+
 # APEX-OmniHub Repository Instructions
 
 This repository belongs to APEX Business Systems LTD and supports APEX-OmniHub. Treat it as production-grade software.

@@ -75,8 +75,12 @@ provider "upstash" {
 
 
 # Cloudflare DNS + WAF
+# Module source is self-relative (./cloudflare) so HCP Terraform's remote plan
+# executor receives it within the uploaded configuration archive.
+# The canonical shared source lives at ../../modules/cloudflare; the copy here
+# is intentional for remote-plan compatibility.
 module "cloudflare" {
-  source = "../../modules/cloudflare"
+  source = "./cloudflare"
   origin_cname = local.origin_cname
 
   zone_id              = var.cloudflare_zone_id
@@ -87,7 +91,7 @@ module "cloudflare" {
 
 # Upstash Redis
 module "redis" {
-  source = "../../modules/upstash"
+  source = "./upstash"
 
   database_name   = "omnihub-production"
   region          = "us-east-1"

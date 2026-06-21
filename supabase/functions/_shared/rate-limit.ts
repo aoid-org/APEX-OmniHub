@@ -14,8 +14,8 @@
  * Remediation: R3 - In-memory rate limiting replaced with distributed Upstash REST
  */
 
-import { Redis } from "npm:@upstash/redis@1.35.3";
-import { Ratelimit } from "npm:@upstash/ratelimit@2.0.8";
+import { Redis } from "https://esm.sh/@upstash/redis@1.35.3";
+import { Ratelimit } from "https://esm.sh/@upstash/ratelimit@2.0.8";
 import { buildCorsHeaders } from "./cors.ts";
 
 export interface RateLimitConfig {

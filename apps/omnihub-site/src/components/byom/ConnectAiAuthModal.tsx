@@ -123,12 +123,13 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-bg)',
                   color: 'var(--color-text)',
+                  colorScheme: 'dark', // Fix OS native dropdown rendering on dark mode
                   fontSize: '1rem',
                   marginTop: '8px'
                 }}
               >
                 {PROVIDERS.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id} style={{ backgroundColor: '#121212', color: '#ffffff' }}>{p.name}</option>
                 ))}
               </select>
             </label>

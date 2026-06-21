@@ -8,12 +8,10 @@ import { checkRateLimit, rateLimitExceededResponse } from "../_shared/rate-limit
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
 
-// We need service_role to create users and bypass RLS
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
-const cockpitCrypto = getCockpitCrypto();
+// We will initialize these lazily to avoid crashing the edge function on boot
+// if environment variables are missing. This allows OPTIONS requests to succeed.
+let supabaseAdmin: ReturnType<typeof createClient> | null = null;
+let cockpitCrypto: ReturnType<typeof getCockpitCrypto> | null = null;
 
 const PROVIDERS = ['openai', 'google', 'anthropic', 'xai', 'groq'] as const;
 type ByomProvider = typeof PROVIDERS[number];
@@ -153,12 +151,20 @@ serve(async (req: Request) => {
   }
 
   const origin = req.headers.get('origin');
-  
+
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405, origin);
   }
 
   try {
+    if (!supabaseAdmin) {
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+    }
+    if (!cockpitCrypto) {
+      cockpitCrypto = getCockpitCrypto();
+    }
     // Basic IP rate limit for the login endpoint
     const clientIp = req.headers.get("x-forwarded-for")?.split(',')[0] || "unknown_ip";
     const rl = await checkRateLimit(clientIp, { maxRequests: 10, windowMs: 60_000, keyPrefix: 'byom-login' });
@@ -171,13 +177,13 @@ serve(async (req: Request) => {
 
     const pattern = API_KEY_PATTERNS[provider];
     if (pattern && !pattern.test(api_key)) {
-      return jsonResponse({ error: `Invalid API key format for ${provider}` }, 400, origin);
+      return jsonResponse({ error: `Invalid API key format for ${provider}` }, 200, origin);
     }
 
     // 1. Probe the credential to ensure it's valid
     const probeResult = await probeCredential(provider, api_key);
     if (!probeResult.valid) {
-      return jsonResponse({ error: "Invalid credential", details: probeResult.reason }, 401, origin);
+      return jsonResponse({ error: "Invalid credential", details: probeResult.reason }, 200, origin);
     }
 
     // 2. Generate deterministic fingerprint
@@ -259,8 +265,8 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error("[byom-login] Error:", error);
     if (error instanceof z.ZodError) {
-      return jsonResponse({ error: "Validation failed", details: error.errors }, 400, origin);
+      return jsonResponse({ error: "Validation failed", details: error.errors }, 200, origin);
     }
-    return jsonResponse({ error: error instanceof Error ? error.message : "Internal Server Error" }, 500, origin);
+    return jsonResponse({ error: error instanceof Error ? error.message : "Internal Server Error" }, 200, origin);
   }
 });

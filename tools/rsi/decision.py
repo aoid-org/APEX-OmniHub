@@ -28,6 +28,62 @@ MAX_REQUIRED_TESTS = 20
 MAX_RECOMMENDED_REVIEWERS = 10
 
 
+def _evaluate_protected_evidence(body: str) -> dict[str, Any]:
+    body_lower = body.lower()
+    missing = []
+    
+    if "protected files touched" not in body_lower:
+        missing.append("List of protected files touched")
+    if "reason for touching production terraform" not in body_lower:
+        missing.append("Reason for touching production Terraform")
+    if "ops doc guard" not in body_lower:
+        missing.append("Ops Doc Guard documentation confirmation")
+    if "terraform/hcp plan status: passed" not in body_lower:
+        if "terraform/hcp plan status: blocked with exact external reason" not in body_lower:
+            missing.append("Terraform/HCP plan status")
+    if "production routing flip status: explicitly approved" not in body_lower and "production routing flip status: deferred" not in body_lower:
+        missing.append("Production routing flip status")
+    if "user-shoes validation result: go" not in body_lower:
+        if "user-shoes validation result: blocked" not in body_lower and "user-shoes validation result: no-go" not in body_lower:
+            missing.append("User-shoes validation result")
+    if "connect ai live validation result if in scope: go" not in body_lower and "byom / connect ai live validation result if in scope: go" not in body_lower:
+        if "connect ai live validation result" not in body_lower and "byom / connect ai" not in body_lower:
+            missing.append("BYOM / Connect AI live validation result")
+    if "no sensitive credentials were exposed" not in body_lower:
+        missing.append("Sensitive credentials confirmation")
+    if "final recommendation: merge by repo owner" not in body_lower and "final recommendation: hold" not in body_lower:
+        missing.append("Final recommendation")
+
+    is_complete = len(missing) == 0
+    
+    is_no_go = "validation result: no-go" in body_lower
+    is_blocked = "validation result: blocked" in body_lower or "plan status: blocked" in body_lower
+    
+    can_pass = False
+    rationale = ""
+    if not is_complete:
+        rationale = "Evidence is incomplete. Missing or invalid: " + ", ".join(missing)
+    elif is_no_go:
+        rationale = "Evidence indicates NO-GO validation result."
+    elif is_blocked:
+        if "final recommendation: hold" in body_lower:
+            rationale = "Evidence is BLOCKED but explicitly held by recommendation."
+        elif "blocked with exact external reason" in body_lower and "final recommendation: merge by repo owner" in body_lower:
+            can_pass = True
+            rationale = "Evidence is complete and externally BLOCKED with valid recommendation."
+        else:
+            rationale = "Evidence is BLOCKED but missing external reason or valid recommendation."
+    else:
+        can_pass = True
+        rationale = "Evidence is complete and validation is GO."
+
+    return {
+        "can_pass": can_pass,
+        "is_complete": is_complete,
+        "missing": missing,
+        "rationale": rationale
+    }
+
 def _risk_from_decision(
     decision: str,
     protected_hits: list[str],
@@ -37,6 +93,8 @@ def _risk_from_decision(
     if decision == "block":
         return "critical"
     if decision == "escalate":
+        if protected_hits:
+            return "critical"
         return "high"
     # decision == "allow"
     if protected_hits:
@@ -94,8 +152,18 @@ def combine(
 
     # Combination rules (deterministic ALWAYS wins)
     if det_decision == "block":
-        final_decision = "block"
-        rationale = policy.get("rationale", "Protected path block — deterministic rule.")
+        pr_body = (evidence or {}).get("pr_body", "")
+        if protected_hits and pr_body:
+            ev_result = _evaluate_protected_evidence(pr_body)
+            if ev_result["can_pass"]:
+                final_decision = "escalate"
+                rationale = "Protected paths touched. Evidence complete and passing. Ready for owner review."
+            else:
+                final_decision = "block"
+                rationale = "Protected path block — deterministic rule. Evidence incomplete or failing: " + ev_result['rationale']
+        else:
+            final_decision = "block"
+            rationale = policy.get("rationale", "Protected path block — deterministic rule.")
     elif det_decision == "escalate" and not model_available:
         # Escalation without model advisory: allow merge but flag for manual review.
         # Failing closed here would deadlock: workflow PRs touching .github/workflows/**
@@ -142,7 +210,7 @@ def combine(
     if model is not None:
         artifacts.insert(2, str(ARTIFACT_DIR / "model_result.json"))
 
-    return {
+    out = {
         "decision": final_decision,
         "risk": risk,
         "abort": abort,
@@ -156,6 +224,12 @@ def combine(
         "model_summary": model_summary,
         "artifacts_generated": artifacts,
     }
+    
+    if final_decision == "escalate" and "Ready for owner review" in rationale:
+        out["owner_review_status"] = "ready_for_owner_merge"
+        out["approval_model"] = "repo_owner_manual_merge_is_final_approval"
+        
+    return out
 
 
 def run_decision() -> int:

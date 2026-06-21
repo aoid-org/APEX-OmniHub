@@ -42,7 +42,10 @@ export function isOriginAllowed(origin: string | null): boolean {
     }
   }
 
-  // Default deny (fail-closed)
+  // Default deny (fail-closed), but allow shadow previews
+  if (origin && /^https:\/\/[a-z0-9]+\.apex-omnihub-shadow\.pages\.dev$/.test(origin)) {
+    return true;
+  }
   return false;
 }
 

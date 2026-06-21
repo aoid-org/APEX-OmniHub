@@ -136,3 +136,5 @@ class FinalDecision:
     deterministic_summary: DeterministicSummary = field(default_factory=DeterministicSummary)
     model_summary: ModelSummary | None = None
     artifacts_generated: list[str] = field(default_factory=list)
+    owner_review_status: str | None = None
+    approval_model: str | None = None

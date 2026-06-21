@@ -1,7 +1,7 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
-status: verified
+last_audited: 2026-06-21
+status: archived
 ---
 
 # Micro-Task Map: Zero-Cost Pipeline Initialization

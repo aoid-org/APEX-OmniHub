@@ -2,8 +2,10 @@
 version: 1.1.0
 created: 2026-06-20
 last_audited: 2026-06-20
-status: verified
+status: archived
+archived_date: 2026-06-21
 supersedes: CURRENT_PLATFORM_STATE_2026_06_14.md
+superseded_by: CURRENT_PLATFORM_STATE_2026_06_21.md
 ---
 
 # Current Platform State — 2026-06-20
