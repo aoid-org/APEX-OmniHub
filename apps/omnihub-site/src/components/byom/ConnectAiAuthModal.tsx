@@ -128,7 +128,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                 }}
               >
                 {PROVIDERS.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id} style={{ color: '#000', backgroundColor: '#fff' }}>{p.name}</option>
                 ))}
               </select>
             </label>
