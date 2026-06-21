@@ -224,6 +224,32 @@ cut is recorded here rather than weakening the guard.
 
 ---
 
+## 9.3 Terraform release-promotion fix — 2026-06-21 (HCP org + token)
+
+The `release.yml` atomic routing-flip path (Terraform Plan/Apply) failed because:
+
+1. **HCP Terraform org mismatch.** `terraform/environments/production/main.tf`
+   declared `organization = "omnihub"`, which does not exist. The live HCP
+   Terraform org is **`APEX-OmniHub`** (single org, verified in the dashboard).
+   Fixed to `APEX-OmniHub`; the `omnihub-production` workspace auto-creates on
+   first `terraform init`.
+2. **Token secret rename.** The workflow referenced `secrets.TF_TOKEN`, which
+   **did not exist** (empty value → `unauthorized`). The Terraform credential is
+   now the **`TF_PROD_TOKEN`** secret, set at **both repo-level and the
+   `production-shadow` environment** (the Plan step runs in the `release` job,
+   which has no `environment:`, so it can only read a repo-level secret; the
+   Apply step runs in `production-shadow`). CI exposes it to the Terraform CLI as
+   `TF_TOKEN_app_terraform_io` / `cli_config_credentials_token`.
+
+**Operational contract change:** the required release secret is now
+**`TF_PROD_TOKEN`** (not `TF_TOKEN`). `scripts/ci/shadow-certification-preflight.mjs`
+B-3 check now validates `TF_PROD_TOKEN`. The **staging** path
+(`.github/workflows/cd-staging.yml`) still uses a **separate** `TF_API_TOKEN`
+secret and a separate workspace; it is intentionally not pointed at the
+production token (environment separation) and is skipped when its secret is unset.
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration

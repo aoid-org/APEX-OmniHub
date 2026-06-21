@@ -79,7 +79,7 @@ jobs:
           SHADOW_HEALTH_URL: ${{ vars.SHADOW_HEALTH_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          TF_TOKEN: ${{ secrets.TF_PROD_TOKEN }}
+          TF_PROD_TOKEN: ${{ secrets.TF_PROD_TOKEN }}
         run: node scripts/ci/shadow-certification-preflight.mjs
       - name: Deploy to Shadow Slot (Cloudflare Pages)
         if: |
