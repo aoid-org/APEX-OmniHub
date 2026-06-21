@@ -137,11 +137,18 @@
     'font-family:"Space Grotesk",system-ui,sans-serif;padding:clamp(64px,9vw,120px) clamp(20px,6vw,80px);' +
     'border-top:1px solid ' + TOKENS.borderSubtle + ';border-bottom:1px solid ' + TOKENS.borderSubtle + '}' +
   '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
-  '.ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
+  '.ohsm-hero-3d{pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
   '.ohsm-hero-3d.ohsm-ready{opacity:1}' +
-  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center}' +
-  '.ohsm-copy{display:grid;gap:18px;min-width:0}' +
-  '.ohsm-stage-3d{position:relative;min-height:clamp(320px,44vh,500px);width:100%}' +
+  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:grid;' +
+    'grid-template-columns:minmax(0,.95fr) minmax(360px,1.05fr);gap:clamp(24px,4vw,64px);align-items:center}' +
+  '.ohsm-copy{display:grid;gap:18px;min-width:0;max-width:600px}' +
+  '.ohsm-stage-3d{position:relative;min-height:clamp(360px,48vh,560px);width:100%;overflow:visible;pointer-events:none}' +
+  '.ohsm-stage-3d .ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;' +
+    'background:radial-gradient(circle at 48% 48%,rgba(234,124,68,.9) 0 3px,transparent 3px),' +
+    'radial-gradient(circle at 58% 38%,rgba(248,250,252,.65) 0 3px,transparent 3px),' +
+    'radial-gradient(circle at 40% 62%,rgba(248,250,252,.48) 0 3px,transparent 3px),' +
+    'radial-gradient(ellipse at 52% 50%,rgba(234,124,68,.32),rgba(234,124,68,.13) 28%,transparent 58%);' +
+    'filter:drop-shadow(0 0 26px rgba(234,124,68,.48))}' +
   '.ohsm-eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--ohsm-accent-hi)}' +
   '.ohsm-section h2{font-weight:700;letter-spacing:-.02em;line-height:1.04;font-size:clamp(30px,4.4vw,52px);max-width:16ch}' +
   '.ohsm-section .ohsm-sub{color:var(--ohsm-text-2);font-size:clamp(15px,1.4vw,17px);line-height:1.65;max-width:54ch}' +
@@ -299,8 +306,8 @@
   '.ohsm-fallback{position:absolute;inset:0;overflow:auto;padding:90px clamp(16px,4vw,48px) 60px;z-index:3}' +
   '.ohsm-fallback .ohsm-fwrap{max-width:760px;margin:0 auto;display:grid;gap:14px}' +
 
-  '@media (max-width:899px){.ohsm-hero-3d.ohsm-ready{opacity:.85}.ohsm-section .ohsm-inner{grid-template-columns:1fr}.ohsm-stage-3d{min-height:clamp(280px,40vh,360px)}}' +
-  '@media (max-width:599px){.ohsm-hero-3d.ohsm-ready{opacity:.38}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
+  '@media (max-width:899px){.ohsm-section .ohsm-inner{max-width:none;grid-template-columns:1fr}.ohsm-stage-3d{min-height:clamp(260px,42vh,420px);order:-1}.ohsm-hero-3d.ohsm-ready{opacity:.72}}' +
+  '@media (max-width:599px){.ohsm-stage-3d{min-height:clamp(220px,34vh,340px)}.ohsm-hero-3d.ohsm-ready{opacity:.52}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
   '@media (max-width:760px){' +
     '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
       'transform:translateY(24px);max-height:65vh;overflow-y:auto}' +
@@ -1905,9 +1912,9 @@
 
         var scene = new THREE.Scene();
         var cam   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200);
-        /* Camera near-on so the station cluster centers within the right-side stage */
-        cam.position.set(10, 18, 72);
-        cam.lookAt(18, 0, -38);
+        /* Stage-centered camera: canvas is already constrained to the right split stage. */
+        cam.position.set(0, 12, 42);
+        cam.lookAt(0, 0, -34);
 
         /* material factories — same additive-blend aesthetic as the full overlay */
         var OG = 0xea7c44, OGD = 0xc4571c, WH = 0xf8fafc;
@@ -1925,21 +1932,21 @@
         }
 
         /* scale CAPS world-space positions to hero viewport */
-        var SX = 0.165, SY = 0.22, SZ = 0.135, XBIAS = 18;
+        var SX = 0.28, SY = 0.34, SZ = 0.09, XBIAS = 0;
         var stMeshes = [], capV3 = [];
         CAPS.forEach(function (c, i) {
           var px = c.pos[0] * SX + XBIAS, py = c.pos[1] * SY, pz = c.pos[2] * SZ;
           capV3.push(new THREE.Vector3(px, py, pz));
-          var sz = c.size * 1.6;
+          var sz = c.size * 3.0;
           var accent = (i % 3 === 0) || i === 1 || i === 2;
           var g = new THREE.Group();
           g.position.set(px, py, pz);
           var geo = new THREE.IcosahedronGeometry(sz, 1);
-          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 0.9 : 0.45)));
-          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.06 : 0.02)));
+          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 1.0 : 0.75)));
+          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.16 : 0.08)));
           if (accent) {
             var hGeo = new THREE.TorusGeometry(sz * 2.0, 0.1, 4, 20);
-            var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.22));
+            var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.45));
             halo.rotation.x = Math.PI / 2.5;
             g.add(halo);
           }
@@ -1951,7 +1958,7 @@
         var spine = new THREE.CatmullRomCurve3(capV3);
         scene.add(new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(spine.getPoints(100)),
-          edgeM(OGD, 0.2)
+          edgeM(OGD, 0.65)
         ));
 
         /* travelling scout dot */
@@ -1970,7 +1977,7 @@
         var pGeo = new THREE.BufferGeometry();
         pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
         scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-          color: WH, size: 0.45, opacity: 0.32, transparent: true,
+          color: WH, size: 0.75, opacity: 0.6, transparent: true,
           blending: THREE.AdditiveBlending, depthWrite: false
         })));
 
@@ -1982,9 +1989,9 @@
           try {
             var t = (ts - t0) * 0.001;
             /* gentle camera drift */
-            cam.position.x = 10 + Math.sin(t * 0.17) * 4;
-            cam.position.y = 18  + Math.cos(t * 0.11) * 3;
-            cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
+            cam.position.x = Math.sin(t * 0.17) * 2.5;
+            cam.position.y = 12  + Math.cos(t * 0.11) * 2;
+            cam.lookAt(Math.sin(t * 0.09) * 1.5, Math.cos(t * 0.07), -34);
             /* station pulse + slow rotation */
             stMeshes.forEach(function (sm) {
               sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
@@ -2101,12 +2108,12 @@
     row.appendChild(launch);
     row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
     copy.appendChild(row);
-    inner.appendChild(copy);
-    var stage = el('div', 'ohsm-stage-3d');
+    var stage3d = el('div', 'ohsm-stage-3d');
     var hero3d = el('canvas', 'ohsm-hero-3d');
-    stage.appendChild(hero3d);
-    inner.appendChild(stage);   /* split hero: copy left, 3D map centered right */
-    host.appendChild(inner);
+    stage3d.appendChild(hero3d);
+    inner.appendChild(copy);
+    inner.appendChild(stage3d);
+    host.appendChild(inner);   /* stacks: starfield \u2192 split copy/stage */
     renderHero3D(hero3d, opts);
   }
 
