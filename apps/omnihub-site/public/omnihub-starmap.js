@@ -139,9 +139,7 @@
   '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
   '.ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.4s ease}' +
   '.ohsm-hero-3d.ohsm-ready{opacity:1}' +
-  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center}' +
-  '.ohsm-copy{display:grid;gap:18px;min-width:0}' +
-  '.ohsm-stage-3d{position:relative;min-height:clamp(320px,44vh,500px);width:100%}' +
+  '.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:min(600px,50%);margin:0;display:grid;gap:18px}' +
   '.ohsm-eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--ohsm-accent-hi)}' +
   '.ohsm-section h2{font-weight:700;letter-spacing:-.02em;line-height:1.04;font-size:clamp(30px,4.4vw,52px);max-width:16ch}' +
   '.ohsm-section .ohsm-sub{color:var(--ohsm-text-2);font-size:clamp(15px,1.4vw,17px);line-height:1.65;max-width:54ch}' +
@@ -299,7 +297,7 @@
   '.ohsm-fallback{position:absolute;inset:0;overflow:auto;padding:90px clamp(16px,4vw,48px) 60px;z-index:3}' +
   '.ohsm-fallback .ohsm-fwrap{max-width:760px;margin:0 auto;display:grid;gap:14px}' +
 
-  '@media (max-width:899px){.ohsm-hero-3d.ohsm-ready{opacity:.85}.ohsm-section .ohsm-inner{grid-template-columns:1fr}.ohsm-stage-3d{min-height:clamp(280px,40vh,360px)}}' +
+  '@media (max-width:899px){.ohsm-hero-3d.ohsm-ready{opacity:.6}.ohsm-section .ohsm-inner{max-width:none}}' +
   '@media (max-width:599px){.ohsm-hero-3d.ohsm-ready{opacity:.38}.ohsm-section h2{text-shadow:0 2px 28px rgba(6,10,19,.95),0 0 56px rgba(6,10,19,.85)}.ohsm-section .ohsm-sub{text-shadow:0 1px 14px rgba(6,10,19,.92)}}' +
   '@media (max-width:760px){' +
     '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
@@ -1905,8 +1903,8 @@
 
         var scene = new THREE.Scene();
         var cam   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200);
-        /* Camera near-on so the station cluster centers within the right-side stage */
-        cam.position.set(10, 18, 72);
+        /* Camera offset left so station cluster (biased right) occupies right 55% of frame */
+        cam.position.set(-10, 18, 72);
         cam.lookAt(18, 0, -38);
 
         /* material factories — same additive-blend aesthetic as the full overlay */
@@ -1982,7 +1980,7 @@
           try {
             var t = (ts - t0) * 0.001;
             /* gentle camera drift */
-            cam.position.x = 10 + Math.sin(t * 0.17) * 4;
+            cam.position.x = -10 + Math.sin(t * 0.17) * 4;
             cam.position.y = 18  + Math.cos(t * 0.11) * 3;
             cam.lookAt(18 + Math.sin(t * 0.09) * 2, Math.cos(t * 0.07), -38);
             /* station pulse + slow rotation */
@@ -2082,10 +2080,9 @@
 
     // section content — feature-section copy, no hero repetition
     var inner = el('div', 'ohsm-inner');
-    var copy = el('div', 'ohsm-copy');
-    copy.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
-    copy.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
-    copy.appendChild(el('p', 'ohsm-sub',
+    inner.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
+    inner.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
+    inner.appendChild(el('p', 'ohsm-sub',
       'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works about two minutes, end to end.'));
     var row = el('div', 'ohsm-row');
     var launch = el('button', 'ohsm-btn ohsm-btn-primary', 'EXPLORE THE MAP \u25b8');
@@ -2100,12 +2097,9 @@
     });
     row.appendChild(launch);
     row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
-    copy.appendChild(row);
-    inner.appendChild(copy);
-    var stage = el('div', 'ohsm-stage-3d');
+    inner.appendChild(row);
     var hero3d = el('canvas', 'ohsm-hero-3d');
-    stage.appendChild(hero3d);
-    inner.appendChild(stage);   /* split hero: copy left, 3D map centered right */
+    host.appendChild(hero3d);   /* stacks: starfield \u2192 3D hero \u2192 inner text */
     host.appendChild(inner);
     renderHero3D(hero3d, opts);
   }
