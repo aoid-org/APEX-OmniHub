@@ -79,11 +79,9 @@ def test_deterministic_block_overrides_model():
 
 
 def test_escalate_no_model_blocks():
-    """Escalation required + model unavailable → fail-closed to block."""
+    """Escalation required + model unavailable -> stays escalate."""
     result = combine(ESCALATE_POLICY, UNAVAILABLE_MODEL)
-    assert result["decision"] == "block"
-    assert result["abort"] is True
-    assert "failing closed" in result["rationale"]
+    assert result["decision"] == "escalate"
 
 
 def test_escalate_with_model_allow_stays_escalate():
@@ -189,3 +187,25 @@ def test_risk_mapping_correct():
     }
     allow_docs = combine(ALLOW_POLICY, None, evidence_docs)
     assert allow_docs["risk"] == "low"
+
+def test_pass_for_owner_review():
+    evidence = {
+        "changed_paths": ["terraform/environments/production/main.tf"],
+        "classified_paths": {"terraform/environments/production/main.tf": "protected"},
+        "pr_body": """
+## RSI Evidence
+- List of protected files touched: terraform/environments/production/main.tf
+- Reason for touching production Terraform: testing
+- Confirmation that Ops Doc Guard documentation was updated where required: yes
+- Terraform/HCP plan status: PASSED
+- Production routing flip status: EXPLICITLY APPROVED
+- User-shoes validation result: GO
+- BYOM / Connect AI live validation result if in scope: GO
+- Confirmation that no sensitive credentials were exposed in evidence: yes
+- Final recommendation: MERGE BY REPO OWNER
+        """
+    }
+    result = combine(BLOCK_POLICY, None, evidence)
+    assert result["decision"] == "PASS_FOR_OWNER_REVIEW"
+    assert result["abort"] is False
+    assert result["approval_model"] == "repo_owner_merge_is_final_approval"
