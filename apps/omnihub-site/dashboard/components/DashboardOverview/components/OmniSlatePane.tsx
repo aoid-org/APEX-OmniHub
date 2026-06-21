@@ -174,7 +174,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         className={
           'apex-hero-tile apex-hero-tile--lg' +
           ' pointer-events-auto' +
-          ' flex flex-col justify-end relative overflow-hidden'
+          ' flex flex-col relative overflow-hidden'
         }
         style={{
           ...GLASS_TILE,
@@ -257,7 +257,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           )}
         </div>
 
-        <div className="relative z-10 flex flex-col gap-3" style={{ minWidth: 0 }}>
+        <div className="relative z-10 flex flex-col gap-3" style={{ minWidth: 0, flex: 1, paddingTop: 8 }}>
           {activeInsight === '__global__' && (
             <div
               data-testid="global-insights-panel"
@@ -319,13 +319,32 @@ export const OmniSlatePane = memo(function OmniSlatePane({
             </div>
           )}
 
+          {firstLog && (
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: traceColor,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                minWidth: 0,
+              }}
+            >
+              {firstLog}
+            </div>
+          )}
+
+          <div style={{ flex: 1 }} />
+
           <div
             data-testid="omnislate-prompt-row"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              marginTop: 'auto',
               flexShrink: 0,
             }}
           >
@@ -374,25 +393,6 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               <span style={{ fontSize: 12, color: '#dfe6fe' }}>▶</span>
             </button>
           </div>
-
-          {firstLog && (
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: 12,
-                fontWeight: 700,
-                color: traceColor,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                minWidth: 0,
-              }}
-            >
-              {firstLog}
-            </div>
-          )}
         </div>
       </motion.div>
     </div>

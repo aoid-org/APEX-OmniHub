@@ -1088,19 +1088,19 @@
 /*
  * Adaptive interaction contract:
  * Wrapper classes (on flex items / canvasRef divs) control adaptive width distribution.
- * Side panes compress first (lower flex-grow, higher flex-shrink).
- * OmniSlate has highest flex-grow and protected min-width so it shrinks last.
+ * Side panes are fixed-width (flex-shrink: 0) — they never compress before OmniSlate.
+ * OmniSlate takes ALL remaining space via flex: 1 1 0 — always the widest pane.
  * Tile classes (on motion.div) control internal height and overflow.
  */
 .apex-hero-tile-wrapper--sm {
-  flex: 1 2 clamp(132px, 18vw, 300px);
-  min-width: 132px;
-  max-width: 320px;
+  flex: 0 0 200px;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .apex-hero-tile-wrapper--lg {
-  flex: 4 1 clamp(420px, 52vw, 820px);
-  min-width: min(100%, 420px);
+  flex: 1 1 0;
+  min-width: 280px;
 }
 
 /* Small tile — fills wrapper, adaptive height */
@@ -1396,13 +1396,13 @@
     gap: 14px;
   }
   .apex-hero-tile-wrapper--sm {
-    flex-basis: 140px;
-    min-width: 116px;
-    max-width: 200px;
+    flex: 0 0 160px;
+    min-width: 120px;
+    max-width: 160px;
   }
   .apex-hero-tile-wrapper--lg {
-    flex: 5 1 440px;
-    min-width: min(100%, 400px);
+    flex: 1 1 0;
+    min-width: 220px;
   }
 }
 
@@ -1412,13 +1412,13 @@
     gap: 12px;
   }
   .apex-hero-tile-wrapper--sm {
-    flex-basis: 132px;
-    min-width: 116px;
-    max-width: 170px;
+    flex: 0 0 140px;
+    min-width: 0;
+    max-width: 140px;
   }
   .apex-hero-tile-wrapper--lg {
-    flex: 5 1 440px;
-    min-width: min(100%, 420px);
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
