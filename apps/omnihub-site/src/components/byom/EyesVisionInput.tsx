@@ -23,7 +23,7 @@ import {
   describeImagePayload,
   isAcceptedImageType,
   type AcceptedImageType,
-} from '../../../../src/lib/eyes-vision';
+} from '../../../../../src/lib/eyes-vision';
 
 interface AttachedImage {
   readonly dataUrl: string;
@@ -97,7 +97,10 @@ export function EyesVisionInput() {
       });
 
       // Metadata-only log — NEVER the bytes.
-      console.info('[APEX OmniHub] Eyes vision send:', describeImagePayload(message.content[0] as never));
+      const imageBlock = message.content.find((block) => block.type === 'image');
+      if (imageBlock && imageBlock.type === 'image') {
+        console.info('[APEX OmniHub] Eyes vision send:', describeImagePayload(imageBlock));
+      }
 
       const provider = sessionStorage.getItem('omni_ai_provider') === 'groq' ? 'groq' : 'anthropic';
 

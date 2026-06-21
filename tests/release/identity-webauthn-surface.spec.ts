@@ -148,9 +148,15 @@ describe('Assertion verification rejects replayed / stale sign counters', () => 
 });
 
 describe('identity-webauthn surface is wired and reuses existing registry', () => {
-  it('embeds the passkey section into the Login flow', () => {
+  it('keeps the passkey UI as foundation, NOT exposed in shipped Login', () => {
+    // The PasskeySection component exists as foundation...
+    const panel = read('apps/omnihub-site/src/components/identity/PasskeySection.tsx');
+    expect(panel).toContain('PasskeySection');
+    // ...but is intentionally NOT rendered in the shipped Login flow, because
+    // the assertion signature is not yet cryptographically verified against the
+    // stored COSE public key. See featureTruth.ts (identity.webauthn).
     const login = read('apps/omnihub-site/src/pages/Login.tsx');
-    expect(login).toContain('PasskeySection');
+    expect(login).not.toContain('<PasskeySection');
   });
 
   it('site client invokes the identity-webauthn edge function', () => {
