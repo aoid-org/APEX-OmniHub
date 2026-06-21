@@ -24,6 +24,8 @@ import {
   generateChallenge,
   parseAndVerifyClientData,
   extractSignCount,
+  extractCredentialPublicKey,
+  verifyAssertionSignature,
   verifyAssertionCounter,
   type StoredCredential,
 } from "./webauthn-core.ts";
@@ -198,10 +200,22 @@ serve(async (req: Request) => {
         return jsonResponse({ error: "registration_failed", reason: cd.reason }, 200, origin);
       }
 
-      const signCount = extractSignCount(body.authenticatorData);
+      // Parse the attestationObject and extract the ES256 public key as a raw
+      // P-256 point we can later import for signature verification.
+      let extracted;
+      try {
+        extracted = extractCredentialPublicKey(body.publicKey);
+      } catch (e) {
+        return jsonResponse(
+          { error: "registration_failed", reason: e instanceof Error ? e.message : "pubkey_parse_failed" },
+          200,
+          origin,
+        );
+      }
+      const signCount = extracted.signCount;
       const stored: StoredCredential = {
         credentialId: body.credentialId,
-        publicKey: body.publicKey, // PUBLIC key metadata only
+        publicKey: extracted.publicKeyRawB64, // raw uncompressed P-256 point (PUBLIC)
         signCount,
         createdAt: new Date().toISOString(),
       };
@@ -237,6 +251,26 @@ serve(async (req: Request) => {
       const stored = creds.find((c) => c.credentialId === body.credentialId);
       if (!stored) {
         return jsonResponse({ error: "assertion_failed", reason: "unknown_credential" }, 200, origin);
+      }
+
+      // Cryptographically verify the assertion signature against the stored
+      // public key BEFORE trusting the sign counter. This is the core security
+      // check: only the authenticator holding the private key can produce it.
+      const signatureValid = await verifyAssertionSignature({
+        publicKeyRawB64: stored.publicKey,
+        authenticatorDataB64: body.authenticatorData,
+        clientDataJSONB64: body.clientDataJSON,
+        signatureB64: body.signature,
+      });
+      if (!signatureValid) {
+        delete info.webauthn_challenge; // consume challenge even on failure
+        await saveDeviceInfo(user.id, body.deviceId, info);
+        await writeAuditReceipt(user.id, "identity.webauthn.assertion_rejected", {
+          deviceId: body.deviceId,
+          credentialId: body.credentialId,
+          reason: "invalid_signature",
+        });
+        return jsonResponse({ error: "assertion_failed", reason: "invalid_signature" }, 200, origin);
       }
 
       const presented = extractSignCount(body.authenticatorData);

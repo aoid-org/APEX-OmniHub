@@ -115,10 +115,10 @@ export async function registerPasskey(userEmail: string): Promise<PasskeyResult>
         name: userEmail,
         displayName: userEmail,
       },
-      pubKeyCredParams: [
-        { alg: -7, type: 'public-key' }, // ES256
-        { alg: -257, type: 'public-key' }, // RS256
-      ],
+      // ES256-only: the server verifies ES256/P-256 assertion signatures
+      // (see webauthn-core.ts). Advertising RS256 could yield a credential the
+      // server cannot verify, so it is intentionally omitted.
+      pubKeyCredParams: [{ alg: -7, type: 'public-key' }], // ES256
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         userVerification: 'required',

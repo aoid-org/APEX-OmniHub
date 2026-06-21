@@ -22,6 +22,9 @@ import {
   parseAndVerifyClientData,
   extractSignCount,
   verifyAssertionCounter,
+  coseKeyToRawP256,
+  derToRawEcdsaSignature,
+  verifyAssertionSignature,
   type StoredCredential,
 } from '../../supabase/functions/identity-webauthn/webauthn-core';
 
@@ -148,15 +151,15 @@ describe('Assertion verification rejects replayed / stale sign counters', () => 
 });
 
 describe('identity-webauthn surface is wired and reuses existing registry', () => {
-  it('keeps the passkey UI as foundation, NOT exposed in shipped Login', () => {
-    // The PasskeySection component exists as foundation...
+  it('exposes the passkey UI in Login, backed by signature verification', () => {
     const panel = read('apps/omnihub-site/src/components/identity/PasskeySection.tsx');
     expect(panel).toContain('PasskeySection');
-    // ...but is intentionally NOT rendered in the shipped Login flow, because
-    // the assertion signature is not yet cryptographically verified against the
-    // stored COSE public key. See featureTruth.ts (identity.webauthn).
     const login = read('apps/omnihub-site/src/pages/Login.tsx');
-    expect(login).not.toContain('<PasskeySection');
+    expect(login).toContain('<PasskeySection');
+    // The edge function must call signature verification on assert.
+    const fn = read('supabase/functions/identity-webauthn/index.ts');
+    expect(fn).toContain('verifyAssertionSignature');
+    expect(fn).toContain('extractCredentialPublicKey');
   });
 
   it('site client invokes the identity-webauthn edge function', () => {
@@ -170,5 +173,100 @@ describe('identity-webauthn surface is wired and reuses existing registry', () =
     expect(fn).toContain('audit_logs'); // reuses existing receipt store
     // No new table is created by this feature.
     expect(fn).not.toContain('CREATE TABLE');
+  });
+});
+
+// ── Real ES256 (ECDSA P-256) signature verification round-trip ──────────────
+// Proves verifyAssertionSignature genuinely verifies the authenticator
+// signature (not a stub): we generate a P-256 keypair, sign the exact bytes a
+// real authenticator signs (authenticatorData || SHA-256(clientDataJSON)), and
+// confirm valid signatures verify true while tampered ones verify false.
+
+function rawToDerEcdsa(raw: Uint8Array): Uint8Array {
+  const enc = (v: Uint8Array): Uint8Array => {
+    let i = 0;
+    while (i < v.length - 1 && v[i] === 0x00) i++;
+    let body = v.slice(i);
+    if (body[0] & 0x80) body = new Uint8Array([0x00, ...body]); // positive sign
+    return new Uint8Array([0x02, body.length, ...body]);
+  };
+  const r = enc(raw.slice(0, 32));
+  const s = enc(raw.slice(32, 64));
+  return new Uint8Array([0x30, r.length + s.length, ...r, ...s]);
+}
+
+describe('ES256 assertion signature verification (real crypto)', () => {
+  it('coseKeyToRawP256 produces the same point as the exported raw key', async () => {
+    const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+      'sign',
+      'verify',
+    ]);
+    const rawPub = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
+    const cose = new Map<number, unknown>([
+      [1, 2], // kty EC2
+      [3, -7], // alg ES256
+      [-1, 1], // crv P-256
+      [-2, rawPub.slice(1, 33)], // x
+      [-3, rawPub.slice(33, 65)], // y
+    ]);
+    expect(Array.from(coseKeyToRawP256(cose))).toEqual(Array.from(rawPub));
+  });
+
+  it('verifies a valid assertion and rejects tampered ones (DER + raw sigs)', async () => {
+    const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+      'sign',
+      'verify',
+    ]);
+    const rawPub = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
+    const publicKeyRawB64 = base64UrlEncode(rawPub);
+
+    const challenge = generateChallenge();
+    const clientDataJSONB64 = makeClientDataJSON(challenge, 'webauthn.get');
+    const authenticatorDataB64 = makeAuthenticatorData(7);
+
+    const authData = base64UrlDecode(authenticatorDataB64);
+    const cHash = new Uint8Array(
+      await crypto.subtle.digest('SHA-256', base64UrlDecode(clientDataJSONB64)),
+    );
+    const signed = new Uint8Array(authData.length + cHash.length);
+    signed.set(authData, 0);
+    signed.set(cHash, authData.length);
+
+    const rawSig = new Uint8Array(
+      await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, kp.privateKey, signed),
+    );
+
+    // Valid — DER form (what authenticators emit) and raw form both verify.
+    const derSig = base64UrlEncode(rawToDerEcdsa(rawSig));
+    expect(
+      await verifyAssertionSignature({ publicKeyRawB64, authenticatorDataB64, clientDataJSONB64, signatureB64: derSig }),
+    ).toBe(true);
+    expect(
+      await verifyAssertionSignature({ publicKeyRawB64, authenticatorDataB64, clientDataJSONB64, signatureB64: base64UrlEncode(rawSig) }),
+    ).toBe(true);
+
+    // Tampered signature → false.
+    const badRaw = rawSig.slice();
+    badRaw[10] ^= 0xff;
+    expect(
+      await verifyAssertionSignature({ publicKeyRawB64, authenticatorDataB64, clientDataJSONB64, signatureB64: base64UrlEncode(rawToDerEcdsa(badRaw)) }),
+    ).toBe(false);
+
+    // Tampered challenge (different clientDataJSON) → false.
+    expect(
+      await verifyAssertionSignature({
+        publicKeyRawB64,
+        authenticatorDataB64,
+        clientDataJSONB64: makeClientDataJSON(generateChallenge(), 'webauthn.get'),
+        signatureB64: derSig,
+      }),
+    ).toBe(false);
+  });
+
+  it('derToRawEcdsaSignature yields 64-byte r||s', () => {
+    const raw = new Uint8Array(64).fill(7);
+    const der = rawToDerEcdsa(raw);
+    const back = derToRawEcdsaSignature(der);
+    expect(back.length).toBe(64);
   });
 });

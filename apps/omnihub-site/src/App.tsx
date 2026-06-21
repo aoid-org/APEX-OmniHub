@@ -32,6 +32,7 @@ import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { OmniSentryPage } from "@/pages/OmniSentry";
 import { OmniTracePage } from "@/pages/OmniTrace";
+import { EyesVisionPage } from "@/pages/EyesVision";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
 import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
@@ -87,6 +88,8 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/omni-sentry.html", element: <OmniSentryPage />, isPublic: true, routeName: "OmniSentry" },
   { path: "/omni-trace", element: <OmniTracePage />, isPublic: true, routeName: "OmniTrace" },
   { path: "/omni-trace.html", element: <OmniTracePage />, isPublic: true, routeName: "OmniTrace" },
+  { path: "/eyes", element: <EyesVisionPage />, isPublic: true, routeName: "EyesVision" },
+  { path: "/eyes.html", element: <EyesVisionPage />, isPublic: true, routeName: "EyesVision" },
   { path: "/features/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
   { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
   { path: "/man-mode.html", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
