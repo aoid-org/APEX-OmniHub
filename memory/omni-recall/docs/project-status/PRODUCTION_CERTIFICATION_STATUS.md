@@ -1,6 +1,6 @@
 ---
-version: 1.4.0
-last_audited: 2026-06-20
+version: 1.5.0
+last_audited: 2026-06-21
 status: verified
 ---
 
@@ -8,7 +8,28 @@ status: verified
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-06-20T00:00Z
+> Last updated: 2026-06-21T05:00Z
+
+## 2026-06-21 Addendum — PR #1439 & #1441 Merged; Verdict Unchanged
+
+**HEAD:** `966d695f` on `main` (PR #1441 — fix(omnidash): canonical widget rescue and global drift guards). Verified `merged: true`, merged 2026-06-21T04:39Z, via GitHub PR API.
+
+**Merges since the 2026-06-20 addendum** (all merged green under branch protection):
+
+| PR | Merge commit | Scope |
+|---|---|---|
+| #1437 | `0b06effe` | docs: audit & snapshot platform state 2026-06-20 |
+| #1438 | `c74a9a5f` | ci+docs: wire `VITE_ORCHESTRATOR_URL` into prod build; pin orchestrator CORS; document topology |
+| #1439 | `d0ae10da` | fix(omnidash): normalize live module action ids |
+| #1441 | `966d695f` | fix(omnidash): canonical widget rescue + global drift guards (Links local URL staging; module-keyed capability map; honest `omnilink-port` Links resolver; OmniBoard wizard timeout + error taxonomy) |
+
+**Effect on certification verdict:** **NONE.** These were frontend/edge/docs changes, **not** a `chore: version packages` release cut. The verdict remains **`NOT_CERTIFIED_NO_RELEASE_CUT`** — unchanged from the 2026-06-14 run #906 baseline. Package version remains `1.7.1`.
+
+**Verified repo facts (2026-06-21):** src TS/TSX 326; edge function dirs 32 (31 + `_shared`); migrations 94 `.sql` (90 forward + 4 rollback); workflows 23; orchestrator Python 103; hooks (src+apps) 38; test/spec files 346. App package `1.3.10`.
+
+**Carried forward (not re-verified this docs pass — no live credentials used):** APEX Agent LIVE / demo-ready; Render API + worker, Temporal Cloud, Supabase `agent_runs`, `omni_policies` healthy (last verified 2026-06-19). See `CURRENT_PLATFORM_STATE_2026_06_21.md`.
+
+---
 
 ## 2026-06-20 Addendum — APEX Agent LIVE + PR #1435 & #1436 Merged (All CI Green)
 

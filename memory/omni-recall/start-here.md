@@ -1,6 +1,6 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-20
+version: 1.2.0
+last_audited: 2026-06-21
 status: verified
 ---
 
@@ -31,9 +31,10 @@ The system should:
 
 ## Last Verified Session
 
-- Audit date: 2026-06-20
-- HEAD: `6f859ec8` (fix(omnidash): repair widget modal contracts and action endpoint UX — PR #1436, merged 2026-06-19)
-- Branch: `claude/laughing-brown-knodfm` (docs); main at `6f859ec8`
+- Audit date: 2026-06-21
+- HEAD: `966d695f` (fix(omnidash): canonical widget rescue and global drift guards — PR #1441, merged this session; squash carries git date 2026-06-20)
+- Branch: `docs/repo-truth-sync-2026-06-21` (docs); main at `966d695f`
 - Package: `1.7.1` (root); app `1.3.10`
-- Key facts: APEX Agent is LIVE — demo-ready (restored via PR #1435 `4bbd3e5b`, PR branch tip `0eff5a6c`, merged 2026-06-19). End-to-end path verified 2026-06-19 with real LLM reply (trace `da6e7fe5`). `respond_to_user` added to TOOL_REGISTRY (9 tools total). `ops-doc-guard.yml` CI workflow added (23 workflows total). 90 forward migrations (89 baselined + `omni_policies` #90) + 4 rollback scripts. PR #1436 then repaired OmniDash widget modal contracts (frontend/tests only). Both PRs CI-green (verified via check-runs API). Full anti-drift audit completed and self-corrected: README, CURRENT_PLATFORM_STATE_2026_06_20.md (new), DOCUMENTATION_RELEASE_INDEX.md, PRODUCTION_CERTIFICATION_STATUS.md, CI_STATUS_POLICY.md, current-status.md all updated.
-- Prior session (2026-06-10): `apex-universal-sync-orchestrator` skill 100/100. OmniBoard widget rescue (correction 004 active). SkillForge live Anthropic generation.
+- Key facts: PR #1441 completed the OmniDash canonical widget rescue with a corrective commit — Links is now a genuine local URL-staging surface (validates input, Add Link never permanently disabled, "staged locally" + "OmniSlate handoff not connected" copy), the global action whitelist became a **module-keyed capability map** (`moduleKey + actionId`, module-specific copy, unsupported actions never call `trigger-workflow`), underscore/raw-id labels are humanized, the OmniBoard wizard gained timeout handling + explicit error taxonomy, and the live `omnilink-port` Links resolver returns an honest empty link-context state (no `integrations` read, no `test-all`). Corrective-commit gates green locally: typecheck/eslint/`vitest run tests/omnidash` (585 passed)/build/ops-doc-guard. `docs/APEX_AGENT_OPERATIONS.md §9.1` records the resolver contract change.
+- Carried forward (not re-verified this pass): APEX Agent LIVE — demo-ready (restored via PR #1435 `4bbd3e5b`, end-to-end verified 2026-06-19, trace `da6e7fe5`). `respond_to_user` in TOOL_REGISTRY (9 tools). 90 forward migrations + 4 rollback (94 `.sql`). 23 workflows. See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`.
+- Docs synced this session: README.md, `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (new), DOCUMENTATION_RELEASE_INDEX.md, docs/README.md, architecture/CANONICAL_TRUTH.md, state/checkpoints/current-status.md.

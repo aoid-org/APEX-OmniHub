@@ -1,6 +1,6 @@
 ---
-version: 1.2.0
-last_audited: 2026-06-20
+version: 1.3.0
+last_audited: 2026-06-21
 status: verified
 ---
 
@@ -405,3 +405,30 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - temporal_cloud: ✅ Connected (ns `apex-omnihub-temporal.i7ero`, ca-central-1, API-key auth)
 - ops_doc_guard_ci: ✅ Active — fails PRs that change runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`
 - docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_20.md (new), DOCUMENTATION_RELEASE_INDEX.md, PRODUCTION_CERTIFICATION_STATUS.md
+
+## Session (2026-06-21) — PR #1441 corrective commit + repo-truth documentation sync
+- branch: `claude/affectionate-einstein-cmrqp9` (corrective commit, also pushed to PR branch `fix/omnidash-canonical-widget-rescue`); docs sync on `docs/repo-truth-sync-2026-06-21`
+- scope: (1) Verified + finished Google Antigravity's PR #1441 "canonical widget rescue" with a corrective commit closing the user-shoes/code-review blockers; (2) fixed the resulting Ops Doc Guard CI failure; (3) PR #1441 merged to `main` (squash `966d695f`); (4) full repo-truth documentation sync starting with README + omni-recall.
+
+### PR #1441 corrective commit (merged to main as `966d695f`)
+- LinksModule: real local URL staging — validates `http(s)`, **Add Link button never permanently disabled**, stages to local component state with "Links are staged locally until link-context persistence is connected.", invalid URLs show validation copy, `send-to-omnislate` shows "OmniSlate context handoff is not connected yet." Never imports/invokes OmniBoardWizard; never calls trigger-workflow.
+- moduleData.json: Links headline rewritten to URL/context-collection semantics (removed "Connected services and integration endpoints.").
+- omnilink-port `resolveLinks`: no longer reads `integrations`; returns honest empty link-context state; removed `test-all`. No migration created (deferred, JR-gated). Recorded in `docs/APEX_AGENT_OPERATIONS.md §9.1`.
+- moduleActionCapabilities.ts: global whitelist → **module-keyed capability map** (`moduleKey + actionId`, baseline + live ids, module-specific copy). ModuleShell shows tailored copy; unsupported actions never call trigger-workflow.
+- useOmniModuleState.ts: `normalizeActionLabel` humanizes labels equal to id / containing underscores (`create_workflow` → `Create Workflow`).
+- OmniBoardWizard.tsx: AbortController timeout + explicit error taxonomy (missing config, invalid URL, unreachable/CORS, HTTP non-2xx, auth required, timeout); kept app-integration copy; never fakes success.
+- tests: global-drift-guards, links-settings-modules, module-action-normalization, omniboard-wizard updated/added.
+
+### Ops Doc Guard fix
+- `supabase/functions/omnilink-port/index.ts` is a CI-critical path; updated `docs/APEX_AGENT_OPERATIONS.md` (new §9.1) documenting the read-free, no-op Links resolver. `node scripts/ci/check-ops-doc-drift.mjs` → PASS.
+
+### Verification (observed exit 0 / pass)
+- `tsc -b --noEmit` exit 0; `eslint .` exit 0; `vitest run tests/omnidash` 585 passed / 27 skipped / 19 todo; `vite build` success; ops-doc-guard PASS.
+
+### Verified runtime facts (2026-06-21)
+- last_verified_commit: `966d695f` (PR #1441 squash; current main HEAD)
+- package_version: `1.7.1` (root); app `1.3.10`
+- repo counts (verified this session): src TS/TSX 326; src .tsx 94; src/pages 0; edge dirs 32 (31 + `_shared`); migrations 94 `.sql` (90 forward + 4 rollback); workflows 23; hooks (src+apps) 38; orchestrator py 103; test/spec files 346
+- correction logged: the 2026-06-20 snapshot conflated `0020ba6b`/#1439 with the widget rescue. Verified: #1439 = `d0ae10da` (normalize live module action ids); #1441 = `966d695f` (canonical widget rescue). `0020ba6b` was PR #1441's first branch commit. Recorded in `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`, not by mutating the dated 06-20 file.
+- carried_forward_not_reverified: APEX Agent LIVE / Render / Temporal / Supabase runtime health (last verified 2026-06-19; no live credentials used this pass)
+- docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_21.md (new), DOCUMENTATION_RELEASE_INDEX.md, docs/README.md, architecture/CANONICAL_TRUTH.md, start-here.md, current-status.md

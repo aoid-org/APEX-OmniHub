@@ -1,6 +1,6 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-20
+version: 1.2.0
+last_audited: 2026-06-21
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.1 | **package.json version:** 1.7.1 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-06-20
+**Release line:** 1.7.1 | **package.json version:** 1.7.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-21
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -32,7 +32,7 @@ status: verified
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_20.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_21.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -54,21 +54,21 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-20)
+## Platform Statistics (Repository Snapshot 2026-06-21)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
 | **Source Files (`src/`)**                        | 326 TypeScript/TSX files                          |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 32 function directories including `_shared`       |
-| **Database Migrations (`supabase/migrations/`)** | 90 SQL migration files                            |
+| **Edge Functions (`supabase/functions/`)**       | 32 directories (31 function dirs + `_shared`)     |
+| **Database Migrations (`supabase/migrations/`)** | 94 `.sql` files (90 forward + 4 rollback under `migrations/rollback/`) |
 | **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 319 spec/test source files; latest pass counts are recorded in certification status |
-| **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
+| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 346 spec/test source files (verified 2026-06-21); latest pass counts are recorded in certification status |
+| **Custom Hooks (`src/` + app surfaces)**         | 38 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 103 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** `main` HEAD `6f859ec8` (June 19, 2026) — fix(omnidash): repair widget modal contracts and action endpoint UX (PR #1436). The prior landmark PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_20.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `966d695f` (2026-06-21) — fix(omnidash): canonical widget rescue and global drift guards (PR #1441). This rescue made Links a genuine local URL-staging surface (no app-integration semantics), replaced the global action whitelist with a module-keyed capability map, hardened the OmniBoard wizard (timeout + explicit error taxonomy), and made the live `omnilink-port` Links resolver return an honest empty link-context state. The prior landmark PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the full assessment.
 
 ---
 
@@ -166,8 +166,8 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
-/supabase/migrations - Database schema (90 versioned SQL migrations)
-/supabase/functions  - Edge functions (31 function directories + _shared)
+/supabase/migrations - Database schema (94 .sql files: 90 forward + 4 rollback)
+/supabase/functions  - Edge functions (31 function directories + _shared = 32)
 /orchestrator        - Temporal workers and orchestration services (103 Python files)
 /tests               - Automated test suite
 /.github/workflows   - CI/CD workflows (23 workflow files)
@@ -182,7 +182,7 @@ To maintain strict architecture safety and prevent "widget drift" across the pla
 ✅ **OmniBoard**: The **ONE AND ONLY** user-facing UI endpoint for third-party application integration and onboarding. It connects 3rd-party apps and AI models deterministically via the `apex-universal-sync-orchestrator`.
 ❌ **Links**: An independent widget **strictly** for collecting URLs to pass as context. It must **never** route to OmniBoard, and must **never** perform app integrations.
 ✅ **Module Boundaries**: All OmniDash sidebar modules must load as distinct modal overlays using the `useOmniModal` state store. No widget may silently mount another widget's FSM (e.g. Links cannot mount OmniBoardWizard).
-✅ **Action Gating**: Action execution across modules is centrally whitelisted by `moduleActionCapabilities.ts`. Unsupported backend actions (e.g. `manage_bundles`, `trigger_workflow` when unauthorized) fail-closed gracefully at the UI shell level before a network request is even attempted.
+✅ **Action Gating**: Action execution across modules is governed by a **module-keyed capability map** (`moduleActionCapabilities.ts`), keyed by `moduleKey + actionId` and covering both baseline and live action ids. Unsupported actions fail-closed at the UI shell with **module-specific copy** and never call `trigger-workflow` (PR #1441). Labels that arrive as raw ids or contain underscores are humanized (`create_workflow` → `Create Workflow`) without implying the action is wired.
 
 ---
 
@@ -274,7 +274,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |

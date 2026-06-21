@@ -1,34 +1,40 @@
 ---
-version: 1.2.0
-last_audited: 2026-06-20
+version: 1.3.0
+last_audited: 2026-06-21
 status: verified
 ---
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-20 (APEX Agent restoration via PR #1435 + OmniDash modal-contract repair via PR #1436, both merged 2026-06-19; ops docs, stale-test fixes, ops-doc CI guard). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_20.md`.
+> Current repo-truth index refreshed 2026-06-21 (PR #1441 "canonical widget rescue" completed + merged to `main` as squash `966d695f`; full repo-truth documentation sync of README + omni-recall). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md`.
 
-## Current Repo Facts Verified in This Pass (2026-06-20)
+## Current Repo Facts Verified in This Pass (2026-06-21)
+
+> Repository counts, HEAD, and versions were directly verified this session against the working tree and `git log`. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked in this docs pass (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| HEAD | `6f859ec8` — fix(omnidash): repair widget modal contracts and action endpoint UX (#1436); APEX Agent restoration landed just prior in #1435 (`4bbd3e5b`) |
-| GitHub workflow files | **23** files in `.github/workflows/` (`ops-doc-guard.yml` added by PR #1435) |
+| HEAD | `966d695f` — fix(omnidash): canonical widget rescue and global drift guards (#1441) |
+| Source files under `src/` | **326** TypeScript/TSX |
+| GitHub workflow files | **23** files in `.github/workflows/` |
 | Release/package versions | Root `package.json` declares **`1.7.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| SQL migrations | **90** files (89 baselined 2026-06-19 + `omni_policies` provisioned same day) |
-| Edge function dirs | **32** (including `_shared`) |
+| SQL migrations | **94** `.sql` files = **90 forward** + **4 rollback** (`migrations/rollback/`) |
+| Edge function dirs | **32** (31 function dirs + `_shared`) |
+| Custom hooks (`src/` + `apps/`) | **38** (`use*.ts*`) |
 | Python orchestrator files | **103** |
+| Test/spec source files | **346** (`tests`, `e2e`, `sim`, `apps`, `orchestrator`, `packages`) |
+| Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441 replaced the global whitelist; unsupported actions fail-closed with module-specific copy, never call `trigger-workflow` |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| APEX Agent | **LIVE / demo-ready** — verified end-to-end 2026-06-19; traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed |
-| `omni_policies` | Provisioned 2026-06-19 — 7 tailored policies active |
+| APEX Agent (carried forward) | **LIVE / demo-ready** — verified end-to-end 2026-06-19; traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed |
+| `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| Main CI | ✅ GREEN — PR #1435 CI: 43 success / 3 skipped / 0 failed |
+| PR #1441 corrective gates (local) | typecheck exit 0; eslint exit 0; `vitest run tests/omnidash` 585 passed; build success; ops-doc-guard PASS |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_14.md` is now historical.)
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_20.md` and earlier are now historical.)
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -46,7 +52,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` _(current — supersedes 2026-06-14 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` _(current — supersedes 2026-06-20 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` _(historical — 2026-06-20 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical — 2026-06-14 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical — 2026-06-06 snapshot)_
 - `README.md`
@@ -147,7 +154,7 @@ status: verified
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 12 Markdown file(s): `AOID.md`, `APEX_AGENT_OPERATIONS.md` _(NEW 2026-06-19)_, `CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_20.md` _(current)_, `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 13 Markdown file(s): `AOID.md`, `APEX_AGENT_OPERATIONS.md` _(NEW 2026-06-19; §9.1 added 2026-06-21)_, `CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_20.md` _(historical)_, `CURRENT_PLATFORM_STATE_2026_06_21.md` _(NEW 2026-06-21 — current)_, `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
@@ -177,6 +184,31 @@ status: verified
 - `docs/sim/` — 9 Markdown file(s): `ARCHITECTURE.md`, `CHAOS_SIMULATION_DELIVERY.md`, `CHAOTIC_CLIENT_SIMULATION_REPORT.md`, `CHAOTIC_CLIENT_STORY.md`, `INVENTORY.md`, `RESULTS_REPORT.md`, `RUNBOOK.md`, `SANDBOX_TEST_RESULTS_TEMPLATE.md`, `TEST_EXECUTION_REPORT.md`
 - `docs/testing/` — 4 Markdown file(s): `ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`, `E2E_TEST_RESULTS.md`, `README.md`, `worldwide-wildcard-tests.md`
 - `docs/valuation/` — 1 Markdown file(s): `PLATFORM_VALUATION_BRIEF.md`
+
+## 2026-06-21 Platform-State Documentation Sync (PR #1441 widget rescue + repo-truth sync)
+
+Full repo-truth documentation sync performed against `main` @ `966d695f` (PR #1441, merged this session). Repository counts were re-verified directly; live infrastructure health was carried forward from the 2026-06-19 verification (not re-checked — no live credentials used).
+
+| File | Change |
+|---|---|
+| `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` | **NEW** — supersedes 2026-06-20 snapshot; PR #1441 behavior record, verified repo counts (with verification commands), corrects the 06-20 `0020ba6b`/#1439 conflation, labels carried-forward infra |
+| `docs/APEX_AGENT_OPERATIONS.md` | §9.1 added (2026-06-21) — records the read-free, no-op `omnilink-port` Links resolver contract change |
+| `README.md` | Stats snapshot → 2026-06-21 (migrations 90→94, hooks 35→38, test files 346); HEAD/repo-history note → `966d695f`/#1441; Action Gating description → module-keyed capability map; platform-state links → 2026-06-21 |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — facts table, authority order, start points, and `docs/` coverage updated to the 2026-06-21 snapshot |
+| `memory/omni-recall/docs/README.md` | Platform snapshot pointer + dates → 2026-06-21 |
+| `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Header → `main` @ `966d695f` / v1.7.1; Source-of-Truth statement **21** added (module-keyed capability map, honest Links resolver, OmniBoard wizard hardening); conflict-resolution pointer → 2026-06-21 |
+| `memory/omni-recall/start-here.md` | Last Verified Session → 2026-06-21 / `966d695f` / PR #1441 |
+| `memory/omni-recall/state/checkpoints/current-status.md` | Appended 2026-06-21 session block (PR #1441 corrective commit + docs sync) |
+| `memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | 2026-06-21 addendum added — HEAD `966d695f`, #1439/#1441 merges, verified repo facts; verdict **unchanged** (`NOT_CERTIFIED_NO_RELEASE_CUT`, no release cut) |
+| `memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md` | Current CI State → HEAD `966d695f` (#1441 merged 2026-06-21); #1438/#1439/#1441 rows added (merge = green signal under branch protection; tallies only where API-verified); workflow registry re-stamped 2026-06-21 |
+| `CLAUDE.md` (root) | `last_audited` → 2026-06-21 (core protocols re-verified accurate; no content drift) |
+| `orchestrator/README.md` | Production-runtime note added (points to canonical ops doc; flags semantic cache disabled in prod + Temporal Cloud); `last_audited` → 2026-06-21 |
+
+### Note on scope (anti-drift)
+
+This pass updates **living** documents only (entry points, indexes, current-status, canonical truth) and adds **one new dated snapshot**. Dated point-in-time artifacts (audits, reports, prior `CURRENT_PLATFORM_STATE_*` snapshots, checkpoints) were **left intact** — editing a dated historical record would itself create drift; corrections to them are recorded forward in the current snapshot instead.
+
+---
 
 ## 2026-06-20 Platform-State Documentation Sync (APEX Agent Restoration)
 
