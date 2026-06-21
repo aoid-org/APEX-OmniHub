@@ -4,11 +4,17 @@
 --
 -- Runs nightly at 03:00 UTC: removes processed receipts older than 30 days.
 
-DO $$
+DO $do$
 BEGIN
-  -- Guard: skip if job already registered
+  -- Guard: skip if job already registered, OR if the target table is absent.
+  -- 'receipts' is never created by any migration (the real table is
+  -- idempotency_receipts), so on a clean history this whole block is a no-op
+  -- instead of failing with "relation receipts does not exist".
   IF NOT EXISTS (
     SELECT 1 FROM cron.job WHERE jobname = 'clean-receipts'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'receipts'
   ) THEN
     -- Enable pg_cron extension (idempotent)
     CREATE EXTENSION IF NOT EXISTS pg_cron;
@@ -29,4 +35,4 @@ BEGIN
 
     RAISE NOTICE 'pg_cron job "clean-receipts" created.';
   END IF;
-END $$;
+END $do$;

@@ -29,13 +29,15 @@ CREATE TYPE byom_auth_type AS ENUM (
 );
 
 -- Connection lifecycle status
-CREATE TYPE byom_status AS ENUM ('active', 'revoked', 'expired', 'rotated');
+CREATE TYPE public.byom_status AS ENUM ('active', 'revoked', 'expired', 'rotated');
 
 -- Constant: canonical default status.  SQL DDL has no CONST keyword so an
 -- IMMUTABLE function serves as the single source-of-truth for DEFAULT / WHERE.
-CREATE FUNCTION public.byom_status_default() RETURNS byom_status
+-- Type is schema-qualified so it resolves when this function is evaluated inside
+-- the partial-index predicate below under the migration tool's restricted search_path.
+CREATE FUNCTION public.byom_status_default() RETURNS public.byom_status
   LANGUAGE sql IMMUTABLE PARALLEL SAFE
-  AS $$ SELECT 'active'::byom_status $$;
+  AS $$ SELECT 'active'::public.byom_status $$;
 
 -- Data sovereignty modes
 CREATE TYPE byom_sovereignty_mode AS ENUM (

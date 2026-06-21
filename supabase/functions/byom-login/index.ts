@@ -102,8 +102,19 @@ async function handleUserAuth(email: string, password: string, fingerprint: stri
   let userId: string;
   let tenantId: string;
   let session;
-  
-  const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+
+  // Use a dedicated client for the sign-in calls. signInWithPassword sets the
+  // user's session (access token) on the client instance it is called on, even
+  // with persistSession:false. If that were the shared `supabaseAdmin` client,
+  // every subsequent .from(...) write would run as the authenticated user instead
+  // of service_role and be blocked by RLS — provider_connections intentionally has
+  // no INSERT policy (credentials are written only via the service role). Keeping a
+  // separate auth client preserves supabaseAdmin's service-role context for writes.
+  const authClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: signInData, error: signInError } = await authClient.auth.signInWithPassword({
     email,
     password,
   });
@@ -128,7 +139,7 @@ async function handleUserAuth(email: string, password: string, fingerprint: stri
     userId = signUpData.user.id;
     tenantId = userId;
 
-    const { data: secondSignInData, error: secondSignInError } = await supabaseAdmin.auth.signInWithPassword({
+    const { data: secondSignInData, error: secondSignInError } = await authClient.auth.signInWithPassword({
       email,
       password,
     });
@@ -215,7 +226,10 @@ serve(async (req: Request) => {
         user_id: userId,
         provider,
         auth_type: 'api_key',
-        credential_ciphertext: Array.from(ciphertext),
+        // Store as PostgreSQL bytea hex literal. Sending Array.from(ciphertext)
+        // (number[]) makes PostgREST persist the JSON array TEXT into the bytea
+        // column, so byom-proxy reads back the string "[..]" and decryption fails.
+        credential_ciphertext: '\\x' + Array.from(ciphertext).map((b) => b.toString(16).padStart(2, '0')).join(''),
         credential_fingerprint: fingerprint,
         key_hint: hint,
         status: "active",
@@ -240,7 +254,10 @@ serve(async (req: Request) => {
         max_cost_usd: 999999,
         retention_mode: 'ephemeral',
         pii_policy: 'passthrough',
-        tool_use_permissions: ['allowed']
+        // Must be one of the values byom-proxy accepts (read_only|action_dispatch|none);
+        // 'allowed' was invalid and made byom-proxy reject the registry row. Align to the
+        // schema's own least-privilege default; tool permissions can be elevated via cockpit.
+        tool_use_permissions: ['none']
       }, { onConflict: 'tenant_id,provider_id' });
 
     if (registryError) {
@@ -248,12 +265,14 @@ serve(async (req: Request) => {
     }
 
     // 7. Audit Log (No Secrets)
+    // audit_logs has no tenant_id column (canonical schema); carry it in metadata.
+    // Previously this insert referenced a non-existent tenant_id column and failed
+    // silently (error intentionally not awaited/checked so audit never blocks login).
     await supabaseAdmin.from("audit_logs").insert({
       actor_id: userId,
-      tenant_id: tenantId,
       action_type: "byom.login",
       resource_type: "auth",
-      metadata: { provider, fingerprint },
+      metadata: { provider, fingerprint, tenant_id: tenantId },
     });
 
     // 8. Return Session to client

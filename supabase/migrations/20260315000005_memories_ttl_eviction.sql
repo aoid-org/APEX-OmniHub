@@ -70,7 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_memories_hnsw
     WITH (m = 16, ef_construction = 64);
 
 -- Schedule nightly TTL eviction at 02:30 UTC
-DO $$ BEGIN
+DO $do$ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM cron.job
         WHERE jobname = 'agent-memories-ttl-eviction'
@@ -86,7 +86,7 @@ DO $$ BEGIN
         );
         RAISE NOTICE 'pg_cron job agent-memories-ttl-eviction scheduled.';
     END IF;
-END $$;
+END $do$;
 
 COMMENT ON TABLE public.agent_memories IS
     'ACRA agent memory store. expires_at enforced nightly by pg_cron. '

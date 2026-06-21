@@ -191,7 +191,9 @@ serve(async (req: Request) => {
     if (!providerConfig || providerConfig.provider_type === 'disabled') {
       return jsonResponse({ error: 'Provider is disabled or not configured in registry' }, 403, corsHeaders);
     }
-    if (!providerConfig.allowed_models.includes(model)) {
+    // '*' is the wildcard written by byom-login for self-service BYOM connections
+    // ("all models allowed"); without honouring it here every real model is rejected.
+    if (!providerConfig.allowed_models.includes('*') && !providerConfig.allowed_models.includes(model)) {
       return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
     }
     
