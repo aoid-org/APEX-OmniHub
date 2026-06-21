@@ -1,7 +1,9 @@
 ---
 version: 1.0.0
 last_audited: 2026-06-12
-status: verified
+status: archived
+archived_date: 2026-06-21
+note: SBBL ↔ OmniHub integration completed. See CURRENT_PLATFORM_STATE_2026_06_21.md for current integration status.
 ---
 
 # Step 1 — Repo Scope: APEX-OmniHub

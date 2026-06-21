@@ -1,7 +1,9 @@
 ---
 version: 1.0.0
 last_audited: 2026-06-12
-status: verified
+status: archived
+archived_date: 2026-06-21
+note: Superseded by continuous drift monitoring and newer audits through 2026-06-21.
 ---
 
 # Drift Audit — 2026-05-12
