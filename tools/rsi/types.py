@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-DecisionEnum = Literal["allow", "escalate", "block", "PASS_FOR_OWNER_REVIEW"]
+DecisionEnum = Literal["allow", "escalate", "block"]
 RiskEnum = Literal["low", "medium", "high", "critical"]
 PathClass = Literal["protected", "critical", "standard", "docs-only"]
 ModelError = Literal[
@@ -136,6 +136,5 @@ class FinalDecision:
     deterministic_summary: DeterministicSummary = field(default_factory=DeterministicSummary)
     model_summary: ModelSummary | None = None
     artifacts_generated: list[str] = field(default_factory=list)
+    owner_review_status: str | None = None
     approval_model: str | None = None
-    final_approval_event: str | None = None
-    notes: list[str] | None = None

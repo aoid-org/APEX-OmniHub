@@ -206,6 +206,8 @@ def test_pass_for_owner_review():
         """
     }
     result = combine(BLOCK_POLICY, None, evidence)
-    assert result["decision"] == "PASS_FOR_OWNER_REVIEW"
+    assert result["decision"] == "escalate"
     assert result["abort"] is False
-    assert result["approval_model"] == "repo_owner_merge_is_final_approval"
+    assert result["approval_model"] == "repo_owner_manual_merge_is_final_approval"
+    assert result["owner_review_status"] == "ready_for_owner_merge"
+    assert result["risk"] == "critical"

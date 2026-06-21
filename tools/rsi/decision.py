@@ -93,6 +93,8 @@ def _risk_from_decision(
     if decision == "block":
         return "critical"
     if decision == "escalate":
+        if protected_hits:
+            return "critical"
         return "high"
     # decision == "allow"
     if protected_hits:
@@ -154,7 +156,7 @@ def combine(
         if protected_hits and pr_body:
             ev_result = _evaluate_protected_evidence(pr_body)
             if ev_result["can_pass"]:
-                final_decision = "PASS_FOR_OWNER_REVIEW"
+                final_decision = "escalate"
                 rationale = "Protected paths touched. Evidence complete and passing. Ready for owner review."
             else:
                 final_decision = "block"
@@ -223,14 +225,9 @@ def combine(
         "artifacts_generated": artifacts,
     }
     
-    if final_decision == "PASS_FOR_OWNER_REVIEW":
-        out["approval_model"] = "repo_owner_merge_is_final_approval"
-        out["final_approval_event"] = "manual_merge_by_repo_owner"
-        out["notes"] = [
-            "Protected production Terraform paths changed.",
-            "Automated evidence gates satisfied.",
-            "Ready for JR owner review and manual merge."
-        ]
+    if final_decision == "escalate" and "Ready for owner review" in rationale:
+        out["owner_review_status"] = "ready_for_owner_merge"
+        out["approval_model"] = "repo_owner_manual_merge_is_final_approval"
         
     return out
 
