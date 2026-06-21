@@ -1,15 +1,15 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-21
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.6.1
-**Last Updated:** 2026-06-10
+**Version:** 1.7.1
+**Last Updated:** 2026-06-21
 
-**Latest verified branch/head:** `work` @ `86bc14a` (`feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)`). See `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
+**Latest verified branch/head:** `main` @ `966d695f` (`fix(omnidash): canonical widget rescue and global drift guards (#1441)`). See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -34,6 +34,8 @@ status: verified
 18. **OmniDash left sidebar is a dedicated 9-widget rail contract.** The canonical source is `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; `OmniDashShell.tsx` must render `OMNIDASH_SIDEBAR_WIDGETS` and must not define local `NAV` or `NAV_MODULE_KEY`. `APP_REGISTRY` and `src/contracts/omnidash.contract.ts` remain broader 14-app product/platform contracts, not sidebar contracts. Sidebar order is locked to: OmniBoard, PhysiOmni, Audits, Links, Automations, Workflows, Files, Billing, Settings. OmniSkills, Orchestrator, Fortress, OmniPort, Maestro, and BYOM are explicitly not left-sidebar widgets.
 19. **OmniBoard is the definitive app integration surface (corrected 2026-06-20).** It serves as a client-facing endpoint — first widget in the left-sidebar rail; the conversational `OmniBoardWizard.tsx` modal opens via OmniSpatialHost and is driven by typed prompts against the FSM endpoints `/omniboard/start` and `/omniboard/{session_id}/next`. The connect FSM outputs a verified Connection Spec, and downstream payload normalization into APEX-OmniHub state vectors is performed by `.claude/skills/apex-universal-sync-orchestrator`. The retired claim "OmniBoard is strictly for application integration — not for clients" must not reappear in docs or skill descriptions. See `docs/platform/OMNIBOARD.md`.
 20. **SkillForge canonical facts.** Edge function `supabase/functions/generate-business-skills/index.ts`: 401 auth gate, 402 entitlement gate (`check_skill_entitlement`, BASIC cap 3 / PRO 999,999), live Anthropic generation with model `claude-3-5-haiku-20241022`, skill name `skill_${crypto.randomUUID()}` (full UUID, no timestamp), insert of exactly `{ user_id, name, trigger_intent, definition }`, response `entitlement.used = current + 1` (optimistic increment). Three UI surfaces: full page `/launch/skillforge` (Step 4 success state), embeddable `SkillForgeWidget` (closes on success; invalidates `['user-skills']`, `['workflows']`), and the `OmniSkillsModule` routed via `MODULE_COMPONENTS` in `ModuleRenderer.tsx` (not `ModuleRegistry.ts`). See `docs/skill-forge-implementation.md`.
+
+21. **Module action gating is a module-keyed capability map (PR #1441, 2026-06-21).** `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` is keyed by `moduleKey + actionId` (covering both baseline hyphen ids and live underscore ids); it replaced the prior single global whitelist. Unsupported actions fail-closed in `ModuleShell` with **module-specific** copy and must **never** call `trigger-workflow`. Labels equal to the action id or containing underscores are humanized by `normalizeActionLabel` in `useOmniModuleState.ts` (`create_workflow` → `Create Workflow`) without implying the action is wired. **Links** stages valid `http(s)` URLs in local component state only (no persistence table yet — deferred, JR-gated), shows "Links are staged locally until link-context persistence is connected." and "OmniSlate context handoff is not connected yet."; its **Add Link** button is enabled on a valid URL and is never permanently disabled. The live `omnilink-port` `module-state` Links resolver returns an honest **empty** link-context state — it does **not** read the `integrations` table and does **not** return `test-all` (see `docs/APEX_AGENT_OPERATIONS.md §9.1`). The OmniBoard wizard (`OmniBoardWizard.tsx`) carries an `AbortController` timeout and the explicit error taxonomy: missing config, invalid URL, unreachable/CORS, HTTP non-2xx, auth required, timeout — and never fakes a successful connection.
 
 ## Tenant Registry
 
@@ -75,7 +77,7 @@ status: verified
 
 ## Conflict Resolution Rule
 
-If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` before dated audit reports.
+If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (latest snapshot) before dated audit reports.
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 
