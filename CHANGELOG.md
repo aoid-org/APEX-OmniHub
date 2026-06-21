@@ -1,9 +1,17 @@
 ---
+
+## 1.8.0
+### Minor Changes
+
+- APEX Agent restored to LIVE / demo-ready (full OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud end-to-end path) and platform drift-governance hardened. Adds the Ops Doc Drift Guard CI (`ops-doc-guard.yml` + `scripts/ci/check-ops-doc-drift.mjs`) that fails PRs changing runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`; provisions the `omni_policies` governance table with 7 tailored APEX policies; and replaces the global action whitelist with a module-keyed capability map (`moduleActionCapabilities.ts`, keyed by `moduleKey + actionId`) that fail-closes unsupported OmniDash module actions with module-specific copy instead of calling `trigger-workflow`.
+
+### Patch Changes
+
+- OmniDash widget rescue and UX-correctness fixes. Links is now a genuine local URL-staging surface — it validates input, never permanently disables the Add Link button, shows "staged locally" / "OmniSlate handoff not connected" copy, and never invokes OmniBoard. The live `omnilink-port` Links resolver now returns an honest empty link-context state (no `integrations` read, no `test-all`). Backend action labels equal to the action id or containing underscores are humanized (`create_workflow` → `Create Workflow`). The OmniBoard wizard gained request-timeout handling and an explicit connection error taxonomy (missing config, invalid URL, unreachable/CORS, HTTP non-2xx, auth required, timeout). Live module action ids are normalized, and widget modal contracts plus action-endpoint UX are repaired.
 version: 1.0.0
 last_audited: 2026-06-14
 status: release-cut
 ---
-
 
 ## Governance
 
@@ -177,12 +185,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+
 - Added `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` as the current branch/head platform assessment for `work` @ `86bc14a`.
 - Reconciled canonical architecture, status, README, OmniDash, onboarding, ops, frontend, and Omni-Recall docs with PR #1274 OmniDash gap closure and PR #1309 security hardening.
 - Updated active docs to use `OmniDashShell.tsx` as shell authority and to remove stale active reliance on `OMNIDASH_ENABLED`.
 
-
 ### Removed
+
 - `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
 - `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
 - `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. 8-week phased rollout timeline starting 2026-03-01; all phases elapsed. Vercel-centric deployment model superseded by Cloudflare Pages.
@@ -192,12 +201,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.3] - 2026-05-11
 
 ### Security
+
 - Patched 3 high-severity OpenTelemetry CVEs (GHSA-q7rr-3cgh-j5r3 — Prometheus exporter
   crash via malformed HTTP request): bumped `@opentelemetry/auto-instrumentations-node`
   to ^0.75.0, `@opentelemetry/sdk-node` to ^0.217.0, `@opentelemetry/exporter-trace-otlp-http`
   to ^0.217.0. npm audit --omit=dev --audit-level=high now exits clean.
 
 ### Integration
+
 - OmniBridge: bidirectional HMAC-signed sync layer between APEX-OmniHub (control plane)
   and SBBL-HQ (first production tenant) is now validated and documented.
   - `integration-harness/lib/deterministic-validator.mjs` — 47-assertion zero-dependency
@@ -208,6 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     validation report: 4 gaps closed (P0/P0/P1/P2), 139 assertions across 3 test layers.
 
 ### Fixed
+
 - Resolved secret-scan false positives in `integration-harness/lib/deterministic-validator.mjs`
   by prefixing all test HMAC fixture keys with 'test-'.
 - Resolved SonarQube code duplication (1.7%, 10 lines) by extracting shared HTTP body
@@ -216,28 +228,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.2] - 2026-05-08
 
 ### Security & Hardening
+
 - Armageddon Live Validation passed: 2,399 Vitest + 891 Pytest + 21 Playwright
   E2E + 168 simulation + 5 Worldwide Wildcard — all green (2026-05-08)
 - SIM_MODE=false chaos guardrail confirmed operational against live Supabase
 - Secret scan clean: zero findings
 
 ### 🧹 Repository Hygiene
+
 - Relocated dev artifacts from root to scripts/debug/ and scripts/dev/
 - Deleted logs.txt (ephemeral runtime artifact; already absent during audit)
 - Canonicalized package manager metadata with packageManager field
 - Hardened .gitignore: excluded runtime logs, debug artifacts, volatile reports
 
 ### 📦 CI/CD
+
 - GitHub Actions package manager usage audited against canonical metadata
 - Playwright install-deps remediation documented for Chromium runtime dependencies
 - Worldwide Wildcard runner remediation documented: guardrail blocks correctly
   scored as passing control-plane outcomes
 
 ### 📚 Documentation
+
 - Armageddon 2026-05-08 validation report integrated into docs/testing/
 - Release Notes v1.6.0 published
 - PR Triage Report published in docs/ops/
-
 
 ### Fixed — Zero Tech Debt Pass (2026-05-07)
 
@@ -264,8 +279,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `docs/platform/OMNIDASH.md` and 1 stale path in `README.md` to canonical
   `apps/omnihub-site/dashboard/components/` locations.
 - **JSDoc @module comments:** Fixed 4 dashboard components with stale
-  '@module apps/omnihub-site/src/components/omnidash/*' headers —
-  now correctly reflect 'apps/omnihub-site/dashboard/components/*'.
+  '@module apps/omnihub-site/src/components/omnidash/_' headers —
+  now correctly reflect 'apps/omnihub-site/dashboard/components/_'.
 
 ### Fixed — Code Quality Improvements (2026-05-07)
 
@@ -297,18 +312,18 @@ Zero breaking changes — all authenticated and service_role access preserved.
 
 - **`supabase/migrations/20260417000000_omnibridge_events.sql`** — applied to production (was previously only validated on the Armageddon Test Suite). Tables `omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit` + `omnibridge_event_stats_hourly` view now live. Migration file corrected: removed invalid `super_admin`/`operator` enum values (only `admin` and `user` exist in `app_role`); all CREATE POLICY statements are idempotency-guarded.
 - **`supabase/migrations/20260426000000_fix_security_advisor_findings.sql`** — fixed 2 `SECURITY DEFINER` view ERRORs (`user_provider_connections_safe`, `active_idempotency_receipts`) by setting `security_invoker = true`. Enabled RLS on 10 previously-unprotected public tables (`media_assets`, `leagues`, `products`, `product_media`, `ingest_jobs`, `ingest_artifacts`, `armageddon_runs`, `armageddon_events`, `ingest_parse_results`, `ingest_dead_letters`) with `service_role` bypass policies. Verified safe: armageddon code uses `service_role` key; `provider_connections` underlying table has existing authenticated-user SELECT policy.
-- **`supabase/migrations/20260504000000_security_hardening_functions_rls.sql`** *(new)* — pinned `search_path = public` on 4 mutable-search-path functions (`cleanup_expired_idempotency_receipts`, `claim_admin_role`, `update_idempotency_receipts_updated_at`, `check_rate_limit`). Revoked PUBLIC execute from 8 trigger-only functions and 4 maintenance functions (re-granted to `service_role` only). Revoked PUBLIC (anon) execute from 20 business-logic SECURITY DEFINER functions and re-granted to `authenticated` + `service_role` — preserving all existing frontend and edge function access. Added `service_role` RLS policy to `admin_claim_secrets` (was RLS-enabled with zero policies).
-- **`supabase/migrations/20260504000001_fk_indexes_performance.sql`** *(new)* — added 14 `CREATE INDEX IF NOT EXISTS` covering indexes on foreign key columns flagged by the Supabase Performance Advisor: `emergency_controls.updated_by`, `health_checks.user_id`, `ingest_artifacts.job_id`, `ingest_dead_letters.job_id`, `ingest_parse_results.job_id`, `media_publications.league_id`, `omnilink_entities.last_event_id`, `omnilink_events.api_key_id`, `omnilink_orchestration_requests.api_key_id`, `omnilink_runs.integration_id`, `omnilink_runs.orchestration_request_id`, `product_media.media_asset_id`, `product_media.product_id`, `usage_metering.user_id`.
+- **`supabase/migrations/20260504000000_security_hardening_functions_rls.sql`** _(new)_ — pinned `search_path = public` on 4 mutable-search-path functions (`cleanup_expired_idempotency_receipts`, `claim_admin_role`, `update_idempotency_receipts_updated_at`, `check_rate_limit`). Revoked PUBLIC execute from 8 trigger-only functions and 4 maintenance functions (re-granted to `service_role` only). Revoked PUBLIC (anon) execute from 20 business-logic SECURITY DEFINER functions and re-granted to `authenticated` + `service_role` — preserving all existing frontend and edge function access. Added `service_role` RLS policy to `admin_claim_secrets` (was RLS-enabled with zero policies).
+- **`supabase/migrations/20260504000001_fk_indexes_performance.sql`** _(new)_ — added 14 `CREATE INDEX IF NOT EXISTS` covering indexes on foreign key columns flagged by the Supabase Performance Advisor: `emergency_controls.updated_by`, `health_checks.user_id`, `ingest_artifacts.job_id`, `ingest_dead_letters.job_id`, `ingest_parse_results.job_id`, `media_publications.league_id`, `omnilink_entities.last_event_id`, `omnilink_events.api_key_id`, `omnilink_orchestration_requests.api_key_id`, `omnilink_runs.integration_id`, `omnilink_runs.orchestration_request_id`, `product_media.media_asset_id`, `product_media.product_id`, `usage_metering.user_id`.
 
 ### Security Posture Change
 
-| Category | Before | After |
-|---|---|---|
-| Security Advisor ERRORs | 12 | 0 |
-| Security Advisor WARNs (anon/auth fn exposure) | ~55 | 0 |
-| Mutable search_path WARNs | 4 | 0 |
-| RLS-enabled-no-policy WARNs | 1 | 0 |
-| Performance Advisor FK index INFOs | 14 | 0 |
+| Category                                       | Before | After |
+| ---------------------------------------------- | ------ | ----- |
+| Security Advisor ERRORs                        | 12     | 0     |
+| Security Advisor WARNs (anon/auth fn exposure) | ~55    | 0     |
+| Mutable search_path WARNs                      | 4      | 0     |
+| RLS-enabled-no-policy WARNs                    | 1      | 0     |
+| Performance Advisor FK index INFOs             | 14     | 0     |
 
 ---
 
@@ -323,11 +338,11 @@ control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
 **Deployment target: Cloudflare Pages Functions (`functions/api`).** The
 original implementation targeted Vercel Edge (`api/`); post-audit the code
 was rewritten for CF Pages's `onRequestPost({request, env})` signature with
-`context.env` binding. The old 'api/omnibridge/*.ts' Vercel-shaped files
+`context.env` binding. The old 'api/omnibridge/\*.ts' Vercel-shaped files
 have been removed.
 
 - **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting. **DDL validated on Armageddon Test Suite** (`qhjqselqpkfqjfpuxykb`) with live insert + idempotency rejection + DLQ FK cascade proven before release.
-- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): 'omnihub_command_log' table created for idempotent receipt of inbound control commands. See 'supabase/migrations/*' + verification log.
+- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): 'omnihub_command_log' table created for idempotent receipt of inbound control commands. See 'supabase/migrations/\*' + verification log.
 - **`src/lib/omnibridge/syncPacketVerifier.ts`** — SBBL-HQ native HMAC-SHA256 verifier with base64url decode + constant-time `crypto.subtle.verify`. Byte-identical to SBBL-HQ's own `signSyncPacket` primitive (proven by `omnibridge-roundtrip.test.ts`).
 - **`functions/api/omnibridge/sync.ts`** — new CF Pages Function (`onRequestPost`) accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
 - **`functions/api/omnibridge/ingest.ts`** — CF Pages Function for the hardened 5-header HMAC profile (migrated from Vercel Edge shape).
