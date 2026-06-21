@@ -177,13 +177,13 @@ serve(async (req: Request) => {
 
     const pattern = API_KEY_PATTERNS[provider];
     if (pattern && !pattern.test(api_key)) {
-      return jsonResponse({ error: `Invalid API key format for ${provider}` }, 400, origin);
+      return jsonResponse({ error: `Invalid API key format for ${provider}` }, 200, origin);
     }
 
     // 1. Probe the credential to ensure it's valid
     const probeResult = await probeCredential(provider, api_key);
     if (!probeResult.valid) {
-      return jsonResponse({ error: "Invalid credential", details: probeResult.reason }, 401, origin);
+      return jsonResponse({ error: "Invalid credential", details: probeResult.reason }, 200, origin);
     }
 
     // 2. Generate deterministic fingerprint
@@ -265,8 +265,8 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error("[byom-login] Error:", error);
     if (error instanceof z.ZodError) {
-      return jsonResponse({ error: "Validation failed", details: error.errors }, 400, origin);
+      return jsonResponse({ error: "Validation failed", details: error.errors }, 200, origin);
     }
-    return jsonResponse({ error: error instanceof Error ? error.message : "Internal Server Error" }, 500, origin);
+    return jsonResponse({ error: error instanceof Error ? error.message : "Internal Server Error" }, 200, origin);
   }
 });
