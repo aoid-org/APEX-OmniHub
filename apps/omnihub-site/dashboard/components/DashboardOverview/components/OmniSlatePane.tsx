@@ -157,7 +157,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
   };
 
   return (
-    <div ref={canvasRef} style={{ position: 'relative', height: '100%' }}>
+    <div ref={canvasRef} data-testid="omnislate-pane" style={{ position: 'relative', height: '100%' }}>
       <motion.div
         data-testid="framer-motion-div"
         initial={{ y: 20, opacity: 0 }}
@@ -174,7 +174,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         className={
           'apex-hero-tile apex-hero-tile--lg' +
           ' pointer-events-auto' +
-          ' flex flex-col justify-end relative overflow-hidden'
+          ' flex flex-col relative overflow-hidden'
         }
         style={{
           ...GLASS_TILE,
@@ -235,6 +235,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               type="button"
               onClick={onToggleGlobalInsight}
               title="View health insights"
+              data-testid="omnislate-insights-button"
               style={{
                 width: 28,
                 height: 28,
@@ -256,74 +257,80 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           )}
         </div>
 
-        <div className="relative z-10 flex flex-col gap-3" style={{ minWidth: 0 }}>
-          {activeInsight === '__global__' && (
-            <div
-              data-testid="global-insights-panel"
-              style={{
-                padding: '10px 14px',
-                borderRadius: 10,
-                marginBottom: 8,
-                background: s.bg,
-                border: `1px solid ${s.border}`,
-                fontSize: 12.84,
-                color: s.text,
-                lineHeight: 1.5,
-              }}
-            >
-              {context
-                .filter(c => c.health !== 'healthy')
-                .map(c => (
-                  <div key={c.id} style={{ marginBottom: 4 }}>
-                    <strong>{c.label}:</strong> {c.failureReason || 'Warning detected'}
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {context.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                flexWrap: 'wrap',
-                marginBottom: 8,
-                maxHeight: 80,
-                overflowY: 'auto',
-                minHeight: 0,
-              }}
-            >
-              <AnimatePresence>
-                {context.map(ctx => (
-                  <ContextTile
-                    key={ctx.id}
-                    ctx={ctx}
-                    activeInsight={activeInsight}
-                    onToggle={onToggleInsight}
-                  />
-                ))}
-              </AnimatePresence>
-              <button
-                type="button"
+        <div className="relative z-10 flex flex-col" style={{ flex: 1, minHeight: 0, minWidth: 0, paddingTop: 20 }}>
+          {/* Scrollable upper area — insights panel + context chips compress/scroll before the prompt row */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {activeInsight === '__global__' && (
+              <div
+                data-testid="global-insights-panel"
                 style={{
-                  ...ORANGE_GHOST,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  padding: '5px 14px',
+                  padding: '10px 14px',
                   borderRadius: 10,
+                  background: s.bg,
+                  border: `1px solid ${s.border}`,
+                  fontSize: 12.84,
+                  color: s.text,
+                  lineHeight: 1.5,
                 }}
               >
-                + Add context
-              </button>
-            </div>
-          )}
+                {context
+                  .filter(c => c.health !== 'healthy')
+                  .map(c => (
+                    <div key={c.id} style={{ marginBottom: 4 }}>
+                      <strong>{c.label}:</strong> {c.failureReason || 'Warning detected'}
+                    </div>
+                  ))}
+              </div>
+            )}
 
+            {context.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  maxHeight: 80,
+                  overflowY: 'auto',
+                  minHeight: 0,
+                }}
+              >
+                <AnimatePresence>
+                  {context.map(ctx => (
+                    <ContextTile
+                      key={ctx.id}
+                      ctx={ctx}
+                      activeInsight={activeInsight}
+                      onToggle={onToggleInsight}
+                    />
+                  ))}
+                </AnimatePresence>
+                <button
+                  type="button"
+                  style={{
+                    ...ORANGE_GHOST,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    padding: '5px 14px',
+                    borderRadius: 10,
+                  }}
+                >
+                  + Add context
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Prompt row — always pinned at the bottom of the tile, never clipped */}
           <div
+            data-testid="omnislate-prompt-row"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              marginTop: 'auto',
+              flexShrink: 0,
+              position: 'relative',
+              zIndex: 2,
+              marginTop: 8,
             }}
           >
             <input
@@ -331,19 +338,16 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
               onFocus={e => {
-                e.currentTarget.style.borderColor =
-                  'rgba(255,255,255,0.25)';
-                e.currentTarget.style.background =
-                  'rgba(255,255,255,0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
               }}
               onBlur={e => {
-                e.currentTarget.style.borderColor =
-                  'rgba(255,255,255,0.1)';
-                e.currentTarget.style.background =
-                  'rgba(255,255,255,0.03)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
               }}
               placeholder="Ask APEX Agent"
-              style={PROMPT_STYLE_BASE}
+              data-testid="omnislate-prompt-input"
+              style={{ ...PROMPT_STYLE_BASE, minWidth: 0 }}
             />
             <RecordButton
               isRecording={isRecording}
@@ -357,6 +361,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               style={{
                 width: 36,
                 height: 36,
+                flexShrink: 0,
                 borderRadius: '50%',
                 background:
                   `linear-gradient(135deg, #f97316, ${APEX_ORANGE})`,
@@ -374,7 +379,8 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           {firstLog && (
             <div
               style={{
-                marginTop: 10,
+                flexShrink: 0,
+                marginTop: 8,
                 fontSize: 12,
                 fontWeight: 700,
                 color: traceColor,
