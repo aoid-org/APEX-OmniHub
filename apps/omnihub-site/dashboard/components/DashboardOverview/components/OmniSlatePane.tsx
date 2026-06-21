@@ -174,7 +174,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         className={
           'apex-hero-tile apex-hero-tile--lg' +
           ' pointer-events-auto' +
-          ' flex flex-col relative overflow-hidden'
+          ' flex flex-col justify-end relative overflow-hidden'
         }
         style={{
           ...GLASS_TILE,
@@ -307,63 +307,18 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               <button
                 type="button"
                 style={{
-                  padding: '10px 14px',
+                  ...ORANGE_GHOST,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: '5px 14px',
                   borderRadius: 10,
-                  background: s.bg,
-                  border: `1px solid ${s.border}`,
-                  fontSize: 12.84,
-                  color: s.text,
-                  lineHeight: 1.5,
                 }}
               >
-                {context
-                  .filter(c => c.health !== 'healthy')
-                  .map(c => (
-                    <div key={c.id} style={{ marginBottom: 4 }}>
-                      <strong>{c.label}:</strong> {c.failureReason || 'Warning detected'}
-                    </div>
-                  ))}
-              </div>
-            )}
+                + Add context
+              </button>
+            </div>
+          )}
 
-            {context.length > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  maxHeight: 80,
-                  overflowY: 'auto',
-                  minHeight: 0,
-                }}
-              >
-                <AnimatePresence>
-                  {context.map(ctx => (
-                    <ContextTile
-                      key={ctx.id}
-                      ctx={ctx}
-                      activeInsight={activeInsight}
-                      onToggle={onToggleInsight}
-                    />
-                  ))}
-                </AnimatePresence>
-                <button
-                  type="button"
-                  style={{
-                    ...ORANGE_GHOST,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    padding: '5px 14px',
-                    borderRadius: 10,
-                  }}
-                >
-                  + Add context
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Prompt row — always pinned at the bottom of the tile, never clipped */}
           <div
             data-testid="omnislate-prompt-row"
             style={{
@@ -379,12 +334,16 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               value={prompt}
               onChange={e => onPromptChange(e.target.value)}
               onFocus={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.borderColor =
+                  'rgba(255,255,255,0.25)';
+                e.currentTarget.style.background =
+                  'rgba(255,255,255,0.05)';
               }}
               onBlur={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                e.currentTarget.style.borderColor =
+                  'rgba(255,255,255,0.1)';
+                e.currentTarget.style.background =
+                  'rgba(255,255,255,0.03)';
               }}
               placeholder="Ask APEX Agent"
               data-testid="omnislate-prompt-input"
@@ -402,7 +361,6 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               style={{
                 width: 36,
                 height: 36,
-                flexShrink: 0,
                 borderRadius: '50%',
                 background:
                   `linear-gradient(135deg, #f97316, ${APEX_ORANGE})`,
@@ -420,8 +378,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           {firstLog && (
             <div
               style={{
-                flexShrink: 0,
-                marginTop: 8,
+                marginTop: 10,
                 fontSize: 12,
                 fontWeight: 700,
                 color: traceColor,
