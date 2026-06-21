@@ -253,7 +253,7 @@ describe('OmniSlate component — stable selectors present', () => {
 
   it('many context items do not push the prompt row out of the pane', async () => {
     const { useOmniSlateStore } = await import('../../apps/omnihub-site/src/stores/omniSlateStore');
-    vi.mocked(useOmniSlateStore).mockImplementation((selector?: (s: unknown) => unknown) => {
+    const manyContextImpl = (selector?: (s: unknown) => unknown) => {
       const state = {
         contextItems: Array.from({ length: 20 }, (_, i) => ({
           id: `ctx-${i}`,
@@ -267,7 +267,10 @@ describe('OmniSlate component — stable selectors present', () => {
         addContext: vi.fn(),
       };
       return selector ? selector(state) : state;
-    });
+    };
+    vi.mocked(useOmniSlateStore).mockImplementation(
+      manyContextImpl as unknown as typeof useOmniSlateStore,
+    );
 
     await renderOmniSlate();
     const row = screen.getByTestId('omnislate-prompt-row');
