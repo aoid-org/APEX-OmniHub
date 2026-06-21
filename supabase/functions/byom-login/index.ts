@@ -8,12 +8,10 @@ import { checkRateLimit, rateLimitExceededResponse } from "../_shared/rate-limit
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
 
-// We need service_role to create users and bypass RLS
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
-const cockpitCrypto = getCockpitCrypto();
+// We will initialize these lazily to avoid crashing the edge function on boot
+// if environment variables are missing. This allows OPTIONS requests to succeed.
+let supabaseAdmin: ReturnType<typeof createClient> | null = null;
+let cockpitCrypto: ReturnType<typeof getCockpitCrypto> | null = null;
 
 const PROVIDERS = ['openai', 'google', 'anthropic', 'xai', 'groq'] as const;
 type ByomProvider = typeof PROVIDERS[number];
@@ -153,12 +151,20 @@ serve(async (req: Request) => {
   }
 
   const origin = req.headers.get('origin');
-  
+
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405, origin);
   }
 
   try {
+    if (!supabaseAdmin) {
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+    }
+    if (!cockpitCrypto) {
+      cockpitCrypto = getCockpitCrypto();
+    }
     // Basic IP rate limit for the login endpoint
     const clientIp = req.headers.get("x-forwarded-for")?.split(',')[0] || "unknown_ip";
     const rl = await checkRateLimit(clientIp, { maxRequests: 10, windowMs: 60_000, keyPrefix: 'byom-login' });
