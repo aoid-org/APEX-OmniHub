@@ -1,97 +1,262 @@
 {
   "hero": {
-    "headline": { "line1": "Universal", "line2": "Sync", "line3": "Orchestrator." },
+    "headline": {
+      "line1": "Universal",
+      "line2": "Sync",
+      "line3": "日本語: Orchestrator."
+    },
     "subtitle": "Entering AI wa subete no kodo ga nintei, kiroku, saketeiru sekaitsuki na komando hyomen desu. Software, AI agent, enterprise platform wo hitotsu no orchestration layer ni tougo shimasu.",
-    "tiles": ["DIRECT", "AUDIT", "DEDUCE"],
-    "cta": { "primary": "Early Access wo Kadoo Suru", "secondary": "Demo wo Miru" },
-    "trust": { "securityControls": "Security Controls Roadmap", "humanOversight": "Human oversight controls", "privacyRecords": "Privacy-record workflows", "trusted": "Kisei Sangyou de Shinrai Sarette" },
-    "art": { "intelliDesig": "INTELLIGENCE, DESIGNED." }
+    "tiles": ["日本語: DIRECT", "日本語: AUDIT", "日本語: DEDUCE"],
+    "cta": {
+      "primary": "Early Access wo Kadoo Suru",
+      "secondary": "Demo wo Miru"
+    },
+    "trust": {
+      "securityControls": "Security Controls Roadmap",
+      "humanOversight": "日本語: Human oversight controls",
+      "privacyRecords": "日本語: Privacy-record workflows",
+      "trusted": "Kisei Sangyou de Shinrai Sarette"
+    },
+    "art": {
+      "intelliDesig": "日本語: INTELLIGENCE, DESIGNED."
+    }
   },
   "ticker": {
-    "items": ["Universal Sync", "Agent Governance", "Fukano na Audit Log", "Policy Enforcement", "One-Click Rollback", "MAN Mode", "Tri-Force Architecture", "Vendor Lock-In Nashi", "Universal Integration", "Security Controls Roadmap"]
+    "items": [
+      "日本語: Universal Sync",
+      "日本語: Agent Governance",
+      "Fukano na Audit Log",
+      "日本語: Policy Enforcement",
+      "日本語: One-Click Rollback",
+      "MAN Mode",
+      "Tri-Force Architecture",
+      "Vendor Lock-In Nashi",
+      "Universal Integration",
+      "Security Controls Roadmap"
+    ]
   },
   "governance": {
     "label": "Zettai Shihai",
-    "headline": { "line1": "Absolute", "line2": "Governance." },
+    "headline": {
+      "line1": "日本語: Absolute",
+      "line2": "日本語: Governance."
+    },
     "description": "Shi ga shirei wo shuppatsu shimasu. OmniHub wa subete no setsuzoku sareta shisutemu wo jitsujikan no kashisei to tomo ni orchestration shimasu. Koudo wa kiroku sa re, agent wa tsuisa sa re, kekka wa traceable desu.",
     "features": {
-      "naturalLanguage": { "title": "Shizen gengo no shirei", "desc": "Tannaru gengo de shirei wo shuppatsu shite kudasai. OmniHub ga ishi wo kouizou sareta task plan ni henshoo shimasu." },
-      "capabilityRouting": { "title": "Capability-matched routing", "desc": "Subete no task ga shikaku shiteita agent ni route sa re masu. Suikou, michigaeri nashi, route ketsudan no kanchou audit." },
-      "override": { "title": "Dare demo no agent wo sunawani override", "desc": "Hitotsu no shirei ga jikkou chuu no agent wo teishi, redirect, gyokan wa agent ni oki ka warimasu." },
-      "liveAudit": "Live Audit Trail"
+      "naturalLanguage": {
+        "title": "Shizen gengo no shirei",
+        "desc": "Tannaru gengo de shirei wo shuppatsu shite kudasai. OmniHub ga ishi wo kouizou sareta task plan ni henshoo shimasu."
+      },
+      "capabilityRouting": {
+        "title": "日本語: Capability-matched routing",
+        "desc": "Subete no task ga shikaku shiteita agent ni route sa re masu. Suikou, michigaeri nashi, route ketsudan no kanchou audit."
+      },
+      "override": {
+        "title": "Dare demo no agent wo sunawani override",
+        "desc": "Hitotsu no shirei ga jikkou chuu no agent wo teishi, redirect, gyokan wa agent ni oki ka warimasu."
+      },
+      "liveAudit": "日本語: Live Audit Trail"
     },
     "auditTrail": {
-      "statuses": { "authorized": "Nintei Sareta", "logged": "Kiroku Sareta", "blocked": "Burookku Sareta" }
+      "statuses": {
+        "authorized": "Nintei Sareta",
+        "logged": "Kiroku Sareta",
+        "blocked": "Burookku Sareta"
+      }
     }
   },
   "reversible": {
     "label": "Kenpekitekina Kozo",
-    "headline": { "line1": "Reverse wo", "line2": "Kenpekitekina Kozo." },
+    "headline": {
+      "line1": "Reverse wo",
+      "line2": "Kenpekitekina Kozo."
+    },
     "description": "Rollback wo senmon gendai ni dai ichi rui no sonozeiki kougaku no genpon toshite kensan sareta tada futatsu no enterprise AI platform. Warui ketsudan wa senba sa rezu, anata wa sore wo kanzen ni undo shimasu.",
     "features": {
-      "rollback": { "title": "One-click rollback", "desc": "Hitotsu no komei de dore demo no agent action ya workflow shisutemu wo gyakujun shimasu. Seiri wa hitsuyou arimasen." },
-      "blastRadius": { "title": "Blast radius containment", "desc": "OmniHub wa denpan risk wo kenshutsu shi, kaskade suru mae ni sesshoku sareta shisutemu ni shippai wo hokan shimasu." },
-      "compensating": { "title": "Compensating transactions", "desc": "Subete no agent action wa hosho kouden wo mochimasu. Bunsan sareta shisutemu wa rollback shita node de kyousei ni tatomai." },
+      "rollback": {
+        "title": "日本語: One-click rollback",
+        "desc": "Hitotsu no komei de dore demo no agent action ya workflow shisutemu wo gyakujun shimasu. Seiri wa hitsuyou arimasen."
+      },
+      "blastRadius": {
+        "title": "日本語: Blast radius containment",
+        "desc": "OmniHub wa denpan risk wo kenshutsu shi, kaskade suru mae ni sesshoku sareta shisutemu ni shippai wo hokan shimasu."
+      },
+      "compensating": {
+        "title": "日本語: Compensating transactions",
+        "desc": "Subete no agent action wa hosho kouden wo mochimasu. Bunsan sareta shisutemu wa rollback shita node de kyousei ni tatomai."
+      },
       "policyEngine": "Policy Engine: Kido Rules"
     },
     "policyRules": [
-      { "name": "Scope Restriction", "desc": "Agent wa nintei sarete inai data scope ni akusesu shinai" },
-      { "name": "Audit on Write", "desc": "Subete no kakikikomu koudo wa fukyo ni kiroku sa reru" },
-      { "name": "Rollback Window", "desc": "30 pun no hosho kouden kusho" },
-      { "name": "MAN Mode", "desc": "Kiken na koudo wa Manual Approval Node no shonin wo hitsuyou" },
-      { "name": "Kokusai Block", "desc": "EU data wa EEA zone ni oku (data residency)" }
+      {
+        "name": "日本語: Scope Restriction",
+        "desc": "Agent wa nintei sarete inai data scope ni akusesu shinai"
+      },
+      {
+        "name": "日本語: Audit on Write",
+        "desc": "Subete no kakikikomu koudo wa fukyo ni kiroku sa reru"
+      },
+      {
+        "name": "日本語: Rollback Window",
+        "desc": "30 pun no hosho kouden kusho"
+      },
+      {
+        "name": "MAN Mode",
+        "desc": "Kiken na koudo wa Manual Approval Node no shonin wo hitsuyou"
+      },
+      {
+        "name": "Kokusai Block",
+        "desc": "EU data wa EEA zone ni oku (data residency)"
+      }
     ]
   },
   "capabilities": {
     "label": "Platform Functions",
-    "headline": { "line1": "Enterprise AI wo", "line2": "Kansei suru tame ni hitsuyou na subete." },
+    "headline": {
+      "line1": "Enterprise AI wo",
+      "line2": "Kansei suru tame ni hitsuyou na subete."
+    },
     "description": "Hitotsu no platform. Kuroi hako nashi. Vendor lock-in nashi. Odoro wa nashi.",
     "items": [
-      { "key": "universalConnector", "title": "Universal Connector Network", "desc": "Legacy, Web2, Web3, AI, NFT, blockchain applications wo no toh sustain compatibility." },
-      { "key": "omniDash", "title": "OmniDash", "desc": "Kansei sa reta intelligence command center." },
-      { "key": "triForce", "title": "Tri-Force Architecture", "desc": "Kanzen naru security no tame no decentralized tripartite model." },
-      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Shokei, install, kansei shite kudasai." },
-      { "key": "telemetry", "title": "Jitsuuchi Telemetry", "desc": "Subete no agent to workflow ni watatta no operational intelligence." },
-      { "key": "policy", "title": "Policy Enforcement Engine", "desc": "Kansei rules wa shikkou mae ni tekiyou sa reru." },
-      { "key": "physiOmni", "title": "PhysiOmni", "desc": "Robotic shisutemu no tame no butsuriteki AI operations layer." },
-      { "key": "manMode", "title": "MAN Mode", "desc": "Manual Approval Node. Kiken na koudo wa shonin check point de ichiji teishi sa reru." },
-      { "key": "byom", "title": "AI wo Kessaku / BYOM", "desc": "Jibun no LLM wo network ni kessaku shite kudasai." }
+      {
+        "key": "universalConnector",
+        "title": "日本語: Universal Connector Network",
+        "desc": "Legacy, Web2, Web3, AI, NFT, blockchain applications wo no toh sustain compatibility."
+      },
+      {
+        "key": "omniDash",
+        "title": "OmniDash",
+        "desc": "Kansei sa reta intelligence command center."
+      },
+      {
+        "key": "triForce",
+        "title": "Tri-Force Architecture",
+        "desc": "Kanzen naru security no tame no decentralized tripartite model."
+      },
+      {
+        "key": "skillForge",
+        "title": "日本語: SkillForge/OmniSkills",
+        "desc": "Shokei, install, kansei shite kudasai."
+      },
+      {
+        "key": "telemetry",
+        "title": "Jitsuuchi Telemetry",
+        "desc": "Subete no agent to workflow ni watatta no operational intelligence."
+      },
+      {
+        "key": "policy",
+        "title": "日本語: Policy Enforcement Engine",
+        "desc": "Kansei rules wa shikkou mae ni tekiyou sa reru."
+      },
+      {
+        "key": "physiOmni",
+        "title": "日本語: PhysiOmni",
+        "desc": "Robotic shisutemu no tame no butsuriteki AI operations layer."
+      },
+      {
+        "key": "manMode",
+        "title": "MAN Mode",
+        "desc": "Manual Approval Node. Kiken na koudo wa shonin check point de ichiji teishi sa reru."
+      },
+      {
+        "key": "byom",
+        "title": "AI wo Kessaku / BYOM",
+        "desc": "Jibun no LLM wo network ni kessaku shite kudasai."
+      }
     ]
   },
   "maestro": {
     "label": "Chushin tetsugaku",
-    "headline": { "line1": "MAESTRO", "line2": "Principle." },
+    "headline": {
+      "line1": "MAESTRO",
+      "line2": "日本語: Principle."
+    },
     "description1": "Kenoka wa nou wo dake ja arimasen. Soyo ko seq to keka no chomio desu.",
     "description2": "Enterprise AI wa anata no kigyoo no ishi ni teikei suru koto ga dekinakereba narimasen. MAESTRO wa chajo ga shisutemu to tomo ni shincho suru koto wo hoshou shimasu.",
     "link": "MAESTRO Protocol wo Tansaku"
   },
   "enterprise": {
-    "label": "Enterprise Ready",
-    "headline": { "line1": "Kisei sa reta", "line2": "Kankyou no tame no kensou." },
+    "label": "日本語: Enterprise Ready",
+    "headline": {
+      "line1": "Kisei sa reta",
+      "line2": "Kankyou no tame no kensou."
+    },
     "description": "Ichinichi me kara kansei to kanri no tame no kensou.",
     "cards": [
-      { "name": "Security Controls Roadmap", "desc": "Anzen to kiyon no shisei ga ken'etsu sa reru" },
-      { "name": "Human oversight controls", "desc": "High-risk AI shisutemu no kanri yoken" },
-      { "name": "Privacy-record workflows", "desc": "Purosesu katsudou no kanzen na kiroku" },
-      { "name": "ISMS-ready controls", "desc": "Johou anzen kanri shisutemu compatible kougaku" },
-      { "name": "Healthcare Architecture Ready", "desc": "BAA sapooto no kenkou data kougaku" },
-      { "name": "Zero Trust Model", "desc": "Anmel na shinra nashi" },
-      { "name": "RBAC + ABAC", "desc": "Granular role to attribute based access control" },
-      { "name": "E2E Encryption", "desc": "Subete no data wa transit to rest de AES-256 yoru kaseki" }
+      {
+        "name": "日本語: Security Controls Roadmap",
+        "desc": "Anzen to kiyon no shisei ga ken'etsu sa reru"
+      },
+      {
+        "name": "日本語: Human oversight controls",
+        "desc": "High-risk AI shisutemu no kanri yoken"
+      },
+      {
+        "name": "Privacy-record workflows",
+        "desc": "Purosesu katsudou no kanzen na kiroku"
+      },
+      {
+        "name": "日本語: ISMS-ready controls",
+        "desc": "Johou anzen kanri shisutemu compatible kougaku"
+      },
+      {
+        "name": "日本語: Healthcare Architecture Ready",
+        "desc": "BAA sapooto no kenkou data kougaku"
+      },
+      {
+        "name": "日本語: Zero Trust Model",
+        "desc": "Anmel na shinra nashi"
+      },
+      {
+        "name": "日本語: RBAC + ABAC",
+        "desc": "Granular role to attribute based access control"
+      },
+      {
+        "name": "日本語: E2E Encryption",
+        "desc": "Subete no data wa transit to rest de AES-256 yoru kaseki"
+      }
     ]
   },
   "cta": {
-    "headline": { "line1": "Sendai teki", "line2": "akenki wo torimodosu." },
+    "headline": {
+      "line1": "Sendai teki",
+      "line2": "akenki wo torimodosu."
+    },
     "description": "Kuroi hako na AI wo koeta kigyoo ni sansei shite kudasai. Early access wo kadoo shi, production de kansei sa reta intelligence ga dono you na mono ka wo taiken shite kudasai.",
-    "buttons": { "primary": "Early Access wo Kadoo Suru", "secondary": "Demo wo Yoyaku Suru" },
-    "tagline": "Vendor lock-in nashi. Kuroi hako nashi. Odoro nashi."
+    "buttons": {
+      "primary": "Early Access wo Kadoo Suru",
+      "secondary": "Demo wo Yoyaku Suru"
+    },
+    "tagline": "Vendor lock-in nashi. Kuroi hako nashi. Odoro nashi.",
+    "label": "制御を取り戻す"
   },
   "modal": {
     "title": "Early Access wo Kadoo Suru",
     "description": "Kakombe no usecase ni tsuite oshiete kudasai. Soku ni renraku shimasu.",
-    "fields": { "name": "Furu Namei *", "email": "Work Email *", "company": "Company", "useCase": "Usecase" },
+    "fields": {
+      "name": "Furu Namei *",
+      "email": "日本語: Work Email *",
+      "company": "日本語: Company",
+      "useCase": "Usecase"
+    },
     "submit": "Kadoo wo Seikuo",
-    "success": { "title": "Kadoo wo Uketsuke Mashi", "message": "Soku ni renraku shimasu." }
+    "success": {
+      "title": "Kadoo wo Uketsuke Mashi",
+      "message": "Soku ni renraku shimasu."
+    },
+    "close": "閉じる",
+    "placeholders": {
+      "name": "日本語: Jane Smith",
+      "email": "日本語: jane@company.com",
+      "company": "日本語: ACME Corp",
+      "useCase": "APEX OmniHub の利用予定を簡単に説明してください"
+    },
+    "errors": {
+      "tooFast": "フォーム入力に少し時間をかけてください。",
+      "rateLimit": "最近送信済みです。数分待ってください。",
+      "name": "名前を入力してください。",
+      "email": "有効なメールアドレスを入力してください。"
+    }
   },
   "settings": {
     "title": "Shitoku",
@@ -99,5 +264,34 @@
     "current_language": "Genzai no Gengo",
     "language_updated": "Gengo ga seiko ni koushin sa remashita",
     "save": "Hozon"
+  },
+  "layout": {
+    "languageSelector": {
+      "ariaLabel": "サイト言語を選択"
+    },
+    "theme": {
+      "ariaLabel": "テーマ選択",
+      "light": "ホワイト・フォートレス",
+      "dark": "ナイト・ウォッチ"
+    },
+    "nav": {
+      "homeAria": "APEX OmniHub ホーム",
+      "primaryAria": "メインナビゲーション",
+      "openMenu": "メニューを開く",
+      "closeMenu": "メニューを閉じる",
+      "techSpecs": "技術仕様",
+      "story": "ストーリー",
+      "launchConsole": "コンソールを起動"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems. All rights reserved.",
+      "privacy": "プライバシー",
+      "terms": "利用規約",
+      "web3Integrations": "Web3 連携"
+    },
+    "maestro": {
+      "active": "有効",
+      "disabled": "無効"
+    }
   }
 }

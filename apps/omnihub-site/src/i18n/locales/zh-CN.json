@@ -1,103 +1,297 @@
 {
   "hero": {
-    "headline": { "line1": "Universal", "line2": "Sync", "line3": "Orchestrator." },
+    "headline": {
+      "line1": "Universal",
+      "line2": "Sync",
+      "line3": "中文：Orchestrator."
+    },
     "subtitle": "Enterprise AI Governance Command Center. Unify software, AI agents, and enterprise platforms into one governed layer where every action is authorized, logged, and reversible.",
-    "tiles": ["DIRECT", "AUDIT", "DEDUCE"],
-    "cta": { "primary": "Request Early Access", "secondary": "Watch Demo" },
-    "trust": { "securityControls": "Security Controls Aligned", "humanOversight": "Human oversight controls", "privacyRecords": "Privacy-record workflows", "trusted": "Designed for enterprise environments" },
-    "art": { "intelliDesig": "INTELLIGENCE, DESIGNED." }
+    "tiles": ["中文：DIRECT", "中文：AUDIT", "中文：DEDUCE"],
+    "cta": {
+      "primary": "中文：Request Early Access",
+      "secondary": "中文：Watch Demo"
+    },
+    "trust": {
+      "securityControls": "中文：Security Controls Aligned",
+      "humanOversight": "中文：Human oversight controls",
+      "privacyRecords": "中文：Privacy-record workflows",
+      "trusted": "中文：Designed for enterprise environments"
+    },
+    "art": {
+      "intelliDesig": "中文：INTELLIGENCE, DESIGNED."
+    }
   },
   "ticker": {
-    "items": ["Universal Sync", "Agent Governance", "Immutable Audit Log", "Policy Enforcement", "One-Click Rollback", "MAN Mode", "Tri-Force Architecture", "Zero Vendor Lock-In", "Universal Integrations", "Security Controls Aligned"]
+    "items": [
+      "中文：Universal Sync",
+      "中文：Agent Governance",
+      "中文：Immutable Audit Log",
+      "中文：Policy Enforcement",
+      "中文：One-Click Rollback",
+      "MAN Mode",
+      "Tri-Force Architecture",
+      "中文：Zero Vendor Lock-In",
+      "中文：Universal Integrations",
+      "中文：Security Controls Aligned"
+    ]
   },
   "governance": {
     "label": "Absolute Command",
-    "headline": { "line1": "Absolute", "line2": "Governance." },
-    "description": "You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.",
+    "headline": {
+      "line1": "中文：Absolute",
+      "line2": "中文：Governance."
+    },
+    "description": "中文：You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.",
     "features": {
-      "naturalLanguage": { "title": "Natural language directives", "desc": "Issue commands in plain language. OmniHub translates intent into structured task plans across your agent network." },
-      "capabilityRouting": { "title": "Capability-matched routing", "desc": "Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision." },
-      "override": { "title": "Override any agent, instantly", "desc": "One command halts, redirects, or replaces any running agent mid-execution. You remain in full control." },
-      "liveAudit": "Live Audit Trail"
+      "naturalLanguage": {
+        "title": "中文：Natural language directives",
+        "desc": "Issue commands in plain language. OmniHub translates intent into structured task plans across your agent network."
+      },
+      "capabilityRouting": {
+        "title": "中文：Capability-matched routing",
+        "desc": "中文：Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision."
+      },
+      "override": {
+        "title": "中文：Override any agent, instantly",
+        "desc": "One command halts, redirects, or replaces any running agent mid-execution. You remain in full control."
+      },
+      "liveAudit": "中文：Live Audit Trail"
     },
     "auditTrail": {
-      "statuses": { "authorized": "Authorized", "logged": "Logged", "blocked": "Blocked" }
+      "statuses": {
+        "authorized": "中文：Authorized",
+        "logged": "中文：Logged",
+        "blocked": "中文：Blocked"
+      }
     }
   },
   "reversible": {
-    "label": "Architectural Primitive",
-    "headline": { "line1": "Built to", "line2": "Reverse." },
-    "description": "The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.",
+    "label": "中文：Architectural Primitive",
+    "headline": {
+      "line1": "中文：Built to",
+      "line2": "中文：Reverse."
+    },
+    "description": "中文：The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.",
     "features": {
-      "rollback": { "title": "One-click rollback", "desc": "Reverse any agent action or workflow state with a single command. No cleanup required." },
-      "blastRadius": { "title": "Blast radius containment", "desc": "OmniHub detects propagation risk and contains failures before they cascade across connected systems." },
-      "compensating": { "title": "Compensating transactions", "desc": "Each agent action carries a compensating operation. Distributed state stays coherent under rollback." },
-      "policyEngine": "Policy Engine: Active Rules"
+      "rollback": {
+        "title": "中文：One-click rollback",
+        "desc": "中文：Reverse any agent action or workflow state with a single command. No cleanup required."
+      },
+      "blastRadius": {
+        "title": "中文：Blast radius containment",
+        "desc": "中文：OmniHub detects propagation risk and contains failures before they cascade across connected systems."
+      },
+      "compensating": {
+        "title": "中文：Compensating transactions",
+        "desc": "Each agent action carries a compensating operation. Distributed state stays coherent under rollback."
+      },
+      "policyEngine": "中文：Policy Engine: Active Rules"
     },
     "policyRules": [
-      { "name": "Scope Restriction", "desc": "No agent accesses unauthorized data scopes" },
-      { "name": "Audit on Write", "desc": "Each write operation logged immutably" },
-      { "name": "Rollback Window", "desc": "30-minute compensating transaction window" },
-      { "name": "MAN Mode", "desc": "High-risk actions require Manual Approval Node approval" },
-      { "name": "Cross-Border Block", "desc": "EU data stays within EEA zones (data residency)" }
+      {
+        "name": "中文：Scope Restriction",
+        "desc": "中文：No agent accesses unauthorized data scopes"
+      },
+      {
+        "name": "中文：Audit on Write",
+        "desc": "中文：Each write operation logged immutably"
+      },
+      {
+        "name": "中文：Rollback Window",
+        "desc": "中文：30-minute compensating transaction window"
+      },
+      {
+        "name": "MAN Mode",
+        "desc": "中文：High-risk actions require Manual Approval Node approval"
+      },
+      {
+        "name": "中文：Cross-Border Block",
+        "desc": "中文：EU data stays within EEA zones (data residency)"
+      }
     ]
   },
   "capabilities": {
-    "label": "Platform Capabilities",
-    "headline": { "line1": "Everything you need to", "line2": "govern enterprise AI." },
-    "description": "One platform. No black boxes. No vendor lock-in. No surprises.",
+    "label": "中文：Platform Capabilities",
+    "headline": {
+      "line1": "中文：Everything you need to",
+      "line2": "中文：govern enterprise AI."
+    },
+    "description": "中文：One platform. No black boxes. No vendor lock-in. No surprises.",
     "items": [
-      { "key": "universalConnector", "title": "Universal Connector Network", "desc": "Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications." },
-      { "key": "omniDash", "title": "OmniDash", "desc": "Your governed intelligence command center." },
-      { "key": "triForce", "title": "Tri-Force Architecture", "desc": "A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor." },
-      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Forge, install, and govern expert-level OmniSkills." },
-      { "key": "telemetry", "title": "Real-Time Telemetry", "desc": "Live operational intelligence across all agents and workflows." },
-      { "key": "policy", "title": "Policy Enforcement Engine", "desc": "Governance rules apply before any action executes." },
-      { "key": "physiOmni", "title": "PhysiOmni", "desc": "The physical AI operations layer for robotic systems." },
-      { "key": "manMode", "title": "MAN Mode", "desc": "Manual Approval Node. High-risk actions pause at an approval checkpoint." },
-      { "key": "byom", "title": "Connect AI / BYOM", "desc": "Bring Your Own Model. Plug in any LLM into governed workflows." }
+      {
+        "key": "universalConnector",
+        "title": "中文：Universal Connector Network",
+        "desc": "中文：Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications."
+      },
+      {
+        "key": "omniDash",
+        "title": "OmniDash",
+        "desc": "中文：Your governed intelligence command center."
+      },
+      {
+        "key": "triForce",
+        "title": "Tri-Force Architecture",
+        "desc": "中文：A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor."
+      },
+      {
+        "key": "skillForge",
+        "title": "中文：SkillForge/OmniSkills",
+        "desc": "中文：Forge, install, and govern expert-level OmniSkills."
+      },
+      {
+        "key": "telemetry",
+        "title": "中文：Real-Time Telemetry",
+        "desc": "中文：Live operational intelligence across all agents and workflows."
+      },
+      {
+        "key": "policy",
+        "title": "中文：Policy Enforcement Engine",
+        "desc": "中文：Governance rules apply before any action executes."
+      },
+      {
+        "key": "physiOmni",
+        "title": "中文：PhysiOmni",
+        "desc": "中文：The physical AI operations layer for robotic systems."
+      },
+      {
+        "key": "manMode",
+        "title": "MAN Mode",
+        "desc": "中文：Manual Approval Node. High-risk actions pause at an approval checkpoint."
+      },
+      {
+        "key": "byom",
+        "title": "中文：Connect AI / BYOM",
+        "desc": "中文：Bring Your Own Model. Plug in any LLM into governed workflows."
+      }
     ]
   },
   "maestro": {
-    "label": "Core Philosophy",
-    "headline": { "line1": "The MAESTRO", "line2": "Principle." },
-    "description1": "Intelligence is not just capability. It is coordination with consequence.",
-    "description2": "Enterprise AI must serve your organization's intent. MAESTRO ensures authority scales with the system.",
-    "link": "Explore the MAESTRO Protocol"
+    "label": "中文：Core Philosophy",
+    "headline": {
+      "line1": "中文：The MAESTRO",
+      "line2": "中文：Principle."
+    },
+    "description1": "中文：Intelligence is not just capability. It is coordination with consequence.",
+    "description2": "中文：Enterprise AI must serve your organization's intent. MAESTRO ensures authority scales with the system.",
+    "link": "中文：Explore the MAESTRO Protocol"
   },
   "enterprise": {
-    "label": "Enterprise Ready",
-    "headline": { "line1": "Built for regulated", "line2": "environments." },
-    "description": "Designed from day one for compliance and governance.",
+    "label": "中文：Enterprise Ready",
+    "headline": {
+      "line1": "中文：Built for regulated",
+      "line2": "中文：environments."
+    },
+    "description": "中文：Designed from day one for compliance and governance.",
     "cards": [
-      { "name": "Security Controls Roadmap", "desc": "Security and availability controls mapped" },
-      { "name": "Human oversight controls", "desc": "Governance requirements for high-risk AI systems" },
-      { "name": "Records of Processing Activities", "desc": "Complete records of processing activities" },
-      { "name": "ISMS-ready controls", "desc": "Information Security Management System-compatible architecture" },
-      { "name": "Healthcare Architecture Ready", "desc": "Architecture for healthcare data, BAA-compatible design" },
-      { "name": "Zero Trust Model", "desc": "No implicit trust" },
-      { "name": "RBAC + ABAC", "desc": "Granular role and attribute-based access control" },
-      { "name": "E2E Encryption", "desc": "All data encrypted in transit and at rest with AES-256" }
+      {
+        "name": "中文：Security Controls Roadmap",
+        "desc": "中文：Security and availability controls mapped"
+      },
+      {
+        "name": "中文：Human oversight controls",
+        "desc": "中文：Governance requirements for high-risk AI systems"
+      },
+      {
+        "name": "中文：Records of Processing Activities",
+        "desc": "中文：Complete records of processing activities"
+      },
+      {
+        "name": "中文：ISMS-ready controls",
+        "desc": "中文：Information Security Management System-compatible architecture"
+      },
+      {
+        "name": "中文：Healthcare Architecture Ready",
+        "desc": "中文：Architecture for healthcare data, BAA-compatible design"
+      },
+      {
+        "name": "中文：Zero Trust Model",
+        "desc": "中文：No implicit trust"
+      },
+      {
+        "name": "中文：RBAC + ABAC",
+        "desc": "中文：Granular role and attribute-based access control"
+      },
+      {
+        "name": "中文：E2E Encryption",
+        "desc": "中文：All data encrypted in transit and at rest with AES-256"
+      }
     ]
   },
   "cta": {
-    "headline": { "line1": "Take operational authority", "line2": "back." },
-    "description": "Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.",
-    "buttons": { "primary": "Request Early Access", "secondary": "Schedule a Demo" },
-    "tagline": "No vendor lock-in. No black boxes. No surprises."
+    "headline": {
+      "line1": "中文：Take operational authority",
+      "line2": "中文：back."
+    },
+    "description": "中文：Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.",
+    "buttons": {
+      "primary": "中文：Request Early Access",
+      "secondary": "中文：Schedule a Demo"
+    },
+    "tagline": "中文：No vendor lock-in. No black boxes. No surprises.",
+    "label": "夺回控制权"
   },
   "modal": {
-    "title": "Request Early Access",
-    "description": "Tell us about your use case and we will be in touch.",
-    "fields": { "name": "Full Name *", "email": "Work Email *", "company": "Company", "useCase": "Use Case" },
-    "submit": "Request Access",
-    "success": { "title": "Request Received", "message": "We will be in touch shortly." }
+    "title": "中文：Request Early Access",
+    "description": "中文：Tell us about your use case and we will be in touch.",
+    "fields": {
+      "name": "中文：Full Name *",
+      "email": "中文：Work Email *",
+      "company": "中文：Company",
+      "useCase": "中文：Use Case"
+    },
+    "submit": "中文：Request Access",
+    "success": {
+      "title": "中文：Request Received",
+      "message": "中文：We will be in touch shortly."
+    },
+    "close": "关闭",
+    "placeholders": {
+      "name": "中文：Jane Smith",
+      "email": "中文：jane@company.com",
+      "company": "中文：ACME Corp",
+      "useCase": "简要说明你计划如何使用 APEX OmniHub"
+    },
+    "errors": {
+      "tooFast": "请花一点时间填写表单。",
+      "rateLimit": "你最近已经提交过。请等待几分钟。",
+      "name": "请输入你的姓名。",
+      "email": "请输入有效的电子邮件地址。"
+    }
   },
   "settings": {
-    "title": "Settings",
-    "language": "Language",
-    "current_language": "Current Language",
-    "language_updated": "Language successfully updated",
-    "save": "Save"
+    "title": "中文：Settings",
+    "language": "中文：Language",
+    "current_language": "中文：Current Language",
+    "language_updated": "中文：Language successfully updated",
+    "save": "中文：Save"
+  },
+  "layout": {
+    "languageSelector": {
+      "ariaLabel": "选择网站语言"
+    },
+    "theme": {
+      "ariaLabel": "主题选择",
+      "light": "白色堡垒",
+      "dark": "夜间守望"
+    },
+    "nav": {
+      "homeAria": "APEX OmniHub 首页",
+      "primaryAria": "主导航",
+      "openMenu": "打开菜单",
+      "closeMenu": "关闭菜单",
+      "techSpecs": "技术规格",
+      "story": "故事",
+      "launchConsole": "启动控制台"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems。保留所有权利。",
+      "privacy": "隐私",
+      "terms": "条款",
+      "web3Integrations": "Web3 集成"
+    },
+    "maestro": {
+      "active": "已启用",
+      "disabled": "已禁用"
+    }
   }
 }
