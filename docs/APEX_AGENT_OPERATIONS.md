@@ -250,6 +250,23 @@ production token (environment separation) and is skipped when its secret is unse
 
 ---
 
+## 9.4 Release cut — 2026-06-21 (apex-omnihub 1.8.0 → 1.8.1)
+
+`package.json` / `package-lock.json` version bumped **1.8.0 → 1.8.1** (patch) via
+`changeset version`, consuming a changeset for the release-promotion infra fix
+(§9.3: HCP Terraform org `APEX-OmniHub` + `TF_PROD_TOKEN`). This is the
+`chore: version packages` release-cut commit that `release.yml` `release_signal`
+detects to set `release_cut=true` — re-arming the certification path that
+previously failed at Terraform Plan, now with the fix present.
+
+**Operational impact:** version-string bump only. **No dependency, env var,
+secret, DB table/migration, start command, or deployed-service topology change**
+beyond the §9.3 release-pipeline secret/org correction already documented above.
+This note satisfies the Ops Doc Drift Guard, which treats `package.json` changes
+as critical-path edits.
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration

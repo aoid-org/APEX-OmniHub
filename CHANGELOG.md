@@ -1,5 +1,12 @@
 ---
 
+## 1.8.1
+### Patch Changes
+
+
+
+- fix(release): correct HCP Terraform organization to `APEX-OmniHub` and wire the `TF_PROD_TOKEN` secret through the release pipeline. The atomic routing-flip certification path previously failed at Terraform Plan because the config pointed at a non-existent org and referenced an empty `TF_TOKEN` secret. No application/runtime behavior change.
+
 ## 1.8.0
 ### Minor Changes
 
