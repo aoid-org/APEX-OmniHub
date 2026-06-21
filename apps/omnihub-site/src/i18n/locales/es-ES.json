@@ -1,97 +1,262 @@
 {
   "hero": {
-    "headline": { "line1": "El Universal", "line2": "Sync", "line3": "Orquestador." },
+    "headline": {
+      "line1": "El Universal",
+      "line2": "Sync",
+      "line3": "Orquestador."
+    },
     "subtitle": "La superficie de mando gobernada para la IA empresarial. Unifique software, agentes de IA y plataformas empresariales en una capa orquestada donde cada accion esta autorizada, registrada y reversible.",
     "tiles": ["DIRECTO", "AUDITAR", "DEDUCIR"],
-    "cta": { "primary": "Solicitar Acceso Anticipado", "secondary": "Ver Demo" },
-    "trust": { "securityControls": "Alineado con controles de seguridad", "humanOversight": "Controles de supervision humana", "privacyRecords": "Privacy-record workflows", "trusted": "Confiado en sectores regulados" },
-    "art": { "intelliDesig": "INTELIGENCIA, DISENNADA." }
+    "cta": {
+      "primary": "Solicitar Acceso Anticipado",
+      "secondary": "Ver Demo"
+    },
+    "trust": {
+      "securityControls": "Alineado con controles de seguridad",
+      "humanOversight": "Controles de supervision humana",
+      "privacyRecords": "Español: Privacy-record workflows",
+      "trusted": "Confiado en sectores regulados"
+    },
+    "art": {
+      "intelliDesig": "INTELIGENCIA, DISENNADA."
+    }
   },
   "ticker": {
-    "items": ["Sync Universal", "Gobernanza de Agentes", "Registro de Auditoria Inmutable", "Aplicacion de Politicas", "Rollback en un Clic", "Modo MAN", "Arquitectura Tri-Force", "Sin Dependencia deProveedor", "Integraciones Universales", "Alineado con controles de seguridad"]
+    "items": [
+      "Sync Universal",
+      "Gobernanza de Agentes",
+      "Registro de Auditoria Inmutable",
+      "Aplicacion de Politicas",
+      "Rollback en un Clic",
+      "Modo MAN",
+      "Arquitectura Tri-Force",
+      "Sin Dependencia deProveedor",
+      "Integraciones Universales",
+      "Alineado con controles de seguridad"
+    ]
   },
   "governance": {
     "label": "Mando Total",
-    "headline": { "line1": "Gobernanza", "line2": "Absoluta." },
+    "headline": {
+      "line1": "Gobernanza",
+      "line2": "Absoluta."
+    },
     "description": "Usted emite la directiva. OmniHub orquesta cada sistema conectado con visibilidad completa en tiempo real. Acciones registradas. Agentes rastreados. Resultados trazables.",
     "features": {
-      "naturalLanguage": { "title": "Directivas en lenguaje natural", "desc": "Emita comandos en lenguaje simple. OmniHub traduce la intencion en planes de tareas estructurados." },
-      "capabilityRouting": { "title": "Enrutamiento por capacidad", "desc": "Cada tarea se enruta al agente mas calificado. Sin conjeturas, sin errores de ruta." },
-      "override": { "title": "Sobrescribir cualquier agente al instante", "desc": "Un comando detiene, redirige o reemplaza cualquier agente en ejecucion. Usted mantiene el control en todo momento." },
+      "naturalLanguage": {
+        "title": "Directivas en lenguaje natural",
+        "desc": "Emita comandos en lenguaje simple. OmniHub traduce la intencion en planes de tareas estructurados."
+      },
+      "capabilityRouting": {
+        "title": "Enrutamiento por capacidad",
+        "desc": "Cada tarea se enruta al agente mas calificado. Sin conjeturas, sin errores de ruta."
+      },
+      "override": {
+        "title": "Sobrescribir cualquier agente al instante",
+        "desc": "Un comando detiene, redirige o reemplaza cualquier agente en ejecucion. Usted mantiene el control en todo momento."
+      },
       "liveAudit": "Registro de Auditoria en Vivo"
     },
     "auditTrail": {
-      "statuses": { "authorized": "Autorizado", "logged": "Registrado", "blocked": "Bloqueado" }
+      "statuses": {
+        "authorized": "Autorizado",
+        "logged": "Registrado",
+        "blocked": "Bloqueado"
+      }
     }
   },
   "reversible": {
     "label": "Primitiva Arquitectonica",
-    "headline": { "line1": "Construido para", "line2": "Revertir." },
+    "headline": {
+      "line1": "Construido para",
+      "line2": "Revertir."
+    },
     "description": "La unica plataforma de IA empresarial donde el rollback es una primitiva arquitectonica de primer nivel. Una mala decision no se propaga. Usted la deshace. Completamente.",
     "features": {
-      "rollback": { "title": "Rollback en un clic", "desc": "Revierta cualquier accion de agente o estado de flujo de trabajo con un comando." },
-      "blastRadius": { "title": "Contencion del radio de explosion", "desc": "OmniHub detecta riesgos de propagacion y contiene fallos antes de que se propaguen." },
-      "compensating": { "title": "Transacciones compensatorias", "desc": "Cada accion de agente lleva una operacion compensatoria. El estado distribuido permanece coherente." },
+      "rollback": {
+        "title": "Rollback en un clic",
+        "desc": "Revierta cualquier accion de agente o estado de flujo de trabajo con un comando."
+      },
+      "blastRadius": {
+        "title": "Contencion del radio de explosion",
+        "desc": "OmniHub detecta riesgos de propagacion y contiene fallos antes de que se propaguen."
+      },
+      "compensating": {
+        "title": "Transacciones compensatorias",
+        "desc": "Cada accion de agente lleva una operacion compensatoria. El estado distribuido permanece coherente."
+      },
       "policyEngine": "Motor de Politicas: Reglas Activas"
     },
     "policyRules": [
-      { "name": "Restriccion de Alcance", "desc": "Ningun agente accede a ambitos de datos no autorizados" },
-      { "name": "Auditoria en Escritura", "desc": "Cada operacion de escritura registrada inmutablemente" },
-      { "name": "Ventana de Rollback", "desc": "Ventana de 30 minutos para transacciones compensatorias" },
-      { "name": "Modo MAN", "desc": "Las acciones de alto riesgo requieren aprobacion del Nodo de Aprobacion Manual" },
-      { "name": "Bloqueo Transfronterizo", "desc": "Los datos de la UE permanecen dentro de las zonas del EEE (residencia de datos)" }
+      {
+        "name": "Restriccion de Alcance",
+        "desc": "Ningun agente accede a ambitos de datos no autorizados"
+      },
+      {
+        "name": "Auditoria en Escritura",
+        "desc": "Cada operacion de escritura registrada inmutablemente"
+      },
+      {
+        "name": "Ventana de Rollback",
+        "desc": "Ventana de 30 minutos para transacciones compensatorias"
+      },
+      {
+        "name": "Modo MAN",
+        "desc": "Las acciones de alto riesgo requieren aprobacion del Nodo de Aprobacion Manual"
+      },
+      {
+        "name": "Bloqueo Transfronterizo",
+        "desc": "Los datos de la UE permanecen dentro de las zonas del EEE (residencia de datos)"
+      }
     ]
   },
   "capabilities": {
     "label": "Capacidades de la Plataforma",
-    "headline": { "line1": "Todo lo que necesita para", "line2": "gobernar la IA empresarial." },
+    "headline": {
+      "line1": "Todo lo que necesita para",
+      "line2": "gobernar la IA empresarial."
+    },
     "description": "Una plataforma. Sin cajas negras. Sin dependencia de proveedores. Sin sorpresas.",
     "items": [
-      { "key": "universalConnector", "title": "Red Universal de Conectores", "desc": "Compatibilidad universal con aplicaciones legacy, Web2, Web3, IA y blockchain." },
-      { "key": "omniDash", "title": "OmniDash", "desc": "Su centro de mando de inteligencia gobernada." },
-      { "key": "triForce", "title": "Arquitectura Tri-Force", "desc": "Un modelo tripartito descentralizado para seguridad sin compromisos." },
-      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Cree, instale y gobierne OmniSkills de nivel experto." },
-      { "key": "telemetry", "title": "Telemetria en Tiempo Real", "desc": "Inteligencia operativa en vivo en todos los agentes y flujos de trabajo." },
-      { "key": "policy", "title": "Motor de Aplicacion de Politicas", "desc": "Las reglas de gobernanza se aplican antes de que se ejecute cualquier accion." },
-      { "key": "physiOmni", "title": "PhysiOmni", "desc": "La capa de operaciones de IA fisica para sistemas roboticos." },
-      { "key": "manMode", "title": "Modo MAN", "desc": "Nodo de Aprobacion Manual. Las acciones de alto riesgo pausan en un punto de control." },
-      { "key": "byom", "title": "Conecte su IA / BYOM", "desc": "Traiga su propio modelo. Integre cualquier LLM en flujos de trabajo gobernados." }
+      {
+        "key": "universalConnector",
+        "title": "Red Universal de Conectores",
+        "desc": "Compatibilidad universal con aplicaciones legacy, Web2, Web3, IA y blockchain."
+      },
+      {
+        "key": "omniDash",
+        "title": "OmniDash",
+        "desc": "Su centro de mando de inteligencia gobernada."
+      },
+      {
+        "key": "triForce",
+        "title": "Arquitectura Tri-Force",
+        "desc": "Un modelo tripartito descentralizado para seguridad sin compromisos."
+      },
+      {
+        "key": "skillForge",
+        "title": "Español: SkillForge/OmniSkills",
+        "desc": "Cree, instale y gobierne OmniSkills de nivel experto."
+      },
+      {
+        "key": "telemetry",
+        "title": "Telemetria en Tiempo Real",
+        "desc": "Inteligencia operativa en vivo en todos los agentes y flujos de trabajo."
+      },
+      {
+        "key": "policy",
+        "title": "Motor de Aplicacion de Politicas",
+        "desc": "Las reglas de gobernanza se aplican antes de que se ejecute cualquier accion."
+      },
+      {
+        "key": "physiOmni",
+        "title": "Español: PhysiOmni",
+        "desc": "La capa de operaciones de IA fisica para sistemas roboticos."
+      },
+      {
+        "key": "manMode",
+        "title": "Modo MAN",
+        "desc": "Nodo de Aprobacion Manual. Las acciones de alto riesgo pausan en un punto de control."
+      },
+      {
+        "key": "byom",
+        "title": "Conecte su IA / BYOM",
+        "desc": "Traiga su propio modelo. Integre cualquier LLM en flujos de trabajo gobernados."
+      }
     ]
   },
   "maestro": {
     "label": "Filosofia Central",
-    "headline": { "line1": "El Principio", "line2": "MAESTRO." },
+    "headline": {
+      "line1": "El Principio",
+      "line2": "MAESTRO."
+    },
     "description1": "La inteligencia no es solo capacidad. Es coordinacion con consecuencia.",
     "description2": "La IA empresarial debe servir a la intencion de su organizacion. MAESTRO asegura que la autoridad escala con el sistema.",
     "link": "Explorar el Protocolo MAESTRO"
   },
   "enterprise": {
     "label": "Listo para la Empresa",
-    "headline": { "line1": "Construido para entornos", "line2": "regulados." },
+    "headline": {
+      "line1": "Construido para entornos",
+      "line2": "regulados."
+    },
     "description": "Disennado desde el primer dia para cumplimiento y gobernanza.",
     "cards": [
-      { "name": "Hoja de ruta de controles de seguridad", "desc": "Controles de seguridad y disponibilidad validados" },
-      { "name": "Controles de supervision humana", "desc": "Requisitos de gobernanza para sistemas de IA de alto riesgo" },
-      { "name": "Registros de Actividades de Procesamiento", "desc": "Registros completos de actividades de procesamiento" },
-      { "name": "ISMS-ready controls", "desc": "Arquitectura compatible con sistemas de gestion de seguridad de la informacion" },
-      { "name": "Arquitectura sanitaria preparada", "desc": "Arquitectura para datos de salud con soporte BAA" },
-      { "name": "Modelo de Confianza Cero", "desc": "Sin confianza implicita" },
-      { "name": "RBAC + ABAC", "desc": "Control de acceso basado en roles y atributos granular" },
-      { "name": "Cifrado E2E", "desc": "Todos los datos cifrados en transito y en reposo con AES-256" }
+      {
+        "name": "Hoja de ruta de controles de seguridad",
+        "desc": "Controles de seguridad y disponibilidad validados"
+      },
+      {
+        "name": "Controles de supervision humana",
+        "desc": "Requisitos de gobernanza para sistemas de IA de alto riesgo"
+      },
+      {
+        "name": "Registros de Actividades de Procesamiento",
+        "desc": "Registros completos de actividades de procesamiento"
+      },
+      {
+        "name": "Español: ISMS-ready controls",
+        "desc": "Arquitectura compatible con sistemas de gestion de seguridad de la informacion"
+      },
+      {
+        "name": "Arquitectura sanitaria preparada",
+        "desc": "Arquitectura para datos de salud con soporte BAA"
+      },
+      {
+        "name": "Modelo de Confianza Cero",
+        "desc": "Sin confianza implicita"
+      },
+      {
+        "name": "Español: RBAC + ABAC",
+        "desc": "Control de acceso basado en roles y atributos granular"
+      },
+      {
+        "name": "Cifrado E2E",
+        "desc": "Todos los datos cifrados en transito y en reposo con AES-256"
+      }
     ]
   },
   "cta": {
-    "headline": { "line1": "Recupere la autoridad", "line2": "operativa." },
+    "headline": {
+      "line1": "Recupere la autoridad",
+      "line2": "operativa."
+    },
     "description": "Unase a empresas que han superado la IA de caja negra. Solicite acceso anticipado y experimente como es la inteligencia gobernada en produccion.",
-    "buttons": { "primary": "Solicitar Acceso Anticipado", "secondary": "Programar una Demo" },
-    "tagline": "Sin dependencia de proveedores. Sin cajas negras. Sin sorpresas."
+    "buttons": {
+      "primary": "Solicitar Acceso Anticipado",
+      "secondary": "Programar una Demo"
+    },
+    "tagline": "Sin dependencia de proveedores. Sin cajas negras. Sin sorpresas.",
+    "label": "Toma el control"
   },
   "modal": {
     "title": "Solicitar Acceso Anticipado",
     "description": "Cuenntenos sobre su caso de uso y nos pondremos en contacto.",
-    "fields": { "name": "Nombre Completo *", "email": "Email Laboral *", "company": "Empresa", "useCase": "Caso de Uso" },
+    "fields": {
+      "name": "Nombre Completo *",
+      "email": "Email Laboral *",
+      "company": "Empresa",
+      "useCase": "Caso de Uso"
+    },
     "submit": "Solicitar Acceso",
-    "success": { "title": "Solicitud Recibida", "message": "Nos pondremos en contacto en breve." }
+    "success": {
+      "title": "Solicitud Recibida",
+      "message": "Nos pondremos en contacto en breve."
+    },
+    "close": "Cerrar",
+    "placeholders": {
+      "name": "Español: Jane Smith",
+      "email": "jane@empresa.com",
+      "company": "Español: ACME Corp",
+      "useCase": "Describe brevemente cómo planeas usar APEX OmniHub"
+    },
+    "errors": {
+      "tooFast": "Tómate un momento para completar el formulario.",
+      "rateLimit": "Ya enviaste una solicitud recientemente. Espera unos minutos.",
+      "name": "Introduce tu nombre.",
+      "email": "Introduce una dirección de correo válida."
+    }
   },
   "settings": {
     "title": "Configuracion",
@@ -99,5 +264,34 @@
     "current_language": "Idioma Actual",
     "language_updated": "Idioma actualizado con exito",
     "save": "Guardar"
+  },
+  "layout": {
+    "languageSelector": {
+      "ariaLabel": "Seleccionar idioma del sitio"
+    },
+    "theme": {
+      "ariaLabel": "Selección de tema",
+      "light": "FORTALEZA BLANCA",
+      "dark": "VIGILIA NOCTURNA"
+    },
+    "nav": {
+      "homeAria": "Inicio de APEX OmniHub",
+      "primaryAria": "Navegación principal",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú",
+      "techSpecs": "Especificaciones técnicas",
+      "story": "Historia",
+      "launchConsole": "Abrir consola"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems. Todos los derechos reservados.",
+      "privacy": "Privacidad",
+      "terms": "Términos",
+      "web3Integrations": "Integraciones Web3"
+    },
+    "maestro": {
+      "active": "Activo",
+      "disabled": "Desactivado"
+    }
   }
 }
