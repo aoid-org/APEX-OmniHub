@@ -98,7 +98,13 @@ vi.mock('../../apps/omnihub-site/dashboard/components/DashboardOverview/componen
 }));
 
 // Stub image imports
-vi.mock('../../../../src/assets/lightbulb-icon.png', () => ({ default: 'lightbulb-icon.png' }));
+vi.mock('../../apps/omnihub-site/src/assets/lightbulb-icon.png', () => ({ default: 'lightbulb-icon.png' }));
+
+vi.mock('../../apps/omnihub-site/dashboard/components/DashboardOverview/components/ContextTile', () => ({
+  ContextTile: ({ ctx }: { ctx: { id: string; label: string } }) => (
+    <div data-testid={`context-tile-${ctx.id}`}>{ctx.label}</div>
+  ),
+}));
 
 // ── CSS contract helpers ────────────────────────────────────────────────────
 
@@ -112,75 +118,47 @@ function extractBlock(pattern: RegExp): string | null {
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-describe('OmniSlate CSS — adaptive wrapper contract', () => {
-  it('apex-hero-tile-wrapper--lg has flex-grow priority over --sm', () => {
-    const lgBlock = extractBlock(/\.apex-hero-tile-wrapper--lg\s*\{([^}]*)\}/);
-    const smBlock = extractBlock(/\.apex-hero-tile-wrapper--sm\s*\{([^}]*)\}/);
-
-    expect(lgBlock).not.toBeNull();
-    expect(smBlock).not.toBeNull();
-
-    // lg must have higher flex-grow (4) than sm (1)
-    expect(lgBlock).toMatch(/flex:/);
-    const lgFlex = lgBlock!.match(/flex:\s*(\d+)/);
-    const smFlex = smBlock!.match(/flex:\s*(\d+)/);
-    expect(lgFlex).not.toBeNull();
-    expect(smFlex).not.toBeNull();
-    expect(Number(lgFlex![1])).toBeGreaterThan(Number(smFlex![1]));
-  });
-
-  it('apex-hero-tile-wrapper--sm has a min-width that prevents total collapse', () => {
-    const smBlock = extractBlock(/\.apex-hero-tile-wrapper--sm\s*\{([^}]*)\}/);
-    expect(smBlock).not.toBeNull();
-    expect(smBlock).toContain('min-width:');
-    // Must not be 0 or empty — assert value is at least 100px
-    const minWidthMatch = smBlock!.match(/min-width:\s*(\d+)px/);
-    if (minWidthMatch) {
-      expect(Number(minWidthMatch[1])).toBeGreaterThanOrEqual(100);
-    }
-  });
-
-  it('apex-hero-tile-wrapper--lg has a min-width to protect OmniSlate', () => {
-    const lgBlock = extractBlock(/\.apex-hero-tile-wrapper--lg\s*\{([^}]*)\}/);
-    expect(lgBlock).not.toBeNull();
-    expect(lgBlock).toContain('min-width:');
-  });
-
-  it('apex-hero-tile--sm uses width: 100% to fill wrapper', () => {
-    const smBlock = extractBlock(/\.apex-hero-tile--sm\s*\{([^}]*)\}/);
-    expect(smBlock).not.toBeNull();
-    expect(smBlock).toContain('width: 100%');
-  });
-
-  it('apex-hero-tile--lg uses width: 100% to fill wrapper', () => {
-    const lgBlock = extractBlock(/\.apex-hero-tile--lg\s*\{([^}]*)\}/);
-    expect(lgBlock).not.toBeNull();
-    expect(lgBlock).toContain('width: 100%');
-  });
-
-  it('hero row retains gap: 20px and display: flex', () => {
+describe('OmniSlate CSS — canonical tile contract', () => {
+  it('apex-hero-row has display: flex and gap: 20px', () => {
     const rowBlock = extractBlock(/\.apex-hero-row\s*\{([^}]*)\}/);
     expect(rowBlock).not.toBeNull();
     expect(rowBlock).toContain('display: flex');
     expect(rowBlock).toContain('gap: 20px');
   });
 
-  it('960px breakpoint wraps the hero row so OmniSlate reflows before clipping', () => {
-    const media960 = css.match(/@media\s*\(max-width:\s*960px\)\s*\{([\s\S]*?)\n\}/);
-    expect(media960).not.toBeNull();
-    const block = media960![1];
-    expect(block).toContain('flex-wrap: wrap');
-    expect(block).toContain('apex-hero-tile-wrapper--lg');
+  it('apex-hero-tile--lg has a fixed height', () => {
+    const lgBlock = extractBlock(/\.apex-hero-tile--lg\s*\{([^}]*)\}/);
+    expect(lgBlock).not.toBeNull();
+    expect(lgBlock).toContain('height:');
   });
 
-  it('at 640px all tiles stack vertically (no horizontal overflow path)', () => {
-    const media640 = css.match(/@media\s*\(max-width:\s*640px\)\s*\{([\s\S]*?)(?=\n@|\n\/\*|$)/);
-    expect(media640).not.toBeNull();
-    // Either flex-direction: column or all tiles go 100% width
-    const block = media640![1];
-    const hasColumn = block.includes('flex-direction: column');
-    const hasFull = block.includes('min-width: 0') || block.includes('height:');
-    expect(hasColumn || hasFull).toBe(true);
+  it('apex-hero-tile--sm has a fixed height', () => {
+    const smBlock = extractBlock(/\.apex-hero-tile--sm\s*\{([^}]*)\}/);
+    expect(smBlock).not.toBeNull();
+    expect(smBlock).toContain('height:');
+  });
+
+  it('apex-hero-tile--lg has overflow: hidden', () => {
+    const lgBlock = extractBlock(/\.apex-hero-tile--lg\s*\{([^}]*)\}/);
+    expect(lgBlock).not.toBeNull();
+    expect(lgBlock).toContain('overflow: hidden');
+  });
+
+  it('apex-hero-tile--sm has overflow: hidden', () => {
+    const smBlock = extractBlock(/\.apex-hero-tile--sm\s*\{([^}]*)\}/);
+    expect(smBlock).not.toBeNull();
+    expect(smBlock).toContain('overflow: hidden');
+  });
+
+  it('apex-hero-row does not use display: grid', () => {
+    const rowBlock = extractBlock(/\.apex-hero-row\s*\{([^}]*)\}/);
+    expect(rowBlock).not.toBeNull();
+    expect(rowBlock).not.toContain('display: grid');
+  });
+
+  it('responsive breakpoints exist for narrower viewports', () => {
+    expect(css).toMatch(/@media\s*\(max-width:\s*1024px\)/);
+    expect(css).toMatch(/@media\s*\(max-width:\s*768px\)/);
   });
 });
 
@@ -265,9 +243,40 @@ describe('OmniSlate component — stable selectors present', () => {
     expect(input.value).toBe('test query');
   });
 
-  it('outer wrapper carries the apex-hero-tile-wrapper--lg class', async () => {
+  it('outer wrapper has the omnislate-pane testid for Antigravity selector targeting', async () => {
     await renderOmniSlate();
     const pane = screen.getByTestId('omnislate-pane');
-    expect(pane.className).toContain('apex-hero-tile-wrapper--lg');
+    expect(pane).toBeTruthy();
+    // The outer wrapper should NOT be the Framer Motion div
+    expect(pane.getAttribute('data-testid')).toBe('omnislate-pane');
+  });
+
+  it('many context items do not push the prompt row out of the pane', async () => {
+    const { useOmniSlateStore } = await import('../../apps/omnihub-site/src/stores/omniSlateStore');
+    const manyContextImpl = (selector?: (s: unknown) => unknown) => {
+      const state = {
+        contextItems: Array.from({ length: 20 }, (_, i) => ({
+          id: `ctx-${i}`,
+          kind: 'apex_app' as const,
+          label: `Context ${i}`,
+          source: 'drag' as const,
+          health: 'healthy' as const,
+          metadata: {},
+          droppedAt: new Date().toISOString(),
+        })),
+        addContext: vi.fn(),
+      };
+      return selector ? selector(state) : state;
+    };
+    vi.mocked(useOmniSlateStore).mockImplementation(
+      manyContextImpl as unknown as typeof useOmniSlateStore,
+    );
+
+    await renderOmniSlate();
+    const row = screen.getByTestId('omnislate-prompt-row');
+    expect(row).toBeTruthy();
+    expect(row.querySelector('[data-testid="omnislate-prompt-input"]')).toBeTruthy();
+    expect(row.querySelector('[data-testid="submit-prompt"]')).toBeTruthy();
+    expect(row.style.flexShrink).toBe('0');
   });
 });

@@ -44,7 +44,7 @@ export const EcosystemPane = memo(function EcosystemPane({
   };
 
   return (
-    <div ref={canvasRef} className="apex-hero-tile-wrapper--sm" style={{ position: 'relative' }}>
+    <div ref={canvasRef} style={{ position: 'relative', height: '100%' }}>
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
