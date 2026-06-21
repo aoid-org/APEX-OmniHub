@@ -95,7 +95,10 @@ async function selectLocale(
   // .last() resolves to the mobile selector (inside the drawer) when both exist in the
   // DOM, and to the single desktop selector otherwise — correct in both viewport cases.
   await selectorLocator.last().click();
-  await page.getByRole("button", { name: label }).click();
+  // On mobile the hamburger drawer nav links (e.g. "Story") overlap the language-option
+  // buttons in the open dropdown. force:true dispatches the click directly on the button
+  // element, bypassing the pointer-events interception check.
+  await page.getByRole("button", { name: label }).click({ force: true });
 }
 
 async function expectNoI18nLeaks(page: import("@playwright/test").Page) {
@@ -155,7 +158,11 @@ test.describe.serial("public language switcher", () => {
         expect(response?.ok()).toBe(true);
       }
 
-      await page.goto("/");
+      // Use "commit" so the goto resolves before any client-side redirect fires
+      // (e.g. /manifesto.html redirect after visiting the /manifesto static route),
+      // then wait for domcontentloaded before interacting with the modal trigger.
+      await page.goto("/", { waitUntil: "commit" });
+      await page.waitForLoadState("domcontentloaded");
       await page.locator('[data-modal="request-access"]').first().click();
       await expect(page.locator(".modal-card").first()).toBeVisible();
       await expectNoI18nLeaks(page);
