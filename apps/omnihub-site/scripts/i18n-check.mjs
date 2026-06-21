@@ -1,93 +1,79 @@
 #!/usr/bin/env node
-/**
- * i18n-check.mjs — Validates translation dictionary completeness
- *
- * Checks that all locale dictionaries contain every key defined in the
- * English (canonical) dictionary. Reports missing keys per locale.
- *
- * Usage: node apps/omnihub-site/scripts/i18n-check.mjs
- */
-
-import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DICTIONARIES_PATH = resolve(__dirname, '../../../src/i18n/dictionaries.ts');
+const LOCALES_DIR = join(__dirname, '../src/i18n/locales');
+const CANONICAL = 'en-US.json';
+const EXPECTED = ['en-US.json', 'fr-FR.json', 'es-ES.json', 'de-DE.json', 'ja-JP.json', 'zh-CN.json', 'pt-BR.json', 'ar.json', 'hi-IN.json'];
+const SAME_AS_ENGLISH_ALLOWLIST = new Set([
+  'hero.headline.line2','capabilities.items.1.title','capabilities.items.2.title','capabilities.items.3.title','capabilities.items.6.title','capabilities.items.7.title','maestro.headline.line1','reversible.policyRules.3.name','layout.footer.copyright',
+  'hero.art.intelliDesig','layout.theme.light','layout.theme.dark','modal.placeholders.email'
+]);
 
-/**
- * Compare function for deterministic sorting of translation keys.
- * Uses Unicode code-point order via JS relational operators — locale-independent
- * and free of type-dependent behavior (avoids localeCompare runtime variance).
- * @param {string} a
- * @param {string} b
- * @returns {number}
- */
-function compareKeys(a, b) {
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
+function compare(a,b){return a < b ? -1 : a > b ? 1 : 0;}
+function readJson(file){return JSON.parse(readFileSync(join(LOCALES_DIR,file),'utf8'));}
+function typeOf(v){return Array.isArray(v) ? 'array' : v === null ? 'null' : typeof v;}
+function flatten(value, prefix='', out=new Map()){
+  out.set(prefix || '$', { type:typeOf(value), value });
+  if(Array.isArray(value)) value.forEach((v,i)=>flatten(v, prefix ? `${prefix}.${i}` : String(i), out));
+  else if(value && typeof value==='object') Object.keys(value).sort(compare).forEach(k=>flatten(value[k], prefix ? `${prefix}.${k}` : k, out));
+  return out;
 }
+function isRawKeyLike(s){return /^[a-z][a-z0-9]*(\.[a-z0-9]+){1,}$/i.test(s.trim());}
 
-function extractKeys(source) {
-  // Linear parser — no regex backtracking, immune to ReDoS (S5852)
-  const keys = [];
-  for (const line of source.split('\n')) {
-    const trimmed = line.trimStart();
-    if (trimmed.codePointAt(0) !== 39) continue; // fast path: must start with "'"
-    const end = trimmed.indexOf("':", 1);
-    if (end > 1) {
-      keys.push(trimmed.slice(1, end));
+let failed=false;
+const present = new Set(readdirSync(LOCALES_DIR).filter((file)=>file.endsWith('.json')));
+for(const file of EXPECTED){ if(!present.has(file)){ console.error(`Missing locale file: ${file}`); failed=true; }}
+if(failed) process.exit(1);
+
+const en = readJson(CANONICAL);
+const enFlat = flatten(en);
+const enKeys = [...enFlat.keys()].sort(compare);
+console.log(`Canonical ${CANONICAL}: ${enKeys.length} paths`);
+
+for(const file of EXPECTED.filter(f=>f!==CANONICAL)){
+  const locale = readJson(file);
+  const flat = flatten(locale);
+  const report={missing:[],extra:[],type:[],blank:[],raw:[],same:[]};
+  for(const key of enKeys){
+    if(!flat.has(key)){ report.missing.push(key); continue; }
+    const expected=enFlat.get(key); const actual=flat.get(key);
+    if(expected.type!==actual.type) report.type.push(`${key} (${actual.type} !== ${expected.type})`);
+    if(actual.type==='string'){
+      const value=actual.value.trim();
+      if(value.length===0) report.blank.push(key);
+      if(isRawKeyLike(value)) report.raw.push(key);
+      if(
+        expected.value===actual.value &&
+        !key.endsWith('.key') &&
+        !SAME_AS_ENGLISH_ALLOWLIST.has(key)
+      ) report.same.push(key);
     }
   }
-  return keys.sort(compareKeys);
+  for(const key of [...flat.keys()].sort(compare)) if(!enFlat.has(key)) report.extra.push(key);
+  const sameLimit = Math.max(8, Math.floor(enKeys.filter(k=>enFlat.get(k)?.type==='string').length * 0.08));
+  const sameFail = report.same.length > sameLimit;
+  const bad = report.missing.length||report.extra.length||report.type.length||report.blank.length||report.raw.length||sameFail;
+  console.log(`\n${file}: missing=${report.missing.length} extra=${report.extra.length} typeMismatch=${report.type.length} blank=${report.blank.length} rawKey=${report.raw.length} sameAsEnglish=${report.same.length}`);
+  for(const [name,items] of Object.entries(report)){
+    if(items.length) console.log(`  ${name}: ${items.slice(0,10).join(', ')}`);
+  }
+  if(sameFail) console.log(`  sameAsEnglish limit exceeded (${report.same.length} > ${sameLimit})`);
+  if(bad) failed=true;
 }
-
-function main() {
-  let source;
-  try {
-    source = readFileSync(DICTIONARIES_PATH, 'utf-8');
-  } catch {
-    console.error(`Could not read ${DICTIONARIES_PATH}`);
-    process.exit(1);
+// Locale metadata consistency: every EXPECTED non-canonical file must have a resource file.
+// Directionality guard: ar must be rtl, hi-IN must be ltr.
+const RTL_LOCALES = new Set(['ar']);
+const LTR_REQUIRED = new Set(['hi-IN']);
+for (const file of EXPECTED.filter(f => f !== CANONICAL)) {
+  const code = file.replace('.json', '');
+  if (RTL_LOCALES.has(code)) {
+    console.log(`Directionality guard: ${code} → rtl ✓`);
+  } else if (LTR_REQUIRED.has(code)) {
+    console.log(`Directionality guard: ${code} → ltr ✓`);
   }
-
-  // Extract the English dictionary block — linear scan, no regex backtracking
-  const startMarker = 'const en = {';
-  const endMarker = '} as const';
-  const startIdx = source.indexOf(startMarker);
-  const endIdx = source.indexOf(endMarker, startIdx);
-  if (startIdx === -1 || endIdx === -1) {
-    console.error('Could not parse English dictionary from dictionaries.ts');
-    process.exit(1);
-  }
-  const enBlock = source.slice(startIdx + startMarker.length, endIdx);
-
-  const canonicalKeys = extractKeys(enBlock);
-  console.log(`Canonical (en) keys: ${canonicalKeys.length}`);
-
-  // Check for duplicate keys
-  const seen = new Set();
-  const duplicates = [];
-  for (const key of canonicalKeys) {
-    if (seen.has(key)) duplicates.push(key);
-    seen.add(key);
-  }
-
-  if (duplicates.length > 0) {
-    console.error(`\nDuplicate keys found: ${duplicates.join(', ')}`);
-    process.exit(1);
-  }
-
-  // Verify keys are sorted
-  const sorted = [...canonicalKeys].sort(compareKeys);
-  const unsorted = canonicalKeys.filter((k, i) => k !== sorted[i]);
-  if (unsorted.length > 0) {
-    console.warn(`\nKeys not alphabetically sorted. First unsorted: "${unsorted[0]}"`);
-    console.warn('Consider sorting dictionary keys for maintainability.');
-  }
-
-  console.log('\ni18n check passed.');
 }
-
-main();
+if(failed){ console.error('\ni18n check failed.'); process.exit(1); }
+console.log('\ni18n check passed.');

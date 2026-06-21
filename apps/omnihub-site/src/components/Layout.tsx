@@ -1,56 +1,26 @@
-import { ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { siteConfig } from '@/content/site';
-import { ReferenceOverlay } from './ReferenceOverlay';
-import { useAuth } from '@/lib/useAuth';
-import { BrandAnthemPlayer } from './BrandAnthemPlayer';
-import { useTranslation } from 'react-i18next';
-
-type SupportedLanguage = Readonly<{
-  code: string;
-  label: string;
-}>;
-
-const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
-  { code: 'en-US', label: 'English' },
-  { code: 'es-ES', label: 'Español' },
-  { code: 'fr-FR', label: 'Français' },
-  { code: 'de-DE', label: 'Deutsch' },
-  { code: 'ja-JP', label: '日本語' },
-  { code: 'zh-CN', label: '中文 (简体)' },
-  { code: 'pt-BR', label: 'Português (Brasil)' },
-];
-
-function resolveSupportedLanguage(languageTag: string | undefined | null): string {
-  // Guard: i18next resolvedLanguage/language can be undefined during async init
-  if (!languageTag) return 'en-US';
-  const normalizedTag = languageTag.toLowerCase();
-  const exactMatch = SUPPORTED_LANGUAGES.find(
-    ({ code }) => code.toLowerCase() === normalizedTag,
-  );
-  if (exactMatch) {
-    return exactMatch.code;
-  }
-
-  const baseLanguage = normalizedTag.split('-')[0];
-  const baseMatch = SUPPORTED_LANGUAGES.find(({ code }) =>
-    code.toLowerCase().startsWith(`${baseLanguage}-`),
-  );
-  return baseMatch?.code ?? 'en-US';
-}
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
+import { siteConfig } from "@/content/site";
+import { ReferenceOverlay } from "./ReferenceOverlay";
+import { useAuth } from "@/lib/useAuth";
+import { BrandAnthemPlayer } from "./BrandAnthemPlayer";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import { SUPPORTED_LOCALES, resolveSupportedLocale } from "../i18n/locales";
 
 function LanguageSelector({
   className,
   onChange,
 }: Readonly<{ className?: string; onChange?: () => void }>) {
-  const { i18n } = useTranslation();
+  const { i18n, tx } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const menuId = useId();
   // Defensive fallback: both fields can be undefined while i18next init is in-flight
-  const selectedLanguage = resolveSupportedLanguage(i18n.resolvedLanguage ?? i18n.language ?? 'en-US');
+  const selectedLanguage = resolveSupportedLocale(
+    i18n.resolvedLanguage ?? i18n.language
+  );
   const selectedLanguageLabel =
-    SUPPORTED_LANGUAGES.find((language) => language.code === selectedLanguage)?.label ??
-    'English';
+    SUPPORTED_LOCALES.find((language) => language.code === selectedLanguage)
+      ?.nativeLabel ?? "English";
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -61,59 +31,67 @@ function LanguageSelector({
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
   const handleLanguageChange = (nextLanguage: string) => {
-    const resolvedLanguage = resolveSupportedLanguage(nextLanguage);
+    const resolvedLanguage = resolveSupportedLocale(nextLanguage);
     void i18n.changeLanguage(resolvedLanguage);
-    globalThis.localStorage.setItem('apex_locale', resolvedLanguage);
+    globalThis.localStorage.setItem("apex_locale", resolvedLanguage);
     setIsOpen(false);
     onChange?.();
   };
 
   return (
     <div
-      className={`language-selector ${className ?? ''}`.trim()}
+      className={`language-selector ${className ?? ""}`.trim()}
       ref={dropdownRef}
     >
       <button
         type="button"
         className="language-selector__trigger"
-        aria-label="Select site language"
+        aria-label={tx("layout.languageSelector.ariaLabel")}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={menuId}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <span className="language-selector__globe" aria-hidden="true">🌐</span>
-        <span className="language-selector__current">{selectedLanguageLabel}</span>
-        <span className="language-selector__caret" aria-hidden="true">▾</span>
+        <span className="language-selector__globe" aria-hidden="true">
+          🌐
+        </span>
+        <span className="language-selector__current">
+          {selectedLanguageLabel}
+        </span>
+        <span className="language-selector__caret" aria-hidden="true">
+          ▾
+        </span>
       </button>
       {isOpen && (
         <ul className="language-selector__menu" id={menuId}>
-          {SUPPORTED_LANGUAGES.map((language) => (
+          {SUPPORTED_LOCALES.map((language) => (
             <li key={language.code}>
               <button
                 type="button"
                 aria-pressed={language.code === selectedLanguage}
                 className={`language-selector__option ${
-                  language.code === selectedLanguage ? 'language-selector__option--active' : ''
+                  language.code === selectedLanguage
+                    ? "language-selector__option--active"
+                    : ""
                 }`}
                 onClick={() => handleLanguageChange(language.code)}
               >
-                {language.label}
+                {language.nativeLabel}
               </button>
             </li>
           ))}
@@ -130,32 +108,38 @@ type LayoutProps = Readonly<{
 
 function getInitialTheme(): boolean {
   if (globalThis.window === undefined) return false;
-  const saved = globalThis.localStorage.getItem('theme');
-  const prefersDark =
-    globalThis.window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return saved === 'dark' || (!saved && prefersDark);
+  const saved = globalThis.localStorage.getItem("theme");
+  const prefersDark = globalThis.window.matchMedia(
+    "(prefers-color-scheme: dark)"
+  ).matches;
+  return saved === "dark" || (!saved && prefersDark);
 }
 
 function ThemeToggle() {
+  const { tx } = useAppTranslation();
   const [isDark, setIsDark] = useState(getInitialTheme);
   const isLight = !isDark;
 
   useEffect(() => {
-    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    document.documentElement.dataset.theme = isDark ? "dark" : "light";
   }, [isDark]);
 
   const setTheme = (dark: boolean) => {
-    const newTheme = dark ? 'dark' : 'light';
+    const newTheme = dark ? "dark" : "light";
     setIsDark(dark);
-    globalThis.localStorage.setItem('theme', newTheme);
+    globalThis.localStorage.setItem("theme", newTheme);
     document.documentElement.dataset.theme = newTheme;
   };
 
   return (
-    <div className="theme-toggle-segmented" aria-label="Theme selection">
+    <div
+      className="theme-toggle-segmented"
+      aria-label={tx("layout.theme.ariaLabel")}
+    >
       <label
-        className={`theme-toggle-segmented__option ${isLight ? 'theme-toggle-segmented__option--active' : ''
-          }`}
+        className={`theme-toggle-segmented__option ${
+          isLight ? "theme-toggle-segmented__option--active" : ""
+        }`}
       >
         <input
           className="theme-toggle-segmented__input"
@@ -165,11 +149,12 @@ function ThemeToggle() {
           checked={isLight}
           onChange={() => setTheme(false)}
         />
-        WHITE FORTRESS
+        {tx("layout.theme.light")}
       </label>
       <label
-        className={`theme-toggle-segmented__option ${isDark ? 'theme-toggle-segmented__option--active' : ''
-          }`}
+        className={`theme-toggle-segmented__option ${
+          isDark ? "theme-toggle-segmented__option--active" : ""
+        }`}
       >
         <input
           className="theme-toggle-segmented__input"
@@ -179,48 +164,49 @@ function ThemeToggle() {
           checked={isDark}
           onChange={() => setTheme(true)}
         />
-        NIGHT WATCH
+        {tx("layout.theme.dark")}
       </label>
     </div>
   );
 }
 
 function Nav() {
+  const { tx } = useAppTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
+  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? "/omnidash";
 
   // Body scroll lock effect
   useEffect(() => {
     if (menuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
       // Prevent iOS bounce
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
     } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     }
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     };
   }, [menuOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setMenuOpen(false);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -228,7 +214,11 @@ function Nav() {
     <nav className="nav">
       <div className="container nav__inner">
         <div className="nav__left">
-          <a href="/" className="nav__logo" aria-label="APEX OmniHub home">
+          <a
+            href="/"
+            className="nav__logo"
+            aria-label={tx("layout.nav.homeAria")}
+          >
             <img
               src="/apex-omnihub-wordmark.svg"
               alt="APEX OmniHub"
@@ -240,21 +230,18 @@ function Nav() {
           <ThemeToggle />
         </div>
 
-        <ul className="nav__links" aria-label="Primary navigation">
+        <ul className="nav__links" aria-label={tx("layout.nav.primaryAria")}>
           {siteConfig.nav.links.map((link) => {
             let customStyle = "";
-            if (link.label === "Tech Specs") {
+            if (link.href === "/tech-specs") {
               customStyle = "nav__btn-pill nav__btn-pill--orange";
-            } else if (link.label === "Story") {
+            } else if (link.href === "/story") {
               customStyle = "nav__btn-pill nav__btn-pill--navy";
             }
             return (
               <li key={link.href}>
-                <a 
-                  href={link.href} 
-                  className={customStyle || 'nav__link'}
-                >
-                  {link.label}
+                <a href={link.href} className={customStyle || "nav__link"}>
+                  {tx(link.labelKey)}
                 </a>
               </li>
             );
@@ -267,15 +254,19 @@ function Nav() {
             <button
               type="button"
               className="nav__burger-btn"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={
+                menuOpen
+                  ? tx("layout.nav.closeMenu")
+                  : tx("layout.nav.openMenu")
+              }
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
             >
               <span
                 className={
                   menuOpen
-                    ? 'nav__burger-icon nav__burger-icon--open'
-                    : 'nav__burger-icon'
+                    ? "nav__burger-icon nav__burger-icon--open"
+                    : "nav__burger-icon"
                 }
               >
                 <span />
@@ -285,10 +276,7 @@ function Nav() {
             </button>
 
             {menuOpen && (
-              <dialog 
-                open
-                className="nav__mobile-menu"
-              >
+              <dialog open className="nav__mobile-menu">
                 {/* Mobile Menu Content */}
                 <ul className="nav__mobile-links">
                   <li className="nav__mobile-language">
@@ -301,21 +289,21 @@ function Nav() {
                         className="nav__mobile-link"
                         onClick={() => setMenuOpen(false)}
                       >
-                        {link.label}
+                        {tx(link.labelKey)}
                       </a>
                     </li>
                   ))}
-                  
+
                   {/* Auth-aware CTA in Mobile Menu */}
                   <li className="nav__mobile-cta-container">
-                    {!authLoading && (
-                      isAuthenticated ? (
+                    {!authLoading &&
+                      (isAuthenticated ? (
                         <a
                           href={dashboardUrl}
                           className="btn btn--primary btn--lg nav__mobile-cta"
                           onClick={() => setMenuOpen(false)}
                         >
-                          LAUNCH CONSOLE
+                          {tx("layout.nav.launchConsole")}
                         </a>
                       ) : (
                         <a
@@ -323,10 +311,9 @@ function Nav() {
                           className="btn btn--primary btn--lg nav__mobile-cta"
                           onClick={() => setMenuOpen(false)}
                         >
-                          {siteConfig.nav.loginLink.label}
+                          {tx(siteConfig.nav.loginLink.labelKey)}
                         </a>
-                      )
-                    )}
+                      ))}
                   </li>
                 </ul>
               </dialog>
@@ -335,11 +322,14 @@ function Nav() {
 
           {isAuthenticated ? (
             <a href={dashboardUrl} className="btn btn--primary btn--sm">
-              LAUNCH CONSOLE
+              {tx("layout.nav.launchConsole")}
             </a>
           ) : (
-            <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
-              {siteConfig.nav.loginLink.label}
+            <a
+              href={siteConfig.nav.loginLink.href}
+              className="btn btn--primary btn--sm"
+            >
+              {tx(siteConfig.nav.loginLink.labelKey)}
             </a>
           )}
         </div>
@@ -349,15 +339,16 @@ function Nav() {
 }
 
 function Footer() {
+  const { tx } = useAppTranslation();
   return (
     <footer className="footer">
       <div className="container footer__inner">
-        <p className="footer__copyright">{siteConfig.footer.copyright}</p>
+        <p className="footer__copyright">{tx("layout.footer.copyright")}</p>
         <ul className="footer__links">
           {siteConfig.footer.links.map((link) => (
             <li key={link.href}>
               <a href={link.href} className="footer__link">
-                {link.label}
+                {tx(link.labelKey)}
               </a>
             </li>
           ))}
@@ -365,33 +356,44 @@ function Footer() {
             <a
               href="/integrations/web3"
               className="footer__link"
-              style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}
             >
-              Web3 Integrations
+              {tx("layout.footer.web3Integrations")}
             </a>
           </li>
         </ul>
       </div>
       {/* Maestro Observability Indicator */}
-      <div className="container" style={{
-        fontSize: '0.75rem',
-        color: 'var(--color-text-secondary)',
-        opacity: 0.7,
-        paddingTop: 'var(--space-4)',
-        borderTop: '1px solid var(--color-border)',
-        marginTop: 'var(--space-4)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}>
-        <div style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: import.meta.env.VITE_MAESTRO_ENABLED === 'true' ? 'var(--color-success)' : 'var(--color-text-muted)'
-        }} />
+      <div
+        className="container"
+        style={{
+          fontSize: "0.75rem",
+          color: "var(--color-text-secondary)",
+          opacity: 0.7,
+          paddingTop: "var(--space-4)",
+          borderTop: "1px solid var(--color-border)",
+          marginTop: "var(--space-4)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+        }}
+      >
+        <div
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor:
+              import.meta.env.VITE_MAESTRO_ENABLED === "true"
+                ? "var(--color-success)"
+                : "var(--color-text-muted)",
+          }}
+        />
         <span>
-          Maestro: {import.meta.env.VITE_MAESTRO_ENABLED === 'true' ? 'Active' : 'Disabled'}
+          MAESTRO:{" "}
+          {import.meta.env.VITE_MAESTRO_ENABLED === "true"
+            ? tx("layout.maestro.active")
+            : tx("layout.maestro.disabled")}
         </span>
       </div>
     </footer>
@@ -403,7 +405,7 @@ export function Layout({ children, title }: LayoutProps) {
   // and must not depend on React Router context (useLocation would throw
   // if Layout were ever rendered outside a <Router>).
   const shouldRenderBrandAnthem =
-    typeof globalThis.window !== 'undefined' && globalThis.window.location.pathname === '/';
+    globalThis.window?.location.pathname === "/";
 
   useEffect(() => {
     if (title) {
