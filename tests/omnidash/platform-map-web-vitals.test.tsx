@@ -46,6 +46,24 @@ describe('Web Vitals regressions', () => {
     expect(starmapSource).not.toContain("launch.addEventListener('click', function () { new Overlay(opts); });");
   });
 
+  it('starmap hero uses deterministic split copy and right-side 3D stage', () => {
+    expect(starmapSource).toContain("'.ohsm-section .ohsm-inner{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:grid;");
+    expect(starmapSource).toContain('grid-template-columns:minmax(0,.95fr) minmax(360px,1.05fr)');
+    expect(starmapSource).toContain("'.ohsm-copy{display:grid;gap:18px;min-width:0;max-width:600px}'");
+    expect(starmapSource).toContain("'.ohsm-stage-3d{position:relative;min-height:clamp(360px,48vh,560px);width:100%;overflow:visible;pointer-events:none}'");
+    expect(starmapSource).toContain("'.ohsm-stage-3d .ohsm-hero-3d{position:absolute;inset:0;width:100%;height:100%;'");
+    expect(starmapSource).toContain("var copy = el('div', 'ohsm-copy');");
+    expect(starmapSource).toContain("var stage3d = el('div', 'ohsm-stage-3d');");
+    expect(starmapSource).toContain('stage3d.appendChild(hero3d);');
+    expect(starmapSource).toContain('inner.appendChild(copy);');
+    expect(starmapSource).toContain('inner.appendChild(stage3d);');
+    expect(starmapSource).toContain('@media (max-width:899px){.ohsm-section .ohsm-inner{max-width:none;grid-template-columns:1fr}');
+    expect(starmapSource).toContain('cam.position.set(0, 12, 42);');
+    expect(starmapSource).toContain('cam.lookAt(0, 0, -34);');
+    expect(starmapSource).not.toContain('host.appendChild(hero3d);');
+    expect(starmapSource).not.toContain('max-width:min(600px,50%)');
+  });
+
   it('Maestro route has stable initial layout shell', () => {
     expect(maestroPageSource).toContain('data-page="maestro"');
     expect(maestroPageSource).toContain('className="maestro-page"');
