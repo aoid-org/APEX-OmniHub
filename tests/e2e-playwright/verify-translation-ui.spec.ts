@@ -123,7 +123,10 @@ test.describe.serial("public language switcher", () => {
       await page.goto("/");
       await selectLocale(page, locale.label);
 
-      await expect(page.getByText(locale.label).first()).toBeVisible();
+      // On mobile the desktop language selector is CSS-hidden after the hamburger
+      // closes, so we check text content (not visibility) on the current-value span.
+      // Language-change correctness is confirmed by html[lang], html[dir], and hero.
+      await expect(page.locator(".language-selector__current").first()).toHaveText(locale.label);
       await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
       await expect(page.locator("html")).toHaveAttribute("dir", locale.dir);
       await expect(
@@ -138,7 +141,7 @@ test.describe.serial("public language switcher", () => {
       await page.reload();
       await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
       await expect(page.locator("html")).toHaveAttribute("dir", locale.dir);
-      await expect(page.getByText(locale.label).first()).toBeVisible();
+      await expect(page.locator(".language-selector__current").first()).toHaveText(locale.label);
 
       for (const route of translatedPublicRoutes) {
         await page.goto(route, { waitUntil: "domcontentloaded" });
