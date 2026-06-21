@@ -86,9 +86,13 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    // FIX: Use service role key for DB health probe — bypasses RLS so the
+    // check reflects actual DB connectivity, not the caller's auth context.
+    // Falls back to anon key only if service role is unavailable (e.g. local dev).
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? supabaseKey;
     const authHeader = req.headers.get('Authorization');
 
-    // Get user for rate limiting
+    // Get user for rate limiting (uses anon/caller context, not service role)
     const tempClient = createClient(supabaseUrl, supabaseKey, {
       global: { headers: authHeader ? { Authorization: authHeader } : {} },
     });
@@ -121,14 +125,14 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: authHeader ? { Authorization: authHeader } : {},
-      },
+    // FIX: Dedicated admin client for DB probe — service role bypasses RLS so
+    // this reflects true DB reachability regardless of caller auth status.
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false }
     });
 
     // Test 1: Database health - lightweight query to emergency_controls table
-    const { error: dbError } = await supabase
+    const { error: dbError } = await adminClient
       .from('emergency_controls')
       .select('id')
       .limit(1);
