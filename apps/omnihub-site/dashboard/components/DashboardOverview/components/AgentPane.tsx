@@ -52,7 +52,7 @@ export const AgentPane = memo(function AgentPane({
   const handlePause = () => setIsRunning(false);
 
   return (
-    <div ref={canvasRef} className="apex-hero-tile-wrapper--sm" style={{ position: 'relative' }}>
+    <div ref={canvasRef} style={{ position: 'relative', height: '100%' }}>
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
