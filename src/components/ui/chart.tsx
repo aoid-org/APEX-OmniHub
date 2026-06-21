@@ -91,40 +91,43 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([, itemConfig]) => itemConfig.theme || itemConfig.color,
-  );
+const ChartStyle = React.memo(({ id, config }: { id: string; config: ChartConfig }) => {
+  const css = React.useMemo(() => {
+    const colorConfig = Object.entries(config).filter(
+      ([, itemConfig]) => itemConfig.theme || itemConfig.color,
+    );
 
-  if (!colorConfig.length) {
-    return null;
-  }
+    if (!colorConfig.length) {
+      return null;
+    }
 
-  const css = Object.entries(THEMES)
-    .map(([theme, prefix]) => {
-      const declarations = colorConfig
-        .map(([key, itemConfig]) => {
-          const rawColor =
-            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-            itemConfig.color;
-          const safeColor = sanitizeColorValue(rawColor);
-          if (!safeColor) return null;
-          const safeKey = sanitizeCssVarName(key);
-          return `  --color-${safeKey}: ${safeColor};`;
-        })
-        .filter(Boolean)
-        .join("\n");
+    return Object.entries(THEMES)
+      .map(([theme, prefix]) => {
+        const declarations = colorConfig
+          .map(([key, itemConfig]) => {
+            const rawColor =
+              itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+              itemConfig.color;
+            const safeColor = sanitizeColorValue(rawColor);
+            if (!safeColor) return null;
+            const safeKey = sanitizeCssVarName(key);
+            return `  --color-${safeKey}: ${safeColor};`;
+          })
+          .filter(Boolean)
+          .join("\n");
 
-      if (!declarations) return null;
-      return `${prefix} [data-chart="${id}"] {\n${declarations}\n}`;
-    })
-    .filter(Boolean)
-    .join("\n");
+        if (!declarations) return null;
+        return `${prefix} [data-chart="${id}"] {\n${declarations}\n}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+  }, [id, config]);
 
   if (!css) return null;
 
   return <style>{css}</style>;
-};
+});
+ChartStyle.displayName = "ChartStyle";
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 

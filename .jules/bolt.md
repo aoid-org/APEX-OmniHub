@@ -32,3 +32,6 @@ status: verified
 ## 2026-06-12 - O(N) array search inside object traversal is a major bottleneck
 **Learning:** Calling `Object.entries()` inside loops (e.g. for detranslating values based on reverse lookup) is highly inefficient due to array allocations and O(N) searching for reverse key lookups.
 **Action:** Use a pre-calculated `REVERSE_DICTIONARY` with a direct lookup utilizing `Object.prototype.hasOwnProperty.call` to prevent prototype pollution and achieve O(1) direct property access instead.
+## 2024-05-18 - Memoized ChartStyle CSS generation
+**Learning:** `ChartStyle` recalculates colors using `Object.entries(config)` and creates css maps string literals every render.
+**Action:** Used `React.memo` and `React.useMemo` to memoize the dynamic CSS declaration to prevent redundant calculations across unrelated parent component re-renders.
