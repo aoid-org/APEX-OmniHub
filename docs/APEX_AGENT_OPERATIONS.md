@@ -288,6 +288,39 @@ continues to use `../../modules/` (local-backend compatible; no HCP Terraform re
 
 ---
 
+## 9.6 Migration idempotency fix — 2026-06-21 (pg_cron receipts rollback `db push` failure)
+
+**Root cause:** The "Deploy Supabase Edge Functions" CI step failed in
+`supabase db push --include-all` with
+`ERROR: could not find valid entry for job 'clean-receipts' (SQLSTATE XX000)`.
+Migration `20260226000001_rollback.sql` called `cron.unschedule('clean-receipts')`
+unconditionally. `pg_cron`'s `unschedule(name)` raises `XX000` when the named job
+does not exist, so the file was **not** idempotent despite its comment. On the
+remote DB that job had already been removed (by `20260226000004`), so every push
+aborted. A second latent bug: `20260226000001_rollback_receipt_cleanup.sql` was an
+empty (0-byte) file sharing the **same** version `20260226000001`, which would have
+caused a `schema_migrations` PRIMARY KEY (version) collision even after the first
+bug was fixed.
+
+**Fix:**
+- Guarded the unschedule in `20260226000001_rollback.sql` on both the `cron` schema
+  and the `clean-receipts` job existing (mirrors the correct pattern already in
+  `20260226000004_rollback_receipt_cleanup.sql`), making it truly idempotent.
+- Removed the empty duplicate-version file `20260226000001_rollback_receipt_cleanup.sql`
+  (the real receipt-cleanup rollback already exists as `20260226000004`).
+- Applied + recorded migration `20260226000001` on the production database via the
+  Supabase Management API query endpoint. Both statements are no-ops against the
+  current schema (the job and index are already absent), so **no data, indexes, or
+  cron jobs were altered**. `supabase db push --include-all` now reports nothing pending.
+
+**Operational impact:** None to runtime contracts — no services, env vars, tables,
+or start commands changed. This corrects an existing migration's idempotency only.
+Follows §10 rule 3 (only additive/idempotent migrations applied) and rule 4 (verified
+live objects + history before the apply). RFC:
+`memory/omni-recall/rfc/RFC_2026_06_21_PGCRON_ROLLBACK_IDEMPOTENCY.md`.
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration
