@@ -352,3 +352,38 @@ restoration session evidence; repo migration-file count (90) verified locally.
 
 > **NEVER** run `supabase db reset`, force-run the migration stack, or disable RLS against
 > production. See §8 Drift-prevention checklist.
+## 9.7 BYOM / Connect AI — login auth + proxy inference fix — 2026-06-21 (PR #1449)
+
+**Scope:** `supabase/functions/byom-login`, `supabase/functions/byom-proxy`,
+`packages/schema/byom/registry.ts`, and migration idempotency/forward-fixes. No cloud
+mutation; all DB validation was against local Docker Supabase only.
+
+**Operational contract changes:**
+
+- `byom-login` now uses a **dedicated auth client** for `signInWithPassword`; the
+  service-role client is used **only** for privileged DB writes (`provider_connections`,
+  `omnihub_model_registry`, `audit_logs`). RLS unchanged — `provider_connections` has no
+  INSERT policy by design (writes are service-role only).
+- Provider credential is stored as a PostgreSQL **bytea hex literal** (`\x...`), never as
+  plaintext or JSON-array text. Only a 4-char key hint is human-visible.
+- Audit insert carries `tenant_id` inside `audit_logs.metadata` (canonical `audit_logs`
+  has **no** `tenant_id` column). Event type: `byom.login`.
+- `byom-login` writes `tool_use_permissions: ['none']` (valid enum) and `allowed_models`
+  may be the wildcard `'*'` for self-service connections.
+- `byom-proxy` accepts wildcard `allowed_models = '*'` in addition to explicit model lists.
+- `pii_policy` enum extended with `'passthrough'` in the schema registry.
+
+**Migrations:** apply-time guards added to existing migrations (UUID-policy skip,
+pg_policies / information_schema existence guards, dollar-quote fixes) so a clean apply
+succeeds; two **forward-fix** migrations added (`20260621000000` new-user subscription
+status cast text->enum; `20260621000001` admin role sync `app_role` enum cast — fixes
+"operator does not exist: app_role = text" that broke new-user creation, incl.
+`<fingerprint>@byom.local` users). Long-standing `ON DELETE CASCADE` (auth-owner FKs) and
+scheduled-cleanup `DELETE FROM` inside function/cron bodies are annotated with
+`-- additive-allow:` reasons (gate-sanctioned, not a bypass).
+
+**Env / start command:** unchanged. No new secrets. Disposable provider test keys must be
+revoked after validation.
+
+**Validation:** backend/edge path proven on local Docker Supabase; UI-render (Phase B)
+pending — see `docs/byom-validation-continuation.md`.

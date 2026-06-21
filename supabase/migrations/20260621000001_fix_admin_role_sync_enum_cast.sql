@@ -41,6 +41,7 @@ BEGIN
     ON CONFLICT (user_id, role) DO NOTHING;
     RAISE LOG 'Admin role granted to user % via app_metadata sync', NEW.id;
   ELSIF admin_flag = false AND role_exists = true THEN
+    -- additive-allow: DELETE_FROM row-scoped admin-role revocation inside a trigger function body (WHERE user_id = NEW.id), not a migration-time bulk delete.
     DELETE FROM public.user_roles
     WHERE user_id = NEW.id AND role = _admin_role;
     RAISE LOG 'Admin role revoked from user % via app_metadata sync', NEW.id;

@@ -54,6 +54,7 @@ CREATE TYPE byom_sovereignty_mode AS ENUM (
 CREATE TABLE public.provider_connections (
   connection_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL,
+  -- additive-allow: ON_DELETE_CASCADE BYOM provider credentials must be removed when their owning auth user is deleted (no orphaned secrets).
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   provider byom_provider NOT NULL,
   auth_type byom_auth_type NOT NULL,
@@ -148,6 +149,7 @@ CREATE POLICY "Users view own connections"
   USING (auth.uid() = user_id);
 
 -- Policy 2: Users can UPDATE to revoke own connections ONLY
+-- additive-allow: REVOKE false positive: "revoke" appears only in the RLS policy NAME; no SQL privilege REVOKE is performed.
 CREATE POLICY "Users revoke own connections"
   ON public.provider_connections FOR UPDATE
   TO authenticated

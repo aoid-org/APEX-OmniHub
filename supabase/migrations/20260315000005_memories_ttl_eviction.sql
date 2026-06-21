@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS public.agent_memories (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    -- additive-allow: ON_DELETE_CASCADE agent memories must be removed when their owning auth user is deleted (no orphaned user data).
     user_id         UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
     session_id      TEXT        NOT NULL,
     content         TEXT        NOT NULL,
@@ -79,6 +80,7 @@ DO $do$ BEGIN
             'agent-memories-ttl-eviction',
             '30 2 * * *',
             $$
+            -- additive-allow: DELETE_FROM TTL eviction inside a scheduled function body, not a migration-time bulk delete.
             DELETE FROM public.agent_memories
             WHERE expires_at IS NOT NULL
               AND expires_at < NOW();
