@@ -27,11 +27,12 @@ terraform {
 
   # PRODUCTION/STAGING: Use Terraform Cloud for encrypted state storage
   # Prerequisites:
-  # 1. Create organization "omnihub" in Terraform Cloud
-  # 2. Create workspace "omnihub-production"
-  # 3. Set TF_API_TOKEN environment variable
+  # 1. Organization "APEX-OmniHub" in HCP Terraform (already exists)
+  # 2. Workspace "omnihub-production" (auto-created by the cloud{} block on init)
+  # 3. Provide an org-scoped token via the TF_PROD_TOKEN secret
+  #    (CI exposes it to Terraform CLI as TF_TOKEN_app_terraform_io)
   cloud {
-    organization = "omnihub"
+    organization = "APEX-OmniHub"
     workspaces {
       name = "omnihub-production"
     }
