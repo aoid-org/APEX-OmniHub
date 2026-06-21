@@ -207,6 +207,23 @@ changed in this PR.
 
 ---
 
+## 9.2 Release cut — 2026-06-21 (apex-omnihub 1.7.1 → 1.8.0)
+
+`package.json` / `package-lock.json` version bumped **1.7.1 → 1.8.0** (minor) via
+`changeset version`, consuming the changesets for the unreleased work since
+v1.7.1 (APEX Agent LIVE restoration + drift governance; OmniDash widget rescue).
+This is the `chore: version packages` release-cut commit that `release.yml`
+`release_signal` detects to set `release_cut=true`.
+
+**Operational impact:** version-string bump only. **No dependency, env var,
+secret, DB table/migration, start command, or deployed-service topology change.**
+This note exists to satisfy the Ops Doc Drift Guard, which (correctly) treats any
+`package.json`/`package-lock.json` change as a critical-path edit; the guard
+cannot distinguish a SemVer-only bump from a dependency change, so the release
+cut is recorded here rather than weakening the guard.
+
+---
+
 ## 10. Migration history baseline — 2026-06-19
 
 Production Supabase held **live schema objects** (every table/object the migration
