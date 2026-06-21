@@ -76,8 +76,21 @@ CREATE TABLE IF NOT EXISTS omni_run_events (
 
 ALTER TABLE omni_run_events ENABLE ROW LEVEL SECURITY;
 
+-- Only create this uuid-keyed owner policy when omni_run_events.workflow_id is
+-- actually uuid (greenfield, where this migration created the table). On the real
+-- migration history the table already exists from 20260125000000_omnitrace_replay
+-- with workflow_id TEXT and its own RLS owner policies, so this would raise
+-- "operator does not exist: uuid = text". Skipping it there preserves security
+-- (OmniTrace policies remain in force) and lets the full history apply cleanly.
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'omni_run_events_owner_policy') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'omni_run_events_owner_policy')
+     AND EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'omni_run_events'
+         AND column_name = 'workflow_id'
+         AND data_type = 'uuid'
+     ) THEN
     CREATE POLICY "omni_run_events_owner_policy" ON omni_run_events
       FOR ALL
       USING (
@@ -90,5 +103,14 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- omnidash_workflows RLS (pre-existing table)
-ALTER TABLE public.omnidash_workflows ENABLE ROW LEVEL SECURITY;
+-- omnidash_workflows RLS (table created out-of-band in production; never captured
+-- as a migration). Guard so the full history applies on a clean database where the
+-- table is absent. Where the table exists, RLS is still enabled as before.
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'omnidash_workflows'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.omnidash_workflows ENABLE ROW LEVEL SECURITY';
+  END IF;
+END $$;

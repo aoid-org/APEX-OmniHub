@@ -10,7 +10,7 @@ export const ModelProviderRegistrySchema = z.object({
   max_cost_usd: z.number().min(0),
   max_latency_ms: z.number().min(100).max(60000).default(10000),
   retention_mode: z.enum(['ephemeral', 'persistent', 'audit-only']),
-  pii_policy: z.enum(['block', 'redact', 'allow_internal']),
+  pii_policy: z.enum(['block', 'redact', 'allow_internal', 'passthrough']),
   tool_use_permissions: z.array(z.enum(['read_only', 'action_dispatch', 'none'])),
   output_validator_profile: z.string().optional(),
 });

@@ -1198,11 +1198,12 @@ const OmniSlateWidget = () => {
         display:"flex", gap:10, alignItems:"center",
       }}>
         <input
+          data-testid="omnislate-prompt-input"
           value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key==="Enter" && send()}
           placeholder="Ask APEX Agent anything…"
           style={{
-            flex:1, background:`${T.surface}cc`,
+            flex:1, minWidth:0, background:`${T.surface}cc`,
             border:`1px solid ${T.border}`,
             borderRadius:12, padding:"11px 15px",
             color:T.t1, fontSize:14.6,
@@ -1210,7 +1211,7 @@ const OmniSlateWidget = () => {
           }}
         />
         {/* Play / Stop icon buttons only — no text labels */}
-        <button onClick={send} title="Execute" style={{
+        <button data-testid="submit-prompt" onClick={send} title="Execute" style={{
           width:44, height:44, borderRadius:12, flexShrink:0,
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
           border:"none", cursor:"pointer",

@@ -161,6 +161,7 @@
   --color-text-muted: #64748b;
   --color-border: #334155;
   --color-border-subtle: #1e293b;
+  --color-error: #f87171;
 
   /* Interactive states - restrained, not neon */
   --color-interactive: #f8fafc;

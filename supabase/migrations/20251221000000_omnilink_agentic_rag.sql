@@ -65,7 +65,6 @@ END $$;
 
 -- Allow service_role full access (for skill registration)
 SELECT public.ensure_service_role_policy('agent_skills');
-SELECT public.ensure_service_role_policy('agent_checkpoints');
 
 -- Hybrid search RPC function (SECURITY INVOKER)
 CREATE OR REPLACE FUNCTION public.match_skills(
@@ -162,6 +161,10 @@ CREATE TABLE IF NOT EXISTS public.agent_checkpoints (
 
 -- Enable RLS on checkpoints
 ALTER TABLE public.agent_checkpoints ENABLE ROW LEVEL SECURITY;
+
+-- Allow service_role full access — must run AFTER the table exists (was a forward
+-- reference at the top of this file, which fails on a clean apply).
+SELECT public.ensure_service_role_policy('agent_checkpoints');
 
 -- RLS Policies for checkpoints
 -- Users can only access their own checkpoints

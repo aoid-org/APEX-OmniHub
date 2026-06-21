@@ -10,13 +10,14 @@ CREATE INDEX IF NOT EXISTS idx_idempotency_receipts_cleanup
   ON idempotency_receipts(created_at, expires_at);
 
 -- 3. Schedule daily cleanup (idempotent guard)
-DO $$
+DO $do$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'clean-expired-receipts') THEN
     PERFORM cron.schedule(
       'clean-expired-receipts',
       '0 3 * * *',
+      -- additive-allow: DELETE_FROM scheduled TTL cleanup inside a pg_cron job body, not a migration-time bulk delete.
       $$DELETE FROM idempotency_receipts WHERE expires_at < NOW() AND created_at < NOW() - INTERVAL '30 days';$$
     );
   END IF;
-END $$;
+END $do$;

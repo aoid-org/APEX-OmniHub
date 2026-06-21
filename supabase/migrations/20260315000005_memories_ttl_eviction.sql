@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS public.agent_memories (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    -- additive-allow: ON_DELETE_CASCADE agent memories must be removed when their owning auth user is deleted (no orphaned user data).
     user_id         UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
     session_id      TEXT        NOT NULL,
     content         TEXT        NOT NULL,
@@ -70,7 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_memories_hnsw
     WITH (m = 16, ef_construction = 64);
 
 -- Schedule nightly TTL eviction at 02:30 UTC
-DO $$ BEGIN
+DO $do$ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM cron.job
         WHERE jobname = 'agent-memories-ttl-eviction'
@@ -79,6 +80,7 @@ DO $$ BEGIN
             'agent-memories-ttl-eviction',
             '30 2 * * *',
             $$
+            -- additive-allow: DELETE_FROM TTL eviction inside a scheduled function body, not a migration-time bulk delete.
             DELETE FROM public.agent_memories
             WHERE expires_at IS NOT NULL
               AND expires_at < NOW();
@@ -86,7 +88,7 @@ DO $$ BEGIN
         );
         RAISE NOTICE 'pg_cron job agent-memories-ttl-eviction scheduled.';
     END IF;
-END $$;
+END $do$;
 
 COMMENT ON TABLE public.agent_memories IS
     'ACRA agent memory store. expires_at enforced nightly by pg_cron. '

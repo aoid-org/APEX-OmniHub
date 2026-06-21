@@ -72,7 +72,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
       backdropFilter: 'blur(4px)',
     }}>
       <div style={{
-        backgroundColor: 'var(--color-bg-elevated)',
+        backgroundColor: 'var(--color-surface-elevated)',
         padding: '32px',
         borderRadius: '16px',
         width: '100%',
@@ -81,7 +81,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
         border: '1px solid var(--color-border)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Connect Your AI</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>Connect Your AI</h2>
           <button 
             onClick={onClose}
             style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}
@@ -110,7 +110,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>
+            <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-primary)', fontWeight: 500 }}>
               Provider
               <select
                 id="provider-select"
@@ -121,22 +121,22 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                   padding: '12px',
                   borderRadius: '8px',
                   border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-text-primary)',
                   colorScheme: 'dark', // Fix OS native dropdown rendering on dark mode
                   fontSize: '1rem',
                   marginTop: '8px'
                 }}
               >
                 {PROVIDERS.map(p => (
-                  <option key={p.id} value={p.id} style={{ backgroundColor: '#121212', color: '#ffffff' }}>{p.name}</option>
+                  <option key={p.id} value={p.id} style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>{p.name}</option>
                 ))}
               </select>
             </label>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>
+            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-primary)', fontWeight: 500 }}>
               API Key
               <input
                 id="api-key-input"
@@ -150,8 +150,8 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                   padding: '12px',
                   borderRadius: '8px',
                   border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-text-primary)',
                   fontSize: '1rem',
                   fontFamily: 'monospace',
                   marginTop: '8px'
@@ -170,7 +170,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                 borderRadius: '8px',
                 border: '1px solid var(--color-border)',
                 backgroundColor: 'transparent',
-                color: 'var(--color-text)',
+                color: 'var(--color-text-primary)',
                 cursor: isLoading ? 'not-allowed' : 'pointer',
                 fontWeight: 600
               }}
@@ -184,7 +184,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: 'var(--color-accent)',
                 color: 'white',
                 cursor: (isLoading || !apiKey) ? 'not-allowed' : 'pointer',
                 fontWeight: 600,
