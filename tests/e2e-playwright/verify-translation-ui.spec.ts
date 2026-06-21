@@ -95,10 +95,15 @@ async function selectLocale(
   // .last() resolves to the mobile selector (inside the drawer) when both exist in the
   // DOM, and to the single desktop selector otherwise — correct in both viewport cases.
   await selectorLocator.last().click();
-  // On mobile the hamburger drawer nav links (e.g. "Story") overlap the language-option
-  // buttons in the open dropdown. force:true dispatches the click directly on the button
-  // element, bypassing the pointer-events interception check.
-  await page.getByRole("button", { name: label }).click({ force: true });
+  // On mobile the hamburger drawer nav links (e.g. ".nav__mobile-link") are positioned
+  // over the language-option buttons at screen coordinates. A pointer-based click —
+  // even with force:true — still resolves at those coordinates and lands on the nav link
+  // instead of the button. evaluate(el => el.click()) calls DOM .click() directly from
+  // within the page context, bypassing hit-testing entirely and reliably firing React's
+  // onClick without depending on z-order or pointer-event routing.
+  await page.getByRole("button", { name: label }).evaluate(
+    (el) => (el as HTMLButtonElement).click()
+  );
 }
 
 async function expectNoI18nLeaks(page: import("@playwright/test").Page) {
