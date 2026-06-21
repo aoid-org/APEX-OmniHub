@@ -3,8 +3,8 @@ import { siteConfig } from "@/content/site";
 import { ReferenceOverlay } from "./ReferenceOverlay";
 import { useAuth } from "@/lib/useAuth";
 import { BrandAnthemPlayer } from "./BrandAnthemPlayer";
-import { useAppTranslation } from "@/i18n/useAppTranslation";
-import { SUPPORTED_LOCALES, resolveSupportedLocale } from "@/i18n/locales";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import { SUPPORTED_LOCALES, resolveSupportedLocale } from "../i18n/locales";
 
 function LanguageSelector({
   className,

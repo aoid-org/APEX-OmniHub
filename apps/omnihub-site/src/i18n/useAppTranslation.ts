@@ -9,7 +9,7 @@ import {
 type TranslationOptions = Record<
   string,
   string | number | boolean | null | undefined
->;
+> & { defaultValue?: string };
 
 export type AppTranslation = Readonly<{
   t: ReturnType<typeof useTranslation>["t"];
@@ -26,8 +26,23 @@ export function useAppTranslation(): AppTranslation {
     i18n.resolvedLanguage ?? i18n.language
   );
   const locale = getLocaleInfo(language);
-  const tx = (key: string, options?: TranslationOptions): string =>
-    t(key, options);
+  const tx = (key: string, options?: TranslationOptions): string => {
+    if (i18n.exists(key, { lng: language })) {
+      return t(key, options);
+    }
+
+    if (i18n.exists(key, { lng: "en-US" })) {
+      return t(key, { ...options, lng: "en-US" });
+    }
+
+    if (options?.defaultValue && options.defaultValue !== key) {
+      return options.defaultValue;
+    }
+
+    return import.meta.env.PROD
+      ? `Missing translation: ${key}`
+      : `⟦missing:${key}⟧`;
+  };
   return { t, i18n, ready, language, locale, tx };
 }
 

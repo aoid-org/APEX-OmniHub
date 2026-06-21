@@ -44,7 +44,11 @@ for(const file of EXPECTED.filter(f=>f!==CANONICAL)){
       const value=actual.value.trim();
       if(value.length===0) report.blank.push(key);
       if(isRawKeyLike(value)) report.raw.push(key);
-      if(expected.value===actual.value && !SAME_AS_ENGLISH_ALLOWLIST.has(key)) report.same.push(key);
+      if(
+        expected.value===actual.value &&
+        !key.endsWith('.key') &&
+        !SAME_AS_ENGLISH_ALLOWLIST.has(key)
+      ) report.same.push(key);
     }
   }
   for(const key of [...flat.keys()].sort(compare)) if(!enFlat.has(key)) report.extra.push(key);

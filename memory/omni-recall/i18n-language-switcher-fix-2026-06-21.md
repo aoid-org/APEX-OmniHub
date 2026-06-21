@@ -1,27 +1,23 @@
----
-date: 2026-06-21
-scope: apps/omnihub-site
-status: partial-validation
----
+# OmniHub i18n Language Switcher Fix — 2026-06-21
 
-# OmniHub Site i18n Language Switcher Fix
+## Context
+- PR #1450 attempted to localize the public language switcher but introduced a root typecheck ambiguity: app-local `@/i18n/locales` imports could resolve to the legacy root `src/i18n/locales.ts` because root `tsconfig.app.json` searches `./src/*` before `./apps/omnihub-site/src/*`.
+- The safest remediation is to keep app-local i18n imports relative inside `apps/omnihub-site/src` and avoid reordering root aliases.
 
-Implemented a surgical public-site i18n repair for the production language switcher:
+## Remediation notes
+- `Layout.tsx` and `Home.tsx` now use relative imports for app-local i18n helpers.
+- Missing-key handling no longer returns blank strings in production. Dev/test uses loud `⟦missing:key⟧`; production returns a visible diagnostic after English/default fallback paths.
+- `useAppTranslation().tx()` now checks the selected locale first, then `en-US`, then `defaultValue`, then a visible diagnostic.
+- Locale parity check still validates production JSON locale files and ignores intentional `.key` metadata when calculating same-as-English realness.
+- Added `i18n-hardcoded-ui-check.mjs` to the root/app `i18n:check` command. It blocks ambiguous i18n imports, blank production missing-key handlers, fake locale prefixes, missing diagnostics, and reports hardcoded UI text as advisory findings.
+- Removed fake `中文：`, `Português:`, and `日本語:` prefixed locale clones from `zh-CN`, `pt-BR`, and `ja-JP` JSON files.
+- Expanded Playwright translation coverage across public app routes, reload persistence, html lang, modal visibility, raw key/missing marker leakage, and blank controls. Static `/manifesto` is checked for reachability because it intentionally hard-navigates to a standalone static asset.
+- Updated `docs/APEX_AGENT_OPERATIONS.md` with the frontend i18n release gate required by ops-doc drift guard.
 
-- Centralized locale metadata and locale resolution in `apps/omnihub-site/src/i18n/locales.ts`.
-- Hardened `i18n` initialization to sync `html lang`, `dir`, and `localStorage.apex_locale` on language changes.
-- Converted primary layout and home-page marketing copy to JSON-backed translations.
-- Replaced the app i18n checker so it validates `apps/omnihub-site/src/i18n/locales/*.json` rather than root dictionaries.
-- Replaced skipped/todo translation guard tests with active Vitest and Playwright coverage.
+## Validation snapshot
+- Passed: `npm run i18n:check`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test`, targeted Playwright translation spec, and root `npm run test:e2e:ci` (33 passed / 12 skipped in this environment).
+- Screenshot evidence generated locally under `apps/omnihub-site/artifacts/i18n-remediation/` for desktop home per locale, request-access modal per locale, mobile nav open, `/omniport`, `/features/man-mode`, `/maestro`, and `/product/omnidash`.
 
-Validation notes:
-
-- `npm run i18n:check`: pass.
-- `npx vitest run tests/omnidash/translation-realness.spec.tsx`: pass.
-- `npx playwright test tests/e2e-playwright/verify-translation-ui.spec.ts --project=chromium --config=playwright.config.ts`: pass after installing Playwright browsers/deps.
-- `cd apps/omnihub-site && npm run typecheck`: blocked by pre-existing root `src/omnidash/useOmniDashAction.ts` alias/implicit-any errors outside this patch.
-- `cd apps/omnihub-site && npm run lint`: blocked by pre-existing hook lint errors in `src/hooks/usePWAInstall.ts` and `src/hooks/useSpeechRecognition.ts` outside this patch.
-- `cd apps/omnihub-site && npm run build`: client build succeeds, SSG server build blocked on Node 20 missing native WebSocket; repo engine requires Node >=22.
-- `cd apps/omnihub-site && npm run smoke`: blocked by pre-existing smoke fixture expectations for missing `.html` files/legacy strings.
-
-Residual risk: Japanese, Simplified Chinese, and Brazilian Portuguese locale resources now change visibly and pass guardrails, but need native-speaker copy review before claiming final production translation quality.
+## Residual risks
+- The hardcoded UI check is intentionally advisory for broad public/OmniDash text because fully migrating every OmniDash/dashboard surface is a larger product translation effort. The advisory list identifies remaining candidate strings for follow-up.
+- `/manifesto` remains a standalone static HTML manifesto and is not wired into React i18n; the route is checked for reachability rather than translation.

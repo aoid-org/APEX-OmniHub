@@ -8,7 +8,7 @@ import {
   isStringArray,
   isTranslatedCardArray,
   useAppTranslation,
-} from "@/i18n/useAppTranslation";
+} from "../i18n/useAppTranslation";
 import "@/styles/landing.css";
 import homepageSchema from "../../public/schema/homepage.jsonld?raw";
 import organizationSchema from "../../public/schema/organization.jsonld?raw";

@@ -3,252 +3,252 @@
     "headline": {
       "line1": "Universal",
       "line2": "Sync",
-      "line3": "Português: Orchestrator."
+      "line3": "Orquestrador."
     },
-    "subtitle": "Português: The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible.",
-    "tiles": ["Português: DIRECT", "Português: AUDIT", "Português: DEDUCE"],
+    "subtitle": "A superfície de comando governada para IA empresarial. Unifique software, agentes de IA e plataformas empresariais em uma camada orquestrada onde cada ação é autorizada, registrada e reversível.",
+    "tiles": ["DIRECIONAR", "AUDITAR", "DEDUZIR"],
     "cta": {
-      "primary": "Português: Request Early Access",
-      "secondary": "Português: Watch Demo"
+      "primary": "Solicitar acesso antecipado",
+      "secondary": "Ver demonstração"
     },
     "trust": {
-      "securityControls": "Português: Security Controls Aligned",
-      "humanOversight": "Português: Human oversight controls",
-      "privacyRecords": "Português: Privacy-record workflows",
-      "trusted": "Português: Designed for enterprise environments"
+      "securityControls": "Controles de segurança alinhados",
+      "humanOversight": "Controles de supervisão humana",
+      "privacyRecords": "Fluxos com registros de privacidade",
+      "trusted": "Projetado para ambientes empresariais"
     },
     "art": {
-      "intelliDesig": "Português: INTELLIGENCE, DESIGNED."
+      "intelliDesig": "INTELIGÊNCIA, PROJETADA."
     }
   },
   "ticker": {
     "items": [
-      "Português: Universal Sync",
-      "Português: Agent Governance",
-      "Português: Immutable Audit Log",
-      "Português: Policy Enforcement",
-      "Português: One-Click Rollback",
+      "Sincronização universal",
+      "Governança de agentes",
+      "Registro de auditoria imutável",
+      "Aplicação de políticas",
+      "Rollback com um clique",
       "MAN Mode",
       "Tri-Force Architecture",
-      "Português: Zero Vendor Lock-In",
-      "Português: Universal Integrations",
-      "Português: Security Controls Aligned"
+      "Sem aprisionamento a fornecedor",
+      "Integrações universais",
+      "Controles de segurança alinhados"
     ]
   },
   "governance": {
     "label": "Absolute Command",
     "headline": {
-      "line1": "Português: Absolute",
-      "line2": "Português: Governance."
+      "line1": "Governança",
+      "line2": "absoluta."
     },
-    "description": "Português: You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.",
+    "description": "Você emite a diretiva. O OmniHub orquestra cada sistema conectado com visibilidade em tempo real. Ações registradas. Agentes rastreados. Resultados rastreáveis.",
     "features": {
       "naturalLanguage": {
-        "title": "Português: Natural language directives",
+        "title": "Diretivas em linguagem natural",
         "desc": "Issue commands in plain language. OmniHub translates intent into structured task plans across your agent network."
       },
       "capabilityRouting": {
-        "title": "Português: Capability-matched routing",
-        "desc": "Português: Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision."
+        "title": "Roteamento por capacidade",
+        "desc": "Cada tarefa é roteada para o agente mais qualificado. Sem suposições, sem rotas erradas e com auditoria completa de cada decisão."
       },
       "override": {
-        "title": "Português: Override any agent, instantly",
+        "title": "Assuma qualquer agente instantaneamente",
         "desc": "One command halts, redirects, or replaces any running agent mid-execution. You remain in full control."
       },
-      "liveAudit": "Português: Live Audit Trail"
+      "liveAudit": "Trilha de auditoria ao vivo"
     },
     "auditTrail": {
       "statuses": {
-        "authorized": "Português: Authorized",
-        "logged": "Português: Logged",
-        "blocked": "Português: Blocked"
+        "authorized": "Autorizado",
+        "logged": "Registrado",
+        "blocked": "Bloqueado"
       }
     }
   },
   "reversible": {
-    "label": "Português: Architectural Primitive",
+    "label": "Primitivo arquitetural",
     "headline": {
-      "line1": "Português: Built to",
-      "line2": "Português: Reverse."
+      "line1": "Criado para",
+      "line2": "reverter."
     },
-    "description": "Português: The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.",
+    "description": "A única plataforma de IA empresarial em que rollback é um primitivo arquitetural de primeira classe. Uma decisão ruim não se propaga. Você a desfaz completamente.",
     "features": {
       "rollback": {
-        "title": "Português: One-click rollback",
-        "desc": "Português: Reverse any agent action or workflow state with a single command. No cleanup required."
+        "title": "Rollback com um clique",
+        "desc": "Reverta qualquer ação de agente ou estado de fluxo com um único comando. Sem limpeza manual."
       },
       "blastRadius": {
-        "title": "Português: Blast radius containment",
-        "desc": "Português: OmniHub detects propagation risk and contains failures before they cascade across connected systems."
+        "title": "Contenção de raio de impacto",
+        "desc": "O OmniHub detecta risco de propagação e contém falhas antes que elas se espalhem entre sistemas conectados."
       },
       "compensating": {
-        "title": "Português: Compensating transactions",
+        "title": "Transações compensatórias",
         "desc": "Each agent action carries a compensating operation. Distributed state stays coherent under rollback."
       },
-      "policyEngine": "Português: Policy Engine: Active Rules"
+      "policyEngine": "Motor de políticas: regras ativas"
     },
     "policyRules": [
       {
-        "name": "Português: Scope Restriction",
-        "desc": "Português: No agent accesses unauthorized data scopes"
+        "name": "Restrição de escopo",
+        "desc": "Nenhum agente acessa escopos de dados não autorizados"
       },
       {
-        "name": "Português: Audit on Write",
-        "desc": "Português: Each write operation logged immutably"
+        "name": "Auditoria em cada gravação",
+        "desc": "Cada gravação é registrada de forma imutável"
       },
       {
-        "name": "Português: Rollback Window",
-        "desc": "Português: 30-minute compensating transaction window"
+        "name": "Janela de rollback",
+        "desc": "Janela de transação compensatória de 30 minutos"
       },
       {
         "name": "MAN Mode",
-        "desc": "Português: High-risk actions require Manual Approval Node approval"
+        "desc": "Ações de alto risco exigem aprovação do Manual Approval Node"
       },
       {
-        "name": "Português: Cross-Border Block",
-        "desc": "Português: EU data stays within EEA zones (data residency)"
+        "name": "Bloqueio transfronteiriço",
+        "desc": "Dados da UE permanecem nas zonas do EEE (residência de dados)"
       }
     ]
   },
   "capabilities": {
-    "label": "Português: Platform Capabilities",
+    "label": "Capacidades da plataforma",
     "headline": {
-      "line1": "Português: Everything you need to",
-      "line2": "Português: govern enterprise AI."
+      "line1": "Tudo o que você precisa para",
+      "line2": "governar a IA empresarial."
     },
-    "description": "Português: One platform. No black boxes. No vendor lock-in. No surprises.",
+    "description": "Uma plataforma. Sem caixas-pretas. Sem aprisionamento. Sem surpresas.",
     "items": [
       {
         "key": "universalConnector",
-        "title": "Português: Universal Connector Network",
-        "desc": "Português: Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications."
+        "title": "Rede universal de conectores",
+        "desc": "Compatibilidade universal com aplicações legadas, Web2, Web3, IA, NFT e blockchain."
       },
       {
         "key": "omniDash",
         "title": "OmniDash",
-        "desc": "Português: Your governed intelligence command center."
+        "desc": "Seu centro de comando de inteligência governada."
       },
       {
         "key": "triForce",
         "title": "Tri-Force Architecture",
-        "desc": "Português: A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor."
+        "desc": "Um modelo tripartite descentralizado para segurança sem concessões: Guardian, Planner e Executor."
       },
       {
         "key": "skillForge",
-        "title": "Português: SkillForge/OmniSkills",
-        "desc": "Português: Forge, install, and govern expert-level OmniSkills."
+        "title": "SkillForge/OmniSkills",
+        "desc": "Crie, instale e governe OmniSkills de nível especialista."
       },
       {
         "key": "telemetry",
-        "title": "Português: Real-Time Telemetry",
-        "desc": "Português: Live operational intelligence across all agents and workflows."
+        "title": "Telemetria em tempo real",
+        "desc": "Inteligência operacional ao vivo em todos os agentes e fluxos."
       },
       {
         "key": "policy",
-        "title": "Português: Policy Enforcement Engine",
-        "desc": "Português: Governance rules apply before any action executes."
+        "title": "Motor de aplicação de políticas",
+        "desc": "Regras de governança se aplicam antes de qualquer ação ser executada."
       },
       {
         "key": "physiOmni",
-        "title": "Português: PhysiOmni",
-        "desc": "Português: The physical AI operations layer for robotic systems."
+        "title": "PhysiOmni",
+        "desc": "A camada de operações de IA física para sistemas robóticos."
       },
       {
         "key": "manMode",
         "title": "MAN Mode",
-        "desc": "Português: Manual Approval Node. High-risk actions pause at an approval checkpoint."
+        "desc": "Manual Approval Node. Ações de alto risco pausam em um ponto de aprovação."
       },
       {
         "key": "byom",
-        "title": "Português: Connect AI / BYOM",
-        "desc": "Português: Bring Your Own Model. Plug in any LLM into governed workflows."
+        "title": "Conectar IA / BYOM",
+        "desc": "Traga seu próprio modelo. Conecte qualquer LLM a fluxos governados."
       }
     ]
   },
   "maestro": {
-    "label": "Português: Core Philosophy",
+    "label": "Filosofia central",
     "headline": {
-      "line1": "Português: The MAESTRO",
-      "line2": "Português: Principle."
+      "line1": "O MAESTRO",
+      "line2": "Princípio."
     },
-    "description1": "Português: Intelligence is not just capability. It is coordination with consequence.",
-    "description2": "Português: Enterprise AI must serve your organization's intent. MAESTRO ensures authority scales with the system.",
-    "link": "Português: Explore the MAESTRO Protocol"
+    "description1": "Inteligência não é apenas capacidade. É coordenação com consequência.",
+    "description2": "A IA empresarial deve servir à intenção da sua organização. MAESTRO garante que a autoridade escale com o sistema.",
+    "link": "Explorar o protocolo MAESTRO"
   },
   "enterprise": {
-    "label": "Português: Enterprise Ready",
+    "label": "Pronto para empresas",
     "headline": {
-      "line1": "Português: Built for regulated",
-      "line2": "Português: environments."
+      "line1": "Criado para ambientes",
+      "line2": "regulados."
     },
-    "description": "Português: Designed from day one for compliance and governance.",
+    "description": "Projetado desde o primeiro dia para conformidade e governança.",
     "cards": [
       {
-        "name": "Português: Security Controls Roadmap",
-        "desc": "Português: Security and availability controls mapped"
+        "name": "Roteiro de controles de segurança",
+        "desc": "Controles de segurança e disponibilidade mapeados"
       },
       {
-        "name": "Português: Human oversight controls",
-        "desc": "Português: Governance requirements for high-risk AI systems"
+        "name": "Controles de supervisão humana",
+        "desc": "Requisitos de governança para sistemas de IA de alto risco"
       },
       {
-        "name": "Português: Records of Processing Activities",
-        "desc": "Português: Complete records of processing activities"
+        "name": "Registros de atividades de processamento",
+        "desc": "Registros completos de atividades de processamento"
       },
       {
-        "name": "Português: ISMS-ready controls",
-        "desc": "Português: Information Security Management System-compatible architecture"
+        "name": "Controles prontos para ISMS",
+        "desc": "Arquitetura compatível com Sistema de Gestão de Segurança da Informação"
       },
       {
-        "name": "Português: Healthcare Architecture Ready",
-        "desc": "Português: Architecture for healthcare data, BAA-compatible design"
+        "name": "Arquitetura de saúde pronta",
+        "desc": "Arquitetura para dados de saúde, com design compatível com BAA"
       },
       {
-        "name": "Português: Zero Trust Model",
-        "desc": "Português: No implicit trust"
+        "name": "Modelo zero trust",
+        "desc": "Nenhuma confiança implícita"
       },
       {
-        "name": "Português: RBAC + ABAC",
-        "desc": "Português: Granular role and attribute-based access control"
+        "name": "RBAC + ABAC",
+        "desc": "Controle granular de acesso por função e atributo"
       },
       {
-        "name": "Português: E2E Encryption",
-        "desc": "Português: All data encrypted in transit and at rest with AES-256"
+        "name": "Criptografia ponta a ponta",
+        "desc": "Todos os dados criptografados em trânsito e em repouso com AES-256"
       }
     ]
   },
   "cta": {
     "headline": {
-      "line1": "Português: Take operational authority",
-      "line2": "Português: back."
+      "line1": "Recupere a autoridade operacional",
+      "line2": "de volta."
     },
-    "description": "Português: Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.",
+    "description": "Junte-se a empresas que superaram a IA de caixa-preta. Solicite acesso antecipado e veja como é a inteligência governada em produção.",
     "buttons": {
-      "primary": "Português: Request Early Access",
-      "secondary": "Português: Schedule a Demo"
+      "primary": "Solicitar acesso antecipado",
+      "secondary": "Agendar demonstração"
     },
-    "tagline": "Português: No vendor lock-in. No black boxes. No surprises.",
+    "tagline": "Sem aprisionamento a fornecedor. Sem caixas-pretas. Sem surpresas.",
     "label": "Assuma o controle"
   },
   "modal": {
-    "title": "Português: Request Early Access",
-    "description": "Português: Tell us about your use case and we will be in touch.",
+    "title": "Solicitar acesso antecipado",
+    "description": "Conte-nos sobre seu caso de uso e entraremos em contato.",
     "fields": {
-      "name": "Português: Full Name *",
-      "email": "Português: Work Email *",
-      "company": "Português: Company",
-      "useCase": "Português: Use Case"
+      "name": "Nome completo *",
+      "email": "E-mail profissional *",
+      "company": "Empresa",
+      "useCase": "Caso de uso"
     },
-    "submit": "Português: Request Access",
+    "submit": "Solicitar acesso",
     "success": {
-      "title": "Português: Request Received",
-      "message": "Português: We will be in touch shortly."
+      "title": "Solicitação recebida",
+      "message": "Entraremos em contato em breve."
     },
     "close": "Fechar",
     "placeholders": {
-      "name": "Português: Jane Smith",
+      "name": "Jane Smith",
       "email": "jane@empresa.com",
-      "company": "Português: ACME Corp",
+      "company": "ACME Corp",
       "useCase": "Descreva brevemente como pretende usar o APEX OmniHub"
     },
     "errors": {
@@ -259,11 +259,11 @@
     }
   },
   "settings": {
-    "title": "Português: Settings",
-    "language": "Português: Language",
-    "current_language": "Português: Current Language",
-    "language_updated": "Português: Language successfully updated",
-    "save": "Português: Save"
+    "title": "Configurações",
+    "language": "Idioma",
+    "current_language": "Idioma atual",
+    "language_updated": "Idioma atualizado com sucesso",
+    "save": "Salvar"
   },
   "layout": {
     "languageSelector": {

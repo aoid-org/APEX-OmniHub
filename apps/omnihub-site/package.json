@@ -12,7 +12,7 @@
     "lint": "eslint src --ext .ts,.tsx",
     "smoke": "node scripts/smoke-test.mjs",
     "test:visual": "playwright test",
-    "i18n:check": "node scripts/i18n-check.mjs"
+    "i18n:check": "node scripts/i18n-check.mjs && node scripts/i18n-hardcoded-ui-check.mjs"
   },
   "dependencies": {
     "apex-omnihub": "file:../..",

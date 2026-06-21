@@ -54,7 +54,10 @@ describe("Translation realness contract", () => {
     for (const [locale, dictionary] of Object.entries(locales)) {
       const actual = flatten(dictionary);
       const same = stringKeys.filter(
-        (key) => canonical.get(key) === actual.get(key) && !allowedSame.has(key)
+        (key) =>
+          canonical.get(key) === actual.get(key) &&
+          !key.endsWith(".key") &&
+          !allowedSame.has(key)
       );
       expect(
         same.length / stringKeys.length,

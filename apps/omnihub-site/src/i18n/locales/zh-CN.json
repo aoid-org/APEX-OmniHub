@@ -3,252 +3,252 @@
     "headline": {
       "line1": "Universal",
       "line2": "Sync",
-      "line3": "中文：Orchestrator."
+      "line3": "编排器。"
     },
     "subtitle": "Enterprise AI Governance Command Center. Unify software, AI agents, and enterprise platforms into one governed layer where every action is authorized, logged, and reversible.",
-    "tiles": ["中文：DIRECT", "中文：AUDIT", "中文：DEDUCE"],
+    "tiles": ["指挥", "审计", "推演"],
     "cta": {
-      "primary": "中文：Request Early Access",
-      "secondary": "中文：Watch Demo"
+      "primary": "申请抢先体验",
+      "secondary": "观看演示"
     },
     "trust": {
-      "securityControls": "中文：Security Controls Aligned",
-      "humanOversight": "中文：Human oversight controls",
-      "privacyRecords": "中文：Privacy-record workflows",
-      "trusted": "中文：Designed for enterprise environments"
+      "securityControls": "安全控制已对齐",
+      "humanOversight": "人工监督控制",
+      "privacyRecords": "隐私记录工作流",
+      "trusted": "专为企业环境设计"
     },
     "art": {
-      "intelliDesig": "中文：INTELLIGENCE, DESIGNED."
+      "intelliDesig": "智能，经设计而成。"
     }
   },
   "ticker": {
     "items": [
-      "中文：Universal Sync",
-      "中文：Agent Governance",
-      "中文：Immutable Audit Log",
-      "中文：Policy Enforcement",
-      "中文：One-Click Rollback",
+      "通用同步",
+      "代理治理",
+      "不可变审计日志",
+      "策略执行",
+      "一键回滚",
       "MAN Mode",
       "Tri-Force Architecture",
-      "中文：Zero Vendor Lock-In",
-      "中文：Universal Integrations",
-      "中文：Security Controls Aligned"
+      "零供应商锁定",
+      "通用集成",
+      "安全控制已对齐"
     ]
   },
   "governance": {
     "label": "Absolute Command",
     "headline": {
-      "line1": "中文：Absolute",
-      "line2": "中文：Governance."
+      "line1": "绝对",
+      "line2": "治理。"
     },
-    "description": "中文：You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.",
+    "description": "你发出指令。OmniHub 以完整实时可见性编排每个连接系统。动作被记录，代理被跟踪，结果可追溯。",
     "features": {
       "naturalLanguage": {
-        "title": "中文：Natural language directives",
+        "title": "自然语言指令",
         "desc": "Issue commands in plain language. OmniHub translates intent into structured task plans across your agent network."
       },
       "capabilityRouting": {
-        "title": "中文：Capability-matched routing",
-        "desc": "中文：Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision."
+        "title": "能力匹配路由",
+        "desc": "每个任务都会路由到最合适的代理。无猜测、无误路由，每次路由决策都完整审计。"
       },
       "override": {
-        "title": "中文：Override any agent, instantly",
+        "title": "即时覆盖任意代理",
         "desc": "One command halts, redirects, or replaces any running agent mid-execution. You remain in full control."
       },
-      "liveAudit": "中文：Live Audit Trail"
+      "liveAudit": "实时审计轨迹"
     },
     "auditTrail": {
       "statuses": {
-        "authorized": "中文：Authorized",
-        "logged": "中文：Logged",
-        "blocked": "中文：Blocked"
+        "authorized": "已授权",
+        "logged": "已记录",
+        "blocked": "已阻止"
       }
     }
   },
   "reversible": {
-    "label": "中文：Architectural Primitive",
+    "label": "架构原语",
     "headline": {
-      "line1": "中文：Built to",
-      "line2": "中文：Reverse."
+      "line1": "生而可",
+      "line2": "回滚。"
     },
-    "description": "中文：The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.",
+    "description": "唯一将回滚作为一等架构原语的企业 AI 平台。一次错误决策不会级联扩散。你可以将其完全撤销。",
     "features": {
       "rollback": {
-        "title": "中文：One-click rollback",
-        "desc": "中文：Reverse any agent action or workflow state with a single command. No cleanup required."
+        "title": "一键回滚",
+        "desc": "用一条命令撤销任何代理动作或工作流状态。无需额外清理。"
       },
       "blastRadius": {
-        "title": "中文：Blast radius containment",
-        "desc": "中文：OmniHub detects propagation risk and contains failures before they cascade across connected systems."
+        "title": "爆炸半径控制",
+        "desc": "OmniHub 会检测传播风险，并在故障跨系统级联前将其控制住。"
       },
       "compensating": {
-        "title": "中文：Compensating transactions",
+        "title": "补偿事务",
         "desc": "Each agent action carries a compensating operation. Distributed state stays coherent under rollback."
       },
-      "policyEngine": "中文：Policy Engine: Active Rules"
+      "policyEngine": "策略引擎：活动规则"
     },
     "policyRules": [
       {
-        "name": "中文：Scope Restriction",
-        "desc": "中文：No agent accesses unauthorized data scopes"
+        "name": "范围限制",
+        "desc": "任何代理都不得访问未授权的数据范围"
       },
       {
-        "name": "中文：Audit on Write",
-        "desc": "中文：Each write operation logged immutably"
+        "name": "写入即审计",
+        "desc": "每次写入操作均不可变记录"
       },
       {
-        "name": "中文：Rollback Window",
-        "desc": "中文：30-minute compensating transaction window"
+        "name": "回滚窗口",
+        "desc": "30 分钟补偿事务窗口"
       },
       {
         "name": "MAN Mode",
-        "desc": "中文：High-risk actions require Manual Approval Node approval"
+        "desc": "高风险动作需要 Manual Approval Node 批准"
       },
       {
-        "name": "中文：Cross-Border Block",
-        "desc": "中文：EU data stays within EEA zones (data residency)"
+        "name": "跨境阻断",
+        "desc": "欧盟数据保留在 EEA 区域内（数据驻留）"
       }
     ]
   },
   "capabilities": {
-    "label": "中文：Platform Capabilities",
+    "label": "平台能力",
     "headline": {
-      "line1": "中文：Everything you need to",
-      "line2": "中文：govern enterprise AI."
+      "line1": "你所需的一切，用于",
+      "line2": "治理企业 AI。"
     },
-    "description": "中文：One platform. No black boxes. No vendor lock-in. No surprises.",
+    "description": "一个平台。无黑箱。无供应商锁定。无意外。",
     "items": [
       {
         "key": "universalConnector",
-        "title": "中文：Universal Connector Network",
-        "desc": "中文：Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications."
+        "title": "通用连接器网络",
+        "desc": "兼容传统、Web2、Web3、AI、NFT 和区块链应用。"
       },
       {
         "key": "omniDash",
         "title": "OmniDash",
-        "desc": "中文：Your governed intelligence command center."
+        "desc": "你的受治理智能指挥中心。"
       },
       {
         "key": "triForce",
         "title": "Tri-Force Architecture",
-        "desc": "中文：A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor."
+        "desc": "一种去中心化三方模型，确保安全不妥协：Guardian、Planner 与 Executor。"
       },
       {
         "key": "skillForge",
-        "title": "中文：SkillForge/OmniSkills",
-        "desc": "中文：Forge, install, and govern expert-level OmniSkills."
+        "title": "SkillForge/OmniSkills",
+        "desc": "打造、安装并治理专家级 OmniSkills。"
       },
       {
         "key": "telemetry",
-        "title": "中文：Real-Time Telemetry",
-        "desc": "中文：Live operational intelligence across all agents and workflows."
+        "title": "实时遥测",
+        "desc": "覆盖所有代理和工作流的实时运营智能。"
       },
       {
         "key": "policy",
-        "title": "中文：Policy Enforcement Engine",
-        "desc": "中文：Governance rules apply before any action executes."
+        "title": "策略执行引擎",
+        "desc": "任何动作执行前都会先应用治理规则。"
       },
       {
         "key": "physiOmni",
-        "title": "中文：PhysiOmni",
-        "desc": "中文：The physical AI operations layer for robotic systems."
+        "title": "PhysiOmni",
+        "desc": "面向机器人系统的实体 AI 运营层。"
       },
       {
         "key": "manMode",
         "title": "MAN Mode",
-        "desc": "中文：Manual Approval Node. High-risk actions pause at an approval checkpoint."
+        "desc": "Manual Approval Node。高风险动作会在审批检查点暂停。"
       },
       {
         "key": "byom",
-        "title": "中文：Connect AI / BYOM",
-        "desc": "中文：Bring Your Own Model. Plug in any LLM into governed workflows."
+        "title": "连接 AI / BYOM",
+        "desc": "自带模型。将任意 LLM 接入受治理的工作流。"
       }
     ]
   },
   "maestro": {
-    "label": "中文：Core Philosophy",
+    "label": "核心理念",
     "headline": {
-      "line1": "中文：The MAESTRO",
-      "line2": "中文：Principle."
+      "line1": "MAESTRO",
+      "line2": "原则。"
     },
-    "description1": "中文：Intelligence is not just capability. It is coordination with consequence.",
-    "description2": "中文：Enterprise AI must serve your organization's intent. MAESTRO ensures authority scales with the system.",
-    "link": "中文：Explore the MAESTRO Protocol"
+    "description1": "智能不只是能力，更是带有后果的协同。",
+    "description2": "企业 AI 必须服务于组织意图。MAESTRO 确保权限随系统一起扩展。",
+    "link": "探索 MAESTRO 协议"
   },
   "enterprise": {
-    "label": "中文：Enterprise Ready",
+    "label": "企业就绪",
     "headline": {
-      "line1": "中文：Built for regulated",
-      "line2": "中文：environments."
+      "line1": "为受监管",
+      "line2": "环境而构建。"
     },
-    "description": "中文：Designed from day one for compliance and governance.",
+    "description": "从第一天起即面向合规与治理而设计。",
     "cards": [
       {
-        "name": "中文：Security Controls Roadmap",
-        "desc": "中文：Security and availability controls mapped"
+        "name": "安全控制路线图",
+        "desc": "安全与可用性控制已映射"
       },
       {
-        "name": "中文：Human oversight controls",
-        "desc": "中文：Governance requirements for high-risk AI systems"
+        "name": "人工监督控制",
+        "desc": "高风险 AI 系统的治理要求"
       },
       {
-        "name": "中文：Records of Processing Activities",
-        "desc": "中文：Complete records of processing activities"
+        "name": "处理活动记录",
+        "desc": "完整的处理活动记录"
       },
       {
-        "name": "中文：ISMS-ready controls",
-        "desc": "中文：Information Security Management System-compatible architecture"
+        "name": "ISMS 就绪控制",
+        "desc": "兼容信息安全管理体系的架构"
       },
       {
-        "name": "中文：Healthcare Architecture Ready",
-        "desc": "中文：Architecture for healthcare data, BAA-compatible design"
+        "name": "医疗架构就绪",
+        "desc": "面向医疗数据的架构，兼容 BAA 的设计"
       },
       {
-        "name": "中文：Zero Trust Model",
-        "desc": "中文：No implicit trust"
+        "name": "零信任模型",
+        "desc": "无隐式信任"
       },
       {
-        "name": "中文：RBAC + ABAC",
-        "desc": "中文：Granular role and attribute-based access control"
+        "name": "RBAC + ABAC",
+        "desc": "精细化角色与属性访问控制"
       },
       {
-        "name": "中文：E2E Encryption",
-        "desc": "中文：All data encrypted in transit and at rest with AES-256"
+        "name": "端到端加密",
+        "desc": "所有传输中和静态数据均使用 AES-256 加密"
       }
     ]
   },
   "cta": {
     "headline": {
-      "line1": "中文：Take operational authority",
-      "line2": "中文：back."
+      "line1": "夺回运营权限",
+      "line2": "。"
     },
-    "description": "中文：Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.",
+    "description": "加入已经超越黑箱 AI 的企业。申请抢先体验，了解生产级受治理智能的样子。",
     "buttons": {
-      "primary": "中文：Request Early Access",
-      "secondary": "中文：Schedule a Demo"
+      "primary": "申请抢先体验",
+      "secondary": "预约演示"
     },
-    "tagline": "中文：No vendor lock-in. No black boxes. No surprises.",
+    "tagline": "无供应商锁定。无黑箱。无意外。",
     "label": "夺回控制权"
   },
   "modal": {
-    "title": "中文：Request Early Access",
-    "description": "中文：Tell us about your use case and we will be in touch.",
+    "title": "申请抢先体验",
+    "description": "告诉我们你的使用场景，我们会与你联系。",
     "fields": {
-      "name": "中文：Full Name *",
-      "email": "中文：Work Email *",
-      "company": "中文：Company",
-      "useCase": "中文：Use Case"
+      "name": "姓名 *",
+      "email": "工作邮箱 *",
+      "company": "公司",
+      "useCase": "使用场景"
     },
-    "submit": "中文：Request Access",
+    "submit": "申请访问",
     "success": {
-      "title": "中文：Request Received",
-      "message": "中文：We will be in touch shortly."
+      "title": "请求已收到",
+      "message": "我们会尽快联系你。"
     },
     "close": "关闭",
     "placeholders": {
-      "name": "中文：Jane Smith",
-      "email": "中文：jane@company.com",
-      "company": "中文：ACME Corp",
+      "name": "张女士",
+      "email": "jane@company.com",
+      "company": "ACME 公司",
       "useCase": "简要说明你计划如何使用 APEX OmniHub"
     },
     "errors": {
@@ -259,11 +259,11 @@
     }
   },
   "settings": {
-    "title": "中文：Settings",
-    "language": "中文：Language",
-    "current_language": "中文：Current Language",
-    "language_updated": "中文：Language successfully updated",
-    "save": "中文：Save"
+    "title": "设置",
+    "language": "语言",
+    "current_language": "当前语言",
+    "language_updated": "语言已成功更新",
+    "save": "保存"
   },
   "layout": {
     "languageSelector": {

@@ -102,7 +102,7 @@
     "test:secret-scan": "node tests/ci/secret-scan-fixtures.test.mjs",
     "check:new-code-coverage": "node scripts/ci/check-new-code-coverage.mjs",
     "verify:cloudflare-pages-contract": "node scripts/ci/verify-cloudflare-pages-contract.mjs",
-    "i18n:check": "node apps/omnihub-site/scripts/i18n-check.mjs"
+    "i18n:check": "node apps/omnihub-site/scripts/i18n-check.mjs && node apps/omnihub-site/scripts/i18n-hardcoded-ui-check.mjs"
   },
   "size-limit": [
     {

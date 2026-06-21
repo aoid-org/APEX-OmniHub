@@ -19,6 +19,10 @@ import {
 } from "./locales";
 
 const isProd = import.meta.env.PROD;
+const missingTranslation = (key: string, defaultValue?: string) =>
+  defaultValue && defaultValue !== key
+    ? defaultValue
+    : `Missing translation: ${key}`;
 const supportedLngs = SUPPORTED_LOCALES.map((locale) => locale.code);
 
 function syncDocumentLocale(language: string): void {
@@ -59,7 +63,8 @@ void i18n
         resolveSupportedLocale(language),
     },
     debug: !isProd,
-    parseMissingKeyHandler: (key: string) => (isProd ? "" : `⟦missing:${key}⟧`),
+    parseMissingKeyHandler: (key: string, defaultValue?: string) =>
+      isProd ? missingTranslation(key, defaultValue) : `⟦missing:${key}⟧`,
     react: { useSuspense: false },
   });
 

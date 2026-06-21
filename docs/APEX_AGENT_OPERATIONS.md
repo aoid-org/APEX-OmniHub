@@ -174,6 +174,18 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 7. **Secrets:** never commit them; rotate the GitHub PAT (it currently sits in the git remote URL), Upstash password, and Temporal key on schedule.
 8. **After every deploy:** run §6 smoke.
 
+### Frontend i18n release gate
+
+The root `npm run i18n:check` command validates OmniHub Site/OmniDash locale resources and hardcoded UI leakage before release. Any change to locale resources, language-switcher behavior, or i18n check scripts must run this command and keep all supported locale JSON files in parity with `en-US`.
+
+Required before merge:
+
+- `npm run i18n:check`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run build`
+- Playwright language-switcher coverage for public pages and OmniDash surfaces where available.
+
 ---
 
 ## 9. Change history — 2026-06-19 restoration (dead → demo-ready)
