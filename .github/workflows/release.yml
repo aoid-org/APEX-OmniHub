@@ -79,7 +79,7 @@ jobs:
           SHADOW_HEALTH_URL: ${{ vars.SHADOW_HEALTH_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          TF_TOKEN: ${{ secrets.TF_TOKEN }}
+          TF_PROD_TOKEN: ${{ secrets.TF_PROD_TOKEN }}
         run: node scripts/ci/shadow-certification-preflight.mjs
       - name: Deploy to Shadow Slot (Cloudflare Pages)
         if: |
@@ -157,7 +157,7 @@ jobs:
           terraform plan -input=false -out=tfplan -var="target_slot=production-shadow"
           echo "tf_plan_result=pass" >> "$GITHUB_OUTPUT"
         env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_PROD_TOKEN }}
       - name: Upload Terraform plan artifact
         if: steps.tf_plan.outputs.tf_plan_result == 'pass'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -240,20 +240,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
-          cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
+          cli_config_credentials_token: ${{ secrets.TF_PROD_TOKEN }}
       - name: Terraform Init
         run: |
           cd terraform/environments/production
           terraform init -input=false
         env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_PROD_TOKEN }}
       - name: Terraform Apply - Promote Shadow to Active
         run: |
           echo "Executing Terraform apply with plan artifact..."
           cd terraform/environments/production
           terraform apply -input=false tfplan
         env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_PROD_TOKEN }}
 
       - name: Write final release evidence (apply failed)
         if: failure()

@@ -97,13 +97,13 @@ async function main() {
     console.warn('Atomic routing flip is disabled. Terraform apply will be skipped.');
   }
 
-  if (routingFlipEnabled && !hasValue(process.env.TF_TOKEN)) {
+  if (routingFlipEnabled && !hasValue(process.env.TF_PROD_TOKEN)) {
     addBlocker(
       blockers,
       'B-3',
       'P1',
       'Terraform token is missing while atomic routing flip is enabled.',
-      'Set repository secret TF_TOKEN before enabling the protected Terraform apply path.',
+      'Set repository secret TF_PROD_TOKEN before enabling the protected Terraform apply path.',
     );
   }
 
