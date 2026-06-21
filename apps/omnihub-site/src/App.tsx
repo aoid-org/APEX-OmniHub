@@ -30,6 +30,7 @@ import { OrchestratorPage } from "@/pages/Orchestrator";
 import { RequestAccessPage } from "@/pages/RequestAccess";
 import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TechSpecsPage } from "@/pages/TechSpecs";
+import { OmniSentryPage } from "@/pages/OmniSentry";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
 import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
@@ -81,6 +82,8 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/story.html", element: <FounderStory />, isPublic: true, routeName: "Founder Story" },
   { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true, routeName: "Tech Specs" },
   { path: "/tech-specs.html", element: <TechSpecsPage />, isPublic: true, routeName: "Tech Specs" },
+  { path: "/omni-sentry", element: <OmniSentryPage />, isPublic: true, routeName: "OmniSentry" },
+  { path: "/omni-sentry.html", element: <OmniSentryPage />, isPublic: true, routeName: "OmniSentry" },
   { path: "/features/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
   { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
   { path: "/man-mode.html", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
