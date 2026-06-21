@@ -1,6 +1,6 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
+last_audited: 2026-06-21
 status: verified
 ---
 
@@ -17,7 +17,7 @@ status: verified
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit (2026-06-10): `c0a9517` (feat: close TOCTOU race, fix edge function naming, add voice input, register /launch/skillforge route); branch `claude/friendly-goodall-6bb4uc`. Main HEAD: `ef0f337` (OmniDash Full Restore, PR #1347).
+- Verified HEAD at this audit (2026-06-21): `8772015e` (chore: version packages, v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3` → main. Main HEAD: `8772015e` (chore: version packages, apex-omnihub 1.8.0 → 1.8.1).
 
 ## Runtime Facts (Claude Code / ephemeral container)
 

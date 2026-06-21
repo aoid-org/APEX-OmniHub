@@ -1,3 +1,8 @@
+---
+status: completed
+completed_date: 2026-06-21
+---
+
 # Release remediation post-CI follow-up — 2026-06-16
 
 Context: GitHub post-CI reported a stale dependency audit failure, Bun frozen-lockfile drift on Bun 1.3.14, Android Gradle dependency-locking issue, and SonarCloud new-code quality noise.
@@ -19,3 +24,5 @@ Follow-up — 2026-06-17:
 - Added a fail-closed Cloudflare Pages repo contract verifier and runbook for the observed provider/internal post-CI Pages error; no root `wrangler.toml` was added.
 - Adjusted release verifier PATH allowlist for pyenv/mise runtime shims so `verify:release` can execute Python lint tools in this CI-like environment without weakening gates.
 - RSI follow-up: restored `orchestrator/security/guardian_fabric.py` to its prior protected-path content and added an orchestrator-local Python startup compatibility shim so Python 3.10 can still resolve `datetime.UTC` without touching `orchestrator/security/**`.
+
+> **Resolved 2026-06-21.** Python 3.11 pinned in release.yml (RFC_2026_06_19). CI green as of PR #1445.
