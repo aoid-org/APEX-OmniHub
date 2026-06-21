@@ -1,7 +1,8 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
-status: verified
+last_audited: 2026-06-21
+status: archived
+note: OmniDash rescue completed 2026-06-20 (PR #1441). See CURRENT_PLATFORM_STATE_2026_06_21.md.
 ---
 
 ### OmniDash Panel Audit
