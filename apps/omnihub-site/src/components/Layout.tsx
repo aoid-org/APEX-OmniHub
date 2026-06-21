@@ -405,8 +405,7 @@ export function Layout({ children, title }: LayoutProps) {
   // and must not depend on React Router context (useLocation would throw
   // if Layout were ever rendered outside a <Router>).
   const shouldRenderBrandAnthem =
-    typeof globalThis.window !== "undefined" &&
-    globalThis.window.location.pathname === "/";
+    globalThis.window?.location.pathname === "/";
 
   useEffect(() => {
     if (title) {
