@@ -2000,8 +2000,9 @@
             });
             /* scout travels the spine */
             var prog = (t * 0.065) % 1;
-            var sp  = spine.getPoint(prog);
-            var sp2 = spine.getPoint(Math.max(0, prog - 0.018));
+            var safeProg = Math.max(0.001, Math.min(0.999, prog));
+            var sp  = spine.getPoint(safeProg);
+            var sp2 = spine.getPoint(Math.max(0.001, safeProg - 0.018));
             if (sp)  scoutM.position.copy(sp);
             if (sp2) trailM.position.copy(sp2);
             renderer.render(scene, cam);
