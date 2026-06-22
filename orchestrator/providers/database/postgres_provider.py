@@ -136,7 +136,7 @@ class PostgresDatabaseProvider(DatabaseProvider):
         if not record:
             raise DatabaseError("Insert requires a non-empty record")
 
-        columns = [validate_column_name(c) for c in record.keys()]
+        columns = [validate_column_name(c) for c in record]
         placeholders = ", ".join(f"${i}" for i in range(1, len(columns) + 1))
         columns_sql = ", ".join(_quote_ident(c) for c in columns)
         sql = (
@@ -164,7 +164,7 @@ class PostgresDatabaseProvider(DatabaseProvider):
         if not record:
             raise DatabaseError("Upsert requires a non-empty record")
 
-        columns = [validate_column_name(c) for c in record.keys()]
+        columns = [validate_column_name(c) for c in record]
         placeholders = ", ".join(f"${i}" for i in range(1, len(columns) + 1))
         columns_sql = ", ".join(_quote_ident(c) for c in columns)
         sql = (
@@ -208,7 +208,7 @@ class PostgresDatabaseProvider(DatabaseProvider):
             raise DatabaseError("Update requires fields to update")
         validated_table = validate_table_name(table)
 
-        set_columns = [validate_column_name(c) for c in updates.keys()]
+        set_columns = [validate_column_name(c) for c in updates]
         set_sql = ", ".join(
             f"{_quote_ident(c)} = ${i}" for i, c in enumerate(set_columns, start=1)
         )
@@ -250,7 +250,7 @@ class PostgresDatabaseProvider(DatabaseProvider):
     async def rpc(self, function_name: str, params: dict[str, Any]) -> Any:
         fn = validate_column_name(function_name)
         if params:
-            keys = [validate_column_name(k) for k in params.keys()]
+            keys = [validate_column_name(k) for k in params]
             args_sql = ", ".join(f"{k} => ${i}" for i, k in enumerate(keys, start=1))
             sql = f"SELECT * FROM {_quote_ident(fn)}({args_sql})"
             values = list(params.values())
