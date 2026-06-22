@@ -14,7 +14,7 @@ export default function OmniSkillsModule({ onClose }: Props) {
 
   // Derive live counts from registry/live stats — never hardcode.
   const freeSkillsStat = state.stats.find(s => s.label === 'Free Skills Used');
-  const freeSkillsStr = freeSkillsStat?.value ?? '0/3';
+  const freeSkillsStr = freeSkillsStat?.value ?? '0/5';
   
   const [used, total] = freeSkillsStr.split('/').map(n => Number.parseInt(n, 10));
   const freePct = total > 0 ? Math.round((used / total) * 100) : 0;
@@ -61,7 +61,7 @@ export default function OmniSkillsModule({ onClose }: Props) {
             
             {paywallActive && (
               <p className="text-[10px] text-amber-500/80 text-center leading-tight">
-                You have reached your 3 free skills limit.<br/>Upgrade to forge more skills.
+                You have reached your 5 free skills limit.<br/>Upgrade to forge more skills.
               </p>
             )}
           </div>

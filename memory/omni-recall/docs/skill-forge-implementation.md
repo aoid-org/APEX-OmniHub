@@ -1,21 +1,24 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-22
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v8.2 | LAST_UPDATED=2026-06-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.3 | LAST_UPDATED=2026-06-22 -->
 # Skill Forge Implementation
 
 ## Overview
-**Skill Forge** is a user-facing AI skill creation workflow that enables users to generate custom business automation skills through a 3-step wizard interface. The feature enforces a strict 3-skill limit for free-tier users (the "Pilot Trap") to drive paid conversions.
+**Skill Forge** is a user-facing AI skill creation workflow that enables users to generate custom business automation skills through a 3-step wizard interface. The feature enforces a **5-skill** limit for free-tier users (the "Pilot Trap") to drive paid conversions: the 6th active-skill generation is paywalled (HTTP 402).
 
-This document is cross-referenced against the actual code as of 2026-06-10. Where earlier revisions drifted (mocked generation, timestamp-style skill names, a `/skill-forge` route), the statements below reflect the verified current state.
+This document is cross-referenced against the actual code as of 2026-06-22. Where earlier revisions drifted (mocked generation, timestamp-style skill names, a `/skill-forge` route, the original 3-skill cap), the statements below reflect the verified current state: **free cap = 5**, provider-routed generation (Groq preferred), Zod-validated output.
 
 ## Architecture
 
 ### Database Layer
-**Migration**: `supabase/migrations/20260214000001_skill_forge_protocol.sql`
+**Migrations**:
+- `supabase/migrations/20260214000001_skill_forge_protocol.sql` — table, RLS, original `check_skill_entitlement` (historical: cap 3)
+- `supabase/migrations/20260610000000_skill_entitlement_db_enforcement.sql` — atomic `trg_enforce_skill_entitlement` trigger (historical: cap 3)
+- `supabase/migrations/20260622000000_skill_entitlement_free_cap_5.sql` — **authoritative**: raises the BASIC cap to **5** at both layers (idempotent `CREATE OR REPLACE`, no table rewrite)
 
 #### Table: `user_generated_skills`
 Stores individual forged skills with the following columns:
@@ -45,8 +48,8 @@ plpgsql, `SECURITY DEFINER`, `search_path = public`. Counts active skills via `S
 }
 ```
 
-**Business Logic**:
-- Free tier (BASIC): 3 skills maximum (The Pilot Trap)
+**Business Logic** (per the authoritative `20260622000000` migration):
+- Free tier (BASIC): **5** active skills maximum (The Pilot Trap); the 6th generation is denied with 402
 - PRO tier: 999,999 skills (effectively unlimited)
 - Defaults to BASIC tier if no `user_entitlements` record exists
 
@@ -62,12 +65,15 @@ plpgsql, `SECURITY DEFINER`, `search_path = public`. Counts active skills via `S
 2. **Entitlement Gate**: Calls `check_skill_entitlement()` RPC
    - Returns **402 Payment Required** if limit reached
 3. **Input Validation**: Requires `intent`, `trigger`, `constraints` (400 if missing)
-4. **Skill Generation (live LLM)**: Calls the Anthropic API
-   (`https://api.anthropic.com/v1/messages`) with model
-   `claude-3-5-haiku-20241022`, `max_tokens: 1024`. The LLM produces a
-   `SkillDefinition` JSON; the function then overwrites the generated name
-   with `skill_${crypto.randomUUID()}` to guarantee uniqueness. Generation
-   failures return 422. (Generation is no longer mocked.)
+4. **Skill Generation (live LLM)**: Routes through the shared provider
+   abstraction `supabase/functions/_shared/llm.ts` (`callLLMJson`), whose policy
+   permits **Groq + Anthropic only**. The provider is resolved by
+   `resolveSkillProvider()` (`generate-business-skills/skill-provider.ts`):
+   **Groq is preferred for cheaper compute** when `GROQ_API_KEY` is present,
+   with Anthropic as the fallback. The model response is validated with **Zod**
+   (`skillDefinitionSchema`) before any insert; invalid output returns 422 and
+   inserts nothing. The function then overwrites the generated name with
+   `skill_${crypto.randomUUID()}` to guarantee uniqueness. (Generation is not mocked.)
 5. **Database Insert**: Persists `{ user_id, name, trigger_intent, definition }` to `user_generated_skills`
 6. **Success Response**: Returns the skill definition plus entitlement stats.
    Note `used` is `entitlement.current + 1` — an optimistic increment, not a
@@ -76,7 +82,7 @@ plpgsql, `SECURITY DEFINER`, `search_path = public`. Counts active skills via `S
 {
   "success": true,
   "skill": { "name": "skill_<uuid>", "...": "..." },
-  "entitlement": { "used": 1, "max": 3, "tier": "BASIC" }
+  "entitlement": { "used": 1, "max": 5, "tier": "BASIC" }
 }
 ```
 
@@ -127,9 +133,10 @@ but differ in success behavior.
 - Per the OmniDash sidebar contract, **OmniSkills is not a left-sidebar
   widget** — it remains available through the header utility/module access
   path.
-- Shows the entitlement bar ("Free Skills Used: N/3") derived from
-  `useOmniModuleState('omniskills')` live stats — never hardcoded. The amber
-  paywall indicator activates when `used >= total`.
+- Shows the entitlement bar ("Free Skills Used: N/5") derived from
+  `useOmniModuleState('omniskills')` stats (live when the backend is reachable;
+  the static registry seed `0/5` is the offline fallback). The amber paywall
+  indicator activates when `used >= total`.
 - The "Forge New Skill" button fires `onClose()` then `navigate('/launch/skillforge')`.
 
 ## End-to-End Flow
@@ -140,16 +147,16 @@ but differ in success behavior.
 3. Fills Step 2: Trigger = "Stripe payment webhook"
 4. Fills Step 3: Constraints = "Only invoices over $100"
 5. Clicks "Forge Skill"
-6. Edge function checks entitlement: `{allowed: true, current: 0, max: 3, tier: 'BASIC'}`
-7. Anthropic generates the definition; skill is persisted as `skill_<uuid>`
-8. Success toast: "SKILL FORGED" (widget also reports `(1/3)` from the optimistic increment)
+6. Edge function checks entitlement: `{allowed: true, current: 0, max: 5, tier: 'BASIC'}`
+7. The selected provider (Groq or Anthropic) generates the definition; skill is persisted as `skill_<uuid>`
+8. Success toast: "SKILL FORGED" (widget also reports `(1/5)` from the optimistic increment)
 9. Full page advances to Step 4; the widget closes and React Query refreshes the skill palette and workflows
 
-### User Attempts 4th Skill (Free Tier - Pilot Trap Activated)
-1. User has 3 active skills
+### User Attempts 6th Skill (Free Tier - Pilot Trap Activated)
+1. User has 5 active skills
 2. Fills all 3 wizard steps
 3. Clicks "Forge Skill"
-4. Edge function checks entitlement: `{allowed: false, current: 3, max: 3, tier: 'BASIC'}`
+4. Edge function checks entitlement: `{allowed: false, current: 5, max: 5, tier: 'BASIC'}`
 5. Edge function returns **402 Payment Required**
 6. Error toast: "SYSTEM OVERLOAD — Upgrade to Architect Tier to forge more skills."
 7. User remains on Step 3 (wizard does not advance)
@@ -159,15 +166,15 @@ but differ in success behavior.
 ### Database Migration
 - [x] Migration runs idempotently (`CREATE TABLE IF NOT EXISTS`)
 - [x] RLS blocks unauthorized access (verify with different user_id)
-- [x] `check_skill_entitlement()` defaults to `max_limit=3` when no `user_entitlements` record exists
+- [x] `check_skill_entitlement()` defaults to `max_limit=5` when no `user_entitlements` record exists
 - [ ] Test with existing `user_entitlements` record (BASIC tier)
 - [ ] Test with PRO tier (should allow unlimited)
 
 ### Edge Function
 - [x] Returns 401 for missing/invalid auth token
 - [x] Returns 400 for missing fields (intent/trigger/constraints)
-- [x] Returns 402 when limit reached (4th skill attempt)
-- [x] Returns 422 when Anthropic generation fails
+- [x] Returns 402 when limit reached (6th skill attempt)
+- [x] Returns 422 when LLM generation fails or output fails Zod validation
 - [x] Returns 200 with skill definition on success
 - [x] Inserts record into `user_generated_skills` table
 - [x] Legacy support: OnboardingWizard flow still works
@@ -190,7 +197,7 @@ All `user_generated_skills` queries are protected by RLS policies. Even if edge 
 - Update/delete skills they don't own
 
 ### Monetization Throttle
-The 3-skill limit is enforced at **database level** via the `check_skill_entitlement()` function, not just in the UI. This prevents:
+The 5-skill limit is enforced at **database level** — the atomic `enforce_skill_entitlement()` trigger plus the `check_skill_entitlement()` preflight — not just in the UI. This prevents:
 - Direct API manipulation
 - Client-side bypasses
 - Race conditions (atomic count in stored function)
@@ -205,16 +212,20 @@ All database operations use parameterized queries via Supabase client. No raw SQ
 2. Environment variables:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
-   - `ANTHROPIC_API_KEY` (required for live skill generation)
    - `ALLOWED_ORIGINS` (CORS configuration)
+   - **Skill-generation provider** (at least one key required):
+     - `GROQ_API_KEY` — enables Groq (preferred, cheaper). Optional model override: `SKILL_FORGE_GROQ_MODEL` (else `_shared/llm.ts` default `GROQ_DEFAULT_MODEL` / `llama-3.1-8b-instant`).
+     - `ANTHROPIC_API_KEY` — enables Anthropic fallback. Optional model override: `SKILL_FORGE_ANTHROPIC_MODEL` (else `_shared/llm.ts` default `ANTHROPIC_DEFAULT_MODEL`).
+     - `SKILL_FORGE_PROVIDER` (optional) — force `groq` or `anthropic`. Unset = prefer Groq when its key exists, else Anthropic.
+     - If neither key is set, the SkillForge flow returns a 503 config error (no skill is generated). No key value is ever logged.
 
 ### Deployment Steps
 1. Apply migration: `supabase db push`
 2. Deploy edge function: `supabase functions deploy generate-business-skills`
 3. Build frontend: `npm run build`
 4. Verify:
-   - Create 3 skills successfully
-   - 4th skill attempt returns 402 error
+   - Create 5 skills successfully
+   - 6th skill attempt returns 402 error
    - Toast notifications display correctly
 
 ## Relationship to OmniBoard
@@ -228,7 +239,7 @@ not handle client interactions; they must not claim OmniBoard as a whole is
 integration-only. See `docs/platform/OMNIBOARD.md`.
 
 ## Completed Since Initial Release
-- [x] LLM integration for skill generation (Anthropic `claude-3-5-haiku-20241022`; previously mocked)
+- [x] LLM integration for skill generation via shared `_shared/llm.ts` (Groq preferred for cheaper compute, Anthropic fallback; Zod-validated; previously mocked)
 - [x] Embeddable `SkillForgeWidget` with voice input and React Query cache invalidation
 - [x] OmniSkills module with live entitlement bar and paywall indicator
 

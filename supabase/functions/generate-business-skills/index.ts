@@ -14,6 +14,13 @@ import {
   rateLimitExceededResponse,
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
+import { callLLMJson } from "../_shared/llm.ts";
+import {
+  resolveSkillProvider,
+  parseSkillDefinition,
+  SKILL_FORGE_SYSTEM_PROMPT,
+  type SkillDefinition,
+} from "./skill-provider.ts";
 
 interface RequestBody {
   intent?: string;
@@ -22,13 +29,6 @@ interface RequestBody {
   // Legacy support for OnboardingWizard
   description?: string;
   goal?: string;
-}
-
-interface SkillDefinition {
-  name: string;
-  description: string;
-  instructions: string[];
-  required_apis: string[];
 }
 
 interface UserRecord {
@@ -182,7 +182,7 @@ async function handleSkillForge(
     );
   }
 
-  // Enforce 3-skill limit (The Pilot Trap)
+  // Enforce free-tier cap (BASIC = 5 active skills; 6th generation paywalled)
   if (!entitlement.allowed) {
     return new Response(
       JSON.stringify({
@@ -202,50 +202,77 @@ async function handleSkillForge(
     );
   }
 
-  // Generate Skill via Anthropic (name overwritten below for uniqueness)
+  // Generate Skill via the shared LLM abstraction (_shared/llm.ts): Groq is
+  // preferred for cheaper compute, Anthropic is the fallback. Provider/model
+  // are resolved from env; no key values are ever logged. The generated name is
+  // overwritten with a UUID below for uniqueness.
   const skillName = `skill_${crypto.randomUUID()}`;
+
+  const providerResolution = resolveSkillProvider({
+    SKILL_FORGE_PROVIDER: Deno.env.get("SKILL_FORGE_PROVIDER"),
+    GROQ_API_KEY: Deno.env.get("GROQ_API_KEY"),
+    ANTHROPIC_API_KEY: Deno.env.get("ANTHROPIC_API_KEY"),
+    SKILL_FORGE_GROQ_MODEL: Deno.env.get("SKILL_FORGE_GROQ_MODEL"),
+    SKILL_FORGE_ANTHROPIC_MODEL: Deno.env.get("SKILL_FORGE_ANTHROPIC_MODEL"),
+  });
+
+  if (!providerResolution.ok) {
+    console.error(
+      "Skill generation provider not configured:",
+      providerResolution.error
+    );
+    return new Response(
+      JSON.stringify({
+        error: "GENERATION_UNAVAILABLE",
+        message: "Skill generation is temporarily unavailable",
+      }),
+      {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
 
   let generatedSkill: SkillDefinition;
 
   try {
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!anthropicApiKey) {
-      throw new Error("ANTHROPIC_API_KEY missing");
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-haiku-20241022",
+    const { data } = await callLLMJson<unknown>(
+      [
+        { role: "system", content: SKILL_FORGE_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: JSON.stringify({ intent, trigger, constraints }),
+        },
+      ],
+      {
+        provider: providerResolution.provider,
+        model: providerResolution.model,
         max_tokens: 1024,
-        system:
-          "Output a valid SkillDefinition JSON with fields: id, name, intent, trigger, constraints (array), instructions (array min 3 items). Do not wrap in markdown or include extra text.",
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify({ intent, trigger, constraints }),
-          },
-        ],
-      }),
-    });
+      }
+    );
 
-    if (!response.ok) {
-      console.error("Anthropic API error:", response.status);
-      throw new Error("Anthropic API failed");
+    const validated = parseSkillDefinition(data);
+    if (!validated.ok) {
+      console.error("Skill validation failed:", validated.error);
+      return new Response(
+        JSON.stringify({
+          error: "UNPROCESSABLE_ENTITY",
+          message: "Failed to generate a valid skill definition",
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const data = await response.json();
-    const resultText = data.content[0].text;
-
-    generatedSkill = JSON.parse(resultText);
-    generatedSkill.name = skillName; // ensure unique name
+    // Overwrite the model-provided name with the unique server-side UUID name.
+    generatedSkill = { ...validated.skill, name: skillName };
   } catch (error) {
-    console.error("Failed to generate skill with Anthropic:", error);
+    console.error(
+      "Skill generation failed:",
+      error instanceof Error ? error.message : "unknown error"
+    );
     return new Response(
       JSON.stringify({
         error: "UNPROCESSABLE_ENTITY",
