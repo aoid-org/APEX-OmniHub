@@ -2,12 +2,16 @@
 version: 1.0.0
 created: 2026-06-21
 last_audited: 2026-06-21
-status: verified
+status: archived
+archived_date: 2026-06-22
 supersedes: CURRENT_PLATFORM_STATE_2026_06_20.md
+superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
 
 # Current Platform State — 2026-06-21
 
+> **⚠️ HISTORICAL / ARCHIVED (2026-06-22).** Superseded by [`CURRENT_PLATFORM_STATE_2026_06_22.md`](./CURRENT_PLATFORM_STATE_2026_06_22.md). Retained verbatim as a point-in-time record — do **not** treat the counts, HEAD, or version below as current.
+>
 > **Canonical drift-control snapshot taken 2026-06-21 against `main` HEAD `966d695f`.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_20.md`. Historical dated snapshots remain valid as point-in-time evidence only where they do not conflict with this snapshot, `project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `architecture/ARCHITECTURE_CANONICAL_MAP.md`.
 >
 > **Date note (anti-drift):** the snapshot/audit was performed 2026-06-21. PR #1441 was *merged* during this session; its squash commit `966d695f` carries git author date 2026-06-20 (the underlying commits were authored 2026-06-20). Event dates below use the verified `git log` dates; the audit date is 2026-06-21.
