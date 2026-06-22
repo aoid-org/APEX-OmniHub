@@ -448,3 +448,6 @@ Two engineering gaps closed in branch `claude/modest-maxwell-oqflsj`.
 **Env / start command:** no changes. No new secrets. No new services.
 
 **RFC:** `memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md`.
+ 
+ -   2 0 2 6 - 0 6 - 2 2 :   A d d e d   o m n i l i n k _ l i n k s   p e r s i s t e n c e   t a b l e   a n d   w i r e d   o m n i l i n k - p o r t .  
+ 

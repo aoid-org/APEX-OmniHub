@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS public.omnilink_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE, -- additive-allow: ON_DELETE_CASCADE user data should be purged on user deletion
     url TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'active',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
