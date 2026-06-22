@@ -27,7 +27,9 @@ describe('Web Vitals regressions', () => {
     expect(landingCss).toContain('min-height: clamp(520px, 72vh, 820px)');
     expect(landingCss).toContain('contain: layout paint');
     expect(landingCss).toContain('content-visibility: auto');
-    expect(landingCss).toContain('contain-intrinsic-size: 720px');
+    // `auto` keyword makes the browser remember the real rendered height after
+    // first paint so re-entry never re-jumps the #maestro section below it.
+    expect(landingCss).toContain('contain-intrinsic-size: auto 720px');
 
     const script = document.getElementById('ohsm-script');
     expect(script).toBeInstanceOf(HTMLScriptElement);
@@ -39,8 +41,11 @@ describe('Web Vitals regressions', () => {
 
   it('starmap primary CTA defers heavy overlay work outside the input event', () => {
     expect(starmapSource).toContain('function scheduleStarmapWork(work)');
-    expect(starmapSource).toContain('requestAnimationFrame(function () { work(); });');
+    // INP: yield to the next paint (rAF) AND push the heavy overlay build into a
+    // fresh macrotask (setTimeout) so the click's loading state paints first.
+    expect(starmapSource).toContain('requestAnimationFrame(function () { setTimeout(function () { work(); }, 0); });');
     expect(starmapSource).toContain("launch.setAttribute('aria-busy', 'true')");
+    expect(starmapSource).toContain("launch.classList.add('ohsm-loading')");
     expect(starmapSource).toContain('scheduleStarmapWork(function () {');
     expect(starmapSource).toContain('new Overlay(opts);');
     expect(starmapSource).not.toContain("launch.addEventListener('click', function () { new Overlay(opts); });");
