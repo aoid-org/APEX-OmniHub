@@ -5,6 +5,7 @@ import { StatusDot, GlassCard, SectionLabel } from "./components/designComponent
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
+import { OmniSentryWidget } from "./components/OmniSentryWidget";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
@@ -1538,7 +1539,8 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <div data-testid="rt_trace"><OmniTraceFeed /></div>
+            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
           </div>
@@ -1612,7 +1614,8 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <div data-testid="rt_trace"><OmniTraceFeed /></div>
+            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
           </div>
