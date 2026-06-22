@@ -1,9 +1,13 @@
+import { Suspense, lazy, useState } from 'react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 import omniskillsIcon from '../../../../../src/assets/omniskills-icon.png';
+
+// Forge wizard renders inside this modal (no page route). Lazy so its submit-time
+// supabase dependency never loads unless the user actually opens the forge.
+const OmniSkillsForgePanel = lazy(() => import('./OmniSkillsForgePanel'));
 
 interface Props {
   readonly onClose: () => void;
@@ -11,7 +15,7 @@ interface Props {
 
 export default function OmniSkillsModule({ onClose }: Props) {
   const state = useOmniModuleState('omniskills');
-  const navigate = useNavigate();
+  const [forging, setForging] = useState(false);
 
   // Derive live counts from registry/live stats — never hardcode.
   const freeSkillsStat = state.stats.find(s => s.label === 'Free Skills Used');
@@ -23,7 +27,18 @@ export default function OmniSkillsModule({ onClose }: Props) {
 
   return (
     <ModuleShell state={state} onClose={onClose}>
-      {!state.loading && (
+      {!state.loading && forging && (
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin" />
+            </div>
+          }
+        >
+          <OmniSkillsForgePanel onBack={() => setForging(false)} />
+        </Suspense>
+      )}
+      {!state.loading && !forging && (
         <div className="space-y-3">
           <div className="rounded-lg border border-border/30 p-3 bg-muted/10 space-y-3">
             <div className="flex items-center justify-between">
@@ -49,12 +64,9 @@ export default function OmniSkillsModule({ onClose }: Props) {
               </span>
             </div>
             
-            <Button 
+            <Button
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 border-none"
-              onClick={() => {
-                onClose();
-                navigate('/launch/skillforge');
-              }}
+              onClick={() => setForging(true)}
             >
               <img src={omniskillsIcon} alt="" aria-hidden="true" className="w-4 h-4 mr-2 object-contain" />
               Forge New Skill
