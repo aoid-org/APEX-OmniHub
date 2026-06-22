@@ -167,10 +167,7 @@ class PostgresDatabaseProvider(DatabaseProvider):
         columns = [validate_column_name(c) for c in record]
         placeholders = ", ".join(f"${i}" for i in range(1, len(columns) + 1))
         columns_sql = ", ".join(_quote_ident(c) for c in columns)
-        sql = (
-            f"INSERT INTO {_quote_ident(validated_table)} ({columns_sql}) "
-            f"VALUES ({placeholders})"
-        )
+        sql = f"INSERT INTO {_quote_ident(validated_table)} ({columns_sql}) VALUES ({placeholders})"
 
         if conflict_columns:
             conflict = [validate_column_name(c) for c in conflict_columns]
@@ -209,15 +206,10 @@ class PostgresDatabaseProvider(DatabaseProvider):
         validated_table = validate_table_name(table)
 
         set_columns = [validate_column_name(c) for c in updates]
-        set_sql = ", ".join(
-            f"{_quote_ident(c)} = ${i}" for i, c in enumerate(set_columns, start=1)
-        )
+        set_sql = ", ".join(f"{_quote_ident(c)} = ${i}" for i, c in enumerate(set_columns, start=1))
         set_params = list(updates.values())
         where_sql, where_params = _build_where(filters, start_index=len(set_columns) + 1)
-        sql = (
-            f"UPDATE {_quote_ident(validated_table)} SET {set_sql} "
-            f"WHERE {where_sql} RETURNING *"
-        )
+        sql = f"UPDATE {_quote_ident(validated_table)} SET {set_sql} WHERE {where_sql} RETURNING *"
 
         try:
             pool = await self._get_pool()
