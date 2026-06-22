@@ -15,7 +15,11 @@ status: verified
 > rewrite); **Supabase → Self-Host ≈ hours**; **Vercel → Cloudflare Workers =
 > done/decommissioned**. What *is* verified is the outcome: all three swaps
 > stayed within the portability design rule ("< 1 day, config changes only").
-> SECURITY-001 (credential rotation) is **CLOSED**.
+> **DBeaver 26.0.0** repointed to the self-hosted `localhost` Postgres
+> (operator screenshot, 2026-03-10; `CREATE DATABASE TEMPORAL`), confirming
+> standard wire-protocol tooling works against the swapped DB — a
+> connection-string change, not a timed swap. SECURITY-001 (credential
+> rotation) is **CLOSED**.
 
 ## Verification Status Legend
 
@@ -232,6 +236,12 @@ export async function query(sql: string, params: any[]) {
 - ❌ NO Supabase-specific features (realtime, storage, auth) in application logic
 - ❌ NO proprietary extensions (unless also available on target)
 - ✅ YES to standard PostgreSQL features (JSON, full-text search, triggers, RLS)
+
+**Tooling Evidence (VERIFIED 2026-03-10):** DBeaver 26.0.0 connected to the
+self-hosted `localhost` Postgres and executed schema DDL (`CREATE DATABASE
+TEMPORAL`) — operator screenshot. Confirms standard Postgres wire-protocol
+clients require only a connection-string change to follow the database across a
+provider swap; no client-side lock-in. Exact reconnect duration was not timed.
 
 ---
 
