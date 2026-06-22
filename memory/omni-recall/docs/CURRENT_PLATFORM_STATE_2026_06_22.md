@@ -64,11 +64,12 @@ This snapshot is taken from working branch `claude/focused-ptolemy-dgd054`, whic
 | SECURITY-001 | ✅ CLOSED | ✅ CLOSED |
 | Swap durations | stated as fact | flagged as **owner estimates, not timed** |
 
-**Recommendation:** on merge, the **branch's evidence-scoped version should prevail**.
-It is grounded in a direct `git log` / working-tree audit and corroborated by the
-operator's own statements (times were estimated; AWS provisioning was being set up via
-console/Gemini, not committed). `main`'s "VERIFIED" wording overstates repo-verifiable
-state. This is the operator's call to confirm at merge time.
+**Operator decision (2026-06-22):** the **branch's evidence-scoped version WILL overwrite
+`main`'s version** at merge. `main`'s "VERIFIED" wording overstates repo-verifiable state;
+the branch version is grounded in a direct `git log` / working-tree audit and corroborated
+by the operator's own statements (times were estimated; AWS provisioning was being set up via
+console/Gemini, not committed). At merge-conflict resolution, accept branch version for all
+files touched on both sides.
 
 > Note: `main`'s PR #1462 repo-truth sync (`57a8a62`) updated README counts/snapshot
 > but **left the README version line at `1.7.1`** while `package.json` is `1.8.1`.
