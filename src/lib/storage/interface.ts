@@ -4,12 +4,14 @@
  * Purpose: S3-compatible storage interface for OmniHub
  * Reduces lock-in risk by abstracting cloud storage APIs
  *
- * Supported providers:
- * - Supabase Storage (current)
- * - AWS S3 (future)
- * - Google Cloud Storage (future)
- * - Azure Blob Storage (future)
- * - Cloudflare R2 (future)
+ * Provider status:
+ * - Supabase Storage   — default, current (browser + server)
+ * - AWS S3             — implemented (server/edge only; never browser)
+ * - Cloudflare R2 / MinIO — implemented via S3-compatible `endpoint` (server/edge only)
+ * - Google Cloud Storage — NOT implemented
+ * - Azure Blob Storage   — NOT implemented
+ *
+ * No production code consumes this layer yet (foundation-only).
  *
  * Design principles:
  * 1. S3-compatible API (industry standard)
@@ -282,11 +284,11 @@ export interface IStorage {
 // ============================================================================
 
 export type StorageProvider =
-  | 'supabase'
-  | 's3'
-  | 'gcs'
-  | 'azure'
-  | 'r2'
+  | 'supabase' // default (browser + server)
+  | 's3' // implemented — server/edge only
+  | 'r2' // implemented via S3-compatible endpoint — server/edge only
+  | 'gcs' // NOT implemented (createStorage throws)
+  | 'azure' // NOT implemented (createStorage throws)
 
 // ============================================================================
 // STORAGE FACTORY OPTIONS

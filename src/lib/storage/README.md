@@ -1,15 +1,38 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-22
 status: verified
 ---
 
 # STORAGE ABSTRACTION LAYER
 
 **Purpose:** S3-compatible storage interface for OmniHub
-**Status:** ✅ Implemented (Week 2, Phase 1)
 **Current Provider:** Supabase Storage
-**Future Providers:** AWS S3, Google Cloud Storage, Azure Blob Storage, Cloudflare R2
+
+## Status & Boundary (2026-06-22)
+
+| Item | State |
+|---|---|
+| Supabase provider | ✅ Implemented (browser + server) |
+| S3 / R2 provider (`S3Storage`) | ✅ Foundation-ready — **server/edge only** (never browser) |
+| GCS / Azure | ⛔ **Intentionally NOT implemented** (`createStorage` throws) |
+| Production consumer | ❌ **None** — this layer has zero importers (foundation-only) |
+| Next provider work | 🚧 **Blocked** until a real storage consumer exists. No speculative scaffolding. |
+
+### S3/R2 is server-side only
+The browser singleton `getStorage()` hard-refuses `s3`/`r2`/`gcs`/`azure` because
+client-side AWS secrets would be shipped in the bundle. Construct S3 via
+`createStorage({ provider: 's3', accessKeyId, secretAccessKey, ... })` in a
+server/edge context and hand the browser presigned URLs only.
+
+### ⚠️ Follow-up: dependency promotion (required before production use)
+`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, and
+`@aws-sdk/s3-presigned-post` currently live in **`devDependencies`** (matching
+the existing `@aws-sdk/client-lambda` placement) because no production runtime
+imports `S3Storage` yet. **The first time a production server/edge runtime
+imports `S3Storage`, promote these three packages to `dependencies`** — otherwise
+`npm ci --omit=dev` will not install them and the dynamic import will fail at
+runtime.
 
 ---
 
