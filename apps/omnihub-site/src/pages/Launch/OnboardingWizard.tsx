@@ -8,8 +8,6 @@ type GeneratedSkill = {
   id: string;
   name: string;
   description: string;
-  projected_monthly_revenue: string;
-  confidence_score: number;
   tier: 'CORE' | 'GROWTH_ENGINE';
 };
 
@@ -277,7 +275,7 @@ export function OnboardingWizard() {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-bold mb-3 border border-emerald-500/20">
-                    <Sparkles className="w-3 h-3"/> AI-DETECTED OPPORTUNITY
+                    <Sparkles className="w-3 h-3"/> ADVANCED ENGINES
                   </div>
                   <h3 className="text-3xl font-bold text-white">Revenue Engines</h3>
                 </div>
@@ -297,9 +295,6 @@ export function OnboardingWizard() {
                     <div className="flex-1">
                       <div className="flex justify-between items-center mb-1">
                         <h4 className="font-bold text-emerald-100">{skill.name}</h4>
-                        <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                          {skill.projected_monthly_revenue}
-                        </span>
                       </div>
                       <p className="text-sm text-gray-400 leading-snug">{skill.description}</p>
                     </div>
@@ -314,8 +309,8 @@ export function OnboardingWizard() {
                     <p className="text-3xl font-bold text-white">$49<span className="text-lg text-gray-500 font-normal">/mo</span></p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-emerald-400 mb-1">Est. 1st Month ROI</p>
-                    <p className="text-xl font-mono font-bold text-emerald-500">~850%</p>
+                    <p className="text-xs text-emerald-400 mb-1">Pro Tier Features</p>
+                    <p className="text-xl font-mono font-bold text-emerald-500">Unlimited</p>
                   </div>
                 </div>
                 <button

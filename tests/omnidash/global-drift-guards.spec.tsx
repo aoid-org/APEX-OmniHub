@@ -100,9 +100,9 @@ describe('Global Drift Guards', () => {
     expect(body).not.toMatch(/\.from\('integrations'\)/);
     // The integration-only `test-all` verb must be gone.
     expect(body).not.toMatch(/test-all/);
-    // It must return an honest empty link-context state.
-    expect(body).toMatch(/items:\s*\[\]/);
-    expect(body).toMatch(/count:\s*0/);
+    // It must return an honest query from the omnilink_links table.
+    expect(body).toMatch(/\.from\('omnilink_links'\)/);
+    expect(body).not.toMatch(/items:\s*\[\]/);
   });
 
   it('OmniBoard opens from the sidebar as the app-integration surface', () => {
