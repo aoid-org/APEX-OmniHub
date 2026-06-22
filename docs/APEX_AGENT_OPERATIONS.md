@@ -449,7 +449,20 @@ Two engineering gaps closed in branch `claude/modest-maxwell-oqflsj`.
 
 **RFC:** `memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md`.
 
- 
- -   2 0 2 6 - 0 6 - 2 2 :   A d d e d   o m n i l i n k _ l i n k s   p e r s i s t e n c e   t a b l e   a n d   w i r e d   o m n i l i n k - p o r t . 
- 
- 
+## 9.8 Orchestrator dependency security lock refresh — 2026-06-22
+
+`orchestrator/uv.lock` was refreshed to resolve the remaining Python dependency
+security alert for `pydantic-settings` by moving the resolved version from
+`2.14.1` to `2.14.2`. The same lock refresh kept `aiohttp` on patched `3.14.1`
+for the reported `aiohttp <=3.14.0` advisories and synchronized lock metadata
+for the already-declared `slowapi>=0.1.9` manifest dependency.
+
+**Operational impact:** no service topology, env var, secret, DB table/migration,
+start command, or public runtime contract changed. Render still builds the
+orchestrator from `orchestrator/pyproject.toml` plus `orchestrator/uv.lock`, and
+the API/worker start commands remain `python main.py api` and
+`python main.py worker`.
+
+**Validation:** `uv lock --check`, an import/version smoke check, `pip-audit`
+against the orchestrator virtualenv, and `uv run pytest tests/test_models.py -q`
+passed during remediation.

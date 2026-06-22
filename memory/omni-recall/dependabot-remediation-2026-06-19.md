@@ -27,3 +27,17 @@ GitHub Dependabot reported open alerts for vulnerable frontend and local-agent d
 - `aiohttp` is locked at 3.14.1, which is the patched version for the listed <=3.14.0 advisories.
 - Upgraded `orchestrator/uv.lock` PyTorch from 2.10.0 to 2.12.1 with `uv lock --upgrade-package torch==2.12.1` to resolve the torch.jit.script memory corruption alert.
 - Exported the orchestrator lockfile and verified it with `pip-audit`; no known vulnerabilities were found.
+
+## Follow-up — 2026-06-22 Orchestrator Python Alerts
+
+- Reviewed the new Dependabot screenshot alerts for `aiohttp` and `pydantic-settings` against the orchestrator lockfile.
+- Confirmed `aiohttp` remains locked at 3.14.1, the patched version for the listed <=3.14.0 advisories.
+- Upgraded `orchestrator/uv.lock` `pydantic-settings` from 2.14.1 to 2.14.2 with `uv lock --upgrade-package pydantic-settings` to resolve GHSA-4xgf-cpjx-pc3j.
+- Let `uv` refresh missing lock metadata for the already-declared `slowapi>=0.1.9` dependency in `orchestrator/pyproject.toml` so the lockfile is consistent with the manifest.
+- Validation: `uv lock --check`, import/version smoke check, `uvx pip-audit --progress-spinner off --path .venv/lib/python3.12/site-packages`, and `uv run pytest tests/test_models.py -q` all passed.
+
+## Follow-up — 2026-06-22 Ops Doc Drift Guard
+
+- The operations doc drift guard failed because `orchestrator/uv.lock` is a deployed-runtime critical path and `docs/APEX_AGENT_OPERATIONS.md` was not updated in the same PR.
+- Added an operations-history note documenting that the lock refresh changes resolved dependency versions only and does not alter service topology, env vars, secrets, DB objects, start commands, or public runtime contracts.
+- Kept the guard unchanged because the dependency lockfile is intentionally critical for the Render orchestrator API/worker build path.
