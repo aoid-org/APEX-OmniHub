@@ -35,3 +35,9 @@ GitHub Dependabot reported open alerts for vulnerable frontend and local-agent d
 - Upgraded `orchestrator/uv.lock` `pydantic-settings` from 2.14.1 to 2.14.2 with `uv lock --upgrade-package pydantic-settings` to resolve GHSA-4xgf-cpjx-pc3j.
 - Let `uv` refresh missing lock metadata for the already-declared `slowapi>=0.1.9` dependency in `orchestrator/pyproject.toml` so the lockfile is consistent with the manifest.
 - Validation: `uv lock --check`, import/version smoke check, `uvx pip-audit --progress-spinner off --path .venv/lib/python3.12/site-packages`, and `uv run pytest tests/test_models.py -q` all passed.
+
+## Follow-up — 2026-06-22 Ops Doc Drift Guard
+
+- The operations doc drift guard failed because `orchestrator/uv.lock` is a deployed-runtime critical path and `docs/APEX_AGENT_OPERATIONS.md` was not updated in the same PR.
+- Added an operations-history note documenting that the lock refresh changes resolved dependency versions only and does not alter service topology, env vars, secrets, DB objects, start commands, or public runtime contracts.
+- Kept the guard unchanged because the dependency lockfile is intentionally critical for the Render orchestrator API/worker build path.
