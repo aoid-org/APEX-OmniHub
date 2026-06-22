@@ -314,21 +314,19 @@ jobs:
         with:
           subject-path: dist/**
 
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright Chromium
+      - name: Provision Chrome for Playwright (system channel)
         timeout-minutes: 10
         run: |
-          ./node_modules/.bin/playwright install --with-deps chromium
+          # E2E runs against the runner's preinstalled Google Chrome via
+          # Playwright's `channel: 'chrome'` (see playwright.config.ts). This
+          # avoids the bundled-Chromium CDN download, which reliably hangs after
+          # reaching 100% on CI runners. Install Chrome via apt (dl.google.com)
+          # only if it is not already present, plus the shared OS libraries.
+          ./node_modules/.bin/playwright install-deps chromium
+          if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
+            ./node_modules/.bin/playwright install chrome
+          fi
+          google-chrome --version 2>/dev/null || google-chrome-stable --version
 
       - name: Start preview server
         run: |

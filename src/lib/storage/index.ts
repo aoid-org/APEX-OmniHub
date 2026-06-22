@@ -14,13 +14,30 @@
 
 import type { IStorage, StorageFactoryOptions } from './interface'
 import { SupabaseStorage } from './providers/supabase'
+import { S3Storage } from './providers/s3'
+
+// Providers that require server-side secrets and must NEVER be wired from
+// browser/client environment variables — doing so would ship the secret key in
+// the bundle. createStorage() allows them (intended for server/edge context);
+// the browser singleton getStorage() refuses them.
+const SERVER_ONLY_PROVIDERS = new Set<StorageFactoryOptions['provider']>([
+  's3',
+  'r2',
+  'gcs',
+  'azure',
+])
 
 // ============================================================================
 // STORAGE FACTORY
 // ============================================================================
 
 /**
- * Create a storage instance based on provider
+ * Create a storage instance based on provider.
+ *
+ * NOTE: 's3'/'r2' require AWS-style credentials and are intended for
+ * server/edge usage. Never call this with secrets in browser code — use
+ * getStorage() there, which is Supabase-only, and mint presigned URLs
+ * server-side for browser uploads/downloads.
  */
 export function createStorage(options: StorageFactoryOptions): IStorage {
   switch (options.provider) {
@@ -38,10 +55,24 @@ export function createStorage(options: StorageFactoryOptions): IStorage {
         debug: options.debug,
       })
 
+    // S3-compatible: AWS S3, and (via endpoint) Cloudflare R2 / MinIO.
     case 's3':
+    case 'r2':
+      if (!options.accessKeyId || !options.secretAccessKey) {
+        throw new Error(
+          `Storage provider "${options.provider}" requires accessKeyId and secretAccessKey (server-side only).`
+        )
+      }
+      return new S3Storage({
+        region: options.region,
+        accessKeyId: options.accessKeyId,
+        secretAccessKey: options.secretAccessKey,
+        endpoint: options.endpoint,
+        debug: options.debug,
+      })
+
     case 'gcs':
     case 'azure':
-    case 'r2':
       throw new Error(`Storage provider "${options.provider}" is not yet implemented. Set VITE_STORAGE_PROVIDER=supabase or remove the env var to use the default.`)
 
     default:
@@ -67,6 +98,19 @@ export function getStorage(): IStorage {
   // Read from environment variables
   const provider = (import.meta.env.VITE_STORAGE_PROVIDER ||
     'supabase') as StorageFactoryOptions['provider']
+
+  // SECURITY: the browser singleton is Supabase-only. S3/R2/GCS/Azure need
+  // secret credentials that must not be exposed client-side. To use them,
+  // construct via createStorage() in a server/edge context and mint presigned
+  // URLs for the browser.
+  if (SERVER_ONLY_PROVIDERS.has(provider)) {
+    throw new Error(
+      `VITE_STORAGE_PROVIDER="${provider}" cannot be used in the browser: it would ` +
+        `embed secret credentials in the client bundle. Use 'supabase' here, and ` +
+        `construct the ${provider} provider server-side via createStorage() with presigned URLs.`
+    )
+  }
+
   const url = import.meta.env.VITE_SUPABASE_URL
   const apiKey =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
@@ -121,6 +165,7 @@ export type {
 } from './interface'
 
 export { SupabaseStorage } from './providers/supabase'
+export { S3Storage } from './providers/s3'
 
 // ============================================================================
 // MIGRATION HELPER

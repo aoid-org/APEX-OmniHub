@@ -1,18 +1,18 @@
 ---
-version: 1.3.0
-last_audited: 2026-06-21
+version: 1.3.1
+last_audited: 2026-06-22
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-21 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-22 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.10.0
-- **Platform Version:** 1.7.1
-- **Last Updated:** 2026-06-21
+- **Document Version:** 2.10.1
+- **Platform Version:** 1.8.1 (1.8.2 in progress)
+- **Last Updated:** 2026-06-22
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
 - **Current Platform Snapshot:** [Current Platform State — 2026-06-21](CURRENT_PLATFORM_STATE_2026_06_21.md) (HEAD `7bf395cf`; PR #1462 SkillForge/OmniSkills cap & Groq routing; APEX Agent LIVE carried forward)
@@ -301,8 +301,8 @@ docs/
 
 ---
 
-**Last Updated:** June 21, 2026
-**Release:** v1.7.1
+**Last Updated:** June 22, 2026
+**Release:** v1.8.1 (v1.8.2 in progress)
 
 ## Documentation Governance
 
