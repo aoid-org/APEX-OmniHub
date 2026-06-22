@@ -169,7 +169,7 @@ class TestDatabaseFactory:
 
     def test_get_provider_unknown_raises(self):
         """Unknown DATABASE_PROVIDER values must raise ValueError."""
-        with patch.dict(os.environ, {"DATABASE_PROVIDER": "postgres"}, clear=False):
+        with patch.dict(os.environ, {"DATABASE_PROVIDER": "oracle"}, clear=False):
             with pytest.raises(ValueError, match="Unknown DATABASE_PROVIDER"):
                 DatabaseFactory.get_provider()
 
