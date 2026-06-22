@@ -36,19 +36,63 @@ const cockpitCrypto = getCockpitCrypto();
 const PROVIDERS = ['anthropic', 'groq'] as const;
 const MAX_OUTPUT_BYTES = Number(Deno.env.get('BYOM_PROXY_MAX_OUTPUT_BYTES') ?? '1048576');
 
+// ── Eyes / multimodal support ──────────────────────────────────────────────
+// Content may be a plain string (legacy, all providers) OR an ordered array of
+// content blocks (text + base64 image) for vision-capable models. The image
+// payload cap mirrors the client validator (5MB raw ≈ ~6.8MB base64).
+const MAX_IMAGE_BASE64_CHARS = 7 * 1024 * 1024;
+
+const TEXT_BLOCK_SCHEMA = z.object({
+  type: z.literal('text'),
+  text: z.string().min(1).max(20_000),
+});
+
+const IMAGE_BLOCK_SCHEMA = z.object({
+  type: z.literal('image'),
+  source: z.object({
+    type: z.literal('base64'),
+    media_type: z.enum(['image/png', 'image/jpeg', 'image/webp', 'image/gif']),
+    data: z.string().min(1).max(MAX_IMAGE_BASE64_CHARS),
+  }),
+});
+
+const CONTENT_BLOCK_SCHEMA = z.discriminatedUnion('type', [
+  TEXT_BLOCK_SCHEMA,
+  IMAGE_BLOCK_SCHEMA,
+]);
+
+const MESSAGE_CONTENT_SCHEMA = z.union([
+  z.string().min(1).max(20_000),
+  z.array(CONTENT_BLOCK_SCHEMA).min(1).max(20),
+]);
+
 const REQUEST_SCHEMA = z.object({
   provider: z.enum(PROVIDERS),
   model: z.string().min(1).max(200),
   messages: z.array(
     z.object({
       role: z.enum(['system', 'user', 'assistant', 'tool']),
-      content: z.string().min(1).max(20_000),
+      content: MESSAGE_CONTENT_SCHEMA,
     }),
   ).min(1).max(100),
 });
 
 type Provider = typeof PROVIDERS[number];
 type Message = z.infer<typeof REQUEST_SCHEMA>['messages'][number];
+type MessageContent = z.infer<typeof MESSAGE_CONTENT_SCHEMA>;
+
+/**
+ * Extract only the human-readable text from a message's content, whether the
+ * content is a plain string or a multimodal block array. Used so safety
+ * (Flight Control) and compression operate on text and NEVER touch image bytes.
+ */
+function extractText(content: MessageContent): string {
+  if (typeof content === 'string') return content;
+  return content
+    .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
+    .map((block) => block.text)
+    .join('\n');
+}
 
 function resolveProviderEndpoint(provider: Provider): string {
   switch (provider) {
@@ -210,8 +254,8 @@ serve(async (req: Request) => {
     const compressionMeta = { originalTokens: 0, compressedTokens: 0, reductionPct: 0, cacheHit: false };
 
     if (APEX_COMPRESS_ENABLED) {
-      const systemContent = compressedMessages.filter(m => m.role === 'system').map(m => m.content).join('\n');
-      
+      const systemContent = compressedMessages.filter(m => m.role === 'system').map(m => extractText(m.content)).join('\n');
+
       const cachedResponse = globalSemanticCache.get(systemContent + provider + model);
       if (cachedResponse) {
         compressionMeta.cacheHit = true;
@@ -222,7 +266,8 @@ serve(async (req: Request) => {
       }
 
       compressedMessages = compressedMessages.map(m => {
-        if (m.role !== 'system') return m;
+        // System prompts are always plain text; image blocks never appear here.
+        if (m.role !== 'system' || typeof m.content !== 'string') return m;
         const result = compress(m.content, { attentionSinks: APEX_ATTENTION_SINKS });
         compressionMeta.originalTokens += result.originalTokens;
         compressionMeta.compressedTokens += result.compressedTokens;
@@ -233,7 +278,10 @@ serve(async (req: Request) => {
     // ── END APEX-COMPRESS ────────────────────────────────────────────
 
     if (!isByomSovereign) {
-      const preFlight = FlightControl.preFlight(compressedMessages);
+      // Project to text-only for safety scanning; image bytes are never scanned
+      // by the regex/PII engine (and must never be join()'d as "[object Object]").
+      const textOnlyMessages = compressedMessages.map((m) => ({ ...m, content: extractText(m.content) }));
+      const preFlight = FlightControl.preFlight(textOnlyMessages);
       if (!preFlight.allowed) {
         await supabase.from('audit_logs').insert({
           action_type: 'BYOM_AUDIT_SPAN',
@@ -261,7 +309,9 @@ serve(async (req: Request) => {
     const encoder = new TextEncoder();
     let outputBytes = 0;
     let outputTokens = 0;
-    const inputContent = messages.map((message) => message.content).join('');
+    // Token estimate counts text only; image bytes are billed by the provider's
+    // own image-token accounting, not by raw base64 length.
+    const inputContent = messages.map((message) => extractText(message.content)).join('');
     const inputTokens = Math.ceil(inputContent.length / 4);
 
     const readable = new ReadableStream<Uint8Array>({
@@ -290,7 +340,7 @@ serve(async (req: Request) => {
           controller.close();
 
           if (APEX_COMPRESS_ENABLED && !compressionMeta.cacheHit) {
-            const cacheKey = compressedMessages.filter(m => m.role === 'system').map(m => m.content).join('\n') + provider + model;
+            const cacheKey = compressedMessages.filter(m => m.role === 'system').map(m => extractText(m.content)).join('\n') + provider + model;
             const cachedObj = {
               id: "chatcmpl-" + crypto.randomUUID().replace(/-/g, ''),
               object: "chat.completion",

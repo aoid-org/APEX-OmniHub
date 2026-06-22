@@ -6,6 +6,7 @@ import { toUserFacingAuthError } from '@/lib/authErrorDisplay';
 import { hasSupabaseConfig, supabase, supabaseConfigStatus, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
 import { ConnectAiAuthModal } from '../components/byom/ConnectAiAuthModal';
+import { PasskeySection } from '../components/identity/PasskeySection';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
 
@@ -379,6 +380,12 @@ export function LoginPage() {
               )}
             </button>
           )}
+
+          {/* Passkey (WebAuthn) login surface. Backend verifies the ES256
+              assertion signature against the stored public key + sign-counter
+              replay watermark (supabase/functions/identity-webauthn +
+              webauthn-core.ts). Owner runs live device validation. */}
+          <PasskeySection />
 
           <p className="text-muted mt-8" style={{ fontSize: 'var(--font-size-sm)' }}>
             Don&apos;t have an account?{' '}

@@ -3,6 +3,7 @@
  * All copy, proof tiles, and navigation live here for easy updates.
  */
 import { getSiteUrl } from "@/lib/site-url";
+import { certifiedTechSpecSections } from "@/content/featureTruth";
 
 // ============================================================================
 // Helper functions to reduce duplication in config objects
@@ -140,7 +141,7 @@ export const siteConfig = {
       ),
       buildItem(
         "Execute",
-        "Deterministic workflows with biometric gates and full audit trails."
+        "Deterministic workflows with Manual Approval Node gates and full audit trails."
       ),
     ],
   },
@@ -148,12 +149,12 @@ export const siteConfig = {
     title: "Zero-Trust Fortress Protocol",
     items: [
       "Assume breach by default",
-      "Hardware-level allowlisting (Device Registry)",
-      "Biometric hardware enclave signing (FaceID/TouchID)",
+      "Hardware-level allowlisting (Zero-Trust Device Registry)",
+      "Tri-Force governance (Guardian → Planner → Executor)",
       "Manual Approval Node governance by architecture (MAN Mode)",
       "Human-oversight policy gates",
-      "Immutable audit logging (Privacy-record workflows)",
-      "Forensic replay via OmniTrace",
+      "Structured audit logging across governed actions",
+      "Gitleaks + TruffleHog secret scanning in CI",
     ],
   },
   manMode: {
@@ -178,99 +179,25 @@ export const proofConfig = {
   title: "Verified Unicorn-Class Architecture",
   tiles: [
     buildProofTile("sonarcloud-gate", "SonarCloud Quality", "PASSED", true),
-    buildProofTile("armageddon-l7", "Armageddon L7", "VERIFIED", true),
+    buildProofTile("secret-scanning", "Secret Scanning", "CI-ENFORCED", true),
     buildProofTile("eu-ai-act", "AI Governance Aligned", "AUGUST 2026", true),
     buildProofTile("privacy-design", "Privacy-by-Design", "MAPPED", true),
   ],
 } as const;
 
 /**
- * Tech Specs page content - the "Nervous System" framework
- * Structured as plain data to maintain CPD compliance.
+ * Tech Specs page content - the "Nervous System" framework.
+ *
+ * IMPORTANT: The visible capability bullets are NOT defined here. They are
+ * projected from the Feature Truth Ledger (`featureTruth.ts`), which renders
+ * ONLY claims certified as functioning. This guarantees the production Tech
+ * Specs page can never display an unsupported, hidden, or downgraded claim.
+ * Edit claims in `featureTruth.ts`, not here.
  */
 export const techSpecsConfig = {
   title: "Technical Specifications",
   subtitle: "The Architecture of Governed Intelligence",
-  sections: [
-    {
-      id: "brain",
-      title: "The Brain (Durable Orchestration)",
-      description:
-        "Temporal.io cognitive core surviving infrastructure failure with deterministic replay safety.",
-      details: [
-        "Temporal.io durable execution engine",
-        "Saga-style compensation & rollbacks",
-        "FastAPI / Python AI agent logic",
-        "pgvector semantic memory (RAG)",
-        "Workflow state visualization (:8080)",
-      ],
-    },
-    {
-      id: "senses",
-      title: "The Senses (Physical AI Perception)",
-      description:
-        "Hardware-level sensory inputs governed by zero-trust and real-time audio intelligence.",
-      details: [
-        "Ears: Real-time audio stream perception",
-        "Eyes: Multimodal vision input analysis",
-        "Touch: Native sensor permission gates",
-        "Whisper local fallback (air-gapped ready)",
-        "Capacitor 6.0 native iOS/Android bridges",
-      ],
-    },
-    {
-      id: "identity",
-      title: "The Identity (Silicon-Level Trust)",
-      description:
-        "Cryptographic signing via biometric enclaves and hardware allowlisting.",
-      details: [
-        "Biometric hardware enclave signing",
-        "Zero-Trust Device Registry (Hardware ID)",
-        "FaceID / TouchID execution gating",
-        "No biometric data leaves the device",
-        "Cryptographic receipts signed by hardware",
-      ],
-    },
-    {
-      id: "conscience",
-      title: "The Conscience (Governance Layer)",
-      description:
-        "Tri-Force Protocol ensures intent never bypasses policy. Manual Approval Node governance by design.",
-      details: [
-        "Tri-Force: Guardian \u2192 Planner \u2192 Executor",
-        "MAN Mode (Manual Approval Node) gates",
-        "Human-oversight policy controls",
-        "OmniLink single controlled port (9876)",
-        "Canonical typed semantic event normalization",
-      ],
-    },
-    {
-      id: "memory",
-      title: "The Memory (Immutable Records)",
-      description:
-        "OmniTrace forensic replay and immutable audit trails for regulatory compliance.",
-      details: [
-        "Audit logging mapped to privacy-record workflows",
-        "OmniTrace forensic decision replay",
-        "Full reconstruction of any agent chain",
-        "365-day structured log retention",
-        "DPIA / FRIA audit-ready documentation",
-      ],
-    },
-    {
-      id: "immune",
-      title: "The Immune System (Verification)",
-      description:
-        "Armageddon L7 verified security posture with self-healing OmniSentry monitoring.",
-      details: [
-        "Armageddon L7: 40,000 adversarial iterations",
-        "0% escape rate on goal hijack & tool misuse",
-        "OmniSentry self-healing monitor",
-        "Gitleaks + TruffleHog secret scanning",
-        "OMEGA infrastructure hardening layer",
-      ],
-    },
-  ] as const,
+  sections: certifiedTechSpecSections,
 } as const;
 
 export const demoConfig = {

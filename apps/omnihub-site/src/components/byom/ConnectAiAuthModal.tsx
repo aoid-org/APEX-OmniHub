@@ -112,52 +112,52 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-primary)', fontWeight: 500 }}>
               Provider
-              <select
-                id="provider-select"
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-surface)',
-                  color: 'var(--color-text-primary)',
-                  colorScheme: 'dark', // Fix OS native dropdown rendering on dark mode
-                  fontSize: '1rem',
-                  marginTop: '8px'
-                }}
-              >
-                {PROVIDERS.map(p => (
-                  <option key={p.id} value={p.id} style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>{p.name}</option>
-                ))}
-              </select>
             </label>
+            <select
+              id="provider-select"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)',
+                colorScheme: 'dark', // Fix OS native dropdown rendering on dark mode
+                fontSize: '1rem',
+                marginTop: '8px'
+              }}
+            >
+              {PROVIDERS.map(p => (
+                <option key={p.id} value={p.id} style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
             <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-primary)', fontWeight: 500 }}>
               API Key
-              <input
-                id="api-key-input"
-                type="password"
-                required
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your API key"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-surface)',
-                  color: 'var(--color-text-primary)',
-                  fontSize: '1rem',
-                  fontFamily: 'monospace',
-                  marginTop: '8px'
-                }}
-              />
             </label>
+            <input
+              id="api-key-input"
+              type="password"
+              required
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your API key"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)',
+                fontSize: '1rem',
+                fontFamily: 'monospace',
+                marginTop: '8px'
+              }}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>

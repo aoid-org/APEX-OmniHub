@@ -66,7 +66,7 @@ class InMemoryIdempotencyStore implements DurableIdempotencyStore {
 
   async complete(key: string, result: unknown): Promise<boolean> {
     const record = this.store.get(key);
-    if (!record || record.state !== IdempotencyState.PENDING) return false;
+    if (record?.state !== IdempotencyState.PENDING) return false;
     this.store.set(key, {
       ...record,
       state: IdempotencyState.COMPLETED,
@@ -149,7 +149,7 @@ export function acquire(
 export function commit(key: string, result?: unknown): boolean {
   const inMem = _store as InMemoryIdempotencyStore;
   const record = inMem.getSync(key);
-  if (!record || record.state !== IdempotencyState.PENDING) return false;
+  if (record?.state !== IdempotencyState.PENDING) return false;
   inMem.setSync(key, {
     ...record,
     state: IdempotencyState.COMPLETED,
@@ -166,7 +166,7 @@ export function commit(key: string, result?: unknown): boolean {
 export function rollback(key: string): boolean {
   const inMem = _store as InMemoryIdempotencyStore;
   const record = inMem.getSync(key);
-  if (!record || record.state !== IdempotencyState.PENDING) return false;
+  if (record?.state !== IdempotencyState.PENDING) return false;
   return inMem.deletePendingSync(key);
 }
 
