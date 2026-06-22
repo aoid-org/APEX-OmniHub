@@ -30,7 +30,7 @@ status: verified
 | `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| PR #1441 corrective gates (local) | typecheck exit 0; eslint exit 0; `vitest run tests/omnidash` 585 passed; build success; ops-doc-guard PASS |
+| PR #1462 corrective gates (local) | typecheck exit 0; eslint exit 0; build success; ops-doc-guard PASS |
 
 ## Documentation Authority Order
 
