@@ -105,6 +105,11 @@ files touched on both sides.
 - **Server-safe S3/R2 storage adapter** (`src/lib/storage/providers/s3.ts`) — foundation
   only; browser factory refuses S3 (would leak secrets); GCS/Azure intentionally not
   implemented; no production consumer yet.
+- **Bun lockfile CI repair** — `bun.lock` was regenerated after the S3/R2 AWS SDK
+  additions so `bun install --frozen-lockfile --ignore-scripts` no longer mutates the
+  lockfile in Bun-based post-CI workflows. The nested npm `overrides` for protobuf remain
+  in `package.json`/`package-lock.json` for npm enforcement; Bun still warns that nested
+  overrides are unsupported, but frozen install now exits successfully.
 - **Comprehensive docs pass** — README + omni-recall canon aligned to 2026-06-22
   repo-truth; `audits/DOCS_AUDIT_2026_06_22.md` ledger added.
 
