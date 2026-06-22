@@ -175,13 +175,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-
+      # No buildx setup: the build below uses plain `docker build`, which runs on the
+      # runner's default Docker daemon (BuildKit is built in). The buildx container
+      # driver pulls moby/buildkit:buildx-stable-1 from Docker Hub on boot, which
+      # intermittently fails the registry HEAD (anonymous rate limit) and adds no value
+      # here since we never call `docker buildx build`.
       - name: Build Docker image
         working-directory: orchestrator
         run: |
-          docker build -t apex-orchestrator:${{ github.sha }} .
+          DOCKER_BUILDKIT=1 docker build -t apex-orchestrator:${{ github.sha }} .
 
       - name: Test Docker image
         run: |

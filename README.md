@@ -1,6 +1,6 @@
 ---
-version: 1.2.0
-last_audited: 2026-06-21
+version: 1.3.0
+last_audited: 2026-06-22
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.1 | **package.json version:** 1.7.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-21
+**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-22
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -54,21 +54,21 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-21)
+## Platform Statistics (Repository Snapshot 2026-06-22, git-verified)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 327 TypeScript/TSX files                          |
-| **React Components (`src/`)**                    | 94 `.tsx` component files                         |
+| **Source Files (`src/`)**                        | 322 TypeScript/TSX files                          |
+| **React Components (`src/`)**                    | 92 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
 | **Edge Functions (`supabase/functions/`)**       | 33 directories (32 function dirs + `_shared`)     |
-| **Database Migrations (`supabase/migrations/`)** | 98 `.sql` files |
+| **Database Migrations (`supabase/migrations/`)** | 98 `.sql` files (94 forward + 4 rollback under `migrations/rollback/`) |
 | **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 3438 spec/test source files (verified 2026-06-21) |
-| **Custom Hooks (`src/` + app surfaces)**         | 40 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 103 files (Temporal workers, activities, security) |
+| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 373 spec/test source files (312 TS + 61 Python, git-verified 2026-06-22); latest pass counts are recorded in certification status |
+| **Custom Hooks (`src/` + app surfaces)**         | 39 hook files matching `use*.ts*`                 |
+| **Orchestrator (Python)**                        | 100 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** `main` HEAD `7bf395cf` (2026-06-21) — SkillForge/OmniSkills: free cap 5, Groq-preferred generation, paywall hardening + tests (PR #1462). This major upgrade expands the free tier to 5 skills, routes LLM generation optimally through Groq, refactors the `generate-business-skills` edge function into four modular files to respect our 500-line strict limit, and introduces idempotent entitlement migrations. Previously, PR #1449 introduced BYOM sovereign AI auth, and PR #1456 merged the claim-approved production release with WebAuthn ES256 identity verification. See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the full V3 assessment.
+**Latest repo-history note:** `main` HEAD `1f22570` (2026-06-22) — chore: exempt apex-governance.yml from ops drift guard (CI/governance chores). Release line is **1.8.1** (`package.json`), with **1.8.2** in progress (`CHANGELOG.md`). Landmark history: PR #1441 (`966d695f`) made Links a genuine local URL-staging surface (no app-integration semantics), replaced the global action whitelist with a module-keyed capability map, hardened the OmniBoard wizard (timeout + explicit error taxonomy), and made the live `omnilink-port` Links resolver return an honest empty link-context state; PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready, full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the last full assessment (a 2026-06-22 refresh is pending).
 
 ---
 
@@ -135,7 +135,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ---
 
-## Edge Functions (32 Directories in Repository, including `_shared`)
+## Edge Functions (33 Directories in Repository, including `_shared`)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -160,15 +160,15 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 ## Repository Layout
 
 ```
-/src                 - Core frontend/domain source tree (326 files)
+/src                 - Core frontend/domain source tree (322 files)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
-/supabase/migrations - Database schema (94 .sql files: 90 forward + 4 rollback)
-/supabase/functions  - Edge functions (31 function directories + _shared = 32)
-/orchestrator        - Temporal workers and orchestration services (103 Python files)
+/supabase/migrations - Database schema (98 .sql files: 94 forward + 4 rollback)
+/supabase/functions  - Edge functions (32 function directories + _shared = 33)
+/orchestrator        - Temporal workers and orchestration services (100 Python files)
 /tests               - Automated test suite
 /.github/workflows   - CI/CD workflows (23 workflow files)
 ```

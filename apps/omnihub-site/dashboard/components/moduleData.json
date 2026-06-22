@@ -187,43 +187,8 @@
   [
     "links",
     "URLs and reference sources collected for OmniSlate and agent context.",
-    [
-      [
-        "Saved Links",
-        "3",
-        "stable"
-      ],
-      [
-        "Context Sources",
-        "3",
-        "stable"
-      ],
-      [
-        "Staged Locally",
-        "0",
-        "stable"
-      ]
-    ],
-    [
-      [
-        "lnk-doc1",
-        "https://github.com/apexbusiness-systems/docs",
-        "active",
-        "Reference URL for agent context"
-      ],
-      [
-        "lnk-doc2",
-        "https://platform.openai.com/docs",
-        "active",
-        "Reference URL for agent context"
-      ],
-      [
-        "lnk-doc3",
-        "https://react.dev/reference/react",
-        "active",
-        "Reference URL for agent context"
-      ]
-    ],
+    [],
+    [],
     [
       [
         "add-link",

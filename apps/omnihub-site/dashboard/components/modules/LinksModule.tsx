@@ -1,15 +1,13 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;
 }
 
-interface StagedLink {
-  readonly id: string;
-  readonly url: string;
-}
+
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   active:   { bg: 'rgba(52,211,153,0.1)',  text: '#34d399' },
@@ -35,8 +33,9 @@ export default function LinksModule({ onClose }: Props) {
   const [isStaging, setIsStaging] = useState(false);
   const [url, setUrl] = useState('');
   const [touched, setTouched] = useState(false);
-  const [stagedLinks, setStagedLinks] = useState<StagedLink[]>([]);
   const [omniSlateBlocked, setOmniSlateBlocked] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const trimmedUrl = url.trim();
   const urlIsValid = isValidHttpUrl(trimmedUrl);
@@ -59,17 +58,41 @@ export default function LinksModule({ onClose }: Props) {
     return false;
   };
 
-  const handleStageLink = () => {
-    if (!urlIsValid) {
+  const handleStageLink = async () => {
+    if (!urlIsValid || isSubmitting) {
       setTouched(true);
       return;
     }
-    setStagedLinks((prev) => [
-      ...prev,
-      { id: `staged-${Date.now()}-${prev.length}`, url: trimmedUrl },
-    ]);
-    setUrl('');
-    setTouched(false);
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+      setSubmitError('Authentication required to save links.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from('omnilink_links').insert({
+      user_id: userId,
+      url: trimmedUrl,
+      status: 'active'
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setSubmitError(`Failed to save link: ${error.message}`);
+    } else {
+      setUrl('');
+      setTouched(false);
+      setIsStaging(false);
+      // Force reload to validate readback from durable storage
+      window.location.reload();
+    }
   };
 
   return (
@@ -107,20 +130,9 @@ export default function LinksModule({ onClose }: Props) {
             </div>
           )}
 
-          {stagedLinks.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <div className="text-[10px] text-amber-400">
-                Links are staged locally until link-context persistence is connected.
-              </div>
-              {stagedLinks.map((link) => (
-                <div
-                  key={link.id}
-                  title={link.url}
-                  className="text-[10px] text-muted-foreground truncate"
-                >
-                  • {link.url}
-                </div>
-              ))}
+          {submitError && (
+            <div className="text-[10px] text-red-400 font-bold bg-red-400/10 p-2 rounded">
+              {submitError}
             </div>
           )}
 
@@ -138,15 +150,15 @@ export default function LinksModule({ onClose }: Props) {
             <button
               type="button"
               onClick={handleStageLink}
-              disabled={!urlIsValid}
+              disabled={!urlIsValid || isSubmitting}
               className={[
                 'px-3 py-1 rounded text-primary-foreground text-xs font-bold',
-                urlIsValid
+                urlIsValid && !isSubmitting
                   ? 'bg-primary hover:bg-primary/90 cursor-pointer'
                   : 'bg-primary/50 cursor-not-allowed',
               ].join(' ')}
             >
-              Add Link
+              {isSubmitting ? 'Saving...' : 'Add Link'}
             </button>
           </div>
         </div>

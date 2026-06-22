@@ -239,22 +239,35 @@ async function resolveAudits(
   };
 }
 
-function resolveLinks(
-  _anonClient: ReturnType<typeof createAnonClient>
-): ModuleStateResponse {
-  // Links collect URLs/reference sources for OmniSlate & agent context — they
-  // are NOT app integrations. There is intentionally no link-context
-  // persistence table yet (no migration is created here; that is gated on JR
-  // approval), so reading the integrations table would hydrate Links as app
-  // integrations and is forbidden. We return an honest, empty link-context
-  // state with safe actions only — no integration-only verbs. add-link and
-  // send-to-omnislate are handled locally in LinksModule and never dispatched
-  // to trigger-workflow.
+async function resolveLinks(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Real backed flow for Links persistence
+  const { data, error } = await anonClient
+    .from('omnilink_links')
+    .select('id, url, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw new Error('links_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    url: string;
+    status: string;
+    created_at: string;
+  }>;
+
   return {
     State: 'Online',
-    items: [],
+    items: rows.map(r => ({
+      id: r.id,
+      label: r.url,
+      status: r.status,
+      timestamp: r.created_at,
+    })),
     actions: ['add-link', 'send-to-omnislate'],
-    count: 0,
+    count: rows.length,
   };
 }
 

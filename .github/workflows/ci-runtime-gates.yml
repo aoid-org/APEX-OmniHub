@@ -326,9 +326,18 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
-          ./node_modules/.bin/playwright install --with-deps chromium
+          # E2E runs against the runner's preinstalled Google Chrome via
+          # Playwright's `channel: 'chrome'` (see playwright.config.ts). This
+          # avoids the bundled-Chromium CDN download, which reliably hangs after
+          # reaching 100% on CI runners. Install Chrome via apt (dl.google.com)
+          # only if it is not already present, plus the shared OS libraries.
+          ./node_modules/.bin/playwright install-deps chromium
+          if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
+            ./node_modules/.bin/playwright install chrome
+          fi
+          google-chrome --version 2>/dev/null || google-chrome-stable --version
 
       - name: Start preview server
         run: |
