@@ -22,24 +22,24 @@ function base64UrlEncode(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    binary += String.fromCodePoint(bytes[i]);
   }
-  return globalThis.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/={1,2}$/, '');
+  return globalThis.btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
 function base64UrlDecode(value: string): Uint8Array {
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = value.replaceAll('-', '+').replaceAll('_', '/');
   const binary = globalThis.atob(padded.padEnd(Math.ceil(padded.length / 4) * 4, '='));
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+    bytes[i] = binary.codePointAt(i) ?? 0;
   }
   return bytes;
 }
 
 /** WebAuthn API availability (browser-only; honest false in SSR/unsupported). */
 export function isWebAuthnSupported(): boolean {
-  if (typeof globalThis.window === 'undefined') return false;
+  if (globalThis.window === undefined) return false;
   return (
     typeof globalThis.PublicKeyCredential === 'function' &&
     typeof navigator !== 'undefined' &&
@@ -111,7 +111,7 @@ export async function registerPasskey(userEmail: string): Promise<PasskeyResult>
       challenge: challenge as unknown as BufferSource,
       rp: { name: RP_NAME, id: globalThis.location.hostname },
       user: {
-        id: new TextEncoder().encode(user.id) as unknown as BufferSource,
+        id: new TextEncoder().encode(user.id),
         name: userEmail,
         displayName: userEmail,
       },

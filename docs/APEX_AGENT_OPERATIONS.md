@@ -103,7 +103,7 @@ Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABA
 | `agent_runs` (migration `20251221000001_omnilink_ops_pack.sql`) | gateway insert/poll, worker write-back | whole pipeline breaks |
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
-| `audit_logs` (creation `20251218000000_create_audit_logs_table.sql`; read-contract guard `20260621000000_omnitrace_audit_read_contract.sql`) | edge fn writes (`apex-agent`, `identity-webauthn`, `byom-login`); OmniTrace RLS-scoped reads (`actor_id = auth.uid()`) | OmniTrace panel returns error; `identity-webauthn` assertion receipts silently fail to write |
+| `audit_logs` (creation `20251218000000_create_audit_logs_table.sql`; read-contract guard `20260621000002_omnitrace_audit_read_contract.sql`) | edge fn writes (`apex-agent`, `identity-webauthn`, `byom-login`); OmniTrace RLS-scoped reads (`actor_id = auth.uid()`) | OmniTrace panel returns error; `identity-webauthn` assertion receipts silently fail to write |
 
 **Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
 
@@ -428,7 +428,7 @@ Two engineering gaps closed in branch `claude/modest-maxwell-oqflsj`.
 
 | Commit | Change | Why |
 |---|---|---|
-| `61b859b` | `supabase/migrations/20260621000000_omnitrace_audit_read_contract.sql` | Idempotent guard: `CREATE TABLE IF NOT EXISTS audit_logs`, additive `ADD COLUMN IF NOT EXISTS` for all OmniTrace columns, `ENABLE ROW LEVEL SECURITY`, idempotent `DROP POLICY IF EXISTS` / `CREATE POLICY` for `actor_id = auth.uid()`, and `CREATE INDEX IF NOT EXISTS` for `actor_id`, `created_at DESC`, and `(resource_type, resource_id)`. |
+| `61b859b` | `supabase/migrations/20260621000002_omnitrace_audit_read_contract.sql` | Idempotent guard: `CREATE TABLE IF NOT EXISTS audit_logs`, additive `ADD COLUMN IF NOT EXISTS` for all OmniTrace columns, `ENABLE ROW LEVEL SECURITY`, idempotent `DROP POLICY IF EXISTS` / `CREATE POLICY` for `actor_id = auth.uid()`, and `CREATE INDEX IF NOT EXISTS` for `actor_id`, `created_at DESC`, and `(resource_type, resource_id)`. |
 
 **New DB object entry:** `audit_logs` (see §4 Required Database Objects above). Migration is additive and idempotent — safe on fresh DB, partial DB, or already-provisioned production DB. No destructive rewrite; existing write paths (`apex-agent`, `byom-login`, service-role inserts) unchanged.
 

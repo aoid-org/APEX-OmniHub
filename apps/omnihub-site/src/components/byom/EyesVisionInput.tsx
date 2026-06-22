@@ -34,7 +34,7 @@ interface AttachedImage {
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
@@ -98,7 +98,7 @@ export function EyesVisionInput() {
 
       // Metadata-only log — NEVER the bytes.
       const imageBlock = message.content.find((block) => block.type === 'image');
-      if (imageBlock && imageBlock.type === 'image') {
+      if (imageBlock?.type === 'image') {
         console.warn('[APEX OmniHub] Eyes vision send:', describeImagePayload(imageBlock));
       }
 
@@ -116,7 +116,12 @@ export function EyesVisionInput() {
       // byom-proxy streams SSE; supabase-js returns the raw text body here.
       setResponse(typeof data === 'string' ? data : JSON.stringify(data));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Vision request failed');
+      const msg = err instanceof Error ? err.message : 'Vision request failed';
+      if (msg === 'EYES_QUOTA_EXCEEDED') {
+        setError('You have used your 5 free vision uploads (15 MB total). Upgrade to APEX Premium for unlimited access.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsSending(false);
     }

@@ -162,6 +162,24 @@ function sumAuditSpend(rows: { metadata: unknown }[] | null): number {
   return total;
 }
 
+const EYES_FREE_MAX_UPLOADS = 5;
+const EYES_FREE_MAX_BYTES = 15 * 1024 * 1024; // 15 MB raw image bytes
+
+function countImageBytes(msgs: { role: string; content: unknown }[]): number {
+  let total = 0;
+  for (const msg of msgs) {
+    if (!Array.isArray(msg.content)) continue;
+    for (const block of msg.content as { type: string; source?: { data?: string } }[]) {
+      if (block.type === 'image' && block.source?.data) {
+        const b64 = block.source.data;
+        const pad = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
+        total += Math.floor(b64.length * 3 / 4) - pad;
+      }
+    }
+  }
+  return total;
+}
+
 async function verifyAuth(req: Request, corsHeaders: Record<string, string>) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith('Bearer ')) return { errorResponse: jsonResponse({ error: 'Missing Authorization' }, 401, corsHeaders) };
@@ -218,6 +236,7 @@ serve(async (req: Request) => {
 
     const body = REQUEST_SCHEMA.parse(await req.json());
     const { provider, model, messages } = body;
+    const imageBytes = countImageBytes(messages);
 
     await RateLimiter.checkLimit(supabase, user.id);
     const tenantId = user.user_metadata?.tenant_id ?? user.id;
@@ -232,20 +251,61 @@ serve(async (req: Request) => {
 
     // Load registry config
     const providerConfig = await getProviderConfig(tenantId, provider);
-    if (!providerConfig || providerConfig.provider_type === 'disabled') {
+
+    // Platform-key fallback: when no BYOM registry entry exists for this user,
+    // fall back to the platform-managed key if one is configured in env.
+    // Flight Control (pre + post) still runs for all platform-key requests.
+    const PLATFORM_KEYS: Partial<Record<Provider, string>> = {
+      anthropic: Deno.env.get('ANTHROPIC_API_KEY'),
+      groq: Deno.env.get('GROQ_API_KEY'),
+    };
+    const platformFallbackKey = !providerConfig ? PLATFORM_KEYS[provider] : undefined;
+
+    if (!providerConfig && !platformFallbackKey) {
       return jsonResponse({ error: 'Provider is disabled or not configured in registry' }, 403, corsHeaders);
     }
-    // '*' is the wildcard written by byom-login for self-service BYOM connections
-    // ("all models allowed"); without honouring it here every real model is rejected.
-    if (!providerConfig.allowed_models.includes('*') && !providerConfig.allowed_models.includes(model)) {
-      return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
-    }
-    
-    const budgetErr = await verifyBudget(tenantId, providerConfig, user, provider, model, corsHeaders);
-    if (budgetErr) return budgetErr;
 
-    const { apiKey, errorResponse: keyErr } = await fetchApiKey(user.id, provider, tenantId, corsHeaders);
-    if (keyErr || !apiKey) return keyErr!;
+    let apiKey: string;
+    if (platformFallbackKey) {
+      // Platform-key mode: enforce free-tier quota for vision requests.
+      if (imageBytes > 0) {
+        const { data: visionRows } = await supabase
+          .from('audit_logs')
+          .select('metadata')
+          .eq('actor_id', user.id)
+          .eq('action_type', 'EYES_VISION_SEND');
+        const usedUploads = visionRows?.length ?? 0;
+        const usedBytes = (visionRows ?? []).reduce(
+          (s, r) => s + (((r.metadata as Record<string, number>)?.image_bytes) ?? 0), 0
+        );
+        if (usedUploads >= EYES_FREE_MAX_UPLOADS || usedBytes + imageBytes > EYES_FREE_MAX_BYTES) {
+          return jsonResponse({
+            error: 'EYES_QUOTA_EXCEEDED',
+            uploads_used: usedUploads,
+            max_uploads: EYES_FREE_MAX_UPLOADS,
+            bytes_used: usedBytes,
+            max_bytes: EYES_FREE_MAX_BYTES,
+          }, 402, corsHeaders);
+        }
+      }
+      apiKey = platformFallbackKey;
+    } else {
+      // BYOM mode: enforce registry gates then fetch user's encrypted key.
+      if (providerConfig!.provider_type === 'disabled') {
+        return jsonResponse({ error: 'Provider is disabled or not configured in registry' }, 403, corsHeaders);
+      }
+      // '*' is the wildcard written by byom-login for self-service BYOM connections
+      // ("all models allowed"); without honouring it here every real model is rejected.
+      if (!providerConfig!.allowed_models.includes('*') && !providerConfig!.allowed_models.includes(model)) {
+        return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
+      }
+      const budgetErr = await verifyBudget(tenantId, providerConfig!, user, provider, model, corsHeaders);
+      if (budgetErr) return budgetErr;
+
+      const { apiKey: fetchedKey, errorResponse: keyErr } = await fetchApiKey(user.id, provider, tenantId, corsHeaders);
+      if (keyErr || !fetchedKey) return keyErr!;
+      apiKey = fetchedKey;
+    }
 
     const isByomSovereign = user.user_metadata?.identity_type === 'byom';
 
@@ -373,8 +433,19 @@ serve(async (req: Request) => {
                 reduction_pct: compressionMeta.reductionPct,
                 cache_hit: compressionMeta.cacheHit,
               } : null,
+              platform_key_fallback: !!platformFallbackKey,
             }
           });
+
+          // Record vision usage for free-tier quota tracking.
+          if (platformFallbackKey && imageBytes > 0) {
+            await supabase.from('audit_logs').insert({
+              action_type: 'EYES_VISION_SEND',
+              actor_id: user.id,
+              resource_id: tenantId,
+              metadata: { image_bytes: imageBytes, provider, model },
+            });
+          }
         } catch (error) {
           controller.error(error);
         }

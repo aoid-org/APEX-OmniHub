@@ -68,8 +68,8 @@ export function OmniSentryPanel() {
       return;
     }
     refresh();
-    const id = window.setInterval(refresh, 5000);
-    return () => window.clearInterval(id);
+    const id = globalThis.setInterval(refresh, 5000);
+    return () => globalThis.clearInterval(id);
   }, [enabled, refresh]);
 
   const handleToggle = useCallback(() => {

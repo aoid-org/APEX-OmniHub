@@ -24,7 +24,7 @@ merge, and the remaining owner-validation items are owner-controlled.
 | # | Capability | Outcome | Surface | Evidence |
 |---|---|---|---|---|
 | 1 | OmniSentry self-healing monitor | CERTIFIED | `/omni-sentry` live panel drives real `getHealthStatus()`; activated at startup | `OmniSentryPanel.tsx`, `pages/OmniSentry.tsx`, `src/main.tsx`, `omni-sentry-surface.spec.ts` |
-| 2 | OmniTrace decision replay | CERTIFIED (code-certified; DB apply = owner action) | `/omni-trace` replays real RLS-scoped `audit_logs` | `OmniTracePanel.tsx`, `lib/omniTrace.ts`, `20260621000000_omnitrace_audit_read_contract.sql`, `omni-trace-surface.spec.ts` |
+| 2 | OmniTrace decision replay | CERTIFIED (code-certified; DB apply = owner action) | `/omni-trace` replays real RLS-scoped `audit_logs` | `OmniTracePanel.tsx`, `lib/omniTrace.ts`, `20260621000002_omnitrace_audit_read_contract.sql`, `omni-trace-surface.spec.ts` |
 | 3 | Eyes multimodal vision | FOUNDATION (owner E2E validation) | built, not routed/visible | `lib/eyes-vision.ts`, `byom/EyesVisionInput.tsx`, `byom-proxy` multimodal, `eyes-vision-surface.spec.ts` |
 | 4 | Identity WebAuthn | REQUIRES_OWNER_VALIDATION (crypto path complete; real-device + deploy = owner) | PasskeySection exposed at `/login`; ES256 signature verification implemented and tested | `identity-webauthn/webauthn-core.ts` (COSE + ECDSA + sign-counter), `identity-webauthn/index.ts`, `webauthnClient.ts`, `identity-webauthn-surface.spec.ts` |
 
@@ -59,7 +59,7 @@ The ES256 assertion signature verification gap is closed:
 - PasskeySection is exposed at `/login`. **Certification status: REQUIRES_OWNER_VALIDATION** — real-device FaceID/TouchID validation and edge function deployment remain owner-controlled.
 
 ## OmniTrace Data Layer — Guaranteed
-- Migration `20260621000000_omnitrace_audit_read_contract.sql` is idempotent:
+- Migration `20260621000002_omnitrace_audit_read_contract.sql` is idempotent:
   - `CREATE TABLE IF NOT EXISTS audit_logs` with all required columns.
   - `ADD COLUMN IF NOT EXISTS` for `resource_type`, `resource_id`, `metadata`, `created_at`.
   - `ENABLE ROW LEVEL SECURITY` (no-op if already enabled).
