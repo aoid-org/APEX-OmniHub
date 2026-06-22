@@ -1,14 +1,18 @@
 .landing-root,.landing-root *,.landing-root *::before,.landing-root *::after{box-sizing:border-box;margin:0;padding:0}
-.landing-root{
-  --bg:#0B1F2E;--bg1:#0F2538;--bg2:#0E2236;
-  --line:rgba(255,255,255,0.07);--teal:rgba(100,180,220,0.08);
-  --copper:#D4855A;--gold:#E8A247;--gold2:#F5C06A;
-  --ember:#C4511A;--ember2:#D46025;
-  --t1:rgba(255,255,255,0.93);--t2:rgba(255,255,255,0.52);
-  --t3:rgba(255,255,255,0.26);--t4:rgba(255,255,255,0.09);
-  --font:'Space Grotesk',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--max:1260px;
+.landing-root {
+  --bg: #0B1F2E; --bg1: #0F2538; --bg2: #0E2236;
+  --line: rgba(255,255,255,0.07); --teal: rgba(100,180,220,0.08);
+  --copper: #D4855A; --gold: #E8A247; --gold2: #F5C06A;
+  --ember: #AF4013; --ember2: #C4511A;
+  --t1: rgba(255,255,255,0.93); --t2: rgba(255,255,255,0.52);
+  --t3: rgba(255,255,255,0.26); --t4: rgba(255,255,255,0.09);
+  --font: 'Space Grotesk', sans-serif; --ease: cubic-bezier(0.16,1,0.3,1); --max: 1260px;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
-.landing-root{font-family:var(--font);background:var(--bg);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .landing-root::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:linear-gradient(var(--teal) 1px,transparent 1px),linear-gradient(90deg,var(--teal) 1px,transparent 1px);
   background-size:64px 64px;

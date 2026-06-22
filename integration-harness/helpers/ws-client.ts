@@ -17,7 +17,7 @@ export async function waitForTelemetryEvent(url: string, pred: (e: JsonValue) =>
     const timer = setTimeout(() => { ws.close(); reject(new Error(`No matching WS event within ${timeoutMs}ms`)); }, timeoutMs);
     ws.on('message', (msg) => {
       try {
-        const payload = Buffer.isBuffer(msg) ? msg.toString('utf8') : msg.toString();
+        const payload = Array.isArray(msg) ? Buffer.concat(msg).toString('utf8') : Buffer.isBuffer(msg) ? msg.toString('utf8') : msg instanceof ArrayBuffer ? Buffer.from(msg).toString('utf8') : String(msg);
         const evt: JsonValue = JSON.parse(payload) as JsonValue;
         if (pred(evt)) { clearTimeout(timer); ws.close(); resolve(evt); }
       } catch { /* ignore non-json */ }
