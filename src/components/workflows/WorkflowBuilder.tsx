@@ -160,6 +160,22 @@ export function WorkflowBuilder() {
     [nodes, connectingFrom],
   );
 
+  const applyDragOffset = useCallback((nodeId: string, originX: number, originY: number, dx: number, dy: number) => {
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.id === nodeId
+          ? {
+              ...n,
+              position: {
+                x: Math.max(0, Math.min(CANVAS_W - NODE_W, originX + dx)),
+                y: Math.max(0, Math.min(CANVAS_H - NODE_H, originY + dy)),
+              },
+            }
+          : n
+      )
+    );
+  }, []);
+
   const onCanvasMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!dragRef.current) return;
@@ -186,22 +202,10 @@ export function WorkflowBuilder() {
         const dx = (clientX - startX) / scale;
         const dy = (clientY - startY) / scale;
 
-        setNodes((prev) =>
-          prev.map((n) =>
-            n.id === nodeId
-              ? {
-                  ...n,
-                  position: {
-                    x: Math.max(0, Math.min(CANVAS_W - NODE_W, originX + dx)),
-                    y: Math.max(0, Math.min(CANVAS_H - NODE_H, originY + dy)),
-                  },
-                }
-              : n,
-          ),
-        );
+        applyDragOffset(nodeId, originX, originY, dx, dy);
       });
     },
-    [],
+    [applyDragOffset],
   );
 
   const onCanvasMouseUp = useCallback(() => {

@@ -337,16 +337,7 @@ async function pollAgentRuns(
 
     if (status === "completed") {
       const reply = buildReplyFromAgentResponse(row.agent_response, prompt);
-      let parsedResult: unknown = {};
-      if (typeof row.agent_response === "string") {
-        try {
-          parsedResult = JSON.parse(row.agent_response);
-        } catch {
-          parsedResult = row.agent_response;
-        }
-      } else if (row.agent_response != null) {
-        parsedResult = row.agent_response;
-      }
+      const parsedResult = parseAgentResult(row.agent_response);
       await emit("completed", {
         traceId,
         status: "completed",
@@ -409,6 +400,17 @@ export function buildReplyFromAgentResponse(agentResponse: unknown, prompt: stri
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseAgentResult(agentResponse: unknown): unknown {
+  if (typeof agentResponse === "string") {
+    try {
+      return JSON.parse(agentResponse);
+    } catch {
+      return agentResponse;
+    }
+  }
+  return agentResponse != null ? agentResponse : {};
 }
 
 function isValidUUID(s: string): boolean {

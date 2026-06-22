@@ -26,13 +26,10 @@ export function getSystemHealth(): SystemHealthReport {
   };
 
   const hasUnavailable = Object.values(subsystems).includes('unavailable');
-  const allLive = Object.values(subsystems).every(s => s === 'live');
 
   let overall: SystemHealthReport['overall'] = 'healthy';
   if (hasUnavailable) {
     overall = 'degraded';
-  } else if (!allLive) {
-    overall = 'healthy';
   }
 
   return {
