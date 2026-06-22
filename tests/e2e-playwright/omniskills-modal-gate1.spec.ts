@@ -67,6 +67,12 @@ test('OmniSkills opens as a modal with the real icon and no route change', async
 
   const urlAfter = page.url();
 
+  // Let the open/fade-in animation settle so the screenshot reflects the resting state.
+  await page.waitForFunction(() => {
+    const el = document.querySelector('[role="dialog"]');
+    return el ? Number(getComputedStyle(el).opacity) >= 0.99 : false;
+  }, { timeout: 5_000 });
+
   await page.screenshot({ path: 'artifacts/gate1/omniskills-modal.png', fullPage: true });
 
   // Modal, not a page route: URL must be unchanged after opening OmniSkills.

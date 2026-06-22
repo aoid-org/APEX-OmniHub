@@ -237,10 +237,11 @@ export function OmniSpatialHost() {
           />
         )}
         <DialogContent
+          style={{ backgroundColor: '#0b1220', backdropFilter: 'none' }}
           className={
             activeModal?.type === 'module'
-              ? 'z-[9001] sm:max-w-[560px] bg-[#0b1220]'
-              : 'z-[9001] sm:max-w-[425px] bg-[#0b1220]'
+              ? 'z-[9001] sm:max-w-[560px]'
+              : 'z-[9001] sm:max-w-[425px]'
           }
           {...(hasDescription ? {} : { 'aria-describedby': undefined })}
           onInteractOutside={(e) => e.preventDefault()}
