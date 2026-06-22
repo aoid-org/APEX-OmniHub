@@ -1,11 +1,21 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-22
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-06-22 -->
 # PORTABILITY MATRIX
+
+> **2026-06-22 update:** Three provider swaps completed in production. See
+> `rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md`. The matrix rows below have
+> been reconciled to verified state. Swaps were fast and config-only; exact
+> durations were **not timed** — the figures below are owner estimates, not
+> stopwatch measurements: **Supabase → AWS ≈ one night** (config-only, no
+> rewrite); **Supabase → Self-Host ≈ hours**; **Vercel → Cloudflare Workers =
+> done/decommissioned**. What *is* verified is the outcome: all three swaps
+> stayed within the portability design rule ("< 1 day, config changes only").
+> SECURITY-001 (credential rotation) is **CLOSED**.
 
 ## Verification Status Legend
 
@@ -27,10 +37,10 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 | Supabase | VERIFIED |
 | Temporal | VERIFIED |
 | Vite | VERIFIED |
-| AWS | PROPOSED |
+| AWS | VERIFIED |
 | Azure | PROPOSED |
 | GCP | PROPOSED |
-| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+| On-prem | VERIFIED |
 
 See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
 
@@ -690,20 +700,25 @@ terraform {
 
 ## LOCK-IN SCORECARD (CURRENT STATE)
 
-**VERIFIED** (from repository reconnaissance):
+**VERIFIED** (reconciled 2026-06-22 against `rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md`):
 
-| Component | Current Technology | Lock-In Risk | Portable Alternative | Migration Effort |
+| Component | Current Technology | Lock-In Risk | Portable Alternative | Actual / Est. Migration |
 |-----------|-------------------|--------------|---------------------|------------------|
-| **Frontend Hosting** | Vercel | 🟥 High | Static CDN (S3/GCS/Azure + Cloudflare) | 1 week |
-| **Backend Runtime** | Supabase Edge Functions (Deno) | 🟥 High | Docker containers on K8s | 3-6 months |
-| **Database** | Supabase PostgreSQL | 🟨 Medium | Cloud SQL / RDS / self-hosted Postgres | 1-2 weeks (pg_dump) |
-| **Auth** | Supabase Auth | 🟥 High | Keycloak / Auth0 / self-hosted | 2-3 weeks |
-| **Storage** | Supabase Storage | 🟨 Medium | S3 / GCS / MinIO | 1 week (data sync) |
-| **Realtime** | Supabase Realtime | 🟥 High | WebSocket server / NATS | 3-4 weeks |
+| **Frontend Hosting** | Cloudflare Workers | ✅ VERIFIED Low | Static CDN (S3/GCS/Azure + Cloudflare) | Done (Vercel decommissioned) |
+| **Backend Runtime** | Cloudflare Workers | ✅ VERIFIED Low | Docker containers on K8s | Done (Supabase Edge retired) |
+| **Database** | AWS / self-hosted Postgres | ✅ VERIFIED Low | Cloud SQL / RDS / self-hosted Postgres | ≈ one night (AWS); ≈ hours (self-host) — *estimates, not timed* |
+| **Auth** | Supabase Auth | 🟥 High | Keycloak / Auth0 / self-hosted | 2-3 weeks — *not covered by RFC; unverified* |
+| **Storage** | Supabase Storage | 🟨 Medium | S3 / GCS / MinIO | 1 week — *not covered by RFC; unverified* |
+| **Realtime** | Supabase Realtime | 🟥 High | WebSocket server / NATS | 3-4 weeks — *not covered by RFC; unverified* |
 
-**TOTAL LOCK-IN RISK:** 🟥 **HIGH** (5/6 components are Vercel/Supabase-specific)
+**TOTAL LOCK-IN RISK:** 🟨 **MEDIUM** — the three highest-risk components (frontend
+hosting, backend runtime, database) are now portable and production-verified. Auth,
+Storage, and Realtime were **not** enumerated in the 2026-06-22 RFC and remain
+unverified pending separate confirmation; do not assume they were migrated.
 
-**RECOMMENDATION:** Implement abstraction layers NOW for critical paths (database, storage, auth).
+**RECOMMENDATION:** Abstraction layers proved out on the swapped paths (database swap
+was config-only, validating the < 1-day rule). Next: separately verify Auth, Storage,
+and Realtime portability and update those three rows when evidence exists.
 
 ---
 
