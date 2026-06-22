@@ -267,7 +267,7 @@ export function SkillForge() {
 
         {step <= 3 && (
           <p className="text-center text-amber-400/60 text-sm">
-            Free tier: 3 skills maximum. Upgrade to Architect Tier for unlimited skills.
+            Free tier: 5 skills maximum. Upgrade to Architect Tier for unlimited skills.
           </p>
         )}
       </div>

@@ -14,6 +14,18 @@ Affected Domains: Supabase migrations, Supabase Edge Functions, Skill Forge mone
 
 ---
 
+> **Update 2026-06-22 — free cap raised 3 → 5.** The BASIC free cap is now **5**
+> active generated skills (the 6th generation is paywalled with HTTP 402), set by
+> `supabase/migrations/20260622000000_skill_entitlement_free_cap_5.sql`. That
+> migration `CREATE OR REPLACE`s both `check_skill_entitlement` and
+> `enforce_skill_entitlement` with `max_limit := 5`, preserving the atomic
+> advisory-lock enforcement, the `SECURITY DEFINER`/`search_path` contract, and
+> the trigger EXECUTE lockdown described below. The TOCTOU analysis is unchanged;
+> only the cap value moved. The "Problem"/"Current Pain" narrative below is the
+> historical record of the original cap-3 race that motivated the trigger.
+
+---
+
 ## Problem
 
 The Skill Forge monetization gate enforced the 3-skill BASIC cap only in the edge function: a read (`check_skill_entitlement` RPC) followed by a separate insert into `user_generated_skills`. Concurrent requests racing between the check and the insert could each pass the gate and exceed the cap — a classic time-of-check-to-time-of-use (TOCTOU) violation with direct revenue impact on the Pilot Trap conversion model.
@@ -36,7 +48,7 @@ None. The application-level check was the only enforcement; correctness depended
 
 ## Proposed Change
 
-Migration `20260610000000_skill_entitlement_db_enforcement.sql` adds a `BEFORE INSERT OR UPDATE OF is_active` trigger (`trg_enforce_skill_entitlement`) on `public.user_generated_skills`. The trigger function (`SECURITY DEFINER`, `search_path = public`) takes `pg_advisory_xact_lock` keyed on the user id to serialize per-user active-skill writes, re-counts active skills inside the same transaction as the write, and raises `LIMIT_REACHED: ...` when the tier cap (BASIC=3, PRO=999999) is exceeded. The edge function maps this exception to the existing HTTP 402 `LIMIT_REACHED` contract, so the client-facing behavior is unchanged.
+Migration `20260610000000_skill_entitlement_db_enforcement.sql` adds a `BEFORE INSERT OR UPDATE OF is_active` trigger (`trg_enforce_skill_entitlement`) on `public.user_generated_skills`. The trigger function (`SECURITY DEFINER`, `search_path = public`) takes `pg_advisory_xact_lock` keyed on the user id to serialize per-user active-skill writes, re-counts active skills inside the same transaction as the write, and raises `LIMIT_REACHED: ...` when the tier cap (BASIC=5 as of 2026-06-22, PRO=999999) is exceeded. The edge function maps this exception to the existing HTTP 402 `LIMIT_REACHED` contract, so the client-facing behavior is unchanged.
 
 ## Business Capability
 
@@ -56,7 +68,7 @@ Forge input flows from the wizard to `generate-business-skills`, through the JWT
 
 ## Failure Modes
 
-Cap exceeded: the transaction aborts with `LIMIT_REACHED`, no row is written, and the user receives the standard 402 upgrade prompt. Missing `user_entitlements` record: tier defaults to BASIC (cap 3), matching the RPC's behavior. Advisory lock contention: concurrent requests for the same user serialize; throughput for distinct users is unaffected because locks are keyed per user id.
+Cap exceeded: the transaction aborts with `LIMIT_REACHED`, no row is written, and the user receives the standard 402 upgrade prompt. Missing `user_entitlements` record: tier defaults to BASIC (cap 5 as of 2026-06-22), matching the RPC's behavior. Advisory lock contention: concurrent requests for the same user serialize; throughput for distinct users is unaffected because locks are keyed per user id.
 
 ## Observability
 

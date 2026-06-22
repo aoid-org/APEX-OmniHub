@@ -9,55 +9,25 @@ import {
   corsErrorResponse,
   isOriginAllowed,
 } from "../_shared/cors.ts";
+import { callLLMJson } from "../_shared/llm.ts";
 import {
-  checkRateLimit,
-  rateLimitExceededResponse,
-  RATE_LIMIT_CONFIGS,
-} from "../_shared/rate-limit.ts";
-
-interface RequestBody {
-  intent?: string;
-  trigger?: string;
-  constraints?: string;
-  // Legacy support for OnboardingWizard
-  description?: string;
-  goal?: string;
-}
-
-interface SkillDefinition {
-  name: string;
-  description: string;
-  instructions: string[];
-  required_apis: string[];
-}
+  resolveSkillProvider,
+  parseSkillDefinition,
+  SKILL_FORGE_SYSTEM_PROMPT,
+  type SkillDefinition,
+} from "./skill-provider.ts";
+import {
+  json,
+  type RequestBody,
+  type CorsHeaders,
+} from "./http-helpers.ts";
+import { handleOnboardingWizard } from "./onboarding-wizard.ts";
 
 interface UserRecord {
   id: string;
 }
 
-type CorsHeaders = Record<string, string>;
-
 const MAX_BODY_SIZE_BYTES = 16 * 1024;
-
-function json(
-  data: unknown,
-  status: number,
-  corsHeaders: CorsHeaders
-): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-function clientIdentifier(req: Request): string {
-  return (
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
 
 async function readJsonBody(req: Request): Promise<RequestBody | Response> {
   const contentLength = Number.parseInt(
@@ -182,7 +152,7 @@ async function handleSkillForge(
     );
   }
 
-  // Enforce 3-skill limit (The Pilot Trap)
+  // Enforce free-tier cap (BASIC = 5 active skills; 6th generation paywalled)
   if (!entitlement.allowed) {
     return new Response(
       JSON.stringify({
@@ -202,50 +172,77 @@ async function handleSkillForge(
     );
   }
 
-  // Generate Skill via Anthropic (name overwritten below for uniqueness)
+  // Generate Skill via the shared LLM abstraction (_shared/llm.ts): Groq is
+  // preferred for cheaper compute, Anthropic is the fallback. Provider/model
+  // are resolved from env; no key values are ever logged. The generated name is
+  // overwritten with a UUID below for uniqueness.
   const skillName = `skill_${crypto.randomUUID()}`;
+
+  const providerResolution = resolveSkillProvider({
+    SKILL_FORGE_PROVIDER: Deno.env.get("SKILL_FORGE_PROVIDER"),
+    GROQ_API_KEY: Deno.env.get("GROQ_API_KEY"),
+    ANTHROPIC_API_KEY: Deno.env.get("ANTHROPIC_API_KEY"),
+    SKILL_FORGE_GROQ_MODEL: Deno.env.get("SKILL_FORGE_GROQ_MODEL"),
+    SKILL_FORGE_ANTHROPIC_MODEL: Deno.env.get("SKILL_FORGE_ANTHROPIC_MODEL"),
+  });
+
+  if (!providerResolution.ok) {
+    console.error(
+      "Skill generation provider not configured:",
+      providerResolution.error
+    );
+    return new Response(
+      JSON.stringify({
+        error: "GENERATION_UNAVAILABLE",
+        message: "Skill generation is temporarily unavailable",
+      }),
+      {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
 
   let generatedSkill: SkillDefinition;
 
   try {
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!anthropicApiKey) {
-      throw new Error("ANTHROPIC_API_KEY missing");
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-haiku-20241022",
+    const { data } = await callLLMJson<unknown>(
+      [
+        { role: "system", content: SKILL_FORGE_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: JSON.stringify({ intent, trigger, constraints }),
+        },
+      ],
+      {
+        provider: providerResolution.provider,
+        model: providerResolution.model,
         max_tokens: 1024,
-        system:
-          "Output a valid SkillDefinition JSON with fields: id, name, intent, trigger, constraints (array), instructions (array min 3 items). Do not wrap in markdown or include extra text.",
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify({ intent, trigger, constraints }),
-          },
-        ],
-      }),
-    });
+      }
+    );
 
-    if (!response.ok) {
-      console.error("Anthropic API error:", response.status);
-      throw new Error("Anthropic API failed");
+    const validated = parseSkillDefinition(data);
+    if (!validated.ok) {
+      console.error("Skill validation failed:", validated.error);
+      return new Response(
+        JSON.stringify({
+          error: "UNPROCESSABLE_ENTITY",
+          message: "Failed to generate a valid skill definition",
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const data = await response.json();
-    const resultText = data.content[0].text;
-
-    generatedSkill = JSON.parse(resultText);
-    generatedSkill.name = skillName; // ensure unique name
+    // Overwrite the model-provided name with the unique server-side UUID name.
+    generatedSkill = { ...validated.skill, name: skillName };
   } catch (error) {
-    console.error("Failed to generate skill with Anthropic:", error);
+    console.error(
+      "Skill generation failed:",
+      error instanceof Error ? error.message : "unknown error"
+    );
     return new Response(
       JSON.stringify({
         error: "UNPROCESSABLE_ENTITY",
@@ -318,109 +315,6 @@ async function handleSkillForge(
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
   );
-}
-
-/** Handle OnboardingWizard flow (description/goal) */
-async function handleOnboardingWizard(
-  body: RequestBody,
-  req: Request,
-  origin: string | null,
-  corsHeaders: CorsHeaders
-): Promise<Response> {
-  const description =
-    typeof body.description === "string" ? body.description.trim() : "";
-  const goal = typeof body.goal === "string" ? body.goal.trim() : "";
-
-  if (description.length < 20 || description.length > 2000) {
-    return json(
-      {
-        error: "BAD_REQUEST",
-        message: "Description must be between 20 and 2,000 characters",
-      },
-      400,
-      corsHeaders
-    );
-  }
-
-  if (goal.length < 5 || goal.length > 500) {
-    return json(
-      {
-        error: "BAD_REQUEST",
-        message: "Goal must be between 5 and 500 characters",
-      },
-      400,
-      corsHeaders
-    );
-  }
-
-  const rateLimit = await checkRateLimit(
-    clientIdentifier(req),
-    RATE_LIMIT_CONFIGS.publicOnboardingGenerate
-  );
-  if (!rateLimit.allowed) {
-    return rateLimitExceededResponse(origin, rateLimit);
-  }
-
-  try {
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!anthropicApiKey) {
-      return json(
-        {
-          error: "GENERATION_UNAVAILABLE",
-          message: "Generation is temporarily unavailable",
-        },
-        503,
-        corsHeaders
-      );
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-haiku-20241022",
-        max_tokens: 1500,
-        system:
-          "You are a business systems architect. Based on the user's business description and primary objective, generate a JSON array of 3 'skills' (automated workflows/agents). The first should be tier 'CORE' (basic operational necessity). The second and third should be tier 'GROWTH_ENGINE' (advanced, revenue-generating). Each skill needs: id (uuid), name, description, projected_monthly_revenue (string), confidence_score (number 0-100), and tier ('CORE' or 'GROWTH_ENGINE'). Output ONLY valid JSON containing an object with a 'skills' array, no markdown.",
-        messages: [
-          {
-            role: "user",
-            content: `Description: ${description}\nGoal: ${goal}`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Anthropic API error:", response.status);
-      throw new Error("Anthropic API failed");
-    }
-
-    const data = await response.json();
-    const resultText = data.content[0].text;
-    const generatedData = JSON.parse(resultText);
-
-    return new Response(JSON.stringify(generatedData), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Failed to generate business skills:", error);
-    return new Response(
-      JSON.stringify({
-        error: "GENERATION_FAILED",
-        message: "Failed to generate operational architecture",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  }
 }
 
 serve(async (req) => {
