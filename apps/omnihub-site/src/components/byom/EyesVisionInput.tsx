@@ -99,7 +99,7 @@ export function EyesVisionInput() {
       // Metadata-only log — NEVER the bytes.
       const imageBlock = message.content.find((block) => block.type === 'image');
       if (imageBlock && imageBlock.type === 'image') {
-        console.info('[APEX OmniHub] Eyes vision send:', describeImagePayload(imageBlock));
+        console.warn('[APEX OmniHub] Eyes vision send:', describeImagePayload(imageBlock));
       }
 
       const provider = sessionStorage.getItem('omni_ai_provider') === 'groq' ? 'groq' : 'anthropic';

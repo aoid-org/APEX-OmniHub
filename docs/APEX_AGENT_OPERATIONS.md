@@ -50,6 +50,7 @@ Gateway poll reads terminal row → SSE completed/failed → UI renders reply
 |---|---|---|---|---|
 | UI + Gateway | Cloudflare Pages | `https://apexomnihub.icu` | — (Pages build) | `main` |
 | Edge `apex-agent` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy` |
+| Edge `identity-webauthn` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi` |
 | Orchestrator **API** | Render Web Service | `apex-orchestrator-api` · `srv-d8qpsi7avr4c73dmb4ig` · `https://apex-orchestrator-api.onrender.com` | `python main.py api` | `main` (auto-deploy) |
 | Orchestrator **Worker** | Render Background Worker | `apex-orchestrator-worker` | `python main.py worker` | `main` (auto-deploy) |
 | Workflow engine | Temporal Cloud | ns `apex-omnihub-temporal.i7ero` · `ca-central-1.aws.api.temporal.io:7233` | — | — |
@@ -102,6 +103,7 @@ Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABA
 | `agent_runs` (migration `20251221000001_omnilink_ops_pack.sql`) | gateway insert/poll, worker write-back | whole pipeline breaks |
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
+| `audit_logs` (creation `20251218000000_create_audit_logs_table.sql`; read-contract guard `20260621000000_omnitrace_audit_read_contract.sql`) | edge fn writes (`apex-agent`, `identity-webauthn`, `byom-login`); OmniTrace RLS-scoped reads (`actor_id = auth.uid()`) | OmniTrace panel returns error; `identity-webauthn` assertion receipts silently fail to write |
 
 **Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
 
@@ -399,3 +401,41 @@ revoked after validation.
 
 **Validation:** backend/edge path proven on local Docker Supabase; UI-render (Phase B)
 pending — see `docs/byom-validation-continuation.md`.
+
+---
+
+## 9.7 WebAuthn ES256 signature verification + OmniTrace `audit_logs` read-contract — 2026-06-21 (PR #1456)
+
+Two engineering gaps closed in branch `claude/modest-maxwell-oqflsj`.
+
+### identity-webauthn edge function
+
+| Commit | Change | Why |
+|---|---|---|
+| `605cc98` | `supabase/functions/identity-webauthn/` — full challenge/register/assert cycle with ES256 ECDSA/P-256 signature verification | Assertion now cryptographically verifies `authenticatorData ‖ SHA-256(clientDataJSON)` against the stored public key before trusting the sign counter. Sign-counter monotonicity rejects replay/cloned credentials. |
+
+**New service entry:** `identity-webauthn` Supabase edge function (see §2 Service Inventory above). Deploy command: `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi`.
+
+**Secrets required:** same Supabase project env as `apex-agent` (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Upstash rate-limit keys (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) must be set on the function — rate limit is fail-closed (rejects if Redis is unreachable).
+
+**Stored data:** only public-key metadata (raw uncompressed P-256 point, credential id, sign counter, timestamps) in `device_registry.device_info.webauthn`. No private keys, no biometric templates.
+
+**Audit receipts:** writes to `audit_logs` (`identity.webauthn.registered`, `identity.webauthn.asserted`, `identity.webauthn.assertion_rejected`) — this is a new write path on the existing `audit_logs` table.
+
+**Certification status:** `REQUIRES_OWNER_VALIDATION` — software path complete and tested; real-device FaceID/TouchID validation and edge function deployment remain owner-controlled.
+
+### OmniTrace `audit_logs` read-contract migration
+
+| Commit | Change | Why |
+|---|---|---|
+| `61b859b` | `supabase/migrations/20260621000000_omnitrace_audit_read_contract.sql` | Idempotent guard: `CREATE TABLE IF NOT EXISTS audit_logs`, additive `ADD COLUMN IF NOT EXISTS` for all OmniTrace columns, `ENABLE ROW LEVEL SECURITY`, idempotent `DROP POLICY IF EXISTS` / `CREATE POLICY` for `actor_id = auth.uid()`, and `CREATE INDEX IF NOT EXISTS` for `actor_id`, `created_at DESC`, and `(resource_type, resource_id)`. |
+
+**New DB object entry:** `audit_logs` (see §4 Required Database Objects above). Migration is additive and idempotent — safe on fresh DB, partial DB, or already-provisioned production DB. No destructive rewrite; existing write paths (`apex-agent`, `byom-login`, service-role inserts) unchanged.
+
+**Apply:** `supabase db push --include-all` (owner-controlled; not applied to production by this PR).
+
+**Certification status:** `CERTIFIED_FUNCTIONING` (code-certified) — migration + RLS + tests verified in-repo; production DB apply is owner action.
+
+**Env / start command:** no changes. No new secrets. No new services.
+
+**RFC:** `memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md`.

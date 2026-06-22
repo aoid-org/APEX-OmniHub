@@ -49,7 +49,7 @@ export function base64UrlEncode(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-export function base64UrlDecode(value: string): Uint8Array {
+export function base64UrlDecode(value: string): Uint8Array<ArrayBuffer> {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/');
   const binary = atob(padded.padEnd(Math.ceil(padded.length / 4) * 4, '='));
   const bytes = new Uint8Array(binary.length);
@@ -354,7 +354,7 @@ export function extractCredentialPublicKey(attestationObjectB64: string): Extrac
  * the raw 64-byte r||s form Web Crypto's ECDSA verify expects. Authenticators
  * emit DER for ES256; some test/raw paths emit raw already.
  */
-export function derToRawEcdsaSignature(der: Uint8Array): Uint8Array {
+export function derToRawEcdsaSignature(der: Uint8Array): Uint8Array<ArrayBuffer> {
   let pos = 0;
   if (der[pos++] !== 0x30) throw new Error('der_bad_sequence');
   // sequence length (may be long-form, but ES256 sigs are short)
@@ -364,7 +364,7 @@ export function derToRawEcdsaSignature(der: Uint8Array): Uint8Array {
     seqLen = cborReadUint({ bytes: der, pos }, n);
     pos += n;
   }
-  const readInt = (): Uint8Array => {
+  const readInt = (): Uint8Array<ArrayBuffer> => {
     if (der[pos++] !== 0x02) throw new Error('der_bad_integer');
     const len = der[pos++];
     let v = der.slice(pos, pos + len);
@@ -403,6 +403,7 @@ export async function verifyAssertionSignature(input: AssertionSignatureInput): 
     return false; // not a raw uncompressed P-256 point
   }
   let key: CryptoKey;
+  let rawSig: Uint8Array<ArrayBuffer>;
   try {
     key = await crypto.subtle.importKey(
       'raw',
@@ -424,7 +425,6 @@ export async function verifyAssertionSignature(input: AssertionSignatureInput): 
   signedData.set(clientDataHash, authData.length);
 
   const sig = base64UrlDecode(input.signatureB64);
-  let rawSig: Uint8Array;
   try {
     rawSig = sig.length === 64 ? sig : derToRawEcdsaSignature(sig);
   } catch {

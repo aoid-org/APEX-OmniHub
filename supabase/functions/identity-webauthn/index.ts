@@ -73,12 +73,6 @@ function jsonResponse(data: unknown, status: number, origin: string | null): Res
   });
 }
 
-interface DeviceRow {
-  device_id: string;
-  user_id: string;
-  device_info: Record<string, unknown>;
-  status: string;
-}
 
 async function getUserFromAuthHeader(req: Request): Promise<{ id: string } | null> {
   const authHeader = req.headers.get("authorization");
