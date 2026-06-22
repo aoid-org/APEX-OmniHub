@@ -17,7 +17,8 @@ status: verified
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit (2026-06-21): `8772015e` (chore: version packages, v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3` → main. Main HEAD: `8772015e` (chore: version packages, apex-omnihub 1.8.0 → 1.8.1).
+- Verified HEAD at this audit (2026-06-22): working branch `claude/focused-ptolemy-dgd054` (docs + portability/storage work, ahead of main). Main HEAD: `1f22570` (chore: exempt apex-governance.yml from ops drift guard). Release line `1.8.1` (`package.json`), `1.8.2` in progress (`CHANGELOG.md`).
+- Prior audit (2026-06-21): `8772015e` (v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3`. Superseded by the line above.
 
 ## Runtime Facts (Claude Code / ephemeral container)
 

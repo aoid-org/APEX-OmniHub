@@ -1,28 +1,28 @@
 ---
-version: 1.3.0
-last_audited: 2026-06-21
+version: 1.4.0
+last_audited: 2026-06-22
 status: verified
 ---
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-21 (PR #1441 "canonical widget rescue" completed + merged to `main` as squash `966d695f`; full repo-truth documentation sync of README + omni-recall). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md`.
+> Current repo-truth index refreshed 2026-06-22 (comprehensive docs pass: repo-truth re-verification of README + omni-recall canonical files; version line corrected 1.7.1 → 1.8.1; portability/storage provider work landed on branch `claude/focused-ptolemy-dgd054`). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md` (a 2026-06-22 refresh is pending).
 
-## Current Repo Facts Verified in This Pass (2026-06-21)
+## Current Repo Facts Verified in This Pass (2026-06-22)
 
 > Repository counts, HEAD, and versions were directly verified this session against the working tree and `git log`. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked in this docs pass (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| HEAD | `966d695f` — fix(omnidash): canonical widget rescue and global drift guards (#1441) |
-| Source files under `src/` | **326** TypeScript/TSX |
+| `main` HEAD | `1f22570` — chore: exempt apex-governance.yml from ops drift guard |
+| Source files under `src/` | **322** TypeScript/TSX |
 | GitHub workflow files | **23** files in `.github/workflows/` |
-| Release/package versions | Root `package.json` declares **`1.7.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| SQL migrations | **94** `.sql` files = **90 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **32** (31 function dirs + `_shared`) |
-| Custom hooks (`src/` + `apps/`) | **38** (`use*.ts*`) |
-| Python orchestrator files | **103** |
-| Test/spec source files | **346** (`tests`, `e2e`, `sim`, `apps`, `orchestrator`, `packages`) |
+| Release/package versions | Root `package.json` declares **`1.8.1`** (1.8.2 in progress); app package `apps/omnihub-site/package.json` declares `1.3.10` |
+| SQL migrations | **98** `.sql` files = **94 forward** + **4 rollback** (`migrations/rollback/`) |
+| Edge function dirs | **33** (32 function dirs + `_shared`) |
+| Custom hooks (`src/` + `apps/`) | **39** (`use*.ts*`) |
+| Python orchestrator files | **100** |
+| Test/spec source files | **373** (312 TS `.test/.spec` + 61 Python `test_*/_test`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441 replaced the global whitelist; unsupported actions fail-closed with module-specific copy, never call `trigger-workflow` |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
