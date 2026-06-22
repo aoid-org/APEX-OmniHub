@@ -16,14 +16,23 @@ from .supabase_provider import SupabaseDatabaseProvider
 
 
 class DatabaseFactory:
+    # Aliases that all resolve to the portable standard-Postgres provider.
+    # 'aws'/'rds' are accepted so the documented swap reads naturally.
+    _POSTGRES_ALIASES = frozenset({"postgres", "postgresql", "aws", "rds"})
+
     @staticmethod
     def get_provider() -> DatabaseProvider:
         """
-        Build the PRIMARY database provider (Supabase only).
+        Build the PRIMARY database provider from DATABASE_PROVIDER.
 
-        DATABASE_PROVIDER env var is accepted for forward-compatibility
-        but currently only 'supabase' is a valid value.
-        Setting DATABASE_PROVIDER=tidb is a fatal misconfiguration.
+        Valid values:
+        - 'supabase' (default): managed Supabase Postgres + API layer.
+        - 'postgres' / 'postgresql' / 'aws' / 'rds': portable standard Postgres
+          over asyncpg, using DATABASE_URL. Works for AWS RDS, GCP Cloud SQL,
+          Azure Database, or self-hosted Postgres — the config-only swap target.
+
+        Setting DATABASE_PROVIDER=tidb is a fatal misconfiguration (TiDB is a
+        vector store, configured separately via VECTOR_PROVIDER).
         """
         provider_type = os.getenv("DATABASE_PROVIDER", "supabase").lower()
 
@@ -32,7 +41,7 @@ class DatabaseFactory:
                 "FATAL: DATABASE_PROVIDER=tidb is not allowed. "
                 "TiDB is a vector store, not a relational CRUD provider. "
                 "Use VECTOR_PROVIDER=tidb instead. "
-                "Primary DB must be 'supabase'."
+                "Primary DB must be 'supabase' or 'postgres'."
             )
 
         if provider_type == "supabase":
@@ -46,8 +55,24 @@ class DatabaseFactory:
                 )
             return SupabaseDatabaseProvider(url=supabase_url, key=supabase_key)
 
+        if provider_type in DatabaseFactory._POSTGRES_ALIASES:
+            # Standard Postgres DSN. SUPABASE_DB_URL is accepted as a fallback so
+            # an existing direct-Postgres connection string can be reused as-is.
+            dsn = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DB_URL")
+            if not dsn:
+                raise ValueError(
+                    f"DATABASE_PROVIDER='{provider_type}' requires DATABASE_URL "
+                    "(standard postgresql:// DSN; works for AWS RDS, GCP Cloud SQL, "
+                    "Azure Database, or self-hosted Postgres)."
+                )
+            # Imported lazily so the Supabase path never imports asyncpg.
+            from .postgres_provider import PostgresDatabaseProvider
+
+            return PostgresDatabaseProvider(dsn=dsn)
+
         raise ValueError(
-            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. Must be 'supabase'."
+            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. "
+            "Must be 'supabase' or 'postgres' (aliases: postgresql, aws, rds)."
         )
 
 

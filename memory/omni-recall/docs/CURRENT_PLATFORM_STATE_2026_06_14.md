@@ -5,7 +5,7 @@ last_audited: 2026-06-14
 status: archived
 archived_date: 2026-06-21
 supersedes: docs/CURRENT_PLATFORM_STATE_2026_06_06.md
-superseded_by: CURRENT_PLATFORM_STATE_2026_06_21.md
+superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
 
 # Current Platform State — 2026-06-14

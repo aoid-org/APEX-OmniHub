@@ -1,15 +1,15 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-21
+version: 1.2.0
+last_audited: 2026-06-22
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.7.1
-**Last Updated:** 2026-06-21
+**Version:** 1.8.1 (1.8.2 in progress)
+**Last Updated:** 2026-06-22
 
-**Latest verified branch/head:** `main` @ `966d695f` (`fix(omnidash): canonical widget rescue and global drift guards (#1441)`). See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`.
+**Latest verified branch/head:** `main` @ `1f22570` (`chore: exempt apex-governance.yml from ops drift guard`). Prior landmark `966d695f` (#1441). See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (2026-06-22 refresh pending).
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements

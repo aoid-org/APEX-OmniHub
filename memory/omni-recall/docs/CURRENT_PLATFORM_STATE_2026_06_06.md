@@ -3,7 +3,7 @@ version: 1.0.0
 last_audited: 2026-06-12
 status: archived
 archived_date: 2026-06-21
-superseded_by: CURRENT_PLATFORM_STATE_2026_06_21.md
+superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
 
 # Current Platform State — 2026-06-06

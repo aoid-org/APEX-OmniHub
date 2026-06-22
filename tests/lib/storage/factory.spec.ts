@@ -45,19 +45,25 @@ describe('storage factory', () => {
     ).not.toThrow();
   });
 
-  it('throws for unsupported providers', async () => {
+  it('requires server-side credentials for s3/r2 providers', async () => {
     const mod = await import('@/lib/storage');
 
+    // s3 and r2 are implemented but require AWS-style credentials.
     expect(() => mod.createStorage({ provider: 's3' })).toThrow(
-      /not yet implemented/i,
+      /accessKeyId and secretAccessKey/i,
     );
+    expect(() => mod.createStorage({ provider: 'r2' })).toThrow(
+      /accessKeyId and secretAccessKey/i,
+    );
+  });
+
+  it('throws for not-yet-implemented providers', async () => {
+    const mod = await import('@/lib/storage');
+
     expect(() => mod.createStorage({ provider: 'gcs' })).toThrow(
       /not yet implemented/i,
     );
     expect(() => mod.createStorage({ provider: 'azure' })).toThrow(
-      /not yet implemented/i,
-    );
-    expect(() => mod.createStorage({ provider: 'r2' })).toThrow(
       /not yet implemented/i,
     );
   });
