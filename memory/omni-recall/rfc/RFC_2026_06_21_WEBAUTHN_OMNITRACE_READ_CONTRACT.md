@@ -36,7 +36,7 @@ APEX OmniHub platform engineer and owner deploying `identity-webauthn` edge func
 ## Proposed Change
 
 1. **WebAuthn**: implement `verifyAssertionSignature` in `webauthn-core.ts` using `crypto.subtle` (Web Crypto API, compatible with Deno edge runtime and vitest/jsdom). Verify `ECDSA/P-256/SHA-256` over `authenticatorData ‖ SHA-256(clientDataJSON)`. Parse DER or raw 64-byte r‖s signature. Reject on signature failure, consuming the challenge to prevent replay.
-2. **OmniTrace migration**: author idempotent `20260621000000_omnitrace_audit_read_contract.sql` using `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `ENABLE ROW LEVEL SECURITY`, guarded `DROP POLICY IF EXISTS` / `CREATE POLICY`, and `CREATE INDEX IF NOT EXISTS`.
+2. **OmniTrace migration**: author idempotent `20260621000002_omnitrace_audit_read_contract.sql` using `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `ENABLE ROW LEVEL SECURITY`, guarded `DROP POLICY IF EXISTS` / `CREATE POLICY`, and `CREATE INDEX IF NOT EXISTS`.
 
 ## Business Capability
 
@@ -47,7 +47,7 @@ APEX OmniHub platform engineer and owner deploying `identity-webauthn` edge func
 
 - `supabase/functions/identity-webauthn/` — edge function; owner deploys.
 - `supabase/functions/identity-webauthn/webauthn-core.ts` — runtime-agnostic crypto; tested in vitest.
-- `supabase/migrations/20260621000000_omnitrace_audit_read_contract.sql` — migration; owner applies to production DB.
+- `supabase/migrations/20260621000002_omnitrace_audit_read_contract.sql` — migration; owner applies to production DB.
 - `apps/omnihub-site/src/components/OmniTracePanel.tsx` — site component; reads only.
 - `apps/omnihub-site/src/lib/omniTrace.ts` — pure grouping logic; no side effects.
 
@@ -101,7 +101,7 @@ OmniTrace read:
 ## Rollback Strategy
 
 - **WebAuthn edge function**: redeploy previous version via `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi` from the prior commit. Stored credentials remain in `device_registry` and are compatible with any future re-deploy.
-- **OmniTrace migration**: `20260621000000_omnitrace_audit_read_contract.sql` is additive and non-destructive. Rollback = no action required; the migration leaves no destructive footprint. RLS policy can be dropped if needed: `DROP POLICY "Users can view own audit logs" ON public.audit_logs;`.
+- **OmniTrace migration**: `20260621000002_omnitrace_audit_read_contract.sql` is additive and non-destructive. Rollback = no action required; the migration leaves no destructive footprint. RLS policy can be dropped if needed: `DROP POLICY "Users can view own audit logs" ON public.audit_logs;`.
 - **UI**: OmniTrace panel is an additive route in `App.tsx`. Remove the `/omni-trace` route entry to disable without touching DB.
 
 ## Security Impact
@@ -138,6 +138,6 @@ OmniTrace read:
 - All 52 release tests pass: `npm run test -- tests/release/`.
 - `npm run typecheck`, `npm run lint`, `npm run build` all pass.
 - `verifyAssertionSignature` returns `true` for a valid in-test P-256 key pair and `false` for tampered signatures, tampered `clientDataJSON`/`authenticatorData`, sign-counter regressions, and mismatched challenges.
-- `20260621000000_omnitrace_audit_read_contract.sql` is idempotent (safe to apply twice).
+- `20260621000002_omnitrace_audit_read_contract.sql` is idempotent (safe to apply twice).
 - OmniTrace `CERTIFIED_FUNCTIONING` in `featureTruth.ts` with migration evidence.
 - WebAuthn remains `REQUIRES_OWNER_VALIDATION` until real-device test + deployment confirmed by owner.

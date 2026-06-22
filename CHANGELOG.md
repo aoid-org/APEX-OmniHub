@@ -4,7 +4,7 @@
 ### Minor Changes
 
 - feat(identity): ES256 WebAuthn assertion signature verification — ECDSA/P-256/SHA-256 over `authenticatorData ‖ SHA-256(clientDataJSON)` using Web Crypto API. Sign-counter monotonicity rejects replay and cloned-credential attacks. Challenge is single-use and time-bound. Only public-key metadata stored; no private keys or biometric data.
-- feat(memory): OmniTrace `audit_logs` idempotent read-contract migration (`20260621000000_omnitrace_audit_read_contract.sql`). Guarantees table shape, RLS, `actor_id = auth.uid()` SELECT policy, and guarded indexes on a fresh, partial, or already-provisioned DB. OmniTrace panel CERTIFIED_FUNCTIONING; production DB apply remains owner action.
+- feat(memory): OmniTrace `audit_logs` idempotent read-contract migration (`20260621000002_omnitrace_audit_read_contract.sql`). Guarantees table shape, RLS, `actor_id = auth.uid()` SELECT policy, and guarded indexes on a fresh, partial, or already-provisioned DB. OmniTrace panel CERTIFIED_FUNCTIONING; production DB apply remains owner action.
 
 ## 1.8.1
 ### Patch Changes
