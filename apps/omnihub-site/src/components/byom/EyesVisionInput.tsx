@@ -116,7 +116,12 @@ export function EyesVisionInput() {
       // byom-proxy streams SSE; supabase-js returns the raw text body here.
       setResponse(typeof data === 'string' ? data : JSON.stringify(data));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Vision request failed');
+      const msg = err instanceof Error ? err.message : 'Vision request failed';
+      if (msg === 'EYES_QUOTA_EXCEEDED') {
+        setError('You have used your 5 free vision uploads (15 MB total). Upgrade to APEX Premium for unlimited access.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsSending(false);
     }
