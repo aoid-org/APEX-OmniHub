@@ -36,7 +36,7 @@ jobs:
         run: |
           changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
           if [ -n "$changed_files" ]; then
-            python governance/ci/scripts/apex_policy_check.py $changed_files
+            python governance/ci/scripts/apex_policy_check.py --ignore-empty $changed_files
           else
             python governance/ci/scripts/apex_policy_check.py
           fi
@@ -48,7 +48,7 @@ jobs:
         run: |
           changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
           if [ -n "$changed_files" ]; then
-            python governance/ci/scripts/apex_policy_check.py --json $changed_files > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
+            python governance/ci/scripts/apex_policy_check.py --json --ignore-empty $changed_files > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
           else
             python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
           fi
