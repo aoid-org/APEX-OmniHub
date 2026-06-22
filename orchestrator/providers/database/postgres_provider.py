@@ -217,7 +217,8 @@ class PostgresDatabaseProvider(DatabaseProvider):
             if row is None:
                 raise NotFoundError(f"No records to update in {validated_table} with {filters}")
             return dict(row)
-        except (DatabaseError, NotFoundError):
+        except DatabaseError:
+            # NotFoundError subclasses DatabaseError, so this catches both.
             raise
         except Exception as e:
             raise DatabaseError(f"Database update failed: {e!s}") from e

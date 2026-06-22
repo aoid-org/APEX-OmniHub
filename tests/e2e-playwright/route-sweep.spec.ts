@@ -84,11 +84,14 @@ test.describe('Route Sweep - Public Routes', () => {
 });
 
 test.describe('Route Sweep - All Routes Summary', () => {
-  test('all registered routes are reachable', async ({ page }) => {
-    // Increased timeout: mobile-chrome emulation is slower per-route; 180s covers 39 routes
-    // with up to 8s shell-check per route plus goto overhead.
-    test.setTimeout(180_000);
+  // This sweep visits every registered route serially; on mobile-chrome emulation in CI
+  // that needs well above the 30s smoke-test default (playwright.config.ts `timeout`).
+  // Set at describe scope — resolved at collection time — because an in-body
+  // test.setTimeout() was not being honored against the config default in CI (each
+  // attempt still capped at 30s and timed out).
+  test.describe.configure({ timeout: 180_000 });
 
+  test('all registered routes are reachable', async ({ page }) => {
     const results: { route: string; status: number | null; hasAppShell: boolean }[] = [];
 
     for (const route of ALL_ROUTES) {

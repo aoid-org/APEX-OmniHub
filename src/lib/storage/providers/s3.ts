@@ -62,9 +62,7 @@ export class S3Storage implements IStorage {
   }
 
   private async mod(): Promise<typeof import('@aws-sdk/client-s3')> {
-    if (!this._mod) {
-      this._mod = await import('@aws-sdk/client-s3')
-    }
+    this._mod ??= await import('@aws-sdk/client-s3')
     return this._mod
   }
 
