@@ -49,11 +49,16 @@ function getFatalErrors(consoleErrors: string[]): string[] {
   );
 }
 
-/** Check if app shell is visible on page */
+/** Check if app shell becomes visible on page within `timeout`. */
 async function checkAppShell(page: Page, timeout = 5000): Promise<boolean> {
+  // Use waitFor (which polls up to `timeout`) rather than locator.isVisible(),
+  // which is an immediate check and ignores the timeout — slow-rendering routes
+  // (SPA multi-hop redirects) were being counted as failures the instant they
+  // were probed, even though the shell appears a moment later.
   return page
     .locator(APP_SHELL_SELECTOR)
-    .isVisible({ timeout })
+    .waitFor({ state: 'visible', timeout })
+    .then(() => true)
     .catch(() => false);
 }
 
@@ -83,14 +88,11 @@ test.describe('Route Sweep - Public Routes', () => {
   }
 });
 
+// This sweep visits every registered route serially; on mobile-chrome emulation in CI
+// it needs well above the 30s smoke-test default. The per-test overrides
+// (test.setTimeout / test.describe.configure) were NOT honored in CI here, so the
+// budget is carried by the base `timeout` in playwright.config.ts instead.
 test.describe('Route Sweep - All Routes Summary', () => {
-  // This sweep visits every registered route serially; on mobile-chrome emulation in CI
-  // that needs well above the 30s smoke-test default (playwright.config.ts `timeout`).
-  // Set at describe scope — resolved at collection time — because an in-body
-  // test.setTimeout() was not being honored against the config default in CI (each
-  // attempt still capped at 30s and timed out).
-  test.describe.configure({ timeout: 180_000 });
-
   test('all registered routes are reachable', async ({ page }) => {
     const results: { route: string; status: number | null; hasAppShell: boolean }[] = [];
 
@@ -101,8 +103,10 @@ test.describe('Route Sweep - All Routes Summary', () => {
           timeout: 10_000
         });
 
-        // 8s timeout: SPA routes with multi-hop JS redirects (catch-all → /omnidash →
-        // ProtectedRoute → /login) take longer on mobile-chrome in CI.
+        // Real 8s budget (via waitFor) for SPA routes with multi-hop JS redirects
+        // (catch-all → /omnidash → ProtectedRoute → /login) that render the shell a
+        // moment after domcontentloaded. The previous isVisible({timeout}) ignored
+        // its timeout and probed instantly, miscounting slow routes as failures.
         const hasAppShell = await checkAppShell(page, 8_000);
 
         results.push({

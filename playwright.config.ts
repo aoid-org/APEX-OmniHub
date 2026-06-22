@@ -70,8 +70,11 @@ export default defineConfig({
   workers: isCI ? 1 : undefined,
   reporter: 'html',
 
-  // Fast timeout for smoke tests
-  timeout: 30_000,
+  // Per-test timeout. Most smoke tests finish in seconds; the route-sweep summary
+  // visits every registered route serially (slower under mobile-chrome emulation),
+  // so the ceiling must cover it. Per-test overrides (test.setTimeout /
+  // describe.configure) are not honored on these CI runners, so the budget lives here.
+  timeout: 180_000,
   expect: {
     timeout: 10_000,
   },
