@@ -31,6 +31,7 @@ ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS created_at timestamptz NO
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- 4. The own-row SELECT policy exists exactly once (idempotent re-create).
+-- additive-allow: DROP_POLICY guarded IF EXISTS drop is immediately followed by an identical CREATE POLICY (same SELECT/authenticated/USING actor_id = auth.uid()); no privilege is widened or removed, this only guarantees a single canonical policy on re-run.
 DROP POLICY IF EXISTS "Users can view own audit logs" ON public.audit_logs;
 CREATE POLICY "Users can view own audit logs"
   ON public.audit_logs
