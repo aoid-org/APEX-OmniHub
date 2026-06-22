@@ -17,49 +17,34 @@ import {
   useSpeechRecognition,
 } from '../../src/hooks/useSpeechRecognition';
 
-// The orchestrator URL — must be set via VITE_ORCHESTRATOR_URL in .env
-const ORCHESTRATOR_URL = import.meta.env.VITE_ORCHESTRATOR_URL ?? '';
-
 // Hard ceiling for any orchestrator round-trip. Without this a hung connection
 // service leaves the wizard spinning forever; on timeout we surface an explicit
 // "timed out" error rather than faking progress or a successful connection.
 const OMNIBOARD_REQUEST_TIMEOUT_MS = 15000;
 
-/** A configured orchestrator URL must be an absolute http(s) URL. */
-function isValidAbsoluteUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
+// OmniBoard routes ALL orchestrator calls through Supabase Edge Functions
+// (omnilink-port/omniboard-*) so they transit https://*.supabase.co — already
+// in the app CSP connect-src — eliminating any cross-origin CSP violation.
+// VITE_ORCHESTRATOR_URL is only read server-side inside the edge function.
+
+async function invokeWithTimeout<T>(
+  fn: string,
+  body: Record<string, unknown>,
+): Promise<{ data: T | null; error: Error | null }> {
+  return Promise.race([
+    supabase.functions.invoke<T>(fn, { body }),
+    new Promise<{ data: null; error: Error }>((resolve) =>
+      setTimeout(
+        () => resolve({ data: null, error: new Error('omniboard_timeout') }),
+        OMNIBOARD_REQUEST_TIMEOUT_MS,
+      ),
+    ),
+  ]);
 }
 
-async function fetchWithTimeout(
-  input: string,
-  init: RequestInit,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), OMNIBOARD_REQUEST_TIMEOUT_MS);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-const UNREACHABLE_COPY =
-  'Connection service unreachable. The OmniBoard app-integration service could not be reached from this browser. Check orchestrator URL, gateway routing, and CORS.';
-const TIMEOUT_COPY =
-  'Connection service timed out. The OmniBoard app-integration service did not respond. Check orchestrator URL, gateway routing, and CORS.';
-
-/** Map a thrown fetch error to explicit, honest connection-error copy. */
 function describeConnectionError(err: unknown, fallback: string): string {
-  if (err instanceof DOMException && err.name === 'AbortError') {
-    return TIMEOUT_COPY;
-  }
-  if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-    return UNREACHABLE_COPY;
+  if (err instanceof Error && err.message === 'omniboard_timeout') {
+    return 'Connection service timed out. The OmniBoard integration gateway did not respond.';
   }
   return err instanceof Error ? err.message : fallback;
 }
@@ -96,24 +81,17 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   }, [onDismiss, stopVoice]);
 
   const startSession = useCallback(async () => {
-    // Invalid (but present) orchestrator URL → explicit config error, no fetch.
-    if (ORCHESTRATOR_URL && !isValidAbsoluteUrl(ORCHESTRATOR_URL)) {
-      setError('OmniBoard orchestrator URL is invalid. Set a valid absolute VITE_ORCHESTRATOR_URL (https://…).');
-      return;
-    }
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError('Authentication required'); return; }
 
     setLoading(true);
     try {
-      const res = await fetchWithTimeout(`${ORCHESTRATOR_URL}/omniboard/start?tenant_id=${user.id}&trace_id=${crypto.randomUUID()}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
-      const ctx: FSMContext = await res.json();
-      setContext(ctx);
+      const { data, error } = await invokeWithTimeout<FSMContext>(
+        'omnilink-port/omniboard-start',
+        { tenant_id: user.id, trace_id: crypto.randomUUID() },
+      );
+      if (error || !data) throw error ?? new Error('No response from connection gateway.');
+      setContext(data);
       setMessage('Tell OmniBoard what app or provider you want to connect.');
     } catch (err) {
       setError(describeConnectionError(err, 'Failed to start session'));
@@ -126,22 +104,17 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     if (!context || !input.trim()) return;
     setLoading(true);
     try {
-      const res = await fetchWithTimeout(`${ORCHESTRATOR_URL}/omniboard/${context.session_id}/next`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_type: 'user_input', payload: { text: input.trim() } }),
-      });
-      if (!res.ok) throw new Error(`Connection service rejected the request: HTTP ${res.status}.`);
-      const { context: newCtx, message: newMsg, connection_spec } = await res.json() as {
-        context: FSMContext;
-        message: string;
-        connection_spec?: Record<string, unknown>;
-      };
-      setContext(newCtx);
-      setMessage(newMsg);
+      type TurnResponse = { context: FSMContext; message: string; connection_spec?: Record<string, unknown> };
+      const { data, error } = await invokeWithTimeout<TurnResponse>(
+        'omnilink-port/omniboard-next',
+        { session_id: context.session_id, event_type: 'user_input', payload: { text: input.trim() } },
+      );
+      if (error || !data) throw error ?? new Error('No response from connection gateway.');
+      setContext(data.context);
+      setMessage(data.message);
       setInput('');
-      if (newCtx.state === 'COMPLETION' && connection_spec) {
-        onComplete(connection_spec);
+      if (data.context.state === 'COMPLETION' && data.connection_spec) {
+        onComplete(data.connection_spec);
       }
     } catch (err) {
       setError(describeConnectionError(err, 'Failed to process turn'));

@@ -72,9 +72,9 @@ export default function PhysiOmniModule({ onClose }: Props) {
   const devices = usePhysiOmniDevices();
 
   const handleLaunchPilot = () => {
-    const logoUrl = 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/shield.svg';
     const brandColor = '#F97316';
-    const url = `/physiomni-pilot?logo=${encodeURIComponent(logoUrl)}&color=${encodeURIComponent(brandColor)}`;
+    // No external logo URL — route to internal pilot page without raw.githubusercontent dependency.
+    const url = `/physiomni-pilot?color=${encodeURIComponent(brandColor)}`;
     window.open(url, '_blank');
   };
 
