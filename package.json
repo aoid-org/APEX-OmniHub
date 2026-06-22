@@ -246,7 +246,7 @@
     "@vitest/coverage-v8": "^4.1.8",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.8.3",
-    "chai": "^4.5.0",
+    "chai": "^6.2.2",
     "dotenv": "^16.4.7",
     "esbuild": "^0.28.1",
     "eslint": "^9.32.0",
