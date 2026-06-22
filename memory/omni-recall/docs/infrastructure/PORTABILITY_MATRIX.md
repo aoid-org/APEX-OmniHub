@@ -1,11 +1,24 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
+last_audited: 2026-06-22
 status: verified
 ---
 
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
 # PORTABILITY MATRIX
+
+## ✅ Verified Swap Completions (2026-06-22)
+
+> These swaps have been executed in production. The portability design rule (<1 day, config-only) was validated by all three.
+
+| Swap | Matrix Estimate | Actual | Status |
+|---|---|---|---|
+| Vercel → Cloudflare Workers | 3-6 months | Done | ✅ VERIFIED |
+| Supabase → AWS | 3-6 months | One night | ✅ VERIFIED |
+| Supabase → Self-Host | 2 weeks | Hours | ✅ VERIFIED |
+| SECURITY-001 Credential Rotation | Open | Prior to beta | ✅ CLOSED |
+
+See `rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md` for full decision record.
 
 ## Verification Status Legend
 
