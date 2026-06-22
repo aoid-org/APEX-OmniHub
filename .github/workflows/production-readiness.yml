@@ -151,37 +151,19 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
           VITE_CONNECT_AI_ENABLED: 'true'
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            playwright-chromium-${{ runner.os }}-
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 15
+      - name: Provision Chrome for Playwright (system channel)
+        timeout-minutes: 10
         run: |
-          # `playwright install` is known to hang after the archive reaches 100%
-          # on some runners (the process never finalizes). Bound each attempt with
-          # `timeout` and retry on a fresh connection so a single stall is self-healing.
-          for attempt in 1 2 3; do
-            echo "::group::Playwright chromium download (attempt $attempt)"
-            if timeout 240 npm exec --no --ignore-scripts -- playwright install chromium; then
-              echo "::endgroup::"
-              exit 0
-            fi
-            echo "::endgroup::"
-            echo "attempt $attempt stalled or failed; retrying after 5s"
-            sleep 5
-          done
-          echo "::error::Playwright chromium install did not complete after 3 attempts"
-          exit 1
-
-      - name: Install Playwright OS Dependencies
-        run: npm exec --no --ignore-scripts -- playwright install-deps chromium
+          # E2E runs against the runner's preinstalled Google Chrome via
+          # Playwright's `channel: 'chrome'` (see playwright.config.ts). This
+          # avoids the bundled-Chromium CDN download, which reliably hangs after
+          # reaching 100% on CI runners. Install Chrome via apt (dl.google.com)
+          # only if it is not already present, plus the shared OS libraries.
+          npm exec --no --ignore-scripts -- playwright install-deps chromium
+          if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
+            npm exec --no --ignore-scripts -- playwright install chrome
+          fi
+          google-chrome --version 2>/dev/null || google-chrome-stable --version
 
       - name: Start preview server
         run: |
