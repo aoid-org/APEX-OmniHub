@@ -93,6 +93,15 @@ Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABA
 ### 3.3 Front-end (UI) build-time env
 `VITE_ORCHESTRATOR_URL` (= `https://apex-orchestrator-api.onrender.com`) is **inlined by Vite at build time** for the OmniBoard wizard. Direct `wrangler pages deploy` uploads run no Cloudflare build, so the CF Pages dashboard var is ignored — the value is wired into the GitHub Actions build (`release.yml`, `deploy-production-cf-direct.yml`) as `${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}`. Unset at build time → empty string → wizard shows "contact your admin". Changing it requires a **UI rebuild + redeploy**.
 
+### 3.4 Supabase Edge `generate-business-skills` (SkillForge) provider secrets
+The SkillForge generation flow routes through `_shared/llm.ts` (Groq + Anthropic only). The provider is resolved by `resolveSkillProvider()` in `supabase/functions/generate-business-skills/skill-provider.ts`:
+- `GROQ_API_KEY` — enables Groq (preferred, cheaper). Optional model override `SKILL_FORGE_GROQ_MODEL` (else the `_shared/llm.ts` default `GROQ_DEFAULT_MODEL` / `llama-3.1-8b-instant`).
+- `ANTHROPIC_API_KEY` — Anthropic fallback. Optional override `SKILL_FORGE_ANTHROPIC_MODEL`.
+- `SKILL_FORGE_PROVIDER` (optional) — force `groq` or `anthropic`; unset = prefer Groq when its key exists, else Anthropic.
+- Neither key set → the SkillForge flow returns **503** (no skill generated). Key values are never logged.
+
+Deploy: `supabase functions deploy generate-business-skills --project-ref rtopreovkywofgwgmozi`.
+
 ---
 
 ## 4. Required database objects
@@ -102,6 +111,7 @@ Config validator: `orchestrator/config.py` hard-requires `SUPABASE_URL`, `SUPABA
 | `agent_runs` (migration `20251221000001_omnilink_ops_pack.sql`) | gateway insert/poll, worker write-back | whole pipeline breaks |
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
+| `user_generated_skills` + `check_skill_entitlement()` / `enforce_skill_entitlement` trigger (migrations `20260214000001`, `20260610000000`; free cap raised 3→5 by `20260622000000_skill_entitlement_free_cap_5.sql`) | SkillForge generation + paywall (BASIC = 5 active skills, 6th = 402) | SkillForge create + paywall breaks |
 
 **Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
 
