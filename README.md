@@ -58,17 +58,17 @@ The platform relies on a "Holy Trinity" architecture:
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 326 TypeScript/TSX files                          |
+| **Source Files (`src/`)**                        | 327 TypeScript/TSX files                          |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 32 directories (31 function dirs + `_shared`)     |
-| **Database Migrations (`supabase/migrations/`)** | 94 `.sql` files (90 forward + 4 rollback under `migrations/rollback/`) |
+| **Edge Functions (`supabase/functions/`)**       | 33 directories (32 function dirs + `_shared`)     |
+| **Database Migrations (`supabase/migrations/`)** | 98 `.sql` files |
 | **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 346 spec/test source files (verified 2026-06-21); latest pass counts are recorded in certification status |
-| **Custom Hooks (`src/` + app surfaces)**         | 38 hook files matching `use*.ts*`                 |
+| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 3438 spec/test source files (verified 2026-06-21) |
+| **Custom Hooks (`src/` + app surfaces)**         | 40 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 103 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** `main` HEAD `966d695f` (2026-06-21) — fix(omnidash): canonical widget rescue and global drift guards (PR #1441). This rescue made Links a genuine local URL-staging surface (no app-integration semantics), replaced the global action whitelist with a module-keyed capability map, hardened the OmniBoard wizard (timeout + explicit error taxonomy), and made the live `omnilink-port` Links resolver return an honest empty link-context state. The prior landmark PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready; full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `7bf395cf` (2026-06-21) — SkillForge/OmniSkills: free cap 5, Groq-preferred generation, paywall hardening + tests (PR #1462). This major upgrade expands the free tier to 5 skills, routes LLM generation optimally through Groq, refactors the `generate-business-skills` edge function into four modular files to respect our 500-line strict limit, and introduces idempotent entitlement migrations. Previously, PR #1449 introduced BYOM sovereign AI auth, and PR #1456 merged the claim-approved production release with WebAuthn ES256 identity verification. See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the full V3 assessment.
 
 ---
 
