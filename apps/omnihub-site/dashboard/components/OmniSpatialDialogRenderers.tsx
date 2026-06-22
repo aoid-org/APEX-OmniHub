@@ -306,11 +306,6 @@ export function DialogModeRenderer({
             The {modal.type} interface is not fully wired to the backend yet.
             Please connect your APEX Infrastructure provider to enable this feature.
           </p>
-          <div className="pt-4">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </div>
         </div>
       );
 

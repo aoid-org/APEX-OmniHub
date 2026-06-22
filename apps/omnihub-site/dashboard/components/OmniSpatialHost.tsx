@@ -23,13 +23,6 @@ import { createPortal } from 'react-dom';
 import { useOmniModal, resolveRenderMode } from '@/stores/omniModalStore';
 import type { OmniModalConfig } from '@/stores/omniModalStore';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
@@ -136,6 +129,7 @@ export function OmniSpatialHost() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Root issue: Native click events on triggers bubble up and immediately trigger
   // Radix Dialog's InteractOutside handler. We use a ref to track mount time and ignore
@@ -155,13 +149,24 @@ export function OmniSpatialHost() {
   }
   prevIsOpen.current = isOpen;
 
-  // Reset processing and PiP state on modal close
+  // Reset local UI state on modal close
   useEffect(() => {
     if (!isOpen) {
       setIsProcessing(false);
       setIsPiP(false);
+      setIsMinimized(false);
     }
   }, [isOpen]);
+
+  // Escape key minimizes dialog-mode (does not destroy — top-right X destroys)
+  useEffect(() => {
+    if (!isOpen || renderMode !== 'dialog' || isMinimized) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMinimized(true);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, isMinimized, renderMode]);
 
   // Get the portal container
   const portalRoot = useMemo(() => {
@@ -169,13 +174,8 @@ export function OmniSpatialHost() {
     return document.getElementById('omni-portal-root');
   }, []);
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (open) return;
-    if (activeModal) {
-      if (Date.now() - mountTime.current < 300) return;
-      abortModal('USER_DISMISSED');
-    }
-  }, [activeModal, abortModal]);
+  const minimizeModal = useCallback(() => setIsMinimized(true), []);
+  const restoreModal = useCallback(() => setIsMinimized(false), []);
 
   const handleAction = useCallback(async (payload: Record<string, unknown>) => {
     if (!activeModal) return;
@@ -217,54 +217,115 @@ export function OmniSpatialHost() {
   }), [isPiP]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DIALOG MODE
+  // DIALOG MODE — custom mounted panel (no Radix Dialog lifecycle)
+  //
+  // Content div stays in DOM while isOpen=true so React state (forge wizard
+  // step, form inputs, scroll) is preserved across minimize/restore cycles.
+  // Outside-click minimizes to dock chip; top-right X destroys the modal.
   // ═══════════════════════════════════════════════════════════════════════════
   const renderDialogMode = () => {
+    if (renderMode !== 'dialog') return null;
     const hasDescription = Boolean(activeModal?.description);
-    const dialogOpen = isOpen && renderMode === 'dialog';
+
     return (
-      <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-        {dialogOpen && (
-          <button
-            type="button"
-            aria-label="Close modal"
-            className="fixed inset-0 z-[9000] w-full h-full border-none bg-transparent cursor-default animate-in fade-in-0"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
-                abortModal('USER_DISMISSED');
-              }
-            }}
-          />
-        )}
-        <DialogContent
-          style={{ backgroundColor: '#0b1220', backdropFilter: 'none' }}
-          className={
-            activeModal?.type === 'module'
-              ? 'z-[9001] sm:max-w-[560px]'
-              : 'z-[9001] sm:max-w-[425px]'
-          }
-          {...(hasDescription ? {} : { 'aria-describedby': undefined })}
-          onInteractOutside={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          {activeModal && (
-            <DialogHeader>
-              <DialogTitle>{activeModal.title}</DialogTitle>
-              {activeModal.description && (
-                <DialogDescription>{activeModal.description}</DialogDescription>
-              )}
-            </DialogHeader>
-          )}
-          {activeModal && (
-            <DialogModeRenderer
-              modal={activeModal}
-              isProcessing={isProcessing}
-              onAction={handleAction}
-              onClose={close}
+      <>
+        {/* Dark overlay + transparent click-capture — only when dialog is visible */}
+        {isOpen && !isMinimized && (
+          <>
+            <div
+              aria-hidden="true"
+              className="fixed inset-0 z-[8999] bg-black/50 animate-in fade-in-0"
             />
-          )}
-        </DialogContent>
-      </Dialog>
+            <button
+              type="button"
+              aria-label="Close modal"
+              className="fixed inset-0 z-[9000] w-full h-full border-none bg-transparent cursor-default animate-in fade-in-0"
+              onClick={(e) => {
+                if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
+                  minimizeModal();
+                }
+              }}
+            />
+          </>
+        )}
+
+        {/* Dialog panel — always mounted while isOpen, hidden via display:none when minimized */}
+        {isOpen && (
+          <div
+            role="dialog"
+            aria-modal={!isMinimized}
+            aria-label={activeModal?.title}
+            data-testid="omni-dialog"
+            data-state={isMinimized ? 'minimized' : 'open'}
+            {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
+            className={`fixed left-[50%] top-[50%] z-[9001] grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
+            style={{ backgroundColor: '#0b1220', display: isMinimized ? 'none' : undefined }}
+          >
+            {/* Top-right X — closes the modal entirely (does not minimize) */}
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              onClick={() => abortModal('USER_DISMISSED')}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+
+            {activeModal && (
+              <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+                <h2 className="text-lg font-semibold leading-none tracking-tight">{activeModal.title}</h2>
+                {activeModal.description && (
+                  <p className="text-sm text-muted-foreground">{activeModal.description}</p>
+                )}
+              </div>
+            )}
+            {activeModal && (
+              <DialogModeRenderer
+                modal={activeModal}
+                isProcessing={isProcessing}
+                onAction={handleAction}
+                onClose={close}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Minimized dock chip — bottom-right, preserves modal identity */}
+        {isMinimized && isOpen && activeModal && (
+          <div
+            className="fixed bottom-6 right-6 z-[9002] flex items-center gap-2 rounded-full px-4 py-2"
+            style={{
+              backgroundColor: '#0b1220',
+              border: '1px solid rgba(249,115,22,0.4)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+            }}
+          >
+            <button
+              type="button"
+              aria-label={`Restore ${activeModal.title}`}
+              className="flex items-center gap-2 bg-transparent border-none cursor-pointer p-0"
+              onClick={restoreModal}
+            >
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: '#f97316', boxShadow: '0 0 6px rgba(249,115,22,0.6)' }}
+              />
+              <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+                {activeModal.title}
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-label="Close"
+              className="flex items-center bg-transparent border-none cursor-pointer p-0 text-muted-foreground hover:text-foreground transition-colors ml-1"
+              onClick={() => { setIsMinimized(false); abortModal('USER_DISMISSED'); }}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+      </>
     );
   };
 

@@ -212,11 +212,11 @@ describe('DialogModeRenderer', () => {
     expect(screen.getByText('Setup Required')).toBeTruthy();
   });
 
-  it('vision type Close button calls onClose', () => {
+  it('vision type has no bottom Close button — top-right X on the modal handles close (GATE 2)', () => {
     const modal = makeModal({ type: 'vision_redact' });
     render(<DialogModeRenderer modal={modal} isProcessing={false} onAction={onAction} onClose={onClose} />);
-    fireEvent.click(screen.getByText('Close'));
-    expect(onClose).toHaveBeenCalled();
+    // Bottom Close button was removed; closing is handled by the modal's own X button.
+    expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
   });
 
   it('default/unknown type renders null (no DOM output)', () => {
