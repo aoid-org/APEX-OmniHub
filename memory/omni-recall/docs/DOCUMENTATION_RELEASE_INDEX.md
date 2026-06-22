@@ -6,7 +6,7 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-21 (PR #1441 "canonical widget rescue" completed + merged to `main` as squash `966d695f`; full repo-truth documentation sync of README + omni-recall). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md`.
+> Current repo-truth index refreshed 2026-06-21 (PR #1462 "SkillForge/OmniSkills cap & Groq routing" completed + merged to `main` as squash `7bf395cf`; full repo-truth documentation sync of README + omni-recall). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md`.
 
 ## Current Repo Facts Verified in This Pass (2026-06-21)
 
@@ -14,15 +14,15 @@ status: verified
 
 | Fact | Current repo evidence |
 |---|---|
-| HEAD | `966d695f` — fix(omnidash): canonical widget rescue and global drift guards (#1441) |
-| Source files under `src/` | **326** TypeScript/TSX |
+| HEAD | `7bf395cf` — SkillForge/OmniSkills: free cap 5, Groq-preferred generation, paywall hardening + tests (#1462) |
+| Source files under `src/` | **327** TypeScript/TSX |
 | GitHub workflow files | **23** files in `.github/workflows/` |
-| Release/package versions | Root `package.json` declares **`1.7.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| SQL migrations | **94** `.sql` files = **90 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **32** (31 function dirs + `_shared`) |
-| Custom hooks (`src/` + `apps/`) | **38** (`use*.ts*`) |
+| Release/package versions | Root `package.json` declares **`1.8.1`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
+| SQL migrations | **98** `.sql` files = **94 forward** + **4 rollback** (`migrations/rollback/`) |
+| Edge function dirs | **33** (32 function dirs + `_shared`) |
+| Custom hooks (`src/` + `apps/`) | **40** (`use*.ts*`) |
 | Python orchestrator files | **103** |
-| Test/spec source files | **346** (`tests`, `e2e`, `sim`, `apps`, `orchestrator`, `packages`) |
+| Test/spec source files | **3438** (`tests`, `e2e`, `sim`, `apps`, `orchestrator`, `packages`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441 replaced the global whitelist; unsupported actions fail-closed with module-specific copy, never call `trigger-workflow` |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
@@ -30,7 +30,7 @@ status: verified
 | `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| PR #1441 corrective gates (local) | typecheck exit 0; eslint exit 0; `vitest run tests/omnidash` 585 passed; build success; ops-doc-guard PASS |
+| PR #1462 corrective gates (local) | typecheck exit 0; eslint exit 0; build success; ops-doc-guard PASS |
 
 ## Documentation Authority Order
 

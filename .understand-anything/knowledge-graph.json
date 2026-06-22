@@ -3,7 +3,7 @@
     "name": "apex-omnihub",
     "generatedAt": "2026-05-23T04:16:31.747Z",
     "version": "1.0.0",
-    "totalFiles": 1743,
+    "totalFiles": 1748,
     "analyzedNodes": 204,
     "edges": 180,
     "languages": [
@@ -3162,7 +3162,7 @@
       "layerName": "Data & Auth",
       "domain": "database",
       "color": "#3b82f6",
-      "fileCount": 60,
+      "fileCount": 64,
       "lineCount": 12127,
       "languages": [
         "typescript"
@@ -3173,7 +3173,11 @@
         "supabase/functions/_shared/auth.ts",
         "supabase/functions/_shared/cockpit-crypto.ts",
         "supabase/functions/_shared/cors.ts",
-        "supabase/functions/_shared/emergency-controls.ts"
+        "supabase/functions/_shared/emergency-controls.ts",
+        "supabase/functions/generate-business-skills/index.ts",
+        "supabase/functions/generate-business-skills/onboarding-wizard.ts",
+        "supabase/functions/generate-business-skills/skill-provider.ts",
+        "supabase/functions/generate-business-skills/http-helpers.ts"
       ]
     },
     {
@@ -3184,7 +3188,7 @@
       "layerName": "Data & Auth",
       "domain": "database",
       "color": "#3b82f6",
-      "fileCount": 75,
+      "fileCount": 76,
       "lineCount": 9464,
       "languages": [
         "sql"
@@ -3195,7 +3199,8 @@
         "supabase/migrations/20251003094610_9ce8947e-f3b6-46cc-8bfa-b93d2677bdd9.sql",
         "supabase/migrations/20251004032712_3d6dc06d-21cd-4fbb-b80d-f4a12307f8d8.sql",
         "supabase/migrations/20251004072520_8fcd5084-a6fc-4a13-a994-3cb1d7e12125.sql",
-        "supabase/migrations/20251004223440_1b0177ed-f035-453c-b7a2-a3702234d41e.sql"
+        "supabase/migrations/20251004223440_1b0177ed-f035-453c-b7a2-a3702234d41e.sql",
+        "supabase/migrations/20260622000000_skill_entitlement_free_cap_5.sql"
       ]
     },
     {
