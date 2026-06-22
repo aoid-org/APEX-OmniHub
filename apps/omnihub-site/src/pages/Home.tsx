@@ -1703,7 +1703,7 @@ function CapabilitiesSection() {
       ),
     },
     {
-      title: "SkillForge/OmniSkills",
+      title: "OmniSkills",
       path: "/ai-automation",
       desc: "Forge, install, and govern expert-level OmniSkills for any task or business use case, giving users task-ready agents with reusable skill memory and auditable execution paths.",
       icon: (

@@ -2,7 +2,8 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
+import omniskillsIcon from '../../../../../src/assets/omniskills-icon.png';
 
 interface Props {
   readonly onClose: () => void;
@@ -27,7 +28,7 @@ export default function OmniSkillsModule({ onClose }: Props) {
           <div className="rounded-lg border border-border/30 p-3 bg-muted/10 space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                SkillForge Entitlement
+                OmniSkills Entitlement
               </div>
               {paywallActive && (
                 <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 uppercase">
@@ -55,7 +56,7 @@ export default function OmniSkillsModule({ onClose }: Props) {
                 navigate('/launch/skillforge');
               }}
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <img src={omniskillsIcon} alt="" aria-hidden="true" className="w-4 h-4 mr-2 object-contain" />
               Forge New Skill
             </Button>
             

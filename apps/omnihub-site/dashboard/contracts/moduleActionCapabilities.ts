@@ -48,7 +48,7 @@ const MODULE_ACTION_IDS: Record<string, readonly string[]> = {
  * own terms, why nothing happened and where the real surface lives.
  */
 const MODULE_UNSUPPORTED_COPY: Record<string, string> = {
-  omniskills:   'Skill activation is not connected to SkillForge yet.',
+  omniskills:   'Skill activation is not connected to the OmniSkills pipeline yet.',
   physiomni:    'Device sync and telemetry export are not connected to the device pipeline yet.',
   audits:       'Audit export and compliance runs are not connected to the reporting pipeline yet.',
   links:        'Link context actions run locally in this panel — no link-context backend is connected yet.',
