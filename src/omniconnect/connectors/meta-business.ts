@@ -273,7 +273,11 @@ export class MetaBusinessConnector extends BaseConnector {
   }
 
   private base64UrlEncode(array: Uint8Array): string {
-    const base64 = btoa(String.fromCharCode(...array));
+    let binary = '';
+    for (let i = 0; i < array.length; i++) {
+      binary += String.fromCharCode(array[i]);
+    }
+    const base64 = btoa(binary);
     return base64
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
