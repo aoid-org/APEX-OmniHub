@@ -199,7 +199,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           safeSetLiveState({
             loading: false,
             error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+            stateKind: 'unavailable', // Forensic Remediation: No silent mock fallback
           });
           return;
         }
@@ -222,7 +222,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           safeSetLiveState({
             loading: false,
             error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+            stateKind: 'unavailable', // Forensic Remediation: No silent mock fallback
           });
           return;
         }
@@ -241,7 +241,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
         safeSetLiveState({
           loading: false,
           error: null,
-          stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+          stateKind: 'unavailable', // Forensic Remediation: No silent mock fallback
         });
       }
     }
@@ -332,10 +332,10 @@ export async function triggerModuleAction(
 
     const result = data as { workflow_id?: string; message?: string } | null;
     return {
-      success: true,
+      success: false, // APEX Forensic Remediation: 202 queued is not completion.
       message:
         result?.message ??
-        `Workflow ${result?.workflow_id ?? actionId} dispatched successfully.`,
+        `Workflow ${result?.workflow_id ?? actionId} queued. Completion tracking not available yet.`,
     };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "omni_module_timeout") {

@@ -85,7 +85,7 @@ export async function handleOnboardingWizard(
         model: "claude-3-5-haiku-20241022",
         max_tokens: 1500,
         system:
-          "You are a business systems architect. Based on the user's business description and primary objective, generate a JSON array of 3 'skills' (automated workflows/agents). The first should be tier 'CORE' (basic operational necessity). The second and third should be tier 'GROWTH_ENGINE' (advanced, revenue-generating). Each skill needs: id (uuid), name, description, projected_monthly_revenue (string), confidence_score (number 0-100), and tier ('CORE' or 'GROWTH_ENGINE'). Output ONLY valid JSON containing an object with a 'skills' array, no markdown.",
+          "You are a business systems architect. Based on the user's business description and primary objective, generate a JSON array of 3 'skills' (automated workflows/agents). The first should be tier 'CORE' (basic operational necessity). The second and third should be tier 'GROWTH_ENGINE' (advanced, revenue-generating). Each skill needs: id (uuid), name, description, and tier ('CORE' or 'GROWTH_ENGINE'). Output ONLY valid JSON containing an object with a 'skills' array, no markdown.",
         messages: [
           {
             role: "user",
