@@ -7,19 +7,31 @@ status: verified
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-06-22 -->
 # PORTABILITY MATRIX
 
-> **2026-06-22 update:** Three provider swaps completed in production. See
-> `rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md`. The matrix rows below have
-> been reconciled to verified state. Swaps were fast and config-only; exact
-> durations were **not timed** — the figures below are owner estimates, not
-> stopwatch measurements: **Supabase → AWS ≈ one night** (config-only, no
-> rewrite); **Supabase → Self-Host ≈ hours**; **Vercel → Cloudflare Workers =
-> done/decommissioned**. What *is* verified is the outcome: all three swaps
-> stayed within the portability design rule ("< 1 day, config changes only").
-> **DBeaver 26.0.0** repointed to the self-hosted `localhost` Postgres
-> (operator screenshot, 2026-03-10; `CREATE DATABASE TEMPORAL`), confirming
-> standard wire-protocol tooling works against the swapped DB — a
-> connection-string change, not a timed swap. SECURITY-001 (credential
-> rotation) is **CLOSED**.
+> **2026-06-22 update — evidence reconciled against git history.** Claims below
+> are scoped to their actual evidence class (per the VERIFIED legend: confirmed
+> by implementation/repo evidence). Source: `rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md`
+> (RFC asserts three swaps; no timing data — durations are owner estimates, not
+> measured).
+>
+> - **Vercel → Cloudflare = VERIFIED (repo).** Cloudflare Terraform
+>   (`terraform/environments/production/`) + wrangler are committed.
+> - **Supabase → Self-Host = VERIFIED (operator-local).** Full containerized
+>   Supabase stack present in local Docker (operator screenshot, 2026):
+>   `gotrue` (auth), `storage-api`, `realtime`, `supavisor`, `studio`,
+>   `postgres-meta`, `postgrest`, `imgproxy`, `vector`, alongside
+>   `apex-omnihub-connect` (running), `cloudflared`, `caddy`. **DBeaver 26.0.0**
+>   on `localhost` Postgres (screenshot 2026-03-10, `CREATE DATABASE TEMPORAL`).
+>   This is demonstrated on the operator's machine — **not** committed infra; the
+>   tracked compose files do not yet declare the Supabase stack.
+> - **Supabase → AWS = RFC-ASSERTED ONLY / UNVERIFIED.** No AWS Terraform, no
+>   AWS SDK, no RDS connection string, and no screenshot exist in repo or tooling.
+>   The `public.ecr.aws/supabase/*` Docker images are Supabase's public registry,
+>   not an AWS deployment. The "≈ one night" figure is an unverified estimate.
+> - SECURITY-001 (credential rotation): **CLOSED** per RFC.
+>
+> **Action item:** to move Self-Host and AWS to repo-VERIFIED, commit the
+> Supabase self-host compose stack and (if real) the AWS Terraform/connection
+> config. Until then they remain operator-local / asserted.
 
 ## Verification Status Legend
 
@@ -41,10 +53,10 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 | Supabase | VERIFIED |
 | Temporal | VERIFIED |
 | Vite | VERIFIED |
-| AWS | VERIFIED |
+| AWS | PROPOSED (RFC-asserted; no repo IaC or tooling evidence) |
 | Azure | PROPOSED |
 | GCP | PROPOSED |
-| On-prem | VERIFIED |
+| On-prem | VERIFIED (self-host demonstrated locally — Docker stack + DBeaver) |
 
 See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
 
@@ -716,10 +728,10 @@ terraform {
 |-----------|-------------------|--------------|---------------------|------------------|
 | **Frontend Hosting** | Cloudflare Workers | ✅ VERIFIED Low | Static CDN (S3/GCS/Azure + Cloudflare) | Done (Vercel decommissioned) |
 | **Backend Runtime** | Cloudflare Workers | ✅ VERIFIED Low | Docker containers on K8s | Done (Supabase Edge retired) |
-| **Database** | AWS / self-hosted Postgres | ✅ VERIFIED Low | Cloud SQL / RDS / self-hosted Postgres | ≈ one night (AWS); ≈ hours (self-host) — *estimates, not timed* |
-| **Auth** | Supabase Auth | 🟥 High | Keycloak / Auth0 / self-hosted | 2-3 weeks — *not covered by RFC; unverified* |
-| **Storage** | Supabase Storage | 🟨 Medium | S3 / GCS / MinIO | 1 week — *not covered by RFC; unverified* |
-| **Realtime** | Supabase Realtime | 🟥 High | WebSocket server / NATS | 3-4 weeks — *not covered by RFC; unverified* |
+| **Database** | Self-hosted Postgres (Docker); AWS *asserted* | 🟨 Low–Medium | Cloud SQL / RDS / self-hosted Postgres | Self-host demonstrated locally; AWS RFC-asserted, no repo/tooling evidence (est. ≈ one night, unverified) |
+| **Auth** | supabase/gotrue (self-hosted, Docker) | 🟨 Medium | Keycloak / Auth0 / self-hosted | Self-host VERIFIED (gotrue image staged in Docker); provider-swap to Keycloak/Auth0 ~2-3 weeks |
+| **Storage** | supabase/storage-api (self-hosted, Docker) | 🟨 Medium | S3 / GCS / MinIO | Self-host VERIFIED (storage-api image staged in Docker); S3 swap ~1 week |
+| **Realtime** | supabase/realtime (self-hosted, Docker) | 🟨 Medium | WebSocket server / NATS | Self-host VERIFIED (realtime image staged in Docker); provider-swap ~3-4 weeks |
 
 **TOTAL LOCK-IN RISK:** 🟨 **MEDIUM** — the three highest-risk components (frontend
 hosting, backend runtime, database) are now portable and production-verified. Auth,
