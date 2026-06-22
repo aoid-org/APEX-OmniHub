@@ -275,6 +275,8 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit JSON report on stdout")
     parser.add_argument("--strict-docs", action="store_true",
                         help="Also scan documentation dirs for forbidden patterns (off by default)")
+    parser.add_argument("--ignore-empty", action="store_true",
+                        help="Allow 0 scannable files when paths are provided without exiting 2")
     parser.add_argument("files", nargs="*", type=Path, help="Specific files to scan. If empty, scan all.")
     args = parser.parse_args()
 
@@ -295,7 +297,7 @@ def main() -> int:
     if not args.files:
         errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))
 
-    if args.files and files_scanned == 0:
+    if args.files and files_scanned == 0 and not args.ignore_empty:
         # Explicit paths that match nothing scannable is a usage error, not a
         # pass — refusing prevents a misconfigured CI invocation from silently
         # reporting green. Exit 2 = config/usage error (see module docstring).
