@@ -325,10 +325,31 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright Chromium
-        timeout-minutes: 10
+      - name: Install Playwright system dependencies
+        # apt-only; fast and independent of the (cached) browser binary.
+        run: ./node_modules/.bin/playwright install-deps chromium
+
+      - name: Install Playwright Chromium browser
+        # Only download the ~170 MB browser on a cache miss. On a cache hit the
+        # binary is already restored to ~/.cache/ms-playwright, so this is skipped.
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 15
         run: |
-          ./node_modules/.bin/playwright install --with-deps chromium
+          # `playwright install` is known to hang after the archive reaches 100%
+          # on some runners (the process never finalizes). Bound each attempt with
+          # `timeout` and retry on a fresh connection so a single stall is self-healing.
+          for attempt in 1 2 3; do
+            echo "::group::Playwright chromium download (attempt $attempt)"
+            if timeout 240 ./node_modules/.bin/playwright install chromium; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "attempt $attempt stalled or failed; retrying after 5s"
+            sleep 5
+          done
+          echo "::error::Playwright chromium install did not complete after 3 attempts"
+          exit 1
 
       - name: Start preview server
         run: |
