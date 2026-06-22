@@ -32,21 +32,29 @@ describe("runtime remediation source gates", () => {
   });
 
   it("public onboarding generation is origin, size, input, and rate limited before Anthropic", () => {
-    const source = readFileSync(
+    // Entry guards (body size + origin) live in the function entrypoint.
+    const entry = readFileSync(
       "supabase/functions/generate-business-skills/index.ts",
       "utf8"
     );
-    expect(source).toContain("MAX_BODY_SIZE_BYTES");
-    expect(source).toContain("!isOriginAllowed(origin)");
-    expect(source).toContain(
+    expect(entry).toContain("MAX_BODY_SIZE_BYTES");
+    expect(entry).toContain("!isOriginAllowed(origin)");
+
+    // Input validation + rate limiting live in the extracted OnboardingWizard
+    // module and must still run before the Anthropic call.
+    const onboarding = readFileSync(
+      "supabase/functions/generate-business-skills/onboarding-wizard.ts",
+      "utf8"
+    );
+    expect(onboarding).toContain(
       "description.length < 20 || description.length > 2000"
     );
-    expect(source).toContain("goal.length < 5 || goal.length > 500");
-    expect(source).toContain("RATE_LIMIT_CONFIGS.publicOnboardingGenerate");
-    expect(source.indexOf("checkRateLimit")).toBeLessThan(
-      source.indexOf('fetch("https://api.anthropic.com/v1/messages"')
+    expect(onboarding).toContain("goal.length < 5 || goal.length > 500");
+    expect(onboarding).toContain("RATE_LIMIT_CONFIGS.publicOnboardingGenerate");
+    expect(onboarding.indexOf("checkRateLimit")).toBeLessThan(
+      onboarding.indexOf('fetch("https://api.anthropic.com/v1/messages"')
     );
-    expect(source).not.toContain("using fallback generation");
+    expect(onboarding).not.toContain("using fallback generation");
   });
 
   it("execute-automation scopes reads and timestamp updates to authenticated user and blocks unsafe tables", () => {
