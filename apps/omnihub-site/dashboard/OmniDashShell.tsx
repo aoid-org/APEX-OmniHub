@@ -22,6 +22,8 @@ import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
+import { GlobalMediaDock } from '@/dashboard/components/media/GlobalMediaDock';
+import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLaunchWidget';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
@@ -1538,6 +1540,7 @@ export default function OmniDashShell() {
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
             <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <SentinelPanel />
+            <OmniMediaLaunchWidget />
           </div>
         )}
 
@@ -1611,6 +1614,7 @@ export default function OmniDashShell() {
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
             <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <SentinelPanel />
+            <OmniMediaLaunchWidget />
           </div>
         )}
 
@@ -1685,6 +1689,8 @@ export default function OmniDashShell() {
 
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />
+      {/* GlobalMediaDock — persistent PiP media layer, portal-mounted */}
+      <GlobalMediaDock />
     </div>
     </LayoutContext.Provider>
   );
