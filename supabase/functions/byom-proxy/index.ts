@@ -130,7 +130,8 @@ async function verifyAuth(req: Request, corsHeaders: Record<string, string>) {
 }
 
 async function verifyBudget(tenantId: string, providerConfig: ModelProviderConfig, user: unknown, provider: string, model: string, corsHeaders: Record<string, string>) {
-  const { data: currentSpendData } = await supabase.from('audit_logs').select('metadata').eq('resource_id', tenantId).eq('action_type', 'BYOM_AUDIT_SPAN');
+  const windowStart = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: currentSpendData } = await supabase.from('audit_logs').select('metadata').eq('resource_id', tenantId).eq('action_type', 'BYOM_AUDIT_SPAN').gte('created_at', windowStart);
   const totalSpend = sumAuditSpend(currentSpendData);
   if (totalSpend >= providerConfig.max_cost_usd) {
      await supabase.from('audit_logs').insert({ action_type: 'BYOM_AUDIT_SPAN', resource_id: tenantId, actor_id: user.id, metadata: { status: 'blocked_budget', provider, model, cost_incurred: 0 } });
