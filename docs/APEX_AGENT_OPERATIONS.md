@@ -76,6 +76,8 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `SUPABASE_URL` | project URL | required always |
 | `SUPABASE_SERVICE_ROLE_KEY` | service-role key | required always |
 | `SUPABASE_DB_URL` | Settings → Database → Connection string (URI) | **required always** — missing = pydantic crash |
+| `DATABASE_PROVIDER` | `supabase` (default) \| `postgres` | optional — config-only swap of the **primary** relational DB. Aliases `postgresql`/`aws`/`rds` also resolve to portable Postgres. `tidb` is rejected (TiDB is vector-only, see `VECTOR_PROVIDER`) |
+| `DATABASE_URL` | standard `postgresql://` DSN | **required when `DATABASE_PROVIDER=postgres`** (AWS RDS / GCP Cloud SQL / Azure Database / self-hosted). Falls back to `SUPABASE_DB_URL` if unset. Ignored when provider is `supabase` |
 | `REDIS_URL` | `rediss://default:<pw>@peaceful-chipmunk-151408.upstash.io:6379` | |
 | `REDIS_PASSWORD` | the token between `default:` and `@` in `REDIS_URL` | required in prod |
 | `REDIS_SSL` | `true` | |
@@ -448,3 +450,30 @@ Two engineering gaps closed in branch `claude/modest-maxwell-oqflsj`.
 **Env / start command:** no changes. No new secrets. No new services.
 
 **RFC:** `memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md`.
+
+---
+
+## 9.8 Portability — S3/R2 storage + portable Postgres DB swap — 2026-06-22 (PR #1466)
+
+Two **config-only** portability targets added. Neither changes the default runtime: with no new env vars set, the orchestrator still uses Supabase Postgres and the front-end still uses Supabase Storage. The attack surface is unchanged — both new providers reuse the same validation guard as Supabase.
+
+### Primary database swap (orchestrator)
+
+| Var | Value | Notes |
+|---|---|---|
+| `DATABASE_PROVIDER` | `supabase` (default) \| `postgres` | Selects the primary relational provider in `orchestrator/providers/database/factory.py`. Aliases `postgresql`/`aws`/`rds` resolve to portable Postgres. `tidb` is a fatal misconfiguration (vector-only). |
+| `DATABASE_URL` | `postgresql://…` DSN | Required when `DATABASE_PROVIDER=postgres`; falls back to `SUPABASE_DB_URL`. Drives `PostgresDatabaseProvider` over `asyncpg` — works for AWS RDS, GCP Cloud SQL, Azure Database, self-hosted. |
+
+- `asyncpg` is imported lazily, so the default Supabase path never loads it.
+- Queries are parameterized; table/identifier allowlist shared with Supabase via `orchestrator/providers/database/_validation.py` (single source of truth).
+- **No application code changes required** to swap — set the two env vars and redeploy the orchestrator services.
+
+### S3-compatible object storage (front-end / edge)
+
+- `src/lib/storage/providers/s3.ts` implements `IStorage` for AWS S3 and S3-compatible services (Cloudflare R2, MinIO) via the lazily-imported `@aws-sdk/client-s3`.
+- **Server/edge only.** `createStorage({ provider: 's3' | 'r2', accessKeyId, secretAccessKey, region?, endpoint? })` requires credentials and throws without them. The browser singleton `getStorage()` refuses `s3`/`r2`/`gcs`/`azure` so secret keys can never ship in the client bundle — mint presigned URLs server-side instead.
+- `gcs`/`azure` remain `not yet implemented` (explicit throw).
+
+**Env / start command:** no change to deployed defaults. New vars are **opt-in**. No new always-on secrets.
+
+**Certification status:** `CERTIFIED_FUNCTIONING` (code-certified) — typecheck, provider unit tests, and factory enforcement tests pass in-repo; production provider swap is an owner action.

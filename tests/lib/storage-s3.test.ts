@@ -14,7 +14,11 @@ class FakeCommand {
 }
 
 vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: vi.fn().mockImplementation(() => ({ send })),
+  // Must be constructable (`new S3Client(...)`); an arrow-returning vi.fn()
+  // throws "is not a constructor" under vitest v4, so use a real class.
+  S3Client: class {
+    send = send
+  },
   PutObjectCommand: class extends FakeCommand {},
   GetObjectCommand: class extends FakeCommand {},
   HeadObjectCommand: class extends FakeCommand {},

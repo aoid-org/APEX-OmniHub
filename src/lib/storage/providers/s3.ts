@@ -165,7 +165,7 @@ export class S3Storage implements IStorage {
       if (!body) {
         return { data: null, error: new Error(`Empty body for ${path}`) }
       }
-      const bytes = await body.transformToByteArray()
+      const bytes = (await body.transformToByteArray()) as Uint8Array<ArrayBuffer>
       return { data: new Blob([bytes], { type: res.ContentType }), error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
@@ -366,7 +366,7 @@ export class S3Storage implements IStorage {
     // createPresignedPost + an XHR client-side.
     const controller = new AbortController()
     onProgress(0)
-    const { url, error } = await this.upload(bucket, path, file, options)
+    const { data: url, error } = await this.upload(bucket, path, file, options)
     if (!error) onProgress(100)
     return { url, error, abort: () => controller.abort() }
   }
