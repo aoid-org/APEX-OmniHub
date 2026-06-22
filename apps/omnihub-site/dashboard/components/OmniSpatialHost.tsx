@@ -123,8 +123,7 @@ function getFullStyles(): CSSProperties {
     maxWidth: 1024,
     height: '85dvh',
     borderRadius: mobile ? 16 : 24,
-    background: 'rgba(15,48,75,0.8)',
-    backdropFilter: 'blur(40px)',
+    background: '#0b1220',
   };
 }
 
@@ -240,8 +239,8 @@ export function OmniSpatialHost() {
         <DialogContent
           className={
             activeModal?.type === 'module'
-              ? 'z-[9001] sm:max-w-[560px]'
-              : 'z-[9001] sm:max-w-[425px]'
+              ? 'z-[9001] sm:max-w-[560px] bg-[#0b1220]'
+              : 'z-[9001] sm:max-w-[425px] bg-[#0b1220]'
           }
           {...(hasDescription ? {} : { 'aria-describedby': undefined })}
           onInteractOutside={(e) => e.preventDefault()}
