@@ -53,11 +53,11 @@ describe('triggerModuleAction — realness contract', () => {
     expect(result.message).toMatch(/boom/);
   });
 
-  it('returns success with the backend message on dispatch', async () => {
+  it('returns honest false (queued) on asynchronous dispatch', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
     mockInvoke.mockResolvedValue({ data: { workflow_id: 'wf-123', message: 'Dispatched' }, error: null });
     const result = await triggerModuleAction('workflows', 'run', ['a', 'b']);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
     expect(result.message).toBe('Dispatched');
   });
 

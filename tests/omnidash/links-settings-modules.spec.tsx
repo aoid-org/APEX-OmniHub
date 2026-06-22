@@ -151,7 +151,7 @@ describe('LinksModule', () => {
     expect(screen.getByText('Stage URL Context')).toBeTruthy();
   });
 
-  it('add-link with a valid URL stages it locally and shows the staged-locally notice', () => {
+  it('add-link with a valid URL triggers save and updates button state', () => {
     render(<LinksModule onClose={vi.fn()} />);
     fireEvent.click(screen.getByTestId('trigger-add-link'));
 
@@ -164,10 +164,9 @@ describe('LinksModule', () => {
 
     fireEvent.click(addButton);
 
-    expect(
-      screen.getByText('Links are staged locally until link-context persistence is connected.'),
-    ).toBeTruthy();
-    expect(screen.getByText('• https://example.com/doc')).toBeTruthy();
+    // Button should enter saving state
+    expect(addButton.textContent).toBe('Saving...');
+    expect(addButton.disabled).toBe(true);
   });
 
   it('Add Link button is NOT permanently disabled and rejects invalid URLs with validation copy', () => {
