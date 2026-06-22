@@ -50,6 +50,8 @@ const EXEMPT = [
   /(^|\/)__tests__\//,
   /\.(test|spec)\.[a-z]+$/,
   /\.md$/,
+  // Governance policy CI checks (linting/format) do not affect deployed runtime contracts
+  /^\.github\/workflows\/apex-governance\.yml$/,
 ];
 
 function changedFiles() {
