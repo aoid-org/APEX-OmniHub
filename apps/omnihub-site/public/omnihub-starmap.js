@@ -165,6 +165,7 @@
   '.ohsm-btn-primary:active{transform:translateY(0)}' +
   '.ohsm-btn-ghost{background:transparent;color:var(--ohsm-text-2);border-color:var(--ohsm-border)}' +
   '.ohsm-btn-ghost:hover{color:var(--ohsm-text);border-color:var(--ohsm-muted)}' +
+  '.ohsm-btn.ohsm-loading{opacity:.72;cursor:progress;pointer-events:none}' +
 
   /* ---- fullscreen overlay ---- */
   '.ohsm-overlay{position:fixed;inset:0;z-index:9999;background:var(--ohsm-bg);color:var(--ohsm-text);' +
@@ -1410,7 +1411,11 @@
    * 6. OVERLAY (the map experience)
    * ============================================================ */
   function scheduleStarmapWork(work) {
-    requestAnimationFrame(function () { work(); });
+    // INP: let the click's immediate "loading" state paint first, THEN build
+    // the heavy overlay in a fresh macrotask. The rAF yields to the next paint
+    // and setTimeout pushes the expensive DOM construction out of the input
+    // event's critical path, keeping Interaction-to-Next-Paint low.
+    requestAnimationFrame(function () { setTimeout(function () { work(); }, 0); });
   }
 
   function Overlay(opts) {

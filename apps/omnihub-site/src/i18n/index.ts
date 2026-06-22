@@ -58,6 +58,11 @@ void i18n
     fallbackLng: DEFAULT_LOCALE,
     cleanCode: true,
     load: "currentOnly",
+    // Web Vitals (CLS): all locale resources are bundled inline, so initialize
+    // synchronously. This guarantees translated copy is present on the very
+    // first paint instead of briefly rendering keys/fallback and reflowing once
+    // init resolves on a later tick — which shifts text-heavy sections.
+    initImmediate: false,
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator"],
