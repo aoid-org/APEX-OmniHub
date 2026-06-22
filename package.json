@@ -206,7 +206,7 @@
     "@aws-sdk/s3-presigned-post": "^3.1014.0",
     "@aws-sdk/s3-request-presigner": "^3.1014.0",
     "@axe-core/playwright": "^4.8.3",
-    "@capacitor/cli": "^6.2.1",
+    "@capacitor/cli": "^7.6.7",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
     "@commitlint/cli": "^20.5.0",
