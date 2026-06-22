@@ -1911,10 +1911,12 @@
         renderer.setSize(W, H);
 
         var scene = new THREE.Scene();
-        var cam   = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200);
+        var heroRoot = new THREE.Group();
+        scene.add(heroRoot);
+        var cam   = new THREE.PerspectiveCamera(46, W / H, 0.1, 1200);
         /* Stage-centered camera: canvas is already constrained to the right split stage. */
-        cam.position.set(0, 12, 42);
-        cam.lookAt(0, 0, -34);
+        cam.position.set(0, 11, 72);
+        cam.lookAt(0, 0, 0);
 
         /* material factories — same additive-blend aesthetic as the full overlay */
         var OG = 0xea7c44, OGD = 0xc4571c, WH = 0xf8fafc;
@@ -1932,40 +1934,58 @@
         }
 
         /* scale CAPS world-space positions to hero viewport */
-        var SX = 0.28, SY = 0.34, SZ = 0.09, XBIAS = 0;
+        var SX = 0.18, SY = 0.46, SZ = 0.052, XBIAS = 0;
         var stMeshes = [], capV3 = [];
         CAPS.forEach(function (c, i) {
           var px = c.pos[0] * SX + XBIAS, py = c.pos[1] * SY, pz = c.pos[2] * SZ;
           capV3.push(new THREE.Vector3(px, py, pz));
-          var sz = c.size * 3.0;
+          var sz = c.size * 5.2;
           var accent = (i % 3 === 0) || i === 1 || i === 2;
           var g = new THREE.Group();
           g.position.set(px, py, pz);
           var geo = new THREE.IcosahedronGeometry(sz, 1);
-          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 1.0 : 0.75)));
-          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.16 : 0.08)));
+          g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeM(accent ? OG : WH, accent ? 1.0 : 0.82)));
+          g.add(new THREE.Mesh(geo, fillM(accent ? OGD : WH, accent ? 0.22 : 0.11)));
           if (accent) {
-            var hGeo = new THREE.TorusGeometry(sz * 2.0, 0.1, 4, 20);
+            var hGeo = new THREE.TorusGeometry(sz * 2.35, 0.16, 5, 28);
             var halo = new THREE.LineSegments(new THREE.EdgesGeometry(hGeo), edgeM(OG, 0.45));
             halo.rotation.x = Math.PI / 2.5;
             g.add(halo);
           }
           stMeshes.push({ g: g, ph: i * 0.54, accent: accent });
-          scene.add(g);
+          heroRoot.add(g);
         });
 
         /* smooth spine through all station positions */
         var spine = new THREE.CatmullRomCurve3(capV3);
-        scene.add(new THREE.Line(
+        heroRoot.add(new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(spine.getPoints(100)),
-          edgeM(OGD, 0.65)
+          edgeM(OGD, 0.9)
         ));
 
+        var orbitalA = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(22, 0.18, 8, 72)), edgeM(OG, 0.72));
+        orbitalA.rotation.x = Math.PI / 2.7;
+        heroRoot.add(orbitalA);
+        var orbitalB = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.TorusGeometry(15, 0.14, 8, 60)), edgeM(WH, 0.42));
+        orbitalB.rotation.y = Math.PI / 3.2;
+        orbitalB.rotation.x = Math.PI / 2.2;
+        heroRoot.add(orbitalB);
+
+        var coreBeacon = new THREE.Mesh(new THREE.IcosahedronGeometry(7.5, 2), new THREE.MeshBasicMaterial({
+          color: OG, opacity: 0.28, transparent: true,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        heroRoot.add(coreBeacon);
+
+        var bounds = new THREE.Box3().setFromObject(heroRoot);
+        var center = bounds.getCenter(new THREE.Vector3());
+        heroRoot.position.sub(center);
+
         /* travelling scout dot */
-        var scoutM = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), fillM(OG, 1.0));
-        var trailM = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), fillM(OGD, 0.45));
-        scene.add(scoutM);
-        scene.add(trailM);
+        var scoutM = new THREE.Mesh(new THREE.SphereGeometry(1.05, 12, 12), fillM(OG, 1.0));
+        var trailM = new THREE.Mesh(new THREE.SphereGeometry(0.65, 8, 8), fillM(OGD, 0.55));
+        heroRoot.add(scoutM);
+        heroRoot.add(trailM);
 
         /* ambient particle field */
         var PC = 180, pPos = new Float32Array(PC * 3);
@@ -1976,8 +1996,8 @@
         }
         var pGeo = new THREE.BufferGeometry();
         pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-          color: WH, size: 0.75, opacity: 0.6, transparent: true,
+        heroRoot.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+          color: WH, size: 0.95, opacity: 0.72, transparent: true,
           blending: THREE.AdditiveBlending, depthWrite: false
         })));
 
@@ -1989,9 +2009,13 @@
           try {
             var t = (ts - t0) * 0.001;
             /* gentle camera drift */
-            cam.position.x = Math.sin(t * 0.17) * 2.5;
-            cam.position.y = 12  + Math.cos(t * 0.11) * 2;
-            cam.lookAt(Math.sin(t * 0.09) * 1.5, Math.cos(t * 0.07), -34);
+            cam.position.x = Math.sin(t * 0.17) * 2.2;
+            cam.position.y = 11  + Math.cos(t * 0.11) * 1.4;
+            cam.lookAt(Math.sin(t * 0.09) * 1.2, Math.cos(t * 0.07) * 0.8, 0);
+            orbitalA.rotation.z = t * 0.16;
+            orbitalB.rotation.z = -t * 0.12;
+            coreBeacon.rotation.x = t * 0.22;
+            coreBeacon.rotation.y = -t * 0.18;
             /* station pulse + slow rotation */
             stMeshes.forEach(function (sm) {
               sm.g.scale.setScalar(0.88 + 0.12 * Math.sin(t * 1.5 + sm.ph));
@@ -2000,8 +2024,9 @@
             });
             /* scout travels the spine */
             var prog = (t * 0.065) % 1;
-            var sp  = spine.getPoint(prog);
-            var sp2 = spine.getPoint(Math.max(0, prog - 0.018));
+            var safeProg = Math.max(0.001, Math.min(0.999, prog));
+            var sp  = spine.getPoint(safeProg);
+            var sp2 = spine.getPoint(Math.max(0.001, safeProg - 0.018));
             if (sp)  scoutM.position.copy(sp);
             if (sp2) trailM.position.copy(sp2);
             renderer.render(scene, cam);
