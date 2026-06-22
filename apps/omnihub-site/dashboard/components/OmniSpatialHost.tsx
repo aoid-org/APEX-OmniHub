@@ -130,6 +130,8 @@ export function OmniSpatialHost() {
   const [isPiP, setIsPiP] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isDialogDragging, setIsDialogDragging] = useState(false);
+  const [isDialogPinned, setIsDialogPinned] = useState(false);
 
   // Root issue: Native click events on triggers bubble up and immediately trigger
   // Radix Dialog's InteractOutside handler. We use a ref to track mount time and ignore
@@ -155,6 +157,8 @@ export function OmniSpatialHost() {
       setIsProcessing(false);
       setIsPiP(false);
       setIsMinimized(false);
+      setIsDialogDragging(false);
+      setIsDialogPinned(false);
     }
   }, [isOpen]);
 
@@ -249,45 +253,40 @@ export function OmniSpatialHost() {
           </>
         )}
 
-        {/* Dialog panel — always mounted while isOpen, hidden via display:none when minimized */}
+        {/* Dialog panel — always mounted while isOpen, hidden via display:none when minimized.
+            Outer div centers; inner motion.div is draggable (pinned on drop). */}
         {isOpen && (
-          <div
-            role="dialog"
-            aria-modal={!isMinimized}
-            aria-label={activeModal?.title}
-            data-testid="omni-dialog"
-            data-state={isMinimized ? 'minimized' : 'open'}
-            {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
-            className={`fixed left-[50%] top-[50%] z-[9001] grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
-            style={{ backgroundColor: '#0b1220', display: isMinimized ? 'none' : undefined }}
-          >
-            {/* Top-right X — closes the modal entirely (does not minimize) */}
-            <button
-              type="button"
-              aria-label="Close"
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-              onClick={() => abortModal('USER_DISMISSED')}
+          <div className="fixed inset-0 z-[9001] flex items-center justify-center pointer-events-none">
+            <motion.div
+              drag={!isMinimized}
+              dragMomentum={false}
+              dragElastic={0}
+              onDragStart={() => setIsDialogDragging(true)}
+              onDragEnd={() => { setIsDialogDragging(false); setIsDialogPinned(true); }}
+              role="dialog"
+              aria-modal={!isMinimized}
+              aria-label={activeModal?.title}
+              data-testid="omni-dialog"
+              data-state={isMinimized ? 'minimized' : isDialogDragging ? 'dragging' : isDialogPinned ? 'pinned' : 'open'}
+              {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
+              className={`pointer-events-auto relative w-full border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
+              style={{ backgroundColor: '#0b1220', display: isMinimized ? 'none' : undefined, cursor: isDialogDragging ? 'grabbing' : 'default' }}
             >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
-
-            {activeModal && (
-              <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-                <h2 className="text-lg font-semibold leading-none tracking-tight">{activeModal.title}</h2>
-                {activeModal.description && (
-                  <p className="text-sm text-muted-foreground">{activeModal.description}</p>
-                )}
+              {/* Draggable title bar — grab to reposition; buttons stop propagation so they don't drag */}
+              <div className="flex items-start justify-between mb-4 select-none" style={{ cursor: isDialogDragging ? 'grabbing' : 'grab' }}>
+                {activeModal && <h2 className="text-lg font-semibold leading-none tracking-tight flex-1 pr-2">{activeModal.title}</h2>}
+                <div className="flex items-center gap-1 flex-shrink-0" onPointerDown={(e) => e.stopPropagation()}>
+                  <button type="button" aria-label="Minimize" className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none p-1 transition-opacity" onClick={minimizeModal}>
+                    <Minimize2 className="h-3.5 w-3.5" />
+                  </button>
+                  <button type="button" aria-label="Close" className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none p-1 transition-opacity" onClick={() => abortModal('USER_DISMISSED')}>
+                    <X className="h-4 w-4" /><span className="sr-only">Close</span>
+                  </button>
+                </div>
               </div>
-            )}
-            {activeModal && (
-              <DialogModeRenderer
-                modal={activeModal}
-                isProcessing={isProcessing}
-                onAction={handleAction}
-                onClose={close}
-              />
-            )}
+              {activeModal?.description && <p className="text-sm text-muted-foreground mb-4">{activeModal.description}</p>}
+              {activeModal && <DialogModeRenderer modal={activeModal} isProcessing={isProcessing} onAction={handleAction} onClose={close} />}
+            </motion.div>
           </div>
         )}
 
