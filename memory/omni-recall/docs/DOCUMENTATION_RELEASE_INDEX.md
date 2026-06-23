@@ -341,3 +341,29 @@ print(sum(1 for _ in Path("docs").rglob("*.md")))
 print(sum(1 for _ in Path(".github/workflows").glob("*.yml")) + sum(1 for _ in Path(".github/workflows").glob("*.yaml")))
 PY
 ```
+
+---
+
+## 2026-06-23 Platform-State Documentation Sync (Release-Rescue Audit + OmniSentry Full Wiring)
+
+Full release-rescue audit performed against `main` @ `5870a8ec` (PR #1476, "Rebrand SkillForge to OmniSkills"). OmniSentry end-to-end wiring completed. All CI gates passing locally.
+
+| File | Change |
+|---|---|
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` | **NEW** — full platform state snapshot; supersedes 2026-06-22 snapshot |
+| `apps/omnihub-site/dashboard/components/OmniSentryWidget.tsx` | Full rewrite — all 5 lib capabilities wired (`initializeOmniSentry`, `shutdownOmniSentry`, `getHealthStatus`, `flushOfflineErrors`, `withResilience`) |
+| `apps/omnihub-site/src/components/OmniSentryPanel.tsx` | Full rewrite — same 5 capabilities + expanded sections for offline queue + circuit probe |
+| `tests/omnidash/omni-sentry-widget.spec.tsx` | **NEW** — 18-test smoke suite covering full widget render path |
+| `scripts/ci/verify-claim-hygiene.mjs` | Patched — false-positive suppression for comments, `notes:` fields, WebAuthn params |
+| `scripts/ci/ci-utils.mjs` | **NEW** — shared `walkFiles()` utility |
+| `scripts/ci/check-omniskills-rebrand.mjs` | **NEW** — OmniSkills rebrand enforcement guard |
+| `tests/ci/claim-hygiene-fixtures.test.mjs` | **NEW** — 5 fixture tests |
+| `tests/ci/omniskills-rebrand-fixtures.test.mjs` | **NEW** — 6 fixture tests |
+| `apps/omnihub-site/src/pages/Launch/SkillForge.tsx` | OmniSkills rebrand (h1 + toast) |
+| `apps/omnihub-site/src/App.tsx` | Route title → `"OmniSkills"` |
+| `memory/omni-recall/state/checkpoints/current-status.md` | 2026-06-23 session block appended |
+| `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Statement 22 added (OmniSkills rebrand, claim hygiene, OmniSentry full wiring) |
+| `README.md` | HEAD / version / gate status synced to 2026-06-23 |
+
+### Current canonical start point
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (supersedes 2026-06-22 snapshot)

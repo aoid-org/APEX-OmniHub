@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-22
+**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-23
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -68,7 +68,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 39 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 100 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** `main` HEAD `1f22570` (2026-06-22) — chore: exempt apex-governance.yml from ops drift guard (CI/governance chores). Release line is **1.8.1** (`package.json`), with **1.8.2** in progress (`CHANGELOG.md`). Landmark history: PR #1441 (`966d695f`) made Links a genuine local URL-staging surface (no app-integration semantics), replaced the global action whitelist with a module-keyed capability map, hardened the OmniBoard wizard (timeout + explicit error taxonomy), and made the live `omnilink-port` Links resolver return an honest empty link-context state; PR #1435 (`4bbd3e5b`) restored the **APEX Agent** to LIVE / demo-ready, full end-to-end verified (OmniSlate → Cloudflare → Supabase → Render → Temporal Cloud → completed). See [`CURRENT_PLATFORM_STATE_2026_06_21.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) for the last full assessment (a 2026-06-22 refresh is pending).
+**Latest repo-history note:** `main` HEAD `5870a8ec` — PR #1476 "Rebrand SkillForge to OmniSkills and update modal styling". Release line is **1.8.1** (`package.json`), with **1.8.2** in progress. Active fix branch: `fix/release-gate-claim-hygiene-omniskills` — restores the `verify-claim-hygiene` CI gate (was blocking every `release.yml` run with 9 false positives: JSDoc comments, `notes:` TS data fields, WebAuthn `attestation: 'none'` API param); completes the OmniSkills user-facing rebrand; adds new `check-omniskills-rebrand` guard; eliminates cross-file `walk()` duplication via `ci-utils.mjs`; and wires all 5 OmniSentry lib capabilities end-to-end in both the sidebar widget and full panel (`flushOfflineErrors`, `withResilience` probe, live queue count). All 8 local CI gates ✅. See [`CURRENT_PLATFORM_STATE_2026_06_23.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md) for the current full assessment.
 
 ---
 

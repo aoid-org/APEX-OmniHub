@@ -81,3 +81,28 @@ If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_20
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 
+
+---
+
+## Source-of-Truth Statement 22 (2026-06-23)
+
+**OmniSkills rebrand is complete in all user-facing surfaces.**
+- `apps/omnihub-site/src/pages/Launch/SkillForge.tsx` renders `<h1>OmniSkills</h1>` and rebranded toast copy.
+- `apps/omnihub-site/src/App.tsx` route title is `"OmniSkills"`. Route path `/launch/skillforge` is intentionally preserved for backward compatibility.
+- CI guard `scripts/ci/check-omniskills-rebrand.mjs` enforces this in all PRs.
+- Internal identifiers (`SkillForgePanel`, `OmniSkillsForgePanel`, `launch/skillforge`) are implementation details — not user-facing — and are NOT flagged by the guard.
+
+**Claim-hygiene gate is fully operational (was broken since before PR #1476).**
+- `verify-claim-hygiene.mjs` now correctly ignores: JSDoc/inline code comments, `notes:` field values in TS data files, and W3C WebAuthn API parameters (`attestation: 'none'`).
+- Public-facing unverified claims (SOC 2, uptime SLA, attestation copy) still FAIL the gate as required.
+- 5 fixture tests in `tests/ci/claim-hygiene-fixtures.test.mjs` prove both behaviors.
+
+**OmniSentry runtime is fully wired end-to-end in both UI surfaces (2026-06-23).**
+- `src/lib/omni-sentry.ts` — browser-side circuit-breaker + self-healing monitor. All state in `sessionStorage` (not `localStorage` — security rule NS-M-008).
+- `apps/omnihub-site/dashboard/components/OmniSentryWidget.tsx` — sidebar widget. Wired: `initializeOmniSentry`, `shutdownOmniSentry`, `getHealthStatus` (5 s poll), `flushOfflineErrors` (flush button, visible when queue > 0), `withResilience` (live circuit probe).
+- `apps/omnihub-site/src/components/OmniSentryPanel.tsx` — full-page surface. Same 5 capabilities + expanded offline queue section + probe section with explanatory copy.
+- Widget sits in right sidebar of `OmniDashShell.tsx` at line 1543, directly below `OmniTraceFeed` at line 1542. `data-testid="omni-sentry-widget"`.
+- 18-test smoke suite at `tests/omnidash/omni-sentry-widget.spec.tsx` covers all 5 wired capabilities.
+- Release gate `tests/release/omni-sentry-surface.spec.ts` — all 4 assertions pass.
+
+**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (latest snapshot) before prior dated snapshots.
