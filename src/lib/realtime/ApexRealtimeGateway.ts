@@ -9,7 +9,7 @@ interface ConnectResult {
 export const ApexRealtimeGateway = {
   async connect(params: ConnectParams): Promise<ConnectResult & { ws?: WebSocket; error?: string }> {
     return new Promise((resolve) => {
-      const baseUrl = process.env.VITE_ORCHESTRATOR_BASE_URL || process.env.ORCHESTRATOR_BASE_URL || 'localhost:3000';
+      const baseUrl = (import.meta.env.VITE_ORCHESTRATOR_URL as string | undefined) || 'localhost:3000';
       const wssUrl = `wss://${baseUrl.replace(/^https?:\/\//, '')}/realtime/${params.skillId}`;
 
       let resolved = false;

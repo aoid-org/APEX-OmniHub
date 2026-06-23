@@ -9,13 +9,7 @@ import {
 } from "../_shared/rate-limit.ts";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-// For MVP we hardcode the fallback if env is missing
-const stripePriceId = Deno.env.get('STRIPE_PRICE_ID_PRO') || 'price_123456789';
-
-const stripe = new Stripe(stripeSecretKey ?? '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const stripePriceId = Deno.env.get('STRIPE_PRICE_ID_PRO');
 
 interface RequestBody {
   tier: 'PRO';
@@ -30,6 +24,23 @@ serve(async (req) => {
 
   const origin = req.headers.get("origin");
   const corsHeaders = buildCorsHeaders(origin);
+
+  // Fail-closed: Stripe requires both secrets. Return 503 rather than
+  // silently creating a session with an empty key or a fake price ID.
+  if (!stripeSecretKey || !stripePriceId) {
+    return new Response(
+      JSON.stringify({
+        error: 'BILLING_NOT_CONFIGURED',
+        message: 'Billing is not configured. Contact support at billing@apexbusiness.systems.',
+      }),
+      { status: 503, headers: { ...buildCorsHeaders(origin), 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2023-10-16',
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 
   try {
     const authHeader = req.headers.get('Authorization');

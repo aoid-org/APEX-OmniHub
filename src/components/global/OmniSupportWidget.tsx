@@ -12,7 +12,7 @@ export function OmniSupportWidget(): JSX.Element {
   useEffect(() => {
     if (isOpen) {
       ApexRealtimeGateway.connect({ skillId: 'omnisupport' })
-        .then(() => console.warn('[OmniSupport] Connected'))
+        .then(() => undefined)
         .catch((err: unknown) => console.warn('[OmniSupport] Connection failed:', err));
     }
   }, [isOpen]);
