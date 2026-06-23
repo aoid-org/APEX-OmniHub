@@ -193,6 +193,7 @@ describe('OmniSentryWidget', () => {
 
     const flushBtn = screen.getByTestId('omni-sentry-flush-btn');
     await act(async () => { fireEvent.click(flushBtn); });
+    await act(async () => { await vi.runAllTimersAsync(); });
 
     expect(mockFlush).toHaveBeenCalledTimes(1);
     await waitFor(() => {
@@ -224,6 +225,7 @@ describe('OmniSentryWidget', () => {
 
     const probeBtn = screen.getByTestId('omni-sentry-probe-btn');
     await act(async () => { fireEvent.click(probeBtn); });
+    await act(async () => { await vi.runAllTimersAsync(); });
 
     expect(mockWithResilience).toHaveBeenCalledTimes(1);
     // Verify correct operation name passed
@@ -242,6 +244,7 @@ describe('OmniSentryWidget', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enable OmniSentry' })); });
 
     await act(async () => { fireEvent.click(screen.getByTestId('omni-sentry-probe-btn')); });
+    await act(async () => { await vi.runAllTimersAsync(); });
 
     await waitFor(() => {
       expect(screen.getByText('⚡ Circuit Open')).toBeTruthy();

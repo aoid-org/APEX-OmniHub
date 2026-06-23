@@ -514,13 +514,14 @@ secrets before it will process checkout requests.
 | Secret | Source |
 |---|---|
 | `STRIPE_SECRET_KEY` | Stripe Dashboard → API keys → Secret key (`sk_live_...`) |
-| `STRIPE_PRICE_ID_BUS` | Stripe Dashboard → Product catalog → Business price ID (`price_...`) — from prod_UkuVFjyDtN35cw |
+| `STRIPE_PRICE_ID_PRO` | Stripe Dashboard → Product catalog → Pro price ID (`price_...`) — $99 CAD/mo |
+| `STRIPE_PRICE_ID_BUS` | Stripe Dashboard → Product catalog → Business price ID (`price_...`) — $299 CAD/mo, prod_UkuVFjyDtN35cw, includes PhysiOmni |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks → signing secret (`whsec_...`) |
 | `RESEND_API_KEY` | Resend Dashboard → API Keys (`re_...`) |
 
 **Set via CLI:**
 ```bash
-supabase secrets set STRIPE_SECRET_KEY=sk_live_... STRIPE_PRICE_ID_BUS=price_... \
+supabase secrets set STRIPE_SECRET_KEY=sk_live_... STRIPE_PRICE_ID_PRO=price_... STRIPE_PRICE_ID_BUS=price_... \
   STRIPE_WEBHOOK_SECRET=whsec_... RESEND_API_KEY=re_... \
   --project-ref rtopreovkywofgwgmozi
 ```

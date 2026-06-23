@@ -8,11 +8,12 @@ import {
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
 
-const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-const stripePriceId = Deno.env.get('STRIPE_PRICE_ID_BUS');
+const stripeSecretKey    = Deno.env.get('STRIPE_SECRET_KEY');
+const stripePriceIdPro   = Deno.env.get('STRIPE_PRICE_ID_PRO');  // $99 CAD/mo
+const stripePriceIdBus   = Deno.env.get('STRIPE_PRICE_ID_BUS');  // $299 CAD/mo — includes PhysiOmni
 
 interface RequestBody {
-  tier: 'PRO';
+  tier: 'PRO' | 'BUS';
   skills: Record<string, unknown>[];
   returnUrl: string;
 }
@@ -25,9 +26,9 @@ serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = buildCorsHeaders(origin);
 
-  // Fail-closed: Stripe requires both secrets. Return 503 rather than
-  // silently creating a session with an empty key or a fake price ID.
-  if (!stripeSecretKey || !stripePriceId) {
+  // Fail-closed: require the Stripe secret key. Individual price IDs are
+  // validated per-request based on the requested tier below.
+  if (!stripeSecretKey) {
     return new Response(
       JSON.stringify({
         error: 'BILLING_NOT_CONFIGURED',
@@ -67,10 +68,22 @@ serve(async (req) => {
 
     const body = await req.json() as RequestBody;
 
-    if (body.tier !== 'PRO') {
+    if (body.tier !== 'PRO' && body.tier !== 'BUS') {
       return new Response(
-        JSON.stringify({ error: 'INVALID_TIER', message: 'This endpoint is for PRO tier checkout' }),
+        JSON.stringify({ error: 'INVALID_TIER', message: 'tier must be PRO or BUS' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Select price ID for the requested tier. Fail-closed if not configured.
+    const stripePriceId = body.tier === 'BUS' ? stripePriceIdBus : stripePriceIdPro;
+    if (!stripePriceId) {
+      return new Response(
+        JSON.stringify({
+          error: 'BILLING_NOT_CONFIGURED',
+          message: `Price ID for tier ${body.tier} is not configured. Contact support at billing@apexbusiness.systems.`,
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -119,7 +132,7 @@ serve(async (req) => {
       client_reference_id: user.id,
       metadata: {
         user_id: user.id,
-        tier: 'PRO',
+        tier: body.tier,
         skills: JSON.stringify(body.skills),
       },
       subscription_data: {

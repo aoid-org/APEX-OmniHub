@@ -542,8 +542,8 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
     // physiomni.view_preview  = pro | business | enterprise
     // physiomni.launch_pilot  = business | enterprise
     // physiomni.hardware_control = enterprise (+ MAN approval required)
-    // Gate enforced in PhysiOmniGate component via usePlan() hook.
-    requiredScopes: ['authenticated', 'plan:business'],
+    // Gate enforced in PhysiOmniGate component via usePlan() hook (not in AccessScope).
+    requiredScopes: ['authenticated'],
     isEnabled: true,
     order: 33,
   },
