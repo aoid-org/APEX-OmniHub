@@ -493,3 +493,61 @@ DB table/migration, or start command changed.
 
 **Operational impact:** None to deployed services, infrastructure, or runtime contracts.
 No new secrets, services, or DB objects required.
+
+---
+
+## 9.10 PR #1477 — OmniSentry + OmniSkills Rebrand + Billing Hardening — 2026-06-23
+
+### 9.10.1 `supabase/functions/create-checkout/index.ts` — Fail-Closed Billing Guard
+
+**Operational contract change:** The `create-checkout` edge function now requires
+`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID_PRO` to be set as Supabase edge function
+secrets before it will process checkout requests.
+
+**Behaviour when secrets are missing:**
+- Returns `HTTP 503` with JSON body `{"error":"BILLING_NOT_CONFIGURED","message":"Billing is not configured. Contact support at billing@apexbusiness.systems."}`
+- The Stripe client is instantiated **only inside** the guard block — no empty-key client is ever created
+- Previously, a fake price ID fallback (`price_123456789`) could silently create
+  invalid Stripe sessions; this is now removed
+
+**Required secrets (set via Supabase secrets, not `.env`):**
+| Secret | Source |
+|---|---|
+| `STRIPE_SECRET_KEY` | Stripe Dashboard → API keys → Secret key (`sk_live_...`) |
+| `STRIPE_PRICE_ID_PRO` | Stripe Dashboard → Product catalog → Pro price ID (`price_...`) — $99 CAD/mo |
+| `STRIPE_PRICE_ID_BUS` | Stripe Dashboard → Product catalog → Business price ID (`price_...`) — $299 CAD/mo, prod_UkuVFjyDtN35cw, includes PhysiOmni |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks → signing secret (`whsec_...`) |
+| `RESEND_API_KEY` | Resend Dashboard → API Keys (`re_...`) |
+
+**Set via CLI:**
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_live_... STRIPE_PRICE_ID_PRO=price_... STRIPE_PRICE_ID_BUS=price_... \
+  STRIPE_WEBHOOK_SECRET=whsec_... RESEND_API_KEY=re_... \
+  --project-ref rtopreovkywofgwgmozi
+```
+
+**Set via Dashboard:** https://supabase.com/dashboard/project/rtopreovkywofgwgmozi/settings/functions
+
+**No new env vars are exposed to the frontend.** The frontend triggers the Edge
+Function via Supabase RPC and redirects to Stripe-hosted checkout — no
+`STRIPE_PUBLISHABLE_KEY` is needed in the Vite app.
+
+---
+
+### 9.10.2 `package.json` — New CI Script: `check:omniskills-rebrand`
+
+A new CI validation script was added to enforce the SkillForge → OmniSkills
+rebrand across all source files:
+
+```json
+"check:omniskills-rebrand": "node scripts/ci/check-omniskills-rebrand.mjs"
+```
+
+**Purpose:** Detects any remaining references to the deprecated `SkillForge` brand
+name in source/docs files and fails CI if found. This is a linting/governance check
+— it does not affect deployed services, start commands, or runtime contracts.
+
+**Script location:** `scripts/ci/check-omniskills-rebrand.mjs`
+
+**Operational impact:** None to deployed services, infrastructure, secrets, or
+runtime contracts. This script runs only in CI.

@@ -81,3 +81,52 @@ If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_20
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 
+
+---
+
+## Source-of-Truth Statement 22 (2026-06-23)
+
+**OmniSkills rebrand is complete in all user-facing surfaces.**
+- `apps/omnihub-site/src/pages/Launch/SkillForge.tsx` renders `<h1>OmniSkills</h1>` and rebranded toast copy.
+- `apps/omnihub-site/src/App.tsx` route title is `"OmniSkills"`. Route path `/launch/skillforge` is intentionally preserved for backward compatibility.
+- CI guard `scripts/ci/check-omniskills-rebrand.mjs` enforces this in all PRs.
+- Internal identifiers (`SkillForgePanel`, `OmniSkillsForgePanel`, `launch/skillforge`) are implementation details — not user-facing — and are NOT flagged by the guard.
+
+**Claim-hygiene gate is fully operational (was broken since before PR #1476).**
+- `verify-claim-hygiene.mjs` now correctly ignores: JSDoc/inline code comments, `notes:` field values in TS data files, and W3C WebAuthn API parameters (`attestation: 'none'`).
+- Public-facing unverified claims (SOC 2, uptime SLA, attestation copy) still FAIL the gate as required.
+- 5 fixture tests in `tests/ci/claim-hygiene-fixtures.test.mjs` prove both behaviors.
+
+**OmniSentry runtime is fully wired end-to-end in both UI surfaces (2026-06-23).**
+- `src/lib/omni-sentry.ts` — browser-side circuit-breaker + self-healing monitor. All state in `sessionStorage` (not `localStorage` — security rule NS-M-008).
+- `apps/omnihub-site/dashboard/components/OmniSentryWidget.tsx` — sidebar widget. Wired: `initializeOmniSentry`, `shutdownOmniSentry`, `getHealthStatus` (5 s poll), `flushOfflineErrors` (flush button, visible when queue > 0), `withResilience` (live circuit probe).
+- `apps/omnihub-site/src/components/OmniSentryPanel.tsx` — full-page surface. Same 5 capabilities + expanded offline queue section + probe section with explanatory copy.
+- Widget sits in right sidebar of `OmniDashShell.tsx` at line 1543, directly below `OmniTraceFeed` at line 1542. `data-testid="omni-sentry-widget"`.
+- 18-test smoke suite at `tests/omnidash/omni-sentry-widget.spec.tsx` covers all 5 wired capabilities.
+- Release gate `tests/release/omni-sentry-surface.spec.ts` — all 4 assertions pass.
+
+**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (latest snapshot) before prior dated snapshots.
+
+## Source-of-Truth Statement 23 (2026-06-23)
+
+**Stripe checkout is fail-closed when billing env vars are absent.**
+- `supabase/functions/create-checkout/index.ts` no longer contains `price_123456789` (fake fallback price ID) or `Stripe(stripeSecretKey ?? '', ...)` (empty-key client).
+- If either `STRIPE_SECRET_KEY` or `STRIPE_PRICE_ID_PRO` is absent at runtime, the function returns HTTP 503 `{ error: 'BILLING_NOT_CONFIGURED' }` immediately — no Stripe client is created, no broken session is submitted.
+- Stripe client is instantiated inside the guard only when both secrets are confirmed present.
+
+**ApexRealtimeGateway env var is corrected (Vite-native).**
+- `src/lib/realtime/ApexRealtimeGateway.ts` previously read `process.env.VITE_ORCHESTRATOR_BASE_URL` (nonexistent var, Node.js `process.env` — not available in Vite browser bundles).
+- Fixed to `import.meta.env.VITE_ORCHESTRATOR_URL` — correct Vite build-time env access; correct var name (defined in `.env.example` and wired into `release.yml` build step).
+- Production WSS URL is now `wss://apex-orchestrator-api.onrender.com/realtime/<skillId>`.
+
+**OmniSupportWidget → apex-support skill wiring is architecturally correct.**
+- `OmniSupportWidget` calls `ApexRealtimeGateway.connect({ skillId: 'omnisupport' })` on open — this is correct.
+- The orchestrator resolves the skill definition from `skillId` server-side (per `.claude/skills/apex-support/SKILL.md §H DAG I/O Contract`). The widget does not need to call `SkillRegistry.loadSkill()`.
+- `SkillRegistry.ts` compact `APEX_SUPPORT_SYSTEM_PROMPT` is the intentional client-side fallback — it is NOT a duplicate of SKILL.md; it is the abbreviated variant for non-orchestrator environments.
+- Billing escalation email in `SkillRegistry.ts`: `info-outreach@apexomnihub.icu` (widget-facing). SKILL.md Section E: `info-outreach@apexomnihub.com` (DAG executor). Both are valid; `apexomnihub.icu` is the primary production domain.
+
+**OmniSentry state storage is sessionStorage, not localStorage.**
+- `src/lib/omni-sentry.ts` stores all state in `sessionStorage` — enforced by security rule NS-M-008 (no cross-tab persistence of error/circuit state).
+- `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
+
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` for the current canonical snapshot.

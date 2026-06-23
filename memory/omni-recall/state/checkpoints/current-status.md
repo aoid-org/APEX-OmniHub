@@ -432,3 +432,103 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - correction logged: the 2026-06-20 snapshot conflated `0020ba6b`/#1439 with the widget rescue. Verified: #1439 = `d0ae10da` (normalize live module action ids); #1441 = `966d695f` (canonical widget rescue). `0020ba6b` was PR #1441's first branch commit. Recorded in `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`, not by mutating the dated 06-20 file.
 - carried_forward_not_reverified: APEX Agent LIVE / Render / Temporal / Supabase runtime health (last verified 2026-06-19; no live credentials used this pass)
 - docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_21.md (new), DOCUMENTATION_RELEASE_INDEX.md, docs/README.md, architecture/CANONICAL_TRUTH.md, start-here.md, current-status.md
+
+## Session (2026-06-23) — OmniSentry full end-to-end wiring + claim-hygiene + OmniSkills rebrand
+
+- branch: `fix/release-gate-claim-hygiene-omniskills` (local; PR to be opened this session)
+- scope: (1) Release-rescue audit — identified + fixed 9 claim-hygiene false positives (comments, `notes:` fields, WebAuthn API params); (2) completed OmniSkills rebrand in user-facing copy (SkillForge.tsx h1, toast, App.tsx route title); (3) created `ci-utils.mjs` shared walk utility eliminating cross-file duplication; (4) new CI guard `check-omniskills-rebrand.mjs`; (5) full OmniSentry end-to-end wiring — all 5 lib capabilities surfaced in both widget and panel; (6) 18 new fixture/smoke tests.
+
+### Files Modified (this session)
+
+| File | Change |
+|---|---|
+| `scripts/ci/verify-claim-hygiene.mjs` | Patched: `stripCodeComments()`, `inNotes` state machine, `WEBAUTHN_ATTESTATION_PARAM_RE`, shared `walkFiles` import |
+| `scripts/ci/ci-utils.mjs` | **NEW** — shared `walkFiles()` utility; eliminates cross-file walk() duplication |
+| `scripts/ci/check-omniskills-rebrand.mjs` | **NEW** — OmniSkills rebrand guard (i18n + public + 3 source files, 6 fixture tests) |
+| `apps/omnihub-site/src/pages/Launch/SkillForge.tsx` | `<h1>Skill Forge</h1>` → `<h1>OmniSkills</h1>`; toast rebranded |
+| `apps/omnihub-site/src/App.tsx` | Route title `"Skill Forge"` → `"OmniSkills"` (path `/launch/skillforge` preserved) |
+| `package.json` | Added `"check:omniskills-rebrand"` script |
+| `tests/ci/claim-hygiene-fixtures.test.mjs` | **NEW** — 5 fixture tests (public claims fail, comments pass, notes: pass, WebAuthn pass, clean pass) |
+| `tests/ci/omniskills-rebrand-fixtures.test.mjs` | **NEW** — 6 fixture tests for rebrand guard |
+| `apps/omnihub-site/dashboard/components/OmniSentryWidget.tsx` | Full rewrite — wired `flushOfflineErrors()`, `withResilience()` probe, offline queue count, flush button, circuit probe button |
+| `apps/omnihub-site/src/components/OmniSentryPanel.tsx` | Full rewrite — wired `flushOfflineErrors()`, `withResilience()` probe, offline count metric, flush section, probe section |
+| `tests/omnidash/omni-sentry-widget.spec.tsx` | **NEW** — 18-test smoke suite covering all 5 wired capabilities end-to-end |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` | **NEW** — full platform state snapshot |
+
+### CI Gate Status (all local, post-fix)
+
+| Gate | Result |
+|---|---|
+| verify-ci-integrity | ✅ PASSED |
+| verify-supabase-security | ✅ PASSED — 93 tables RLS |
+| verify-supply-chain | ✅ PASSED |
+| check-pwa-integrity | ✅ PASSED — 10/10 |
+| check-omnidash-integrity | ✅ PASSED — 7/7 |
+| assert_no_stubbed_provider_impls | ✅ PASSED |
+| verify-claim-hygiene | ✅ PASSED (was FAILING with 9 findings) |
+| check-omniskills-rebrand | ✅ PASSED (NEW guard) |
+
+### OmniSentry — full end-to-end wiring (verified)
+
+All 5 lib capabilities now surfaced in both `OmniSentryWidget` (sidebar) and `OmniSentryPanel` (full page):
+
+| Capability | Widget | Panel |
+|---|---|---|
+| `initializeOmniSentry()` | ✅ toggle enable | ✅ toggle enable |
+| `shutdownOmniSentry()` | ✅ toggle disable | ✅ toggle disable |
+| `getHealthStatus()` | ✅ 5 s poll, 4-metric grid | ✅ 5 s poll, 6-metric grid incl. offline count |
+| `flushOfflineErrors()` | ✅ flush button (visible when queue > 0) | ✅ flush section with count + button |
+| `withResilience()` | ✅ circuit probe button (pass/skip/fail) | ✅ circuit probe section (pass/skip/fail) |
+
+### Verified runtime facts (2026-06-23)
+- audit_date: 2026-06-23
+- fix_branch: `fix/release-gate-claim-hygiene-omniskills` (local; push + PR this session)
+- main_HEAD_at_session_start: `5870a8ec` — "Rebrand SkillForge to OmniSkills and update modal styling (#1476)"
+- package_version: `1.8.1`
+- platform: Vite 7 + React 18 + TypeScript 5.9
+- sonarqube_exclusions: `scripts/**`, `**/*.mjs` excluded from scan; `apps/omnihub-site/src/App.tsx` in `sonar.coverage.exclusions`; `apps/omnihub-site/src/pages/**` in `sonar.cpd.exclusions`
+- carried_forward: APEX Agent LIVE / Render / Temporal / Supabase runtime health (last verified 2026-06-19; no live credentials used this pass)
+
+## Session (2026-06-23 late) — Commercial realness fixes: Stripe fail-closed, gateway env var, apex-support skill audit
+
+- branch: `fix/release-gate-claim-hygiene-omniskills-v2`
+- commit: `1fa8870e`
+- PR: #1477 (open → main) — https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1477
+
+### Root cause of release.yml CI failures (confirmed)
+- GitHub run `27998946447` failed on step "Run Release verification suite" → `verify:claim-hygiene` 9 findings.
+- These are the same false positives patched in this PR. `release.yml` only triggers on `main`; our fix is on the branch. Merge resolves it.
+
+### Files Modified (Batch 2)
+
+| File | Change |
+|---|---|
+| `supabase/functions/create-checkout/index.ts` | Removed `price_123456789` fake fallback price ID; removed `Stripe(stripeSecretKey ?? '', ...)` empty-key instantiation; added HTTP 503 `BILLING_NOT_CONFIGURED` fail-closed guard; Stripe client moved inside guard |
+| `src/lib/realtime/ApexRealtimeGateway.ts` | Fixed env var: `process.env.VITE_ORCHESTRATOR_BASE_URL` (nonexistent) → `import.meta.env.VITE_ORCHESTRATOR_URL` (Vite-correct, defined in `.env.example`) |
+| `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path; `ApexRealtimeGateway.connect({ skillId: 'omnisupport' })` call retained and confirmed correct |
+
+### apex-support skill — audit (no changes required)
+- `.claude/skills/apex-support/SKILL.md` read in full.
+- Version 2.0, production DAG executor node.
+- Section H I/O contract: orchestrator resolves systemPrompt from skillId server-side. Widget sending `{ skillId: 'omnisupport' }` is architecturally correct.
+- `SkillRegistry.ts` compact prompt is the intentional client-side fallback summary. Not a duplicate.
+- Billing escalation: `info-outreach@apexomnihub.com`. Prompt-injection defense: Section F. DAG registration: Section I.
+
+### CI Gate Status (all local, Batch 2 post-fix)
+
+| Gate | Result |
+|---|---|
+| verify:claim-hygiene | ✅ PASSED |
+| verify:ci-integrity | ✅ PASSED |
+| verify:supabase-security | ✅ PASSED |
+| check:omnidash-integrity | ✅ PASSED |
+| verify:supply-chain | ✅ PASSED |
+| check:omniskills-rebrand | ✅ PASSED |
+| check:pwa-integrity | ✅ PASSED |
+
+### Verified runtime facts (2026-06-23 late)
+- branch_head: `1fa8870e`
+- pr: #1477 open, 2 commits
+- main_HEAD: `5870a8ec` (unchanged — PR not yet merged)
+- package_version: `1.8.1`
+- docs_updated: CURRENT_PLATFORM_STATE_2026_06_23.md, CANONICAL_TRUTH.md (Statement 23), EDGE_FUNCTIONS_REFERENCE.md, OMNISENTRY.md (localStorage→sessionStorage), DOCUMENTATION_RELEASE_INDEX.md, README.md, current-status.md

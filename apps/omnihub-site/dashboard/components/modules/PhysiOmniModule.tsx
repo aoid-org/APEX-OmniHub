@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
+import { usePlan } from '@/hooks/usePlan';
+import { PhysiOmniGate } from '@/components/physiomni/PhysiOmniGate';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { ModuleShell } from './ModuleShell';
 import { Button } from '@/components/ui/button';
@@ -70,6 +72,7 @@ function usePhysiOmniDevices(): LiveDevices {
 export default function PhysiOmniModule({ onClose }: Props) {
   const state = useOmniModuleState('physiomni');
   const devices = usePhysiOmniDevices();
+  const plan = usePlan();
 
   const handleLaunchPilot = () => {
     const brandColor = '#F97316';
@@ -80,6 +83,7 @@ export default function PhysiOmniModule({ onClose }: Props) {
 
   return (
     <ModuleShell state={state} onClose={onClose}>
+      <PhysiOmniGate tier={plan.tier} loading={plan.loading}>
       <div className="flex flex-col gap-4 py-2">
         {/* Live device registry — real per-tenant data from physiomni_devices */}
         <div className="rounded-xl border border-border/40 p-4 bg-card/60 backdrop-blur-md">
@@ -174,6 +178,7 @@ export default function PhysiOmniModule({ onClose }: Props) {
           </div>
         </div>
       </div>
+      </PhysiOmniGate>
     </ModuleShell>
   );
 }

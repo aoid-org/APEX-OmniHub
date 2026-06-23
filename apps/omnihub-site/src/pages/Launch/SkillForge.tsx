@@ -71,7 +71,7 @@ export function SkillForge() {
       }));
     },
     onUnsupported: () =>
-      toast.error('VOICE UNAVAILABLE', { description: 'Your browser does not support speech recognition for Skill Forge.' }),
+      toast.error('VOICE UNAVAILABLE', { description: 'Your browser does not support speech recognition for OmniSkills.' }),
     onError: () =>
       toast.error('VOICE CAPTURE FAILED', { description: 'Could not capture speech. Please retry.' }),
   });
@@ -153,7 +153,7 @@ export function SkillForge() {
           <div className="inline-flex items-center justify-center p-3 bg-amber-500/20 rounded-full mb-4">
             <Sparkles className="w-8 h-8 text-amber-400" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Skill Forge</h1>
+          <h1 className="text-4xl font-bold tracking-tight">OmniSkills</h1>
           <p className="text-amber-200 text-lg">
             Create custom AI skills to automate your business workflows
           </p>

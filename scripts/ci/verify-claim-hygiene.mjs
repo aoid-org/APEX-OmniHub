@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { walkFiles } from "./ci-utils.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -118,32 +119,110 @@ const validApproved = approved.filter((entry, index) => validateEvidenceRef(entr
 const approvedSet = new Set(validApproved.map((a) => a?.claim).filter((a) => typeof a === "string" && a.trim()).map(normalize));
 const isApproved = (line) => approvedSet.has(normalize(line));
 
-function walk(dir, acc) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const entry of fs.readdirSync(dir)) {
-    const full = path.join(dir, entry);
-    if (EXCLUDE.some((re) => re.test(full.replaceAll("\\", "/")))) continue;
-    const stat = fs.statSync(full);
-    if (stat.isDirectory()) walk(full, acc);
-    else if (SCAN_EXTS.has(path.extname(full))) acc.push(full);
-  }
-  return acc;
-}
+// walk() extracted to ci-utils.mjs as walkFiles()
 
-const files = [...new Set(SCAN_ROOTS.flatMap((root) => walk(root, [])))];
+const files = [...new Set(SCAN_ROOTS.flatMap((root) => walkFiles(root, SCAN_EXTS, EXCLUDE, [])))];
 const findings = [];
 
-for (const file of files) {
-  const lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
-  lines.forEach((line, i) => {
+// --- INTERNAL-SCOPE GUARDS (non-weakening fix) ---
+// Strip JS/TS comment text from a line before claim-pattern matching.
+// Prevents false positives from: (1) JSDoc comments (/** ... */), inline
+// comments (// ...) that are never rendered as public UI copy; (2) WebAuthn
+// implementation parameters (attestation: 'none', credential var names)
+// that are code-level API calls, not marketing claims.
+// IMPORTANT: this does NOT skip lines — all non-comment content is still
+// scanned. Rendered JSX strings, i18n JSON, HTML, and Markdown are unchanged.
+const CODE_EXTS_SET = new Set([".ts", ".tsx", ".js", ".jsx"]);
+
+function stripCodeComments(line, fileExt) {
+  if (!CODE_EXTS_SET.has(fileExt)) return line;
+  return line
+    .replace(/\/\*.*?\*\//g, " ")  // inline block comments: /* ... */
+    .replace(/^\s*\*[^/].*/, " ")   // JSDoc body lines:  * text
+    .replace(/^\s*\*$/, " ")         // JSDoc close line:  */  (already stripped above, safety)
+    .replace(/\/\/.*/, " ");         // Line comments: // ...
+}
+
+// Detect internal non-rendered metadata: the notes: field in featureTruth
+// data objects. These engineering notes are explicitly excluded from public
+// rendering by the featureTruth ledger (only CERTIFIED_FUNCTIONING +
+// releaseCopy fields are surfaced to users). Scanning notes: values would
+// produce only false positives.
+//
+// Supported formats in featureTruth data objects:
+//   (a) Same-line:  notes: 'text',
+//   (b) Split-line: notes:
+//                     'text',      <- value on next line, indented
+//
+// Also suppresses WebAuthn API implementation parameters (attestation: 'none')
+// which are W3C API values, not marketing claims.
+
+// notes: key alone on its line (value follows on next line)
+const NOTES_KEY_ONLY_RE = /^\s*notes:\s*$/;
+// notes: 'value' on same line
+const NOTES_INLINE_RE = /^\s*notes:\s*['"]/;
+// WebAuthn API parameter: attestation: 'none' or attestation: 'direct' etc.
+// This is a W3C PublicKeyCredentialCreationOptions parameter, not a claim.
+const WEBAUTHN_ATTESTATION_PARAM_RE = /^\s*attestation:\s*['"](?:none|direct|enterprise|indirect)['"]/;
+
+function scanFile(file) {
+  const ext = path.extname(file);
+  const rawLines = fs.readFileSync(file, "utf8").split(/\r?\n/);
+  const isCode = CODE_EXTS_SET.has(ext);
+  let inNotes = false;
+  let notesNextLine = false; // notes: key was on previous line; value is this line
+
+  rawLines.forEach((line, i) => {
     if (isApproved(line)) return;
+
+    if (isCode) {
+      // WebAuthn API parameter — skip (W3C implementation constant, not a claim)
+      if (WEBAUTHN_ATTESTATION_PARAM_RE.test(line)) return;
+
+      // Handle notes: key on its own line (value follows next line)
+      if (notesNextLine) {
+        notesNextLine = false;
+        inNotes = true;
+        // The value starts here; fall through to inNotes handling below
+      }
+
+      if (!inNotes && NOTES_KEY_ONLY_RE.test(line)) {
+        // Key-only line: value is on next line
+        notesNextLine = true;
+        return; // skip the key line
+      }
+
+      if (!inNotes && NOTES_INLINE_RE.test(line)) {
+        inNotes = true;
+        // Check if it closes on the same line
+        const after = line.replace(/^\s*notes:\s*/, "");
+        const q = after[0];
+        const closeRe = q === "'" ? /'\s*,?\s*$/ : q === '"' ? /"\s*,?\s*$/ : /`\s*,?\s*$/;
+        if (closeRe.test(after.slice(1))) inNotes = false;
+        return; // skip the key+value line (internal metadata)
+      }
+
+      if (inNotes) {
+        // Detect close: a line ending with quote + optional comma
+        if (/['"]\s*,?\s*$/.test(line.trim())) inNotes = false;
+        return; // skip internal notes content
+      }
+    }
+
+    // Strip comments before pattern matching
+    const scanLine = stripCodeComments(line, ext);
+
     for (const { id, re } of CLAIM_PATTERNS) {
-      if (re.test(line)) {
+      if (re.test(scanLine)) {
         findings.push({ id, location: `${rel(file)}:${i + 1}`, text: line.trim().slice(0, 120) });
         break;
       }
     }
   });
+}
+
+for (const file of files) {
+  scanFile(file);
 }
 
 console.log("=== verify:claim-hygiene — Launch-Claim Hygiene Gate ===");

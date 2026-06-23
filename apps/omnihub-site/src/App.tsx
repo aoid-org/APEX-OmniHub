@@ -156,7 +156,7 @@ function App() {
 
         {/* Skill Forge — protected launch route. Invokes the generate-business-skills
             edge function with the user JWT, so it requires an authenticated session. */}
-        <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "Skill Forge")} />
+        <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "OmniSkills")} />
 
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />

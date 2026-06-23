@@ -1,23 +1,52 @@
-import fs from 'node:fs';
-import path from 'node:path';
+#!/usr/bin/env node
+// APEX-OmniHub CI Shared Utilities
+// Single source of truth for helpers used by multiple CI gate scripts.
+// Import with: import { walkFiles, getAllFiles } from "./ci-utils.mjs";
+import fs from "node:fs";
+import path from "node:path";
 
 /**
- * Recursively gets all files in a directory matching specific extensions.
- * @param {string} dir - Directory to search
- * @param {string[]} exts - Extensions to include (e.g. ['.md'])
- * @returns {string[]} List of absolute file paths
+ * Recursively collect files under `dir` whose extensions are in `extSet`,
+ * skipping any path that matches a pattern in `excludePatterns`.
+ *
+ * @param {string} dir - Absolute directory path to walk.
+ * @param {Set<string>} extSet - Allowed extensions, e.g. new Set([".ts", ".tsx"]).
+ * @param {RegExp[]} excludePatterns - Paths matching any pattern are skipped.
+ * @param {string[]} [acc=[]] - Accumulator (mutated in-place).
+ * @returns {string[]} Collected absolute file paths.
+ */
+export function walkFiles(dir, extSet, excludePatterns, acc = []) {
+  if (!fs.existsSync(dir)) return acc;
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    if (excludePatterns.some((re) => re.test(full.replaceAll("\\", "/")))) continue;
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) walkFiles(full, extSet, excludePatterns, acc);
+    else if (extSet.has(path.extname(full))) acc.push(full);
+  }
+  return acc;
+}
+
+/**
+ * Simple recursive file collector used by doc-check scripts.
+ * Returns all files under `dir` whose extension is in `exts`.
+ *
+ * @param {string} dir - Absolute directory path to walk.
+ * @param {string[]} [exts=['.md']] - Allowed extensions.
+ * @returns {string[]} Collected absolute file paths.
  */
 export function getAllFiles(dir, exts = ['.md']) {
+  if (!fs.existsSync(dir)) return [];
+  /** @type {string[]} */
   let results = [];
-  const list = fs.readdirSync(dir);
-  list.forEach(file => {
-    file = path.join(dir, file);
-    const stat = fs.statSync(file);
-    if (stat?.isDirectory()) {
-      results = results.concat(getAllFiles(file, exts));
-    } else if (exts.includes(path.extname(file))) {
-      results.push(file);
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) {
+      results = results.concat(getAllFiles(full, exts));
+    } else if (exts.includes(path.extname(full))) {
+      results.push(full);
     }
-  });
+  }
   return results;
 }
