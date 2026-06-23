@@ -175,6 +175,8 @@ jobs:
         run: npm run test:e2e
         env:
           BASE_URL: http://localhost:4173
+          # Match build-time VITE_SUPABASE_URL so stub-session storage keys align.
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://ci-placeholder.supabase.co' }}
 
       - name: Stop preview server
         if: always()
