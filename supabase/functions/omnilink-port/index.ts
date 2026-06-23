@@ -1311,6 +1311,93 @@ async function handleKeysRequest(route: string, req: Request, corsHeaders: Heade
   return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
 }
 
+// ── OmniBoard connect proxy ───────────────────────────────────────────────────
+// Bridges OmniBoardWizard (frontend) to the orchestrator FSM endpoints
+// (orchestrator/omniboard/router.py: POST /omniboard/start, POST /omniboard/{id}/next).
+// The wizard calls omnilink-port/omniboard-start|omniboard-next; without this proxy
+// those routes 404'd (surfacing as "Edge Function returned a non-2xx status code").
+// /omniboard/* is NOT in the orchestrator signed-path set, so no HMAC is required —
+// only the user JWT is validated here and tenant_id is bound to the authenticated user.
+async function handleOmniBoardStart(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  const { data: { user } } = await createAnonClient(authHeader).auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  const orchestratorUrl = Deno.env.get('ORCHESTRATOR_URL');
+  if (!orchestratorUrl) {
+    return jsonResponse(
+      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.' },
+      503, corsHeaders,
+    );
+  }
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const traceId = typeof payload.trace_id === 'string' ? payload.trace_id : crypto.randomUUID();
+  // orchestrator /omniboard/start takes tenant_id + trace_id as QUERY params.
+  const base = orchestratorUrl.replace(/\/$/, '');
+  const url = `${base}/omniboard/start?tenant_id=${encodeURIComponent(user.id)}&trace_id=${encodeURIComponent(traceId)}`;
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'X-User-Id': user.id, 'X-Trace-Id': traceId } });
+    if (!r.ok) {
+      return jsonResponse(
+        { error: 'connect_unavailable', message: 'The connection service is unavailable right now. No app was connected.' },
+        502, corsHeaders,
+      );
+    }
+    return jsonResponse(await r.json(), 200, corsHeaders);
+  } catch {
+    return jsonResponse(
+      { error: 'connect_unavailable', message: 'Could not reach the connection service.' },
+      502, corsHeaders,
+    );
+  }
+}
+
+async function handleOmniBoardNext(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  const { data: { user } } = await createAnonClient(authHeader).auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  const orchestratorUrl = Deno.env.get('ORCHESTRATOR_URL');
+  if (!orchestratorUrl) {
+    return jsonResponse(
+      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.' },
+      503, corsHeaders,
+    );
+  }
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const sessionId = typeof payload.session_id === 'string' ? payload.session_id : '';
+  if (!sessionId) return jsonResponse({ error: 'session_id_required' }, 400, corsHeaders);
+  // Forward the FSMEvent shape { event_type, payload } (orchestrator schema.py FSMEvent).
+  const fsmEvent = { event_type: payload.event_type, payload: payload.payload ?? {} };
+  const base = orchestratorUrl.replace(/\/$/, '');
+  const url = `${base}/omniboard/${encodeURIComponent(sessionId)}/next`;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
+      body: JSON.stringify(fsmEvent),
+    });
+    if (!r.ok) {
+      return jsonResponse(
+        { error: 'connect_unavailable', message: 'The connection service is unavailable right now.' },
+        502, corsHeaders,
+      );
+    }
+    return jsonResponse(await r.json(), 200, corsHeaders);
+  } catch {
+    return jsonResponse(
+      { error: 'connect_unavailable', message: 'Could not reach the connection service.' },
+      502, corsHeaders,
+    );
+  }
+}
+
 // ── Main request handler ──────────────────────────────────────────────────────
 
 async function handleServeRequest(req: Request): Promise<Response> {
@@ -1354,6 +1441,14 @@ async function handleServeRequest(req: Request): Promise<Response> {
 
   if (route === 'module-state' && req.method === 'POST') {
     return handleModuleState(req, corsHeaders);
+  }
+
+  if (route === 'omniboard-start' && req.method === 'POST') {
+    return handleOmniBoardStart(req, corsHeaders);
+  }
+
+  if (route === 'omniboard-next' && req.method === 'POST') {
+    return handleOmniBoardNext(req, corsHeaders);
   }
 
   const taskResponse = await routeTaskRequest(route, req, corsHeaders);
