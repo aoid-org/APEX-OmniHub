@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => {
     alias: {
       "dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
       "@/dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
+      // @/lib resolves to root src/lib so cross-package imports (e.g. OmniSentryWidget)
+      // correctly reach root-level libraries regardless of which Vite entry is active.
+      "@/lib": path.resolve(__dirname, "./src/lib"),
       "@omniconnect": path.resolve(__dirname, "./src/omniconnect"),
       "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },

@@ -538,7 +538,12 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
     description: 'Physical AI sensor analytics — industrial IoT (nRF9161-DK / ADXL345) and wearable health',
     icon: Cpu,
     category: 'monitoring',
-    requiredScopes: ['authenticated'],
+    // Paywall: business+ required for pilot access. Pro = preview/waitlist only.
+    // physiomni.view_preview  = pro | business | enterprise
+    // physiomni.launch_pilot  = business | enterprise
+    // physiomni.hardware_control = enterprise (+ MAN approval required)
+    // Gate enforced in PhysiOmniGate component via usePlan() hook.
+    requiredScopes: ['authenticated', 'plan:business'],
     isEnabled: true,
     order: 33,
   },

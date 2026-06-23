@@ -21,7 +21,7 @@ const mockGetHealth     = vi.fn();
 const mockFlush         = vi.fn();
 const mockWithResilience = vi.fn();
 
-vi.mock('../../../../src/lib/omni-sentry', () => ({
+vi.mock('@/lib/omni-sentry', () => ({
   initializeOmniSentry: (...args: unknown[]) => mockInitialize(...args),
   shutdownOmniSentry:   (...args: unknown[]) => mockShutdown(...args),
   getHealthStatus:      (...args: unknown[]) => mockGetHealth(...args),
@@ -130,9 +130,9 @@ describe('OmniSentryWidget', () => {
     expect(localStorage.getItem('omni_sentry_enabled')).toBe('true');
   });
 
-  it('hydrates from stored preference and calls initializeOmniSentry on mount', () => {
+  it('hydrates from stored preference and calls initializeOmniSentry on mount', async () => {
     localStorage.setItem('omni_sentry_enabled', 'true');
-    render(<OmniSentryWidget />);
+    await act(async () => { render(<OmniSentryWidget />); });
     expect(mockInitialize).toHaveBeenCalledTimes(1);
   });
 

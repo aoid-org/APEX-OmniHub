@@ -21,7 +21,7 @@ import {
   flushOfflineErrors,
   withResilience,
   type HealthStatus,
-} from '../../../../src/lib/omni-sentry';
+} from '@/lib/omni-sentry';
 
 const STORAGE_KEY = 'omni_sentry_enabled';
 const OFFLINE_KEY = 'omni_sentry_offline';
