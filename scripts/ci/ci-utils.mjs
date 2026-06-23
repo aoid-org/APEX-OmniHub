@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // APEX-OmniHub CI Shared Utilities
 // Single source of truth for helpers used by multiple CI gate scripts.
-// Import with: import { walkFiles } from "./ci-utils.mjs";
+// Import with: import { walkFiles, getAllFiles } from "./ci-utils.mjs";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -25,4 +25,28 @@ export function walkFiles(dir, extSet, excludePatterns, acc = []) {
     else if (extSet.has(path.extname(full))) acc.push(full);
   }
   return acc;
+}
+
+/**
+ * Simple recursive file collector used by doc-check scripts.
+ * Returns all files under `dir` whose extension is in `exts`.
+ *
+ * @param {string} dir - Absolute directory path to walk.
+ * @param {string[]} [exts=['.md']] - Allowed extensions.
+ * @returns {string[]} Collected absolute file paths.
+ */
+export function getAllFiles(dir, exts = ['.md']) {
+  if (!fs.existsSync(dir)) return [];
+  /** @type {string[]} */
+  let results = [];
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) {
+      results = results.concat(getAllFiles(full, exts));
+    } else if (exts.includes(path.extname(full))) {
+      results.push(full);
+    }
+  }
+  return results;
 }
