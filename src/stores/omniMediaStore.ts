@@ -14,7 +14,10 @@
  */
 
 import { create } from 'zustand';
-import { prefetchAndCacheMedia, revokeCachedBlobUrl } from '@/lib/media/EdgeCacheController';
+// Relative import: this root-package store is pulled into the apps Vite build
+// (via the media components), where '@' maps to apps/omnihub-site/src and would
+// miss this root module. A relative path resolves identically in build + tests.
+import { prefetchAndCacheMedia, revokeCachedBlobUrl } from '../lib/media/EdgeCacheController';
 
 // ============================================================================
 // Types — All readonly for immutability

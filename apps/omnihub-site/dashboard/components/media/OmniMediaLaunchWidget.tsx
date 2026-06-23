@@ -6,7 +6,10 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useOmniMedia } from '@/stores/omniMediaStore';
+// Relative import (not '@/stores/...'): vite.config resolves '@' to
+// apps/omnihub-site/src, but omniMediaStore lives in the ROOT src/ package.
+// A relative path resolves correctly in both the Vite build and vitest.
+import { useOmniMedia } from '../../../../../src/stores/omniMediaStore';
 import { Play, Video } from 'lucide-react';
 
 interface DemoClip {

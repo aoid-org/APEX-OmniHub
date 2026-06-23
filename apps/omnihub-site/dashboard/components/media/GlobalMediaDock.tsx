@@ -16,9 +16,15 @@
  */
 
 import { type ComponentType } from 'react';
-import { useOmniMedia } from '@/stores/omniMediaStore';
+// Relative import (not '@/stores/...'): vite.config resolves '@' to
+// apps/omnihub-site/src, but omniMediaStore lives in the ROOT src/ package.
+// A relative path resolves correctly in both the Vite build and vitest.
+import { useOmniMedia } from '../../../../../src/stores/omniMediaStore';
 import { OmniMediaPlayer } from './OmniMediaPlayer';
-import { Slider } from '@/components/ui/slider';
+// Relative import: the Slider primitive lives in the ROOT src/ package, not
+// apps/omnihub-site/src (where vite.config maps '@'). Its own '@/lib/utils'
+// resolves to a compatible cn() in both trees, so the build and tests agree.
+import { Slider } from '../../../../../src/components/ui/slider';
 import {
   Play,
   Pause,
