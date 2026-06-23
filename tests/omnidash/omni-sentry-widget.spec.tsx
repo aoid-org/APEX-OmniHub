@@ -76,7 +76,10 @@ function setOfflineQueue(count: number): void {
 describe('OmniSentryWidget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
+    // NOTE: do NOT call vi.useFakeTimers() here globally — it breaks waitFor()
+    // because waitFor uses setTimeout internally to poll for DOM updates.
+    // Only the polling test ("polls getHealthStatus every 5 s") opts in to
+    // fake timers locally via vi.useFakeTimers() + vi.useRealTimers().
     sessionStorage.clear();
     localStorage.removeItem('omni_sentry_enabled');
 
@@ -86,6 +89,7 @@ describe('OmniSentryWidget', () => {
   });
 
   afterEach(() => {
+    // Ensure fake timers are always cleaned up even if a test forgets.
     vi.useRealTimers();
     sessionStorage.clear();
     localStorage.removeItem('omni_sentry_enabled');
@@ -138,17 +142,24 @@ describe('OmniSentryWidget', () => {
 
   // ── 3. Live polling ─────────────────────────────────────────────────────────
   it('polls getHealthStatus every 5 s while enabled', async () => {
-    render(<OmniSentryWidget />);
-    const toggle = screen.getByRole('button', { name: 'Enable OmniSentry' });
-    await act(async () => { fireEvent.click(toggle); });
+    // Opt in to fake timers ONLY for this test so we can control setInterval.
+    // All other tests use real timers so that waitFor() can poll the DOM.
+    vi.useFakeTimers();
+    try {
+      render(<OmniSentryWidget />);
+      const toggle = screen.getByRole('button', { name: 'Enable OmniSentry' });
+      await act(async () => { fireEvent.click(toggle); });
 
-    const callsAfterEnable = mockGetHealth.mock.calls.length;
+      const callsAfterEnable = mockGetHealth.mock.calls.length;
 
-    act(() => { vi.advanceTimersByTime(5000); });
-    expect(mockGetHealth.mock.calls.length).toBeGreaterThan(callsAfterEnable);
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(mockGetHealth.mock.calls.length).toBeGreaterThan(callsAfterEnable);
 
-    act(() => { vi.advanceTimersByTime(5000); });
-    expect(mockGetHealth.mock.calls.length).toBeGreaterThan(callsAfterEnable + 1);
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(mockGetHealth.mock.calls.length).toBeGreaterThan(callsAfterEnable + 1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows degraded status badge when health is degraded', async () => {
@@ -192,9 +203,7 @@ describe('OmniSentryWidget', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enable OmniSentry' })); });
 
     const flushBtn = screen.getByTestId('omni-sentry-flush-btn');
-    // Use advanceTimersByTimeAsync(0) to flush Promise microtasks without
-    // advancing the repeating 5 s setInterval (which would cause infinite loop).
-    await act(async () => { fireEvent.click(flushBtn); await vi.advanceTimersByTimeAsync(0); });
+    await act(async () => { fireEvent.click(flushBtn); });
 
     expect(mockFlush).toHaveBeenCalledTimes(1);
     await waitFor(() => {
@@ -225,9 +234,7 @@ describe('OmniSentryWidget', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enable OmniSentry' })); });
 
     const probeBtn = screen.getByTestId('omni-sentry-probe-btn');
-    // Use advanceTimersByTimeAsync(0) to flush Promise microtasks without
-    // advancing the repeating 5 s setInterval (which would cause infinite loop).
-    await act(async () => { fireEvent.click(probeBtn); await vi.advanceTimersByTimeAsync(0); });
+    await act(async () => { fireEvent.click(probeBtn); });
 
     expect(mockWithResilience).toHaveBeenCalledTimes(1);
     // Verify correct operation name passed
@@ -245,9 +252,7 @@ describe('OmniSentryWidget', () => {
     render(<OmniSentryWidget />);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enable OmniSentry' })); });
 
-    // Use advanceTimersByTimeAsync(0) to flush Promise microtasks without
-    // advancing the repeating 5 s setInterval (which would cause infinite loop).
-    await act(async () => { fireEvent.click(screen.getByTestId('omni-sentry-probe-btn')); await vi.advanceTimersByTimeAsync(0); });
+    await act(async () => { fireEvent.click(screen.getByTestId('omni-sentry-probe-btn')); });
 
     await waitFor(() => {
       expect(screen.getByText('⚡ Circuit Open')).toBeTruthy();
