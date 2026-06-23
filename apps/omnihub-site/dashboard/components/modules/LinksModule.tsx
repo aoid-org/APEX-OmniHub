@@ -93,7 +93,7 @@ export default function LinksModule({ onClose }: Props) {
       // Refresh module state in place (re-reads durable storage via the
       // omnilink-port resolver) — keeps the modal open and the dashboard
       // intact instead of a jarring full-page reload.
-      state.refetch();
+      state.refetch?.();
     }
   };
 

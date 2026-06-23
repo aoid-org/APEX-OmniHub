@@ -135,7 +135,7 @@ export interface OmniModuleState {
   readonly error: string | null;
   readonly stateKind: 'live' | 'demo' | 'local' | 'unavailable';
   /** Re-fetch live module state in place (no full-page reload). */
-  readonly refetch: () => void;
+  readonly refetch?: () => void;
 }
 
 type LiveModuleState = Readonly<{
