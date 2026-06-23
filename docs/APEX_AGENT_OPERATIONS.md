@@ -466,3 +466,30 @@ the API/worker start commands remain `python main.py api` and
 **Validation:** `uv lock --check`, an import/version smoke check, `pip-audit`
 against the orchestrator virtualenv, and `uv run pytest tests/test_models.py -q`
 passed during remediation.
+
+---
+
+## 9.9 OmniDash OMNIDASH EXECUTION CONTRACT v1.1 — gates 1–15 (PR #1476) — 2026-06-23
+
+UI-only dashboard hardening pass. No deployed-service topology, env var, secret,
+DB table/migration, or start command changed.
+
+**Changes in scope:**
+- OmniDash shell: drag/drop/pin/minimize/restore modal system (gates 1–4)
+- GlobalMediaDock + OmniMediaLaunchWidget with Zustand store (`omniMediaStore`) for real video playback (gate 4)
+- GlassCard orange border/glow on all widget cards (gate 5); light-mode border visibility fix
+- OmniSentryWidget placement below OmniTrace in right panel (gate 6)
+- Billing usage bar + meaningful action handlers (gate 7)
+- Files module with working file picker + honest staging CTA (gate 8)
+- Workflows SVG pipeline canvas (gate 9)
+- Automations module icon-contexted rows (gate 10)
+- Audits module static category baseline to prevent blank tiles (gate 11)
+- OmniBoard routed through Supabase Edge Functions; CSP tightened (gate 12)
+- Settings panel: labeled descriptions, live theme control (Light/Dark/System), Guardian Mode honest "Setup Required" state (gate 13)
+- Zero fake/simulated security labels confirmed in production UI (gate 14)
+- OmniTraceFeed migrated to Supabase singleton — removed per-render `createClient` (gate 15)
+- CI: `.github/workflows/ci-runtime-gates.yml` and `.github/workflows/production-readiness.yml` updated for E2E gate coverage; no start command or env contract changes
+- E2E test `omniskills-modal-gate1.spec.ts`: hardened against missing `SUPABASE_URL` by falling back to the same `placeholder.supabase.co` URL the app singleton uses when unconfigured
+
+**Operational impact:** None to deployed services, infrastructure, or runtime contracts.
+No new secrets, services, or DB objects required.
