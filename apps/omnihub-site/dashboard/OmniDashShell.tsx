@@ -5,6 +5,7 @@ import { StatusDot, GlassCard, SectionLabel } from "./components/designComponent
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
+import { OmniSentryWidget } from "./components/OmniSentryWidget";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
@@ -22,6 +23,8 @@ import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
+import { GlobalMediaDock } from '@/dashboard/components/media/GlobalMediaDock';
+import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLaunchWidget';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
@@ -1536,8 +1539,10 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <div data-testid="rt_trace"><OmniTraceFeed /></div>
+            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <OmniSentryWidget />
             <SentinelPanel />
+            <OmniMediaLaunchWidget />
           </div>
         )}
 
@@ -1609,8 +1614,10 @@ export default function OmniDashShell() {
             }}
           >
             <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
-            <div data-testid="rt_trace"><OmniTraceFeed /></div>
+            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <OmniSentryWidget />
             <SentinelPanel />
+            <OmniMediaLaunchWidget />
           </div>
         )}
 
@@ -1685,6 +1692,8 @@ export default function OmniDashShell() {
 
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />
+      {/* GlobalMediaDock — persistent PiP media layer, portal-mounted */}
+      <GlobalMediaDock />
     </div>
     </LayoutContext.Provider>
   );

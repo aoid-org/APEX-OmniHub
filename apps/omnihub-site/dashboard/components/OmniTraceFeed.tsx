@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase as supabaseSingleton } from '@/lib/supabase';
+
+type SupabaseClient = typeof supabaseSingleton;
 
 interface AuditLog {
   id: string;
@@ -270,7 +272,7 @@ function controlBtnStyle(disabled: boolean): React.CSSProperties {
 
 // ─── Main Feed ──────────────────────────────────────────────────────────────
 
-export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: unknown }>) {
+export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: SupabaseClient }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
   const [replayOpen, setReplayOpen] = useState(false);
@@ -285,16 +287,10 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
   }, []);
 
   useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+    const hasConfig = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+    if (!hasConfig) return;
 
-    if (!supabaseUrl || !supabaseKey) {
-      return;
-    }
-
-    const supabase = mockSupabase
-      ? (mockSupabase as ReturnType<typeof createClient>)
-      : createClient(supabaseUrl, supabaseKey);
+    const supabase = mockSupabase ?? supabaseSingleton;
     let channel: ReturnType<typeof supabase.channel>;
 
     try {
@@ -311,8 +307,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
           if (s === 'SUBSCRIBED') setStatus('SUBSCRIBED');
           else if (s === 'CHANNEL_ERROR') setStatus('ERROR');
         });
-    } catch (e) {
-      console.error('SUPABASE CATCH ERROR:', e);
+    } catch {
       setStatus('ERROR');
     }
 

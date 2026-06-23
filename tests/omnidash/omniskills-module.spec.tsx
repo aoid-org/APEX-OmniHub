@@ -2,8 +2,8 @@
  * OmniSkillsModule — entitlement bar + paywall (free cap = 5).
  *
  * Proves the OmniSkills surface shows N/5, activates the paywall indicator at
- * 5/5, and routes "Forge New Skill" to the protected SkillForge page.
- * useOmniModuleState, react-router, and ModuleShell are mocked.
+ * 5/5, and opens the forge in-modal (no page route) when "Forge New Skill" is
+ * clicked. useOmniModuleState, react-router, and ModuleShell are mocked.
  */
 
 import type { ReactNode } from 'react';
@@ -63,11 +63,14 @@ describe('OmniSkillsModule entitlement bar', () => {
     expect(screen.queryByText(/unlimited free/i)).not.toBeInTheDocument();
   });
 
-  it('"Forge New Skill" routes to the protected SkillForge page', () => {
+  it('"Forge New Skill" opens the forge in-modal — no page route, no close', () => {
     const onClose = vi.fn();
     render(<OmniSkillsModule onClose={onClose} />);
     fireEvent.click(screen.getByRole('button', { name: /forge new skill/i }));
-    expect(onClose).toHaveBeenCalled();
-    expect(h.navigate).toHaveBeenCalledWith('/launch/skillforge');
+    // GATE 1: OmniSkills stays a modal. Forging must not navigate away or close.
+    expect(h.navigate).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    // The entitlement view is replaced by the forge wizard (lazy panel suspends).
+    expect(screen.queryByText('OmniSkills Entitlement')).not.toBeInTheDocument();
   });
 });

@@ -71,7 +71,7 @@ interface ModuleShellProps {
 
 export const ModuleShell = memo(function ModuleShell({
   state,
-  onClose,
+  onClose: _onClose,
   children,
   onAction,
 }: ModuleShellProps) {
@@ -212,23 +212,22 @@ export const ModuleShell = memo(function ModuleShell({
         </div>
       )}
 
-      {/* Actions */}
-      <DialogFooter className="gap-2 pt-2">
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
-        {state.actions.map((action) => (
-          <Button
-            key={action.id}
-            variant={action.variant === 'destructive' ? 'destructive' : 'default'}
-            disabled={processing}
-            onClick={() => handleAction(action.id)}
-          >
-            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {action.label}
-          </Button>
-        ))}
-      </DialogFooter>
+      {/* Actions — top-right X on the modal handles close; no bottom Close button */}
+      {state.actions.length > 0 && (
+        <DialogFooter className="gap-2 pt-2">
+          {state.actions.map((action) => (
+            <Button
+              key={action.id}
+              variant={action.variant === 'destructive' ? 'destructive' : 'default'}
+              disabled={processing}
+              onClick={() => handleAction(action.id)}
+            >
+              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {action.label}
+            </Button>
+          ))}
+        </DialogFooter>
+      )}
     </div>
   );
 });

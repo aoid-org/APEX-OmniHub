@@ -6,10 +6,18 @@ import {
   type VoiceTestWindow,
 } from './_speech-recognition-test-helpers';
 
+// Hoist the invoke mock so the factory closure captures it (vi.mock is hoisted before imports).
+const { mockInvoke } = vi.hoisted(() => ({
+  mockInvoke: vi.fn(),
+}));
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'tenant-1' } } }),
+    },
+    functions: {
+      invoke: mockInvoke,
     },
   },
 }));
@@ -22,13 +30,6 @@ const fsmContext = {
   state: 'APP_IDENTIFICATION',
   trace_id: 'trace-1',
 };
-
-function mockStartFetch() {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(fsmContext),
-  });
-}
 
 async function renderWizard(
   overrides: Partial<{ onComplete: () => void; onDismiss: () => void }> = {},
@@ -44,22 +45,22 @@ async function renderWizard(
 describe('OmniBoardWizard', () => {
   beforeEach(() => {
     FakeSpeechRecognition.instances = [];
-    vi.stubGlobal('fetch', mockStartFetch());
+    // Default: session start succeeds and returns fsmContext.
+    mockInvoke.mockResolvedValue({ data: fsmContext, error: null });
   });
 
   afterEach(() => {
     cleanup();
     delete voiceWindow.SpeechRecognition;
-    vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
 
   it('starts an FSM session on mount and renders the input row', async () => {
     await renderWizard();
     expect(screen.getByText(/OmniBoard — App Integration/)).toBeTruthy();
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/omniboard/start?tenant_id=tenant-1'),
-      expect.objectContaining({ method: 'POST' }),
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'omnilink-port/omniboard-start',
+      expect.objectContaining({ body: expect.objectContaining({ tenant_id: 'tenant-1' }) }),
     );
   });
 
@@ -121,19 +122,16 @@ describe('OmniBoardWizard', () => {
 
   it('sends a turn and completes when the FSM reaches COMPLETION', async () => {
     const connectionSpec = { provider: 'salesforce' };
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(fsmContext) })
+    mockInvoke
+      .mockResolvedValueOnce({ data: fsmContext, error: null })
       .mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            context: { ...fsmContext, state: 'COMPLETION' },
-            message: 'Connected.',
-            connection_spec: connectionSpec,
-          }),
+        data: {
+          context: { ...fsmContext, state: 'COMPLETION' },
+          message: 'Connected.',
+          connection_spec: connectionSpec,
+        },
+        error: null,
       });
-    vi.stubGlobal('fetch', fetchMock);
     const { onComplete } = await renderWizard();
 
     fireEvent.change(screen.getByPlaceholderText('Type your response...'), {
@@ -142,25 +140,21 @@ describe('OmniBoardWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: '→' }));
 
     await waitFor(() => expect(onComplete).toHaveBeenCalledWith(connectionSpec));
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/omniboard/session-1/next'),
-      expect.objectContaining({ method: 'POST' }),
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'omnilink-port/omniboard-next',
+      expect.objectContaining({ body: expect.objectContaining({ session_id: 'session-1' }) }),
     );
   });
 
   it('surfaces an error when the session start fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    mockInvoke.mockResolvedValue({ data: null, error: new Error('Gateway unavailable') });
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText('Connection service rejected the request: HTTP 503.')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Gateway unavailable')).toBeTruthy());
   });
 
   it('surfaces an explicit timeout error when the connection service does not respond', async () => {
-    // Simulate the AbortController firing: fetch rejects with an AbortError.
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValue(new DOMException('The operation was aborted.', 'AbortError')),
-    );
+    mockInvoke.mockResolvedValue({ data: null, error: new Error('omniboard_timeout') });
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
 
     await waitFor(() =>
@@ -170,12 +164,12 @@ describe('OmniBoardWizard', () => {
     );
   });
 
-  it('surfaces an unreachable/CORS error when the fetch fails outright', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+  it('surfaces a network error when the invoke call rejects', async () => {
+    mockInvoke.mockRejectedValue(new Error('Network failure'));
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
 
     await waitFor(() =>
-      expect(screen.getByText(/Connection service unreachable\./)).toBeTruthy(),
+      expect(screen.getByText('Network failure')).toBeTruthy(),
     );
   });
 });
