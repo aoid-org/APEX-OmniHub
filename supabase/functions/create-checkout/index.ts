@@ -9,7 +9,7 @@ import {
 } from "../_shared/rate-limit.ts";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-const stripePriceId = Deno.env.get('STRIPE_PRICE_ID_PRO');
+const stripePriceId = Deno.env.get('STRIPE_PRICE_ID_BUS');
 
 interface RequestBody {
   tier: 'PRO';
