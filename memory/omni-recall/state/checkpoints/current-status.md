@@ -532,3 +532,25 @@ All 5 lib capabilities now surfaced in both `OmniSentryWidget` (sidebar) and `Om
 - main_HEAD: `5870a8ec` (unchanged — PR not yet merged)
 - package_version: `1.8.1`
 - docs_updated: CURRENT_PLATFORM_STATE_2026_06_23.md, CANONICAL_TRUTH.md (Statement 23), EDGE_FUNCTIONS_REFERENCE.md, OMNISENTRY.md (localStorage→sessionStorage), DOCUMENTATION_RELEASE_INDEX.md, README.md, current-status.md
+
+## Session (2026-06-23 — user-shoes validation + production flip)
+
+- branch: `fix/prod-readiness-omniboard-links-demoflip-20260623` (push + PR this session)
+- scope: live user-shoes validation of https://apexomnihub.icu/omnidash, then surgical production-readiness fixes.
+
+### User-shoes findings (live, demo session as JR)
+- Landing + OmniDash shell: GO. OmniBoard opens the correct app-integration surface; Links is correctly separated (no "Connect App" copy, does not open OmniBoard); Audits action gating shows honest module-specific copy (no 500/fake success).
+- **Links persistence loop verified end-to-end in production**: staged a URL → persisted through reload → rendered as ACTIVE chip (real RLS-scoped `omnilink_links` write/read). Confirms Statement 24.
+- **OmniBoard connect wizard defect**: leaked raw "Edge Function returned a non-2xx status code" (its `omniboard-start` edge returns non-2xx).
+
+### Fixes (commit on branch above)
+- `OmniBoardWizard.tsx`: `describeConnectionError` maps opaque Supabase transport strings to honest copy; descriptive errors still pass through; retry label.
+- `LinksModule.tsx`: `window.location.reload()` → in-place `useOmniModuleState().refetch()` (new optional `refetch` on the shared hook).
+- Production flip: `DemoModeContext` default off + PROD force-off; Demo toggle hidden in prod (`SentinelPanel`); 3 hardcoded "(Simulated)" labels gated (`OmniDashShell`); fabricated `syncedMinutesAgo` → honest null/— (`useAppRegistryHealth` + `DashboardOverview`).
+- Docs: CANONICAL_TRUTH Statement 24, DEMO_MODE production-enforcement section, CHANGELOG 1.8.2 bullet, start-here.md session note, this block.
+
+### Verification
+- Edits syntax-clean (standalone tsc 5.6.3: 0 TS1xxx across all 8 touched files). No visual/layout drift (logic + copy only).
+- Full vitest/tsc/build gates NOT run in sandbox (heavy web3 monorepo install exceeds the agent's 45s call cap; background installs killed by die-with-parent) — they run in CI on the PR + on JR's machine.
+- last_verified_main_HEAD: `fd2d1833`. package_version: `1.8.1` / app `1.3.10`.
+- Security: a GitHub PAT embedded in plaintext in the OneDrive clone's `.git/config` was stripped + reported; JR rotated it. Disposable `GH_TOKEN_TEMP` provided via ENV for this push — revoke after merge.

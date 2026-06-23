@@ -130,3 +130,11 @@ If any other document conflicts with this file, this file wins unless explicitly
 - `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
 
 **Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` for the current canonical snapshot.
+
+## Source-of-Truth Statement 24 (2026-06-23)
+
+**Links is now live-persisted (supersedes the Links portion of Statement 21).** `apps/omnihub-site/dashboard/components/modules/LinksModule.tsx` writes validated `http(s)` URLs to the Supabase `omnilink_links` table (migration `20260622102600_omnilink_links_persistence.sql`; own-row RLS for insert/select/update/delete). The `omnilink-port` `module-state` `resolveLinks` resolver SELECTs from `omnilink_links` (JWT forwarded via `createAnonClient(authHeader)` → RLS-scoped to the owner). Add Link refreshes the panel in place via `useOmniModuleState().refetch()` — **no full-page reload**. The earlier "staged locally until link-context persistence is connected" copy and the "empty link-context" resolver claim are retired.
+
+**Production demo-state is hard-disabled in production builds.** `DemoModeContext` defaults `demoMode:false` and force-disables demo in production (`import.meta.env.PROD`); a stale localStorage value cannot re-enable it and the Demo Mode ops toggle is hidden in prod (`SentinelPanel`). The three previously hardcoded "(Simulated)" status labels in `OmniDashShell` (header Zero Trust badge + footer Guardian/Zero-Trust) are now gated on `demoMode`. The fabricated `syncedMinutesAgo` metric in `useAppRegistryHealth` is replaced with an honest `null` (rendered as "—"). No visual/layout drift.
+
+**OmniBoard connect-wizard errors are honest (refines Statement 21 taxonomy).** `OmniBoardWizard.describeConnectionError` maps opaque Supabase transport strings ("Edge Function returned a non-2xx status code", relay/fetch failures) to user-facing copy and never leaks them; genuinely descriptive errors still pass through. The retry control reads "Retry Connection" after a failure. The underlying `omniboard-start` edge availability remains a separate backend item.

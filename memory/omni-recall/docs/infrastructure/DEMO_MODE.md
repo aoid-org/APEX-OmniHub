@@ -51,3 +51,13 @@ In demo mode, the `alchemy-webhook` function returns a 200 response and skips al
 
 **Demo mode must never be enabled in production.**
 Remove `VITE_DEMO_MODE` and `DEMO_MODE` and provide real secrets before any production deploy.
+
+## Production Enforcement (code-level, 2026-06-23)
+
+The warning above is now enforced in code, not just by convention:
+
+- `apps/omnihub-site/src/contexts/DemoModeContext.tsx` defaults `demoMode:false` and **force-disables demo in production builds** (`import.meta.env.PROD`). A stale `localStorage` value cannot re-enable demo in production, and `setDemoMode(true)` is a no-op there.
+- The **Demo Mode ops toggle is hidden in production** (`apps/omnihub-site/dashboard/components/SentinelPanel.tsx`, `!import.meta.env.PROD` guard).
+- `"(Simulated)"` status labels render only when `demoMode` is true; production shows clean labels.
+
+Dev and test builds (`import.meta.env.PROD === false`, including Vitest) keep the full demo toggle for local demos.
