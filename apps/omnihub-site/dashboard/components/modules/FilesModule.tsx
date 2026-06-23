@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { UploadCloud, FileText, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;
@@ -11,6 +12,8 @@ export default function FilesModule({ onClose }: Props) {
   const state = useOmniModuleState('files');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [staged, setStaged] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const storageStat    = state.stats.find(s => s.label === 'Storage Used');
   const totalFilesStat = state.stats.find(s => s.label === 'Total Files');
@@ -27,7 +30,35 @@ export default function FilesModule({ onClose }: Props) {
     e.target.value = '';
   };
 
-  const clearStaged = () => setStaged(null);
+  // Real end-to-end upload to the tenant-scoped 'omnihub-files' bucket
+  // (RLS: first path segment must equal auth.uid() — migration 20260531000002).
+  // Mirrors the proven LinksModule auth -> write -> refetch pattern; honest on failure.
+  const handleUpload = async () => {
+    if (!staged || isUploading) return;
+    setIsUploading(true);
+    setUploadError(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) {
+      setUploadError('Authentication required to upload files.');
+      setIsUploading(false);
+      return;
+    }
+    const path = `${userId}/${Date.now()}-${staged.name}`;
+    const { error } = await supabase.storage
+      .from('omnihub-files')
+      .upload(path, staged, { upsert: false });
+    setIsUploading(false);
+    if (error) {
+      setUploadError(`Upload failed: ${error.message}`);
+      return;
+    }
+    setStaged(null);
+    // Refresh module state in place (storage stats/file count re-read).
+    state.refetch?.();
+  };
+
+  const clearStaged = () => { setStaged(null); setUploadError(null); };
 
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -68,7 +99,7 @@ export default function FilesModule({ onClose }: Props) {
             <UploadCloud className="text-muted-foreground/50 mb-2 h-6 w-6" />
             <p className="text-sm font-medium text-muted-foreground">Click to select a file</p>
             <p className="text-xs text-muted-foreground/60 mt-0.5">
-              File upload requires a connected APEX Storage Provider.
+              Files upload to your private APEX Storage.
             </p>
           </div>
 
@@ -88,9 +119,22 @@ export default function FilesModule({ onClose }: Props) {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground truncate">{staged.name}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{formatBytes(staged.size)}</p>
-                <p className="text-[10px] text-orange-400/80 mt-1">
-                  Staged locally — connect APEX Storage Provider to upload.
-                </p>
+                {uploadError ? (
+                  <p className="text-[10px] text-red-400 mt-1">{uploadError}</p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">Ready to upload to your private APEX Storage.</p>
+                )}
+                <button
+                  type="button"
+                  disabled={isUploading}
+                  onClick={(e) => { e.stopPropagation(); void handleUpload(); }}
+                  className={[
+                    'mt-2 px-3 py-1 rounded text-primary-foreground text-xs font-bold',
+                    isUploading ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-primary/90 cursor-pointer',
+                  ].join(' ')}
+                >
+                  {isUploading ? 'Uploading…' : 'Upload'}
+                </button>
               </div>
               <button
                 type="button"
