@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as supabaseSingleton } from '@/lib/supabase';
 
+type SupabaseClient = typeof supabaseSingleton;
+
 interface AuditLog {
   id: string;
   action: string;
@@ -270,7 +272,7 @@ function controlBtnStyle(disabled: boolean): React.CSSProperties {
 
 // ─── Main Feed ──────────────────────────────────────────────────────────────
 
-export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: unknown }>) {
+export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: SupabaseClient }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
   const [replayOpen, setReplayOpen] = useState(false);
