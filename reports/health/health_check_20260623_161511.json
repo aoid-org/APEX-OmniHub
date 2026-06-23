@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-06-23T16:15:11Z",
+  "checks": [
+    {"component":"database","status":"healthy","connections":45,"max":100,"utilization":45},
+    {"component":"api","status":"healthy","p95_latency_ms":145,"threshold_ms":200},
+    {"component":"memory","status":"healthy","used_percent":65,"threshold":80},
+    {"component":"cpu","status":"healthy","used_percent":55,"threshold":70},
+    {"component":"disk","status":"healthy","used_percent":42,"threshold":75},
+    {"component":"websocket","status":"healthy","active_connections":3200,"max":10000,"utilization":32}
+  ],
+  "overall_status": "healthy",
+  "summary": {
+    "critical": 0
+0,
+    "warning": 0
+0,
+    "degraded": 0
+0
+  }
+}
