@@ -40,7 +40,7 @@ status: verified
 | `verify-nft` | POST | Yes (anon) | NFT ownership verification |
 | `web3-nonce` | GET | No | Generate SIWE nonce |
 | `web3-verify` | POST | No | SIWE wallet authentication |
-| `create-checkout` | POST | Yes (anon) | Stripe checkout session creation |
+| `create-checkout` | POST | Yes (anon) | Stripe checkout session creation. **Fail-closed** — returns HTTP 503 `BILLING_NOT_CONFIGURED` if `STRIPE_SECRET_KEY` or `STRIPE_PRICE_ID_PRO` env vars are absent. Stripe client only instantiated when both secrets present. |
 | `stripe-webhook` | POST | No (HMAC-signed) | Stripe payment event webhook |
 | `send-push-notification` | POST | Yes (service) | Mobile push delivery |
 | `storage-upload-url` | POST | Yes (anon) | Generate signed storage upload URL |

@@ -21,7 +21,7 @@ OmniSentry is an enterprise-grade monitoring system that runs entirely client-si
 | **Self-Healing**        | Exponential backoff retry with jitter (max 30s)                  |
 | **Self-Diagnosing**     | Periodic health checks every 30 seconds                          |
 | **Error Deduplication** | Fingerprint-based deduplication (60s window)                     |
-| **Zero-Maintenance**    | Autonomous operation, persists state to localStorage             |
+| **Zero-Maintenance**    | Autonomous operation, persists state to `sessionStorage` (not `localStorage` — security rule NS-M-008: no cross-tab persistence of error/circuit state) |
 
 ## Quick Start
 

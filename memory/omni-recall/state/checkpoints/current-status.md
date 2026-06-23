@@ -488,3 +488,47 @@ All 5 lib capabilities now surfaced in both `OmniSentryWidget` (sidebar) and `Om
 - platform: Vite 7 + React 18 + TypeScript 5.9
 - sonarqube_exclusions: `scripts/**`, `**/*.mjs` excluded from scan; `apps/omnihub-site/src/App.tsx` in `sonar.coverage.exclusions`; `apps/omnihub-site/src/pages/**` in `sonar.cpd.exclusions`
 - carried_forward: APEX Agent LIVE / Render / Temporal / Supabase runtime health (last verified 2026-06-19; no live credentials used this pass)
+
+## Session (2026-06-23 late) — Commercial realness fixes: Stripe fail-closed, gateway env var, apex-support skill audit
+
+- branch: `fix/release-gate-claim-hygiene-omniskills-v2`
+- commit: `1fa8870e`
+- PR: #1477 (open → main) — https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1477
+
+### Root cause of release.yml CI failures (confirmed)
+- GitHub run `27998946447` failed on step "Run Release verification suite" → `verify:claim-hygiene` 9 findings.
+- These are the same false positives patched in this PR. `release.yml` only triggers on `main`; our fix is on the branch. Merge resolves it.
+
+### Files Modified (Batch 2)
+
+| File | Change |
+|---|---|
+| `supabase/functions/create-checkout/index.ts` | Removed `price_123456789` fake fallback price ID; removed `Stripe(stripeSecretKey ?? '', ...)` empty-key instantiation; added HTTP 503 `BILLING_NOT_CONFIGURED` fail-closed guard; Stripe client moved inside guard |
+| `src/lib/realtime/ApexRealtimeGateway.ts` | Fixed env var: `process.env.VITE_ORCHESTRATOR_BASE_URL` (nonexistent) → `import.meta.env.VITE_ORCHESTRATOR_URL` (Vite-correct, defined in `.env.example`) |
+| `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path; `ApexRealtimeGateway.connect({ skillId: 'omnisupport' })` call retained and confirmed correct |
+
+### apex-support skill — audit (no changes required)
+- `.claude/skills/apex-support/SKILL.md` read in full.
+- Version 2.0, production DAG executor node.
+- Section H I/O contract: orchestrator resolves systemPrompt from skillId server-side. Widget sending `{ skillId: 'omnisupport' }` is architecturally correct.
+- `SkillRegistry.ts` compact prompt is the intentional client-side fallback summary. Not a duplicate.
+- Billing escalation: `info-outreach@apexomnihub.com`. Prompt-injection defense: Section F. DAG registration: Section I.
+
+### CI Gate Status (all local, Batch 2 post-fix)
+
+| Gate | Result |
+|---|---|
+| verify:claim-hygiene | ✅ PASSED |
+| verify:ci-integrity | ✅ PASSED |
+| verify:supabase-security | ✅ PASSED |
+| check:omnidash-integrity | ✅ PASSED |
+| verify:supply-chain | ✅ PASSED |
+| check:omniskills-rebrand | ✅ PASSED |
+| check:pwa-integrity | ✅ PASSED |
+
+### Verified runtime facts (2026-06-23 late)
+- branch_head: `1fa8870e`
+- pr: #1477 open, 2 commits
+- main_HEAD: `5870a8ec` (unchanged — PR not yet merged)
+- package_version: `1.8.1`
+- docs_updated: CURRENT_PLATFORM_STATE_2026_06_23.md, CANONICAL_TRUTH.md (Statement 23), EDGE_FUNCTIONS_REFERENCE.md, OMNISENTRY.md (localStorage→sessionStorage), DOCUMENTATION_RELEASE_INDEX.md, README.md, current-status.md

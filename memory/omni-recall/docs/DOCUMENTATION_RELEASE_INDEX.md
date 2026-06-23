@@ -367,3 +367,29 @@ Full release-rescue audit performed against `main` @ `5870a8ec` (PR #1476, "Rebr
 
 ### Current canonical start point
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (supersedes 2026-06-22 snapshot)
+
+---
+
+## 2026-06-23 Commercial Realness Doc Sync (Stripe fail-closed + Gateway fix + apex-support skill audit)
+
+Batch 2 of the PR #1477 fix session. Three code files changed; six doc files updated.
+
+| File | Change |
+|---|---|
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` | Batch 2 section appended — Stripe fail-closed, gateway env fix, OmniSupportWidget audit, apex-support skill audit, PR #1477 final commit state |
+| `memory/omni-recall/state/checkpoints/current-status.md` | 2026-06-23 late session block appended |
+| `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Statement 23 added — Stripe fail-closed, gateway env var, OmniSupportWidget wiring, OmniSentry sessionStorage correction |
+| `memory/omni-recall/docs/api/EDGE_FUNCTIONS_REFERENCE.md` | `create-checkout` entry expanded — fail-closed behaviour, HTTP 503 error code, env var guard documented |
+| `memory/omni-recall/docs/platform/OMNISENTRY.md` | Corrected `localStorage` → `sessionStorage` (NS-M-008) in feature table |
+| `README.md` | Branch, PR, and gateway fix noted |
+
+### Code files changed (Batch 2, commit `1fa8870e`)
+
+| File | Change |
+|---|---|
+| `supabase/functions/create-checkout/index.ts` | Removed fake `price_123456789` fallback; removed empty-key Stripe client; added HTTP 503 `BILLING_NOT_CONFIGURED` fail-closed guard |
+| `src/lib/realtime/ApexRealtimeGateway.ts` | `process.env.VITE_ORCHESTRATOR_BASE_URL` → `import.meta.env.VITE_ORCHESTRATOR_URL` |
+| `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path |
+
+### Current canonical start point
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (Batch 2 section is the latest state)
