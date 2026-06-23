@@ -14,6 +14,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import {
   getDevice,
   type DeviceRecord,
@@ -867,8 +868,7 @@ class OmniPortEngine {
     try {
       const { error: dbError } = await supabase.from('ingress_buffer').insert({
         correlation_id: ctx.correlationId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw_input is an untyped jsonb column accepting arbitrary inbound payloads (P2-1 deferral)
-        raw_input: input as any,
+        raw_input: JSON.parse(JSON.stringify(input)) as Json,
         error_reason: error.message,
         status: 'pending',
         risk_score: riskScore,

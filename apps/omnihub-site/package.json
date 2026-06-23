@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite-react-ssg build",
-    "build:ssg": "vite-react-ssg build",
+    "build": "node scripts/build-ssg.mjs",
+    "build:ssg": "node scripts/build-ssg.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",

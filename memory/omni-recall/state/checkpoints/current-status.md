@@ -532,3 +532,5 @@ All 5 lib capabilities now surfaced in both `OmniSentryWidget` (sidebar) and `Om
 - main_HEAD: `5870a8ec` (unchanged — PR not yet merged)
 - package_version: `1.8.1`
 - docs_updated: CURRENT_PLATFORM_STATE_2026_06_23.md, CANONICAL_TRUTH.md (Statement 23), EDGE_FUNCTIONS_REFERENCE.md, OMNISENTRY.md (localStorage→sessionStorage), DOCUMENTATION_RELEASE_INDEX.md, README.md, current-status.md
+
+- 2026-06-23 audit-gap closure: `tenant_entitlements` gap resolved via real `public.tenant_entitlements` table (Option B) because OmniConnect requires tenant/user/app/feature scoping that neither Web3 `public.entitlements` nor UEP `public.user_entitlements` models without domain overloading. Added RLS with own-row SELECT and service_role write policy, typed service usage, regression tests, SSG smoke gate, and spatial id->Point removal index. Validation: `bun run typecheck`, `bun run build`, `cd apps/omnihub-site && bun run build:ssg` under Node 24, `bun run lint`, targeted entitlement/spatial tests, and static `rg` checks passed.
