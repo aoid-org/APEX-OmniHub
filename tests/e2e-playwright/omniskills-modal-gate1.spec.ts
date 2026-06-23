@@ -15,7 +15,7 @@ function base64url(obj: unknown): string {
 }
 
 test('OmniSkills opens as a modal with the real icon and no route change', async ({ page }) => {
-  const supabaseUrl = process.env.SUPABASE_URL!;
+  const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
   const ref = new URL(supabaseUrl).hostname.split('.')[0];
   const storageKey = `sb-${ref}-auth-token`;
 
