@@ -15,7 +15,7 @@ export const GlassCard = ({ children, style={}, glow = true, onClick }: GlassCar
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
     borderRadius: 16,
     boxShadow: glow
-      ? `0 0 24px ${T.orangeGlow}, 0 4px 24px rgba(0,0,0,.5)`
+      ? `var(--omni-card-drop-shadow)`
       : `0 4px 24px rgba(0,0,0,.4)`,
     backdropFilter: "blur(12px)",
     transition: "all .2s ease",
