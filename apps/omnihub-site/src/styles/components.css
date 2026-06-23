@@ -2220,8 +2220,10 @@ body {
 }
 
 /* === DEMO VIDEO === */
+/* contain:layout prevents video section reflow from affecting sibling sections (CLS fix) */
 .demo-video {
   text-align: center;
+  contain: layout;
 }
 
 .demo-copy-font,
@@ -2236,6 +2238,13 @@ body {
 .demo-video__container {
   position: relative;
   max-width: 960px;
+  /*
+   * CLS FIX: Pre-reserve the exact 16:9 space at all viewport widths before
+   * React hydrates and before video metadata loads. Uses clamp to match the
+   * max-width:960px cap while scaling on smaller screens.
+   * Formula: height = min(viewport_width, 960px) × (9/16)
+   */
+  min-height: clamp(180px, calc(min(100vw, 960px) * 9 / 16), 540px);
   margin: 0 auto;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
@@ -2283,6 +2292,8 @@ body {
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: var(--border-radius-lg);
+  /* Prevent internal video reflow cascading outward */
+  contain: layout paint;
 }
 
 .demo-video__controls {
