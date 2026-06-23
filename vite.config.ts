@@ -40,9 +40,11 @@ export default defineConfig(({ mode }) => {
     alias: {
       "dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
       "@/dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
-      // @/lib resolves to root src/lib so cross-package imports (e.g. OmniSentryWidget)
-      // correctly reach root-level libraries regardless of which Vite entry is active.
-      "@/lib": path.resolve(__dirname, "./src/lib"),
+      // Specific alias for root-level lib imports used by dashboard components.
+      // INTENTIONAL: OmniSentryWidget lives in apps/omnihub-site/dashboard/ but
+      // imports from root src/lib/omni-sentry. A broad @/lib alias would break
+      // all apps/omnihub-site/src/lib/* imports — so we alias only this one file.
+      "@/lib/omni-sentry": path.resolve(__dirname, "./src/lib/omni-sentry"),
       "@omniconnect": path.resolve(__dirname, "./src/omniconnect"),
       "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },
