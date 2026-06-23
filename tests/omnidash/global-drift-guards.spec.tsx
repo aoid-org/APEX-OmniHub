@@ -33,8 +33,8 @@ describe('Global Drift Guards', () => {
     expect(content).toMatch(/freeze_mode/);
     expect(content).toMatch(/show_connected_ecosystem/);
 
-    // Ensure we iterate over the hardcoded labels instead of the dynamic backend list
-    expect(content).toMatch(/Object\.entries\(SETTING_LABELS\)\.map/);
+    // Ensure we iterate over the hardcoded meta map instead of the dynamic backend list
+    expect(content).toMatch(/Object\.entries\(SETTING_META\)\.map/);
   });
 
   it('module-keyed capability map blocks unsupported actions with module-specific copy', () => {
