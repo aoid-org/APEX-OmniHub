@@ -10,9 +10,30 @@
   <meta property="og:title" content="Demo | APEX OmniHub" />
   <meta property="og:description" content="See APEX OmniHub in action. Watch the demo and explore the workflow." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://apexomnihub.icu/demo.html" />
+  <meta property="og:image" content="https://apexomnihub.icu/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Demo | APEX OmniHub" />
+  <meta name="twitter:description" content="See APEX OmniHub in action. Watch the demo and explore the workflow." />
+  <meta name="twitter:image" content="https://apexomnihub.icu/og.png" />
   <link rel="icon" type="image/svg+xml" href="/apex-badge.svg?v=20260118" />
   <link rel="canonical" href="https://apexomnihub.icu/demo.html" />
+  <!-- Font: preconnect first, then load — eliminates font-swap CLS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <title>Demo | APEX OmniHub</title>
+  <!-- FOUC Prevention: Set theme before render (mirrors index.html) -->
+  <script>
+    (function () {
+      var theme = localStorage.getItem("theme");
+      if (!theme) theme = "light";
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 
 <body>

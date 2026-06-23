@@ -98,7 +98,26 @@ export function DemoVideoPlayer({
   return (
     <div className="demo-video__container">
       <div className="demo-video__glow" aria-hidden="true" />
-      <video ref={videoRef} id={id} className="demo-video__player" src={sourceUrl} autoPlay muted={isMuted} loop playsInline preload="metadata" controls>
+      {/*
+        CLS FIX: explicit width + height attributes tell the browser the
+        intrinsic size BEFORE video metadata loads, eliminating the 0.169 layout shift.
+        aspect-ratio:16/9 in CSS is the primary constraint; width+height are the
+        authoritative intrinsic-size hint for pre-metadata render.
+      */}
+      <video
+        ref={videoRef}
+        id={id}
+        className="demo-video__player"
+        src={sourceUrl}
+        autoPlay
+        muted={isMuted}
+        loop
+        playsInline
+        preload="metadata"
+        controls
+        width={960}
+        height={540}
+      >
         <track kind="captions" src={captionUrl} srcLang="en" label="English" />
         Your browser does not support the video tag.
       </video>
