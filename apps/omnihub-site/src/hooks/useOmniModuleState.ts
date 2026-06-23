@@ -7,7 +7,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase, hasSupabaseConfig } from "@/lib/supabase";
 import { getModuleContent } from "@/dashboard/components/ModuleRegistry";
 import type {
@@ -134,6 +134,8 @@ export interface OmniModuleState {
   readonly loading: boolean;
   readonly error: string | null;
   readonly stateKind: 'live' | 'demo' | 'local' | 'unavailable';
+  /** Re-fetch live module state in place (no full-page reload). */
+  readonly refetch: () => void;
 }
 
 type LiveModuleState = Readonly<{
@@ -147,7 +149,7 @@ type LiveModuleState = Readonly<{
   stateKind: 'live' | 'demo' | 'local' | 'unavailable';
 }>;
 
-function registryStateFor(appKey: string): OmniModuleState {
+function registryStateFor(appKey: string): Omit<OmniModuleState, 'refetch'> {
   const reg = getModuleContent(appKey);
   return {
     moduleKey: appKey,
@@ -164,6 +166,8 @@ function registryStateFor(appKey: string): OmniModuleState {
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
   const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const refetch = useCallback(() => setReloadKey((k) => k + 1), []);
   const [liveState, setLiveState] = useState<LiveModuleState>(() => ({
     key: appKey,
     loading: true,
@@ -251,10 +255,10 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     return () => {
       cancelled = true;
     };
-  }, [appKey, baselineState.stateKind, baselineState.actions]);
+  }, [appKey, baselineState.stateKind, baselineState.actions, reloadKey]);
 
   if (liveState.key !== appKey) {
-    return baselineState;
+    return { ...baselineState, refetch };
   }
 
   // Fall back to baseline fields ONLY if not live and not unavailable
@@ -272,6 +276,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     loading: liveState.loading,
     error: liveState.error,
     stateKind: liveState.stateKind,
+    refetch,
   };
 }
 

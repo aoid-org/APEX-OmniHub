@@ -46,7 +46,19 @@ function describeConnectionError(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message === 'omniboard_timeout') {
     return 'Connection service timed out. The OmniBoard integration gateway did not respond.';
   }
-  return err instanceof Error ? err.message : fallback;
+  const raw = err instanceof Error ? err.message : '';
+  // supabase-js surfaces opaque transport strings for Edge Function failures
+  // (e.g. "Edge Function returned a non-2xx status code"). These are not user
+  // copy — map them to an honest message instead of leaking transport detail.
+  // Genuinely descriptive errors still pass through unchanged.
+  if (
+    /non-2xx status code|Relay Error invoking the Edge Function|Failed to send a request to the Edge Function/i.test(
+      raw,
+    )
+  ) {
+    return 'OmniBoard could not complete the connection \u2014 the integration gateway is unavailable right now. No app was connected.';
+  }
+  return raw || fallback;
 }
 
 interface FSMContext {
@@ -177,7 +189,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
           disabled={loading}
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold"
         >
-          {loading ? 'Starting session…' : 'Start Connecting'}
+          {loading ? 'Starting session…' : error ? 'Retry Connection' : 'Start Connecting'}
         </button>
       )}
       <p className="text-[10px] text-muted-foreground text-center">
