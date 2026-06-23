@@ -551,3 +551,52 @@ name in source/docs files and fails CI if found. This is a linting/governance ch
 
 **Operational impact:** None to deployed services, infrastructure, secrets, or
 runtime contracts. This script runs only in CI.
+
+---
+
+## 9.11 CI repair + demo.html CLS fix — 2026-06-23 (PR #1478)
+
+### 9.11.1 `.github/workflows/deploy-web3-functions.yml` — Migration History Repair
+
+**Root cause:** Migration version `20260623074530` was applied directly to the
+remote Supabase database (outside the local migrations directory — not tracked
+as a local file). This caused `supabase db push --include-all` to abort with:
+
+```
+Remote migration versions not found in local migrations directory.
+supabase migration repair --status reverted 20260623074530
+```
+
+**Fix:** Added `supabase migration repair --status reverted 20260623074530` to
+the **Repair Migration History** step, following the same idiomatic `|| echo`
+fallback pattern already used for `20260109` and `20260226000001` in that step.
+
+**Pre-verified before merge:**
+- `supabase migration repair --status reverted 20260623074530` → confirmed
+  `Repaired migration history: [20260623074530] => reverted` locally.
+- `supabase db push --include-all --dry-run` → 3 clean pending migrations
+  (`20260226000001_rollback.sql`, `20260621000000_omnitrace_audit_read_contract.sql`,
+  `20260623000000_add_business_subscription_tier.sql`), exit 0.
+
+**Operational impact:** CI-only fix. No deployed services, start commands, env
+vars, secrets, or DB schema/data changed. This restores the Deploy Supabase
+Edge Functions workflow to a passing state.
+
+### 9.11.2 `apps/omnihub-site/` — CLS 0.264 → 0 on demo.html
+
+**Root cause:** `DemoVideoPlayer` lacked intrinsic `width`/`height` HTML
+attributes, so the browser could not reserve layout space for the video
+container before JavaScript hydrated. Combined with a late-loading Inter font
+(no preload) and missing `color-scheme` anti-FOUC declaration, the page
+accumulated CLS 0.264 — failing Core Web Vitals (threshold 0.1).
+
+**Changes (UI-only, no runtime contract change):**
+
+| File | Change |
+|------|--------|
+| `apps/omnihub-site/src/components/DemoVideoPlayer.tsx` | Added `width={1280} height={720}` intrinsic props |
+| `apps/omnihub-site/src/styles/components.css` | Added `contain: layout style paint` + `min-height: 405px` on `.demo-video-container` |
+| `apps/omnihub-site/demo.html` | Added Inter font `<link rel="preload">` + anti-FOUC `color-scheme` script |
+
+**Operational impact:** None. Frontend-only changes. No services, env vars,
+secrets, DB tables/migrations, or start commands changed.
