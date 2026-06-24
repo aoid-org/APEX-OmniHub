@@ -680,3 +680,44 @@ before invoking the SSG CLI.
 **Operational impact:** CI-only deployment safety improvement. No Cloudflare
 Pages project name, start command, runtime secret, or production URL changes.
 
+---
+
+## 9.14 Post-merge security + CI remediation — 2026-06-24 (PR #1484)
+
+Resolves 8 open `aiohttp` Dependabot alerts and completes post-CI hardening.
+RFC: `memory/omni-recall/rfc/RFC_2026_06_24_POST_MERGE_SECURITY_CI.md`.
+
+**Dependency lock changes (deployed-runtime critical path):**
+- `orchestrator/requirements.lock`: `aiohttp` `3.13.3 → 3.14.1` (patched floor).
+  This was the only repo artifact still on a vulnerable aiohttp; `uv.lock` and
+  `local-agents/requirements.txt` were already on `3.14.1`. All 8 alerts map to
+  advisories affecting aiohttp `3.14.0`, all fixed in `3.14.1` (verified via
+  OSV.dev + PyPI; the live Dependabot API was policy-denied this session).
+- `orchestrator/uv.lock`: confirmed `aiohttp 3.14.1`; only a lock-format
+  `revision 2 → 3` bump (no resolved package versions changed).
+- `package.json`: replaced Bun-unsupported nested `protobufjs` overrides with a
+  flat `"protobufjs": "^7.6.4"`; the dependency tree now unifies on `7.6.4`.
+
+**Operational impact:** no service topology, env var, secret, DB table/migration,
+start command, or public runtime contract changed. Render still builds the
+orchestrator from `orchestrator/pyproject.toml` plus `orchestrator/uv.lock`, and
+the API/worker start commands remain `python main.py api` and
+`python main.py worker`. The workflow edits only pin the Bun toolchain
+(`bun-version: latest → 1.3.14`, `packageManager: bun@1.3.14`) and add
+regression-guard steps to `security-regression-guard.yml`; no job topology,
+secret, or deploy target changed.
+
+**Migration change:** removed the duplicate
+`supabase/migrations/20260621000000_omnitrace_audit_read_contract.sql`
+(byte-identical to the canonical `20260621000002_omnitrace_audit_read_contract.sql`,
+which is unchanged). No DB object contract changed; the canonical OmniTrace
+read-contract migration remains the source of truth. Apply guidance per §10.
+
+**New guards:** `scripts/ci/check-python-dependency-security.py`,
+`scripts/ci/check-supabase-migration-versions.mjs`, and pre-commit hooks under
+`.githooks/pre-commit.d/`, wired into `security-regression-guard.yml`.
+
+**Validation:** Python security guard, migration-version guard,
+`bun install --frozen-lockfile`, `uv lock --check`, and
+`pytest tests/omniboard -q` (38 passed) all passed during remediation.
+
