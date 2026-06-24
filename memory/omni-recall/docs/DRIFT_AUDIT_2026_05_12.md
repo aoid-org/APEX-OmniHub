@@ -5,6 +5,7 @@ status: archived
 archived_date: 2026-06-21
 note: Superseded by continuous drift monitoring and newer audits through 2026-06-21.
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 # Drift Audit — 2026-05-12
 

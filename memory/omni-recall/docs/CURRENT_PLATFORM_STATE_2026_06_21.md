@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 3.0.0
 created: 2026-06-21
@@ -8,11 +10,13 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_20.md
 superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
 
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 # Current Platform State — 2026-06-21 (V3)
 
 > **⚠️ HISTORICAL / ARCHIVED (2026-06-22).** Superseded by [`CURRENT_PLATFORM_STATE_2026_06_22.md`](./CURRENT_PLATFORM_STATE_2026_06_22.md). Retained verbatim as a point-in-time record — do **not** treat the counts, HEAD, or version below as current.
 >
-> **Canonical drift-control snapshot taken 2026-06-21 against `main` HEAD `966d695f`.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_20.md`. Historical dated snapshots remain valid as point-in-time evidence only where they do not conflict with this snapshot, `project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `architecture/ARCHITECTURE_CANONICAL_MAP.md`.
+> **Canonical drift-control snapshot taken 2026-06-21 against `main` HEAD `966d695f`.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_20.md`. Historical dated snapshots remain valid as point-in-time evidence only where they do not conflict with this snapshot, `project-status/release-validation-summary.json`, or `architecture/ARCHITECTURE_CANONICAL_MAP.md`.
 >
 > **Verification scope (honesty note):** repository counts, HEAD, versions, and behavior changes were **directly verified this session** against the working tree and `git log`. Live infrastructure state (Render/Temporal/Supabase runtime health) is **carried forward** from the 2026-06-19 end-to-end verification.
 
@@ -27,7 +31,7 @@ superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 | Package version | `1.8.1` (root `package.json`) |
 | App package version | `1.3.10` (`apps/omnihub-site/package.json`) |
 | Package manager posture | npm-first for CI (`package-lock.json` canonical); bun optional for local dev |
-| Certification authority | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification authority | `docs/project-status/release-validation-summary.json` |
 | Architecture authority | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` + `docs/architecture/CANONICAL_TRUTH.md` |
 
 ## Commits Since 2026-06-21 V1 Snapshot (`966d695f`)
@@ -101,7 +105,7 @@ Reconciled OmniSkills logic around a newly expanded **5-skill free tier** using 
 
 | Concern | Authority |
 |---|---|
-| Certification verdict | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification verdict | `docs/project-status/release-validation-summary.json` |
 | Architecture topology | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` |
 | APEX Agent operations | `docs/APEX_AGENT_OPERATIONS.md` |
 | CI/release gate | `.github/workflows/release.yml` |

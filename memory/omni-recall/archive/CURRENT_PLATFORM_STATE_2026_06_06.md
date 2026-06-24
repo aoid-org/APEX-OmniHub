@@ -5,6 +5,7 @@ status: archived
 archived_date: 2026-06-21
 superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 # Current Platform State — 2026-06-06
 

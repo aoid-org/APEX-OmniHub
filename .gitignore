@@ -140,7 +140,7 @@ Thumbs.db
 *.swo
 
 # ─── CI-generated release artifacts (uploaded as workflow artifacts, not committed) ──
-release-evidence.json
+release-validation-summary.json
 shadow-preflight.json
 
 # ─── Package Manager Conflicts ───────────────────────────────────────────────

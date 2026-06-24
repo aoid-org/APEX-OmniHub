@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 last_audited: 2026-06-12
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Testing Evidence & Reports
 
@@ -27,7 +31,7 @@ Volatile runtime artifacts (JUnit XML, HTML reports) are excluded via .gitignore
 - **Platform:** APEX-OmniHub v1.6.0
 - **L7 Adversarial Iterations:** 40,000
 - **Escape Rate:** 0%
-- **Certification:** LEVEL 7 CERTIFIED — ZERO ESCAPE
+- **Certification:** LEVEL 7 VALIDATED — ZERO ESCAPE
 - **Run ID:** 10efa424-e2e1-4659-b684-f37401f61f2f
 - **Latest run:** 2026-05-08
 

@@ -1398,7 +1398,7 @@ const IntegratedAppsWidget = () => {
   );
 };
 
-function OmniGridTop({ hiddenWidgets, tick, isDesktop }: { hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }) {
+function OmniGridTop({ hiddenWidgets, tick, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }>) {
   const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
   const gridHeight = isDesktop ? 300 : undefined;
   return (
@@ -1410,7 +1410,7 @@ function OmniGridTop({ hiddenWidgets, tick, isDesktop }: { hiddenWidgets: readon
   );
 }
 
-function M03ObservabilityPanels({ hiddenWidgets }: { hiddenWidgets: readonly string[] }) {
+function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: readonly string[] }>) {
   if (!(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id))) {
     return null;
   }

@@ -3,6 +3,7 @@ version: 1.0.0
 last_audited: 2026-06-12
 status: verified
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 <!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # ARMAGEDDON TEST SUITE - Comprehensive System Validation Report

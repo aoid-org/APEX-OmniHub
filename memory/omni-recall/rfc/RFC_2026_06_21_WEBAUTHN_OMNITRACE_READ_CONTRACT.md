@@ -4,6 +4,7 @@ date: 2026-06-21
 pr: "#1456"
 branch: claude/modest-maxwell-oqflsj
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 # RFC: WebAuthn ES256 Assertion Signature Verification + OmniTrace `audit_logs` Read Contract
 

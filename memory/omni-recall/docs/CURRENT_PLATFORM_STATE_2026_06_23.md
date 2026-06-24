@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 created: 2026-06-23
@@ -5,6 +7,8 @@ last_audited: 2026-06-23
 status: verified
 supersedes: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Current Platform State — 2026-06-23
 
@@ -31,7 +35,7 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_22.md
 | Branch | `claude/great-curie-5l5v2i` — merged to `main` |
 | Scope | OmniSkillsForgePanel, OmniSentryWidget, OmniMediaLaunchWidget, AuditsModule, AutomationsModule, BillingModule, FilesModule, WorkflowsModule, SettingsModule, OmniSpatialHost, OmniTraceFeed, OmniBoardWizard, i18n (9 languages), slider.tsx, omniMediaStore, sitemap.xml, Playwright E2E |
 | CI green | Security Guards, apex-governance, compliance, Secret Scanning, Lighthouse, Security Regression Guard, Deploy to Staging, CI Runtime Gates |
-| CI failing (pre-fix) | **Clean-Room Final Certification** — `verify:claim-hygiene` 9 false positives |
+| CI failing (pre-fix) | **Release Validation** — `verify:claim-hygiene` 9 false positives |
 
 ## Release Blocker Fixed (2026-06-23)
 
@@ -71,7 +75,7 @@ New guard `scripts/ci/check-omniskills-rebrand.mjs` added to prevent regression.
 | assert_no_stubbed_provider_impls | PASSED |
 | **verify-claim-hygiene** | **PASSED** (was FAILING) |
 | check-omniskills-rebrand | PASSED (NEW guard) |
-| Clean-Room Final Certification (CI) | YELLOW — local gates pass; CI run pending merge |
+| Release Validation (CI) | YELLOW — local gates pass; CI run pending merge |
 
 ## Product-Realness Audit (PR #1476 surfaces)
 

@@ -192,7 +192,8 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
           disabled={loading}
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold"
         >
-          {loading ? 'Starting session…' : error ? 'Retry Connection' : 'Start Connecting'}
+          {/* eslint-disable-next-line no-nested-ternary */}
+          {loading ? 'Starting session…' : (error ? 'Retry Connection' : 'Start Connecting')}
         </button>
       )}
       <p className="text-[10px] text-muted-foreground text-center">

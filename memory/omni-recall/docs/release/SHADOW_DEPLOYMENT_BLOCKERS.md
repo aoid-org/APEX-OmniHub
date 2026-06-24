@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.1.0
 last_audited: 2026-06-14
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Shadow Deployment Certification Blockers — 2026-05-14
 
@@ -11,14 +15,14 @@ status: verified
 | ID | Severity | Status | Resolution Date | Next Action |
 |---|---|---|---|---|
 | B-1 | P0 | **RESOLVED** | 2026-05-20 | No action required. apex-omnihub-shadow project created via Cloudflare API; all 6 required secrets/variables set in GitHub repository. |
-| B-2 | P0 | **`chore: version packages` MERGED 2026-06-05** (`959a8fd6`) | `release_signal` step in `release.yml` detects `chore: version packages` via `git log`. Release workflow must be triggered (push or manual dispatch) to produce `release-evidence.json`. |
+| B-2 | P0 | **`chore: version packages` MERGED 2026-06-05** (`959a8fd6`) | `release_signal` step in `release.yml` detects `chore: version packages` via `git log`. Release workflow must be triggered (push or manual dispatch) to produce `release-validation-summary.json`. |
 | B-3 | P1 | **RESOLVED** | 2026-05-20 | No action required. production-shadow GitHub Environment created with required-reviewer protection rule. |
 
 ---
 
-## Status: PENDING CI EXECUTION (B-1/B-3 resolved, B-2 version commit merged) — trigger `release.yml` on main to produce `release-evidence.json`
+## Status: PENDING CI EXECUTION (B-1/B-3 resolved, B-2 version commit merged) — trigger `release.yml` on main to produce `release-validation-summary.json`
 
-A release cannot be marked `CERTIFIED` until a real Cloudflare Pages shadow deployment is provisioned, validated, and promoted through the protected Terraform approval path. The repository now has fail-closed preflight and evidence generation so CI cannot silently skip these blockers or emit a misleading certification verdict.
+A release cannot be marked `VALIDATED` until a real Cloudflare Pages shadow deployment is provisioned, validated, and promoted through the protected Terraform approval path. The repository now has fail-closed preflight and evidence generation so CI cannot silently skip these blockers or emit a misleading certification verdict.
 
 B-1 and B-3 were resolved 2026-05-20. B-2 structural root cause resolved 2026-05-20 via PR #1185: the release workflow now detects private-package releases via `git log` commit subject (not npm publish). Evidence production pending the changesets version PR (`chore: version packages`) merge to main.
 
@@ -29,10 +33,10 @@ B-1 and B-3 were resolved 2026-05-20. B-2 structural root cause resolved 2026-05
 | ID | Blocker | Severity | Status | Automated control |
 |---|---|---:|---|---|
 | B-1 | Cloudflare Pages shadow slot is not verified as provisioned, or required Cloudflare secrets/vars are absent. | P0 | **RESOLVED 2026-05-20** — apex-omnihub-shadow project created via Cloudflare API; all 6 required secrets/variables set in GitHub repository. | `scripts/ci/shadow-certification-preflight.mjs` checks `ENABLE_SHADOW_DEPLOYMENT`, Cloudflare credentials, project name, and health URL before deploy. |
-| B-2 | `release-evidence.json` with `CERTIFIED` verdict has not yet been produced by a real release workflow run with CI secrets. | P0 | **`chore: version packages` MERGED 2026-06-05** (`959a8fd6`) — `release_signal` step reads commit subject via `git log`; release workflow must be triggered in CI to complete shadow deploy + health check + evidence write. | `.github/workflows/release.yml` always uploads `release-evidence.json`; `scripts/ci/write-release-evidence.mjs` computes the verdict from actual preflight/deploy/health/validator/Terraform outputs. |
+| B-2 | `release-validation-summary.json` with `VALIDATED` verdict has not yet been produced by a real release workflow run with CI secrets. | P0 | **`chore: version packages` MERGED 2026-06-05** (`959a8fd6`) — `release_signal` step reads commit subject via `git log`; release workflow must be triggered in CI to complete shadow deploy + health check + evidence write. | `.github/workflows/release.yml` always uploads `release-validation-summary.json`; `scripts/ci/write-release-validation-summary.mjs` computes the verdict from actual preflight/deploy/health/validator/Terraform outputs. |
 | B-3 | GitHub Environment `production-shadow` with required reviewer protection is not verified for Terraform apply approval. | P1 | **RESOLVED 2026-05-20** — production-shadow GitHub Environment created with required-reviewer protection rule. | `scripts/ci/shadow-certification-preflight.mjs` queries the GitHub Environments API and blocks certification when required reviewers are absent or unverifiable. |
 
-These blockers require external GitHub/Cloudflare configuration. Do **not** update this document to `CERTIFIED` until the release artifact from a real `main` workflow run proves the final verdict.
+These blockers require external GitHub/Cloudflare configuration. Do **not** update this document to `VALIDATED` until the release artifact from a real `main` workflow run proves the final verdict.
 
 ---
 
@@ -108,10 +112,10 @@ The release workflow now enforces the following sequence:
 4. Run shadow `/health` polling against the real deployment URL.
 5. Run deterministic validator against the real shadow URL.
 6. Run Terraform plan/apply only after shadow validation and the protected `production-shadow` environment approval path.
-7. Always upload `release-evidence.json` and `shadow-preflight.json` artifacts.
+7. Always upload `release-validation-summary.json` and `shadow-preflight.json` artifacts.
 8. Fail enabled shadow releases when preflight is blocked instead of silently skipping deployment.
 
-Interim, non-certified releases keep a machine-readable blocker list in `release-evidence.json` with verdict `NOT_CERTIFIED_BLOCKED` or `NOT_CERTIFIED_NO_RELEASE_PUBLISHED`.
+Interim, non-certified releases keep a machine-readable blocker list in `release-validation-summary.json` with verdict `NOT_VALIDATED_BLOCKED` or `NOT_VALIDATED_NO_RELEASE_PUBLISHED`.
 
 ---
 
@@ -134,7 +138,7 @@ The strict command exits non-zero until B-1 and B-3 are resolved.
 
 ---
 
-## Path to `CERTIFIED`
+## Path to `VALIDATED`
 
 1. Provision the Cloudflare Pages shadow project.
 2. Set repository secrets:
@@ -148,16 +152,16 @@ The strict command exits non-zero until B-1 and B-3 are resolved.
    - `ENABLE_ATOMIC_ROUTING_FLIP=true` after Terraform approval protection is configured.
 4. Configure GitHub Environment `production-shadow` with required reviewers.
 5. Merge to `main` and confirm all required CI gates pass.
-6. Confirm the release workflow artifact `release-evidence.json` reports either:
-   - `CERTIFICATION_PENDING_FINAL_MAIN_CI` when shadow validation passed and final protected apply is still pending, or
-   - `CERTIFIED` when shadow validation and Terraform promotion passed.
-7. Update this document from `BLOCKED` to `CERTIFIED` with the release evidence artifact link.
+6. Confirm the release workflow artifact `release-validation-summary.json` reports either:
+   - `VALIDATION_PENDING_FINAL_MAIN_CI` when shadow validation passed and final protected apply is still pending, or
+   - `VALIDATED` when shadow validation and Terraform promotion passed.
+7. Update this document from `BLOCKED` to `VALIDATED` with the release evidence artifact link.
 
 ---
 
 ## Certification Rule
 
-The only acceptable source of truth for certification is a `release-evidence.json` artifact produced by a real release workflow run on `main`. Manual claims, local mock evidence, skipped shadow deployments, or unverified environment settings do not certify the release.
+The only acceptable source of truth for certification is a `release-validation-summary.json` artifact produced by a real release workflow run on `main`. Manual claims, local mock evidence, skipped shadow deployments, or unverified environment settings do not certify the release.
 
 ---
 

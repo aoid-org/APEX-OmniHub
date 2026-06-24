@@ -88,27 +88,24 @@ export default function FilesModule({ onClose }: Props) {
           </div>
 
           {/* File drop / select zone */}
-          <div
-            className="rounded-lg border border-dashed border-border/40 p-5 flex flex-col items-center justify-center bg-muted/5 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/10 transition-colors"
+          <button
+            type="button"
+            className="w-full rounded-lg border border-dashed border-border/40 p-5 flex flex-col items-center justify-center bg-muted/5 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/10 transition-colors"
             onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
             aria-label="Select file to upload"
           >
             <UploadCloud className="text-muted-foreground/50 mb-2 h-6 w-6" />
-            <p className="text-sm font-medium text-muted-foreground">Click to select a file</p>
-            <p className="text-xs text-muted-foreground/60 mt-0.5">
+            <span className="block text-sm font-medium text-muted-foreground">Click to select a file</span>
+            <span className="block text-xs text-muted-foreground/60 mt-0.5">
               Files upload to your private APEX Storage.
-            </p>
-          </div>
+            </span>
+          </button>
 
           {/* Hidden native file input */}
           <input
             ref={fileInputRef}
             type="file"
             className="hidden"
-            aria-hidden="true"
             onChange={handleSelect}
           />
 

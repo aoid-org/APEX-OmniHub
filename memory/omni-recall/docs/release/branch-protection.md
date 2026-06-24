@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 last_audited: 2026-06-16
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # APEX-OmniHub Branch Protection Configuration
 
@@ -30,7 +34,7 @@ The following exact job names must be configured as required status checks in Gi
 
 5. **Release**
    - **Job ID / Name**: `release` (defined in `.github/workflows/release.yml`)
-   - **Workflow Name**: `Clean-Room Final Certification`
+   - **Workflow Name**: `Release Validation`
 
 6. **Governance gate (required for branch protection)**
    - **Job ID / Name**: `governance-gate` (defined in `.github/workflows/apex-governance.yml`)

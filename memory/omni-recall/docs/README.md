@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.3.1
 last_audited: 2026-06-22
@@ -5,6 +7,8 @@ status: verified
 ---
 
 <!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-22 -->
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # APEX OmniHub Documentation
 
@@ -14,9 +18,9 @@ status: verified
 - **Platform Version:** 1.8.1 (1.8.2 in progress)
 - **Last Updated:** 2026-06-22
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
-- **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-21](CURRENT_PLATFORM_STATE_2026_06_21.md) (HEAD `7bf395cf`; PR #1462 SkillForge/OmniSkills cap & Groq routing; APEX Agent LIVE carried forward)
-- **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
+- **Current Certification Authority:** [CI Status Policy](project-status/CI_STATUS_POLICY.md) _(release-validation-summary.json is CI-generated; not a tracked file)_
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-24](CURRENT_PLATFORM_STATE_2026_06_24.md) (HEAD `d5d2684e`; PR #1485 certification owner-approval + agent guardrails; APEX Agent LIVE carried forward)
+- **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
 
@@ -87,9 +91,8 @@ Current deployment state and ecosystem overview:
 
 | Document                                                    | Description              |
 | ----------------------------------------------------------- | ------------------------ |
-| [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
-| [Release Readiness v1.6.1](project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md) | Current release readiness report |
-| [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation |
+| [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation and certification authority _(release-validation-summary.json is CI-generated)_ |
+| [Release Readiness v1.6.1 (archived)](../archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md) | Historical release readiness report — 2026-05-20 |
 
 ---
 
@@ -258,17 +261,17 @@ Test results, simulation, and quality assurance:
 
 Audit reports, remediation, and historical records:
 
-| Document                                                                                       | Description                                                            |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                                      | Extreme testing                                                        |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                               | Voice security                                                         |
-| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)               | Full platform audit                                                    |
-| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)               | Third-party audit                                                      |
-| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit                                                      |
-| [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)**                                        |
-| [Annotated PR Triage 2026-05-06](audits/ANNOTATED_PR_TRIAGE_2026_05_06.md)                     | Current merge/update/close decisions for screenshot-annotated PR queue |
-| [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)                                      | Current docs inventory and authority order for maps, READMEs, status, audits, and runbooks |
-| [Documentation Audit 2026-05-15](audits/DOCUMENTATION_AUDIT_2026-05-15.md)                      | Historical documentation inventory, stale-document disposition, and validation evidence |
+| Document                                                                                                                    | Description                                                            |
+| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [Armageddon Test](../archive/docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                                                   | Extreme testing                                                        |
+| [Voice Fortress Audit](../archive/docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                                            | Voice security                                                         |
+| [Full Code Audit 2026-03-06](../archive/docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)                            | Full platform audit                                                    |
+| [Third-Party Code Audit 2026-03-07](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)                            | Third-party audit                                                      |
+| [Third-Party Code Audit 2026-03-08](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)                            | Third-party audit                                                      |
+| [**Third-Party Code Audit 2026-03-09 ← CURRENT**](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md)             | **Latest audit — 94.3/100 (A)**                                        |
+| [Annotated PR Triage 2026-05-06](../archive/docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md)                                  | Current merge/update/close decisions for screenshot-annotated PR queue |
+| [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)                                                               | Current docs inventory and authority order for maps, READMEs, status, audits, and runbooks |
+| [Documentation Audit 2026-05-15](../archive/docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md)                                  | Historical documentation inventory, stale-document disposition, and validation evidence |
 
 ---
 
@@ -306,7 +309,7 @@ docs/
 
 ## Documentation Governance
 
-- All strategic status changes must be reflected in `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
+- All strategic status changes must be reflected in `docs/project-status/release-validation-summary.json`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
 - Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
 

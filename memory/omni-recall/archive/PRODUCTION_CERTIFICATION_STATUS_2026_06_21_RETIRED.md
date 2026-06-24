@@ -1,3 +1,16 @@
+# RETIRED — DO NOT USE FOR CURRENT RELEASE DECISIONS
+
+This document is archived for historical context only.
+
+It was retired because the CI-generated certification flow repeatedly failed to serve as a reliable owner-facing production certification source.
+
+Current rule:
+
+CI validates. Owner certifies.
+
+Do not use this document as a current source of release truth.
+
+---
 ---
 version: 1.5.0
 last_audited: 2026-06-21

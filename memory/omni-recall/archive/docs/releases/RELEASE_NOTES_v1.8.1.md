@@ -5,6 +5,7 @@ last_audited: 2026-06-21
 status: release-cut — PENDING CERTIFICATION
 supersedes: RELEASE_NOTES_v1.8.0.md
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 # Release Notes — v1.8.1
 

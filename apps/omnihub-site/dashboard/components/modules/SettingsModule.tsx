@@ -216,7 +216,7 @@ export default function SettingsModule({ onClose: _onClose }: Props) {
               </p>
             </div>
           </div>
-          <div className="flex gap-1.5 mt-1" role="group" aria-label="Theme selection">
+          <fieldset className="flex gap-1.5 mt-1" aria-label="Theme selection">
             {THEME_OPTIONS.map(opt => (
               <button
                 key={opt.value}
@@ -234,7 +234,7 @@ export default function SettingsModule({ onClose: _onClose }: Props) {
                 {opt.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
 
