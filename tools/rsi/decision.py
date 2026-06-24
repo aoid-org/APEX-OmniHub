@@ -28,7 +28,7 @@ MAX_REQUIRED_TESTS = 20
 MAX_RECOMMENDED_REVIEWERS = 10
 
 
-def _evaluate_protected_evidence(body: str) -> dict[str, Any]:
+def _evaluate_protected_evidence(body: str) -> dict[str, Any]:  # noqa: C901
     body_lower = body.lower()
     missing = []
     

@@ -1,14 +1,15 @@
-import pytest
+import os
+import subprocess
 import sys
+import tempfile
+
+import pytest
+
 pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='grep not available on windows')
 """
 Tests for guard rail violation detection logic.
 Validates grep pattern matching used in CI workflow.
 """
-
-import os
-import subprocess
-import tempfile
 
 
 def test_guard_rail_violation_detected():

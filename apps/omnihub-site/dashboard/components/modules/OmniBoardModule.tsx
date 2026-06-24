@@ -1,5 +1,5 @@
 /**
- * OmniBoardModule — Module shell wrapping OmniBoardWizard.
+ * OmniBoardModule — Module shell wrapping OmniBoardWizard for App Integration.
  * Registered in ModuleRenderer as 'omniboard' and 'omniboard-wizard'.
  * OWNED BY: APEX Business Systems Ltd.
  *

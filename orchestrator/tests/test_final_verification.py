@@ -21,7 +21,9 @@ class TestBootStability:
 
     def test_dependencies_pinned(self):
         """FastAPI and Uvicorn must be pinned in pyproject.toml."""
-        with open("pyproject.toml") as f:
+        import os
+        pyproject_path = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
+        with open(pyproject_path) as f:
             content = f.read()
             assert "fastapi" in content.lower(), "FastAPI not in dependencies"
             assert "uvicorn" in content.lower(), "Uvicorn not in dependencies"
@@ -250,7 +252,9 @@ class TestCodeQuality:
 
     def test_no_pass_in_persistence(self):
         """Audit persistence should not have placeholder 'pass'."""
-        with open("models/audit.py") as f:
+        import os
+        audit_path = os.path.join(os.path.dirname(__file__), "..", "models", "audit.py")
+        with open(audit_path) as f:
             content = f.read()
 
             # Check _store_supabase is implemented

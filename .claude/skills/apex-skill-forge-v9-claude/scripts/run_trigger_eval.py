@@ -9,7 +9,10 @@ heuristic stands in for the model and results are labeled "mode": "mock".
 Mock accuracy is a harness check only — never copy it into scorecard.json.
 """
 from __future__ import annotations
-import json, os, sys
+
+import json
+import os
+import sys
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent

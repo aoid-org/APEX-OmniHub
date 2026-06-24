@@ -16,21 +16,21 @@ Exit codes:
 License: Proprietary - APEX Business Systems Ltd. Edmonton, AB, Canada.
 """
 
-import sys
 import argparse
-import json
 import hashlib
-from pathlib import Path
-from datetime import datetime
-from typing import Optional
+import json
+import sys
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
+
 
 def hash_content(content: str) -> str:
     """Generate short hash of content for comparison."""
     return hashlib.sha256(content.encode()).hexdigest()[:12]
 
 
-def check_repeated_changes(history: list[dict]) -> Optional[str]:
+def check_repeated_changes(history: list[dict]) -> str | None:
     """Detect if same change was made multiple times."""
     change_hashes = [h.get('change_hash') for h in history if h.get('change_hash')]
     
@@ -42,7 +42,7 @@ def check_repeated_changes(history: list[dict]) -> Optional[str]:
     return None
 
 
-def check_scope_expansion(history: list[dict]) -> Optional[str]:
+def check_scope_expansion(history: list[dict]) -> str | None:
     """Detect if task scope expanded without confirmation."""
     if len(history) < 2:
         return None
@@ -57,7 +57,7 @@ def check_scope_expansion(history: list[dict]) -> Optional[str]:
     return None
 
 
-def check_error_loops(history: list[dict]) -> Optional[str]:
+def check_error_loops(history: list[dict]) -> str | None:
     """Detect if same error appeared 3+ times."""
     errors = [h.get('error') for h in history if h.get('error')]
     
@@ -76,7 +76,7 @@ def check_error_loops(history: list[dict]) -> Optional[str]:
     return None
 
 
-def check_file_churn(history: list[dict]) -> Optional[str]:
+def check_file_churn(history: list[dict]) -> str | None:
     """Detect files touched 5+ times without apparent progress."""
     file_touches = []
     for h in history:

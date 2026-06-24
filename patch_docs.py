@@ -146,7 +146,7 @@ def patch_docs(root_dir: str = ".") -> list[str]:
                 continue
             path = os.path.join(root, filename)
             try:
-                with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                with open(path, encoding="utf-8", errors="replace") as fh:
                     original = fh.read()
                 content = original
                 for pattern, replacement in REPLACEMENTS:

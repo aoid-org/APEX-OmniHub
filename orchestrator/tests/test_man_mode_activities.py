@@ -54,9 +54,13 @@ def _load_man_mode_activities():
     with patch.dict("sys.modules", mocks):
         import importlib.util
 
+        import os
+        base_dir = os.path.dirname(__file__)
+        activities_path = os.path.join(base_dir, "..", "activities", "man_mode.py")
+
         spec = importlib.util.spec_from_file_location(
             "_test_activities_man_mode",
-            "activities/man_mode.py",
+            activities_path,
             submodule_search_locations=[],
         )
         mod = importlib.util.module_from_spec(spec)

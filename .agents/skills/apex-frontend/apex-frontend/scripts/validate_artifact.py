@@ -5,7 +5,10 @@ Usage:
   python validate_artifact.py output.md
 """
 from __future__ import annotations
-import sys, re, pathlib
+
+import pathlib
+import re
+import sys
 
 REQUIRED = [
   r'^1\)\s*\*\*Mode\s*\+\s*Assumptions\*\*',

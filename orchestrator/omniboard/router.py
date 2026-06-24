@@ -69,7 +69,6 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
             else {}
         ),
     }
-    return response
 
 
 @router.get("/{session_id}", responses=_404_RESPONSE)

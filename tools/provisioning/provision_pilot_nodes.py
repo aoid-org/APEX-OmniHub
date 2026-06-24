@@ -6,10 +6,10 @@ Generates Ed25519 key-pairs and X.509 certs, registers nodes via Supabase REST A
 and produces a J-Link/Serial credential flashing shell script for the physical pucks.
 """
 
+import datetime
+import json
 import os
 import sys
-import json
-import datetime
 import urllib.request
 from uuid import uuid4
 
@@ -18,8 +18,8 @@ try:
     from cryptography import x509
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ed25519
-    from cryptography.x509.oid import NameOID
     from cryptography.hazmat.primitives.hashes import SHA256
+    from cryptography.x509.oid import NameOID
 except ImportError:
     print("Error: The 'cryptography' library is required to run this script.")
     print("Please install it using: pip install cryptography")
@@ -46,7 +46,7 @@ def generate_ca_and_device_credentials(device_serial: str):
         x509.NameAttribute(NameOID.COMMON_NAME, "APEX Root CA v1"),
     ])
     
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     ca_cert = x509.CertificateBuilder().subject_name(
         ca_name
     ).issuer_name(
@@ -121,10 +121,10 @@ def register_device_in_supabase(device_serial: str, device_id: str):
         "device_serial": device_serial,
         "tenant_id": TENANT_ID,
         "status": "active",
-        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        "created_at": datetime.datetime.now(datetime.UTC).isoformat()
     }
 
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310
         url, 
         data=json.dumps(payload).encode("utf-8"), 
         headers=headers, 
@@ -132,7 +132,7 @@ def register_device_in_supabase(device_serial: str, device_id: str):
     )
 
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req) as response:  # noqa: S310
             status_code = response.getcode()
             if status_code in (200, 201):
                 print(f"Successfully registered node {device_serial} in database.")
@@ -240,7 +240,7 @@ def main():
         "fingerprint": fingerprint,
         "secure_tag": SEC_TAG,
         "tenant_id": TENANT_ID,
-        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        "created_at": datetime.datetime.now(datetime.UTC).isoformat()
     }
     with open(audit_file, "w") as f:
         json.dump(audit_data, f, indent=4)

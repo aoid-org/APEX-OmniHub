@@ -113,7 +113,7 @@ def _get_pr_body() -> str:
     if event_path and Path(event_path).exists():
         try:
             import json
-            with open(event_path, "r", encoding="utf-8") as file_obj:
+            with open(event_path, encoding="utf-8") as file_obj:
                 event = json.load(file_obj)
             if "pull_request" in event:
                 return event["pull_request"].get("body", "") or ""

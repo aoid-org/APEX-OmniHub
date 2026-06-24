@@ -9,8 +9,7 @@ Security: Defense-in-depth XSS prevention (SonarQube S5131 compliant)
 """
 
 import json
-from datetime import datetime, timezone
-
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -122,7 +121,7 @@ class VerificationEngine:
             HTML-escaped at storage time for defense-in-depth XSS protection.
         """
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        submitted_at = datetime.now(timezone.utc).isoformat()
+        submitted_at = datetime.now(UTC).isoformat()
 
         # SECURITY FIX (S5131): Sanitize user-controlled data at storage time
         # This ensures data is XSS-safe when retrieved via get_pending_requests()
@@ -161,7 +160,7 @@ class VerificationEngine:
             raise ValueError(f"Request {request_id} not found")
 
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        approved_at = datetime.now(timezone.utc).isoformat()
+        approved_at = datetime.now(UTC).isoformat()
 
         # SECURITY NOTE: request_id and approved_by are whitelist-validated by
         # the dashboard layer. They are stored here but NOT reflected in HTTP responses.
@@ -202,7 +201,7 @@ class VerificationEngine:
             raise ValueError(f"Request {request_id} not found")
 
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        rejected_at = datetime.now(timezone.utc).isoformat()
+        rejected_at = datetime.now(UTC).isoformat()
 
         # SECURITY NOTE: request_id, rejected_by, and reason are whitelist-validated
         # by the dashboard layer. They are stored here but NOT reflected in HTTP responses.
