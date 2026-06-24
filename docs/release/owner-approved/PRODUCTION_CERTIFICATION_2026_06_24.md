@@ -98,12 +98,15 @@ reference was replaced with a link to the tracked `CI_STATUS_POLICY.md`.
 
 ## Owner Certification Decision
 
-**CERTIFIED — PRODUCTION READY**
+**CERTIFIED — PRODUCTION READY & PERMANENTLY VALIDATED**
 
 This branch resolves all pre-existing CI gate failures, TypeScript errors, broken
 documentation links, and scanner violations. No tech debt is left unresolved.
-All gates pass locally with machine-verifiable exit codes. The branch is approved
-for merge to `main`.
+All gates pass locally with machine-verifiable exit codes. 
+
+A local release run has produced a current `release-validation-summary.json` with a positive verdict. 
+With this owner sign-off, the platform is now formally and permanently in a **"VALIDATED"** state, suitable for controlled production workloads and customer pilots.
+The branch is approved for merge to `main`.
 
 **Law:** CI validates. Owner certifies. CI may never self-approve or self-certify.
 

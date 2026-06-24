@@ -131,7 +131,7 @@ export const TOUR_STEPS = [
   },
   {
     title: '③ Temporal Orchestrator — Layer 2',
-    body: 'Python Temporal workflows: agent_saga.py (57k lines — the core saga), universal_saga.py (cross-domain sync), intent_registry.py (AI intent routing). Exposes REST via FastAPI server.py.',
+    body: 'Python Temporal workflows: agent_saga.py (1.2k lines — core saga, safely decomposed), universal_saga.py (cross-domain sync), intent_registry.py (AI intent routing). Exposes REST via FastAPI server.py.',
     highlight: 'L2',
     layer: 'L2',
   },

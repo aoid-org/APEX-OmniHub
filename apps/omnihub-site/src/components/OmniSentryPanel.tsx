@@ -168,6 +168,16 @@ export function OmniSentryPanel() {
     globalThis.setTimeout(() => setProbeResult('idle'), 5000);
   }, [refresh]);
 
+  // Formatting helpers to avoid nested ternaries and negated conditions in JSX
+  const offlineErrorSuffix = offlineCount === 1 ? '' : 's';
+  const offlineDescription = offlineCount > 0
+    ? `${offlineCount} error${offlineErrorSuffix} queued while circuit was open. Flush to move them into the error log.`
+    : 'No errors queued offline. Errors captured while the circuit is open will appear here.';
+
+  const flushButtonIdleText = offlineCount > 0 ? `Flush Offline Errors (${offlineCount})` : 'Flush Offline Errors';
+  const flushedErrorSuffix = flushedCount === 1 ? '' : 's';
+  const flushButtonDoneText = `✓ Flushed ${flushedCount} error${flushedErrorSuffix}`;
+
   return (
     <div className="card" style={{ maxWidth: '720px', margin: '0 auto' }}>
 
@@ -242,9 +252,7 @@ export function OmniSentryPanel() {
               Offline Error Queue
             </h4>
             <p className="text-secondary" style={{ fontSize: '0.8rem', marginBottom: 'var(--space-3)' }}>
-              {offlineCount > 0
-                ? `${offlineCount} error${offlineCount !== 1 ? 's' : ''} queued while circuit was open. Flush to move them into the error log.`
-                : 'No errors queued offline. Errors captured while the circuit is open will appear here.'}
+              {offlineDescription}
             </p>
             <button
               type="button"
@@ -253,9 +261,9 @@ export function OmniSentryPanel() {
               disabled={offlineCount === 0 || flushState === 'flushing'}
               onClick={() => { void handleFlush(); }}
             >
-              {flushState === 'idle'     && `Flush Offline Errors${offlineCount > 0 ? ` (${offlineCount})` : ''}`}
+              {flushState === 'idle'     && flushButtonIdleText}
               {flushState === 'flushing' && 'Flushing…'}
-              {flushState === 'done'     && `✓ Flushed ${flushedCount} error${flushedCount !== 1 ? 's' : ''}`}
+              {flushState === 'done'     && flushButtonDoneText}
             </button>
           </div>
 

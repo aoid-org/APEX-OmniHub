@@ -28,7 +28,7 @@ interface PhysiOmniGateProps {
 
 // ── Locked state (free / starter) ──────────────────────────────────────────
 
-function LockedCard({ tier }: { tier: SubscriptionTier }) {
+function LockedCard({ tier }: Readonly<{ tier: SubscriptionTier }>) {
   const isStarter = tier === 'starter';
   return (
     <div
