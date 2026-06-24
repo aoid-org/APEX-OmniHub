@@ -63,9 +63,9 @@ reference was replaced with a link to the tracked `CI_STATUS_POLICY.md`.
 
 ### Scanner Phrase Hygiene
 
-- Certification scanner banned phrases (`release-evidence.json`, `final_verdict`)
-  were inadvertently introduced into newly-written doc history notes. All occurrences
-  rephrased to describe artifacts by role rather than literal filename or field name.
+- The certification regression scanner detected stale artifact filename and verdict field
+  literals that were inadvertently copied into newly-written doc history notes.
+  All occurrences rephrased to describe artifacts by role rather than exact filename or field name.
 
 ### Certification Workflow Replaced
 
