@@ -619,18 +619,22 @@ async function resolveDashboard(
     occurred_at: string;
   }>;
 
-  const items = [
-    { metric: 'paid_starts', value: kpi?.tradeline_paid_starts ?? 0 },
-    { metric: 'active_pilots', value: kpi?.tradeline_active_pilots ?? 0 },
-    { metric: 'sev1_incidents', value: kpi?.ops_sev1_incidents ?? 0 },
-    ...incidents.map((i) => ({
+  const items = normalizeModuleItems([
+    { id: 'paid_starts', label: 'Paid Starts', status: 'active', detail: String(kpi?.tradeline_paid_starts ?? 0) },
+    { id: 'active_pilots', label: 'Active Pilots', status: 'active', detail: String(kpi?.tradeline_active_pilots ?? 0) },
+    {
+      id: 'sev1_incidents',
+      label: 'SEV1 Incidents',
+      status: (kpi?.ops_sev1_incidents ?? 0) > 0 ? 'error' : 'active',
+      detail: String(kpi?.ops_sev1_incidents ?? 0),
+    },
+    ...incidents.map(i => ({
       id: i.id,
-      type: 'incident',
-      severity: i.severity,
-      title: i.title,
-      occurred_at: i.occurred_at,
+      label: i.title,
+      status: i.severity === 'sev1' ? 'error' : 'pending',
+      detail: `${i.severity.toUpperCase()} • ${i.occurred_at}`,
     })),
-  ];
+  ]);
 
   return {
     State: 'Online',

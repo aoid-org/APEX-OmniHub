@@ -871,6 +871,6 @@ will report `skipped` on PRs.
 
 ---
 
-## 9.16 Edge Function canonical response envelope — 2026-06-24 (PR #1488)
+## 9.16 Edge Function canonical response envelope ï¿½ 2026-06-24 (PR #1488)
 
-All edge functions (pex-agent, create-checkout, omnilink-port, platform-health) now return a standardized JSON envelope ({ ok: true, data: ... } or { ok: false, error: ... }) via _shared/response.ts.
+The module-state route in omnilink-port, and the core endpoints in pex-agent, create-checkout, and platform-health, now return a standardized JSON envelope ({ ok: true, data: ... } or { ok: false, error: ... }) via _shared/response.ts.

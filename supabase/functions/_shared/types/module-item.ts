@@ -1,6 +1,6 @@
 export interface NormalizedModuleItem {
   id: string;
   label: string;
-  status: 'active' | 'inactive' | 'error' | 'unknown';
+  status: 'active' | 'inactive' | 'error' | 'pending';
   detail?: string;
 }

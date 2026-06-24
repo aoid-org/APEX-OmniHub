@@ -45,12 +45,14 @@ export function okResponse<T = unknown>(
   data: T,
   origin?: string | null,
   status = 200,
+  extraHeaders?: Record<string, string>,
 ): Response {
   return new Response(JSON.stringify(envelope(data)), {
     status,
     headers: {
       ...buildCorsHeaders(origin ?? ''),
       'Content-Type': 'application/json',
+      ...extraHeaders,
     },
   });
 }
@@ -63,12 +65,14 @@ export function errResponse(
   message: string,
   status = 400,
   origin?: string | null,
+  extraHeaders?: Record<string, string>,
 ): Response {
   return new Response(JSON.stringify(errorEnvelope(code, message)), {
     status,
     headers: {
       ...buildCorsHeaders(origin ?? ''),
       'Content-Type': 'application/json',
+      ...extraHeaders,
     },
   });
 }

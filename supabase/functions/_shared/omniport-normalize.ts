@@ -123,7 +123,7 @@ export function normalizeModuleItems(items: unknown[]): NormalizedModuleItem[] {
   
   return items.map((rawItem: unknown, i) => {
     if (!rawItem || typeof rawItem !== 'object') {
-      return { id: `item-${i}`, label: String(rawItem), status: 'unknown' };
+      return { id: `item-${i}`, label: String(rawItem), status: 'pending' };
     }
     
     const item = rawItem as Record<string, unknown>;
@@ -134,7 +134,7 @@ export function normalizeModuleItems(items: unknown[]): NormalizedModuleItem[] {
     const detail = item.detail || item.description || item.subtitle || undefined;
     
     // Coerce status
-    let status: NormalizedModuleItem['status'] = 'unknown';
+    let status: NormalizedModuleItem['status'] = 'pending';
     const rawStatus = String(item.status || item.state || (item.active ? 'active' : '') || (item.is_active ? 'active' : '')).toLowerCase();
     
     if (['active', 'ok', 'running', 'online', 'success', 'healthy', 'true'].includes(rawStatus)) {

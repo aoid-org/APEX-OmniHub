@@ -105,7 +105,12 @@ Deno.serve(async (req: Request) => {
     if (!rateCheck.allowed) {
       console.warn(`[${requestId}] Rate limit exceeded for user ${userId ?? 'anonymous'}`);
 
-      return errResponse('RATE_LIMIT_EXCEEDED', 'Rate limit exceeded. Try again later.', 429, req.headers.get('origin'));
+      return errResponse('RATE_LIMIT_EXCEEDED', 'Rate limit exceeded. Try again later.', 429, req.headers.get('origin'), {
+        'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
+        'X-RateLimit-Remaining': rateCheck.remaining.toString(),
+        'X-RateLimit-Reset': rateCheck.resetAt.toString(),
+        'X-Request-ID': requestId,
+      });
     }
 
     // FIX: Dedicated admin client for DB probe — service role bypasses RLS so
@@ -122,7 +127,7 @@ Deno.serve(async (req: Request) => {
 
     if (dbError) {
       console.error('❌ Database health check failed:', dbError);
-      return errResponse('DB_UNREACHABLE', dbError.message, 503, req.headers.get('origin'));
+      return errResponse('DB_UNREACHABLE', dbError.message, 503, req.headers.get('origin'), { 'X-Request-ID': requestId });
     }
 
     // Test 2: Orchestrator health - check Python service endpoint (NON-BLOCKING)
@@ -151,13 +156,13 @@ Deno.serve(async (req: Request) => {
       responseBody.warnings = [`orchestrator: ${orchestratorWarning}`];
     }
 
-    return okResponse(responseBody, req.headers.get('origin'));
+    return okResponse(responseBody, req.headers.get('origin'), 200, { 'X-Request-ID': requestId });
 
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] ❌ Health check failed (${duration}ms):`, error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return errResponse('INTERNAL_ERROR', errorMessage, 500, req.headers.get('origin'));
+    return errResponse('INTERNAL_ERROR', errorMessage, 500, req.headers.get('origin'), { 'X-Request-ID': requestId });
   }
 });
