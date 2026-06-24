@@ -127,43 +127,12 @@ jobs:
             echo "No dependency manifests modified; skipping osv-scan."
           fi
 
-  sast:
-    name: Static analysis (SAST)
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-
-      # CodeQL analysis itself runs, but uploading results requires GitHub code
-      # scanning (Advanced Security), which is not enabled here — the analyze
-      # step then fails with "Resource not accessible by integration"
-      # (configuration error). Gate behind ENABLE_GHAS; SAST coverage remains
-      # active via SonarCloud, ESLint security rules, and osv-scanner. Set
-      # repository variable ENABLE_GHAS=true after enabling Advanced Security to
-      # run full CodeQL analysis with code-scanning upload.
-      - name: Initialize CodeQL
-        if: ${{ vars['ENABLE_GHAS'] == 'true' }}
-        uses: github/codeql-action/init@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
-        with:
-          languages: javascript,python
-          config: |
-            paths-ignore:
-              - apps/omnihub-site/public/omnihub-starmap.js
-
-      - name: Perform CodeQL Analysis
-        if: ${{ vars['ENABLE_GHAS'] == 'true' }}
-        uses: github/codeql-action/analyze@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
-
-      - name: Skip CodeQL Analysis (GHAS Disabled)
-        if: ${{ vars['ENABLE_GHAS'] != 'true' }}
-        run: |
-          echo "::notice::CodeQL code-scanning upload skipped — requires GitHub Advanced Security (set ENABLE_GHAS=true once enabled)."
-          echo "SAST coverage remains active via SonarCloud, ESLint security rules, and osv-scanner."
+  # NOTE: A CodeQL "sast" job was removed here — CodeQL's upload requires GitHub
+  # Advanced Security, which is not enabled on this repo, so the job was a
+  # structural no-op (always skipped → green) and was already excluded from the
+  # governance-gate aggregation. SAST coverage remains active via SonarCloud
+  # (ci-runtime-gates), ESLint security rules, and osv-scanner (dependency-audit).
+  # Re-add a CodeQL job only after setting repository variable ENABLE_GHAS=true.
 
   rfc-architecture-marker:
     name: RFC + architecture review marker
@@ -229,7 +198,7 @@ jobs:
     name: Governance gate (required for branch protection)
     runs-on: ubuntu-22.04
     permissions: {}
-    needs: [apex-policy, secret-scan, dependency-audit, sast, rfc-architecture-marker]
+    needs: [apex-policy, secret-scan, dependency-audit, rfc-architecture-marker]
     if: always()
     steps:
       - name: Aggregate result
@@ -242,7 +211,6 @@ jobs:
             echo "apex-policy: ${{ needs.apex-policy.result }}"
             echo "secret-scan: ${{ needs.secret-scan.result }}"
             echo "dependency-audit: ${{ needs.dependency-audit.result }}"
-            echo "sast: ${{ needs.sast.result }}"
             echo "rfc-architecture-marker: ${{ needs.rfc-architecture-marker.result }}"
             exit 1
           fi

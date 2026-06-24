@@ -752,3 +752,44 @@ change is to the **release pipeline**: CI no longer materializes release tags as
 a side effect of SBOM attachment. Release authority is the owner. **Law: CI
 validates. Owner certifies.**
 
+---
+
+## 9.16 CI gate optimization — deduplication + dead-gate removal (2026-06-24, PR #1487)
+
+Owner-approved, deductive optimization of the CI surface (~37 PR checks → ~18–20)
+with **identical real coverage**: every unique security/correctness/governance
+gate still runs exactly once. The waste removed was duplication and structurally
+dead (no-op) gates, not governance. Applied incrementally, tier by tier, with a
+CI re-run between tiers. **No deployed service, env var, DB table/migration, or
+start command changed** — these are CI-pipeline topology edits only.
+
+**Tier A (this section's first landing) — delete provably-dead gates:**
+- Removed `.github/workflows/dependency-review.yml`: the GitHub-native dependency
+  review requires GitHub Advanced Security, which is not enabled, so the job only
+  printed a notice and always passed. Dependency-vuln coverage remains via
+  osv-scanner (`apex-governance`), npm audit (`security-regression-guard`), and
+  Dependabot.
+- Removed the `sast` (CodeQL) job from `apex-governance.yml`: CodeQL upload also
+  requires GHAS (disabled) → job always skipped/green, and it was already excluded
+  from the `governance-gate` aggregation. SAST coverage remains via SonarCloud
+  (`ci-runtime-gates`), ESLint security rules, and osv-scanner. Dropped from
+  `governance-gate` `needs`/echo accordingly.
+- Removed the `verify-secrets-manager` job from `secret-scanning.yml`: a warn-only
+  regex grep that never failed the build, fully dominated by the blocking
+  TruffleHog (verified-only) + gitleaks scanners in the same workflow.
+
+**OmniLink (bundled in Tier A):** `apps/omnihub-site/.env.example` and root
+`.env.example` documented `VITE_DASHBOARD_URL` as an external host
+(`app.apexomnihub.icu` / absolute `apexomnihub.icu/omnidash`). Changed both to the
+same-origin relative `/omnidash`, matching the code default in
+`apps/omnihub-site/src/pages/Login.tsx` and `.../components/Layout.tsx`
+(`VITE_DASHBOARD_URL ?? '/omnidash'`). This guarantees the OmniLink Capacitor
+native shell deep-links into the internal authenticated `/omnidash` shell rather
+than an external host. (`capacitor.config.ts` has no `server.url`, so the native
+shell already loads the local `dist/` bundle — no live redirect existed; this
+removes the copy-paste hazard.)
+
+Subsequent tiers (B: scanner + build/test dedup; C: ops-doc SemVer exemption;
+mobile Android-on-PR/iOS-nightly; Lighthouse a11y+best-practices blocking with
+perf+seo advisory; compliance micro-job consolidation) are recorded as they land.
+
