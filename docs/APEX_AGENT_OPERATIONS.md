@@ -601,6 +601,7 @@ accumulated CLS 0.264 — failing Core Web Vitals (threshold 0.1).
 **Operational impact:** None. Frontend-only changes. No services, env vars,
 secrets, DB tables/migrations, or start commands changed.
 
+<<<<<<< fix/prod-readiness-omniboard-links-demoflip-20260623
 
 ## 9.12 OmniBoard connect proxy — omnilink-port → orchestrator FSM (2026-06-23)
 
@@ -633,3 +634,50 @@ honest taxonomy: 401 unauthorized, 503 `connect_unavailable` (no `ORCHESTRATOR_U
 ### Verification gate
 - `deno check supabase/functions/omnilink-port/index.ts` (could not run in the agent sandbox — no deno binary).
 - Staging e2e: wizard `start` → `next` turns → `COMPLETION` with a Connection Spec.
+=======
+---
+
+## 9.12 Audit readiness closure — 2026-06-23 (PR #1483)
+
+### 9.12.1 `public.tenant_entitlements` — OmniConnect tenant feature contract
+
+**New DB object entry:** `tenant_entitlements`.
+
+| Object | Runtime owner | Operational purpose |
+|---|---|---|
+| `public.tenant_entitlements` | OmniConnect `EntitlementsService` | Tenant/user/app/feature access grants for connector features |
+
+**Schema contract:** `id`, `tenant_id`, `user_id`, `app_id`, `feature_key`,
+`is_active`, `created_at`, `updated_at`.
+
+**Access contract:** RLS enabled. Authenticated users may select only their own
+rows; `service_role` has explicit SELECT/INSERT/UPDATE/DELETE for server-side
+grant/revoke flows. No anon grant is added.
+
+**Operational behavior:** grants are upserted on
+`(tenant_id, user_id, app_id, feature_key)` and revokes are soft revokes
+(`is_active = false`). Missing Supabase credentials, missing rows, or query
+errors remain fail-closed. The `auth.users` foreign key uses `ON DELETE RESTRICT`
+so entitlement rows are not silently purged by user deletion.
+
+**Apply guidance:** this is a new additive/idempotent migration. Apply through
+the standard Supabase migration path only; do not run a full reset or disable
+RLS. If production history drift appears, follow §10 migration repair/baseline
+rules before applying.
+
+### 9.12.2 `production-readiness.yml` — isolated site SSG smoke gate
+
+**Workflow contract:** the `Smoke Tests` job now installs root dependencies,
+installs the isolated `apps/omnihub-site` dependencies, then runs
+`bun run build:ssg` with `working-directory: apps/omnihub-site` before the root
+production bundle build.
+
+**Runtime expectation:** the gate runs on Node 24 and Bun, matching the existing
+production-readiness runner setup. The site SSG launcher preserves the current
+React Router v7 stack by patching `vite-react-ssg`'s removed
+`react-router-dom/server.js` import to the supported `react-router` server API
+before invoking the SSG CLI.
+
+**Operational impact:** CI-only deployment safety improvement. No Cloudflare
+Pages project name, start command, runtime secret, or production URL changes.
+>>>>>>> main

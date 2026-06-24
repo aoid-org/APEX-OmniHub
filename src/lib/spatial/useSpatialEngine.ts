@@ -20,8 +20,10 @@ import { useRef, useCallback, useEffect } from 'react';
 import { QuadTree, type Point, type Rectangle } from './QuadTree';
 
 export type Bounds = Rectangle;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SpatialEntity = Point<any>;
+export interface SpatialEntityData {
+  readonly id: string;
+}
+export type SpatialEntity = Point<SpatialEntityData>;
 
 // ============================================================================
 // Types
@@ -51,8 +53,7 @@ export interface SpatialEngineAPI {
   /** Current transform (read-only ref — do not mutate directly) */
   transformRef: React.RefObject<SpatialTransform>;
   /** The QuadTree for spatial queries */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  quadTree: React.RefObject<QuadTree<any>>;
+  quadTree: React.RefObject<QuadTree<SpatialEntityData>>;
   /** Apply a translation delta (pan) */
   pan: (dx: number, dy: number) => void;
   /** Apply zoom centered at a viewport point */
@@ -102,8 +103,8 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   } = options;
 
   const transformRef = useRef<SpatialTransform>({ tx: 0, ty: 0, scale: 1 });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const quadTreeRef = useRef<QuadTree<any>>(new QuadTree<any>(worldBounds));
+  const quadTreeRef = useRef<QuadTree<SpatialEntityData>>(new QuadTree<SpatialEntityData>(worldBounds));
+  const entityPointRef = useRef<Map<string, SpatialEntity>>(new Map());
   const rafIdRef = useRef<number>(0);
   const dirtyRef = useRef(false);
   const targetElementRef = useRef<HTMLElement | null>(null);
@@ -192,17 +193,23 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   }, []);
 
   const registerEntity = useCallback((entity: SpatialEntity) => {
-    quadTreeRef.current.insert(entity);
+    const existing = entityPointRef.current.get(entity.data.id);
+    if (existing) {
+      quadTreeRef.current.remove(existing);
+      entityPointRef.current.delete(entity.data.id);
+    }
+
+    if (quadTreeRef.current.insert(entity)) {
+      entityPointRef.current.set(entity.data.id, entity);
+    }
   }, []);
 
   const removeEntity = useCallback((id: string) => {
-    // KNOWN BUG (tracked, DEFER): QuadTree.remove(point: Point<T>) expects a Point,
-    // not a string id, so this call is silently a no-op at runtime. Correct removal
-    // needs an id->Point index that does not exist yet; implementing it is a runtime
-    // change out of scope for this type-debt pass. Suppression retained and documented
-    // rather than masked. Tracked under P2-1 debt triage.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tracked latent bug: remove() arg-type mismatch, runtime fix deferred (P2-1)
-    (quadTreeRef.current as any).remove(id);
+    const point = entityPointRef.current.get(id);
+    if (!point) return;
+
+    quadTreeRef.current.remove(point);
+    entityPointRef.current.delete(id);
   }, []);
 
   return {
