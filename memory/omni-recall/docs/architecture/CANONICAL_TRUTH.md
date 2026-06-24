@@ -9,7 +9,7 @@ status: verified
 **Version:** 1.8.2
 **Last Updated:** 2026-06-24
 
-**Latest verified branch/head:** `main` @ `8bfb1a6` (`fix(sonar): resolve SonarQube code smells across omnihub-site components`, #1486). Release `v1.8.2` (auto-cut from `package.json` on push to `main`). See `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current authoritative snapshot.
+**Latest verified branch/head:** `main` @ `8bfb1a6` (`fix(sonar): resolve SonarQube code smells across omnihub-site components`, #1486). Release line `1.8.2` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. See `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current authoritative snapshot and the release-cut mechanism note.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements

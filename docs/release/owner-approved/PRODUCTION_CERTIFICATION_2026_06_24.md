@@ -15,7 +15,7 @@
 | **Date**                 | 2026-06-24                                                                    |
 | **Certified commit**     | `8bfb1a60a87e89089d5578eff4fde4fc02dad46f` (`main` HEAD)                      |
 | **Last merged PR**       | [#1486](https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1486) — SonarQube code-smell closure across omnihub-site |
-| **Release identifier**   | `v1.8.2` (cut automatically from `package.json` on push to `main`)            |
+| **Release identifier**   | `v1.8.2` — cut manually by the owner (`changeset version` → `chore: version packages`); CI validates, `compliance.yml` attaches SBOM evidence |
 | **Previous release**     | `v1.8.1` → `8772015e` (2026-06-21)                                            |
 | **Certifying authority** | APEX Business Systems LTD — product owner (JR)                               |
 | **Certification scope**  | `main` at `8bfb1a6` — the production line of record                           |
@@ -26,9 +26,12 @@
 
 - `main` and the active development branch are at the **same commit** (`8bfb1a6`); there is
   no divergence and there are **no open pull requests**.
-- The `1.8.2` CHANGELOG section is written. `package.json` is bumped to `1.8.2` so the
-  `compliance.yml` release automation cuts the `v1.8.2` tag + GitHub release on the next
-  push to `main`. (The tag is derived from `package.json`; releases are **not** cut by hand.)
+- The `1.8.2` CHANGELOG section is written and `package.json` is bumped to `1.8.2`.
+  **Releases are cut manually by the owner** — the deliberate version bump
+  (`changeset version` → `chore: version packages`) is the cut; CI validates and
+  `compliance.yml` attaches SBOM evidence to the release. CI does not decide or certify
+  releases. (Caveat: the `softprops/action-gh-release` SBOM step will create a missing tag
+  as a side effect of attaching artifacts — see Known Items.)
 
 ---
 
@@ -85,7 +88,8 @@ hallucinations in source files are still blocked everywhere they were before.
 | Item | Severity | Owner Decision |
 |---|---|---|
 | `integration-harness` (run #341) is `in_progress` and has not reported a conclusion across the last three `main` commits (#1484, #1485, #1486). It is **not failing** — it appears parked awaiting an environment/runner gate. | Low | Accepted for certification. The 9 completed CI workflows are green; release validation passed. Owner to confirm the harness completes (or is intentionally manual) before relying on it as a blocking gate. |
-| `package.json` was at `1.8.1` while the `1.8.2` CHANGELOG section was already written. | Low | Resolved — `package.json` bumped to `1.8.2` so the release tag matches the changelog. |
+| `package.json` was at `1.8.1` while the `1.8.2` CHANGELOG section was already written. | Low | Resolved — `package.json` bumped to `1.8.2` so the release version matches the changelog. |
+| `compliance.yml` `sbom-gate` uses `softprops/action-gh-release` with `tag_name: v<package.json version>`. That action attaches SBOMs to an existing release but **creates the tag + release if it does not exist** (action default). A `main` push carrying `1.8.2` with no `v1.8.2` tag will therefore auto-create the tag as a side effect — which is not the intended manual-release authority. | Medium | **Open decision for owner.** If strictly manual tagging is required, constrain the step to attach-only (run only when the tag already exists, or create releases by hand and let CI attach SBOMs). |
 
 ---
 

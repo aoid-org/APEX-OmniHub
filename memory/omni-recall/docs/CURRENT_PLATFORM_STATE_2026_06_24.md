@@ -9,8 +9,9 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_23.md
 # Current Platform State — 2026-06-24
 
 > **CURRENT AUTHORITY (Session 3, 2026-06-24):** `main` HEAD is `8bfb1a6` (PR #1486).
-> Release line is **1.8.2** (`package.json` bumped; `v1.8.2` tag + GitHub release cut
-> automatically from `package.json` on push to `main` via `compliance.yml`). No open PRs;
+> Release line is **1.8.2** (`package.json` bumped). **Releases are cut manually by the owner**
+> (deliberate version bump via `changeset version` → `chore: version packages`); CI validates
+> and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. No open PRs;
 > the development branch tracks `main` at the same commit. Owner-approved certification:
 > [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](../../../docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md).
 > See the **v1.8.2 Release Cut** section at the bottom for the full Session-3 record.
@@ -188,7 +189,7 @@ unless a newer dated file exists.
 | Dev branch vs `main` | even (0 ahead / 0 behind) — same commit |
 | Open PRs | none |
 | Root package version | `1.8.2` (was `1.8.1`; CHANGELOG `1.8.2` section was already written) |
-| Release tag | `v1.8.2` — cut automatically from `package.json` by `compliance.yml` on push to `main` (not tagged by hand) |
+| Release cut model | **Manual / owner-driven** — deliberate version bump (`changeset version` → `chore: version packages`). CI validates; `compliance.yml` attaches SBOM evidence. See note below on the `softprops/action-gh-release` create-on-missing-tag side effect. |
 | Previous release | `v1.8.1` → `8772015e` (2026-06-21) |
 
 ### Local gate evidence (run against `8bfb1a6`)
@@ -209,6 +210,26 @@ unless a newer dated file exists.
 Guards, Secret Scanning, apex-governance, Release Validation, Lighthouse CI, Deploy to
 Staging). `integration-harness` (run #341) is **pending** (`in_progress`, not failing) —
 recorded as an accepted known item in the owner certification.
+
+### Release-cut mechanism (corrected — read before cutting a release)
+
+The documented, intended model is **manual / owner-driven**:
+
+1. Owner runs `changeset version` (consumes changesets → bumps `package.json` +
+   `package-lock.json` + writes CHANGELOG), producing the `chore: version packages` commit.
+2. That commit on `main` is what `release.yml` `release_signal` detects (`release_cut=true`)
+   to run shadow validation / Terraform-flip. **CI validates; it does not certify or decide.**
+3. Owner certifies via `docs/release/owner-approved/`.
+
+**Known side effect (latent gap):** the only piece that is automatic is `compliance.yml` →
+`sbom-gate` → step **"Attach SBOM to GitHub Release (on main push)"**, which uses
+`softprops/action-gh-release@v2` with `tag_name: v<package.json version>`. That action
+*updates assets if the tag exists* but *creates the tag + release if it does not* (its
+default; no flag here disables creation). So a `main` push carrying a `package.json` version
+with no matching tag will auto-create that tag as a side effect — which is **not** the
+intended manual-release authority. If strictly manual tag creation is desired, this step
+should be constrained to attach-only (e.g. only run when the tag already exists). Tracked
+as an open decision for the owner.
 
 ### Guard-alignment fix (this session)
 
