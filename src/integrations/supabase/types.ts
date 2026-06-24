@@ -26,6 +26,7 @@ export interface Database {
           received_at?: string;
         };
         Update: Partial<Database['public']['Tables']['physiomni_telemetry']['Insert']>;
+        Relationships: [];
       };
       omnihub_audit_log: {
         Row: {
@@ -42,6 +43,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['omnihub_audit_log']['Insert']>;
+        Relationships: [];
       };
       physiomni_devices: {
         Row: {
@@ -61,6 +63,7 @@ export interface Database {
           registered_at?: string;
         };
         Update: Partial<Database['public']['Tables']['physiomni_devices']['Insert']>;
+        Relationships: [];
       };
       physiomni_device_commands: {
         Row: {
@@ -80,6 +83,7 @@ export interface Database {
           queued_at?: string;
         };
         Update: Partial<Database['public']['Tables']['physiomni_device_commands']['Insert']>;
+        Relationships: [];
       };
       omnihub_model_registry: {
         Row: {
@@ -105,6 +109,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['omnihub_model_registry']['Insert']>;
+        Relationships: [];
       };
       ingress_buffer: {
         Row: {
@@ -125,11 +130,33 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['ingress_buffer']['Insert']>;
+        Relationships: [];
+      };
+      tenant_entitlements: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          user_id: string;
+          app_id: string;
+          feature_key: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tenant_entitlements']['Row'], 'id' | 'is_active' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['tenant_entitlements']['Insert']>;
+        Relationships: [];
       };
       [key: string]: {
         Row: Record<string, unknown>;
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

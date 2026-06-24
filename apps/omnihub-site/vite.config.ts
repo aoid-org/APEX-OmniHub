@@ -61,8 +61,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/dashboard': resolve(__dirname, './dashboard'),
+      '@/lib/omni-sentry': resolve(__dirname, '../../src/lib/omni-sentry.ts'),
       '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
+      'react-router-dom/server.js': 'react-router',
       'react-i18next': resolve(__dirname, '../../node_modules/react-i18next'),
       'i18next': resolve(__dirname, '../../node_modules/i18next'),
     },

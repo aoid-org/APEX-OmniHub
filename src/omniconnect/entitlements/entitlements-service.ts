@@ -14,7 +14,8 @@
  */
 
 import { LRUCache } from 'lru-cache';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface EntitlementCheck {
   tenantId: string;
@@ -27,7 +28,7 @@ export interface EntitlementCheck {
 
 export class EntitlementsService {
   private readonly cache: LRUCache<string, boolean>;
-  private readonly supabase: ReturnType<typeof createClient> | null = null;
+  private readonly supabase: SupabaseClient<Database> | null = null;
 
   constructor() {
     this.cache = new LRUCache<string, boolean>({
@@ -37,10 +38,10 @@ export class EntitlementsService {
 
     // Assume environment variables are provided
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
     if (supabaseUrl && supabaseKey) {
-      this.supabase = createClient(supabaseUrl, supabaseKey);
+      this.supabase = createClient<Database>(supabaseUrl, supabaseKey);
     } else {
       console.warn('Supabase credentials missing for EntitlementsService');
     }
@@ -69,6 +70,7 @@ export class EntitlementsService {
         .eq('user_id', userId)
         .eq('app_id', appId)
         .eq('feature_key', feature)
+        .eq('is_active', true)
         .limit(1);
 
       if (error) {
@@ -96,15 +98,15 @@ export class EntitlementsService {
     if (!this.supabase) return;
 
     try {
-      const { error } = await (this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 'tenant_entitlements' is not present in generated Supabase Database types (P2-1 deferral)
-        .from('tenant_entitlements') as any)
-        .insert({
+      const { error } = await this.supabase
+        .from('tenant_entitlements')
+        .upsert({
           tenant_id: tenantId,
           user_id: userId,
           app_id: appId,
-          feature_key: feature
-        });
+          feature_key: feature,
+          is_active: true,
+        }, { onConflict: 'tenant_id,user_id,app_id,feature_key' });
 
       if (error) {
         console.error('Error granting entitlement:', error);
@@ -130,7 +132,7 @@ export class EntitlementsService {
     try {
       const { error } = await this.supabase
         .from('tenant_entitlements')
-        .delete()
+        .update({ is_active: false })
         .eq('tenant_id', tenantId)
         .eq('user_id', userId)
         .eq('app_id', appId)
@@ -158,7 +160,8 @@ export class EntitlementsService {
         .from('tenant_entitlements')
         .select('app_id, feature_key')
         .eq('tenant_id', tenantId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
       if (error) {
         console.error('Error listing entitlements:', error);
