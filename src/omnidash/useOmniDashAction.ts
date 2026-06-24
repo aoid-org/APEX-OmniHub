@@ -236,7 +236,11 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
 
             if (error) throw error;
 
-            const responseData = (data ?? {}) as Record<string, unknown>;
+            const rawData = (data as { ok?: boolean; data?: unknown }).ok === true
+              ? (data as { data: Record<string, unknown> }).data
+              : data;
+              
+            const responseData = (rawData ?? {}) as Record<string, unknown>;
             const sanitizedMeta = sanitizeBackendPayload(responseData);
 
             const connectorRecord: OmniBoardConnectorRecord = {

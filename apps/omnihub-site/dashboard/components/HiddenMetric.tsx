@@ -5,10 +5,8 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
-import type { LucideIcon } from 'lucide-react';
-
 interface HiddenMetricProps {
-  icon: LucideIcon;
+  icon: React.ElementType<{ className?: string }>;
   label: string;
   value: string;
   valueClass?: string;

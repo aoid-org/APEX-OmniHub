@@ -100,7 +100,10 @@ export default async function handler(request: Request): Promise<Response> {
       }),
     });
 
-    const upstreamJson = (await upstream.json().catch(() => ({}))) as unknown;
+    const upstreamJsonRaw = (await upstream.json().catch(() => ({}))) as unknown;
+    const upstreamJson = (upstreamJsonRaw as { ok?: boolean; data?: unknown }).ok === true
+      ? (upstreamJsonRaw as { data: unknown }).data
+      : upstreamJsonRaw;
 
     if (!upstream.ok) {
       return jsonResponse(upstream.status, {
