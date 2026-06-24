@@ -105,6 +105,7 @@ Deno.serve(async (req: Request) => {
       const retryAfter = Math.ceil((rateCheck.resetAt - Date.now()) / 1000);
       console.warn(`[${requestId}] Rate limit exceeded for user ${userId ?? 'anonymous'}`);
 
+<<<<<<< Updated upstream
       return new Response(
         JSON.stringify({
           error: 'Rate limit exceeded. Try again later.',
@@ -123,6 +124,14 @@ Deno.serve(async (req: Request) => {
           }
         }
       );
+=======
+      return errResponse('RATE_LIMIT_EXCEEDED', 'Rate limit exceeded. Try again later.', 429, req.headers.get('origin'), {
+        'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
+        'X-RateLimit-Remaining': rateCheck.remaining.toString(),
+        'X-RateLimit-Reset': rateCheck.resetAt.toString(),
+        'X-Request-ID': requestId,
+      });
+>>>>>>> Stashed changes
     }
 
     // FIX: Dedicated admin client for DB probe — service role bypasses RLS so
@@ -139,6 +148,7 @@ Deno.serve(async (req: Request) => {
 
     if (dbError) {
       console.error('❌ Database health check failed:', dbError);
+<<<<<<< Updated upstream
       return new Response(
         JSON.stringify({
           status: 'error',
@@ -147,6 +157,9 @@ Deno.serve(async (req: Request) => {
         }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+=======
+      return errResponse('DB_UNREACHABLE', dbError.message, 503, req.headers.get('origin'), { 'X-Request-ID': requestId });
+>>>>>>> Stashed changes
     }
 
     // Test 2: Orchestrator health - check Python service endpoint (NON-BLOCKING)
@@ -183,16 +196,21 @@ Deno.serve(async (req: Request) => {
       responseBody.warnings = [`orchestrator: ${orchestratorWarning}`];
     }
 
+<<<<<<< Updated upstream
     return new Response(
       JSON.stringify(responseBody),
       { status: 200, headers: securityHeaders }
     );
+=======
+    return okResponse(responseBody, req.headers.get('origin'), 200, { 'X-Request-ID': requestId });
+>>>>>>> Stashed changes
 
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] ❌ Health check failed (${duration}ms):`, error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+<<<<<<< Updated upstream
     return new Response(
       JSON.stringify({
         status: 'error',
@@ -208,5 +226,8 @@ Deno.serve(async (req: Request) => {
         }
       }
     );
+=======
+    return errResponse('INTERNAL_ERROR', errorMessage, 500, req.headers.get('origin'), { 'X-Request-ID': requestId });
+>>>>>>> Stashed changes
   }
 });

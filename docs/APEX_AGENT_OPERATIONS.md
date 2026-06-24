@@ -868,3 +868,12 @@ will report `skipped` on PRs.
 `Lighthouse Audit`, `sbom-gate`, `sonarcloud-gate`, `ruff-gate`, and the
 `apex-governance` contexts.
 
+<<<<<<< Updated upstream
+=======
+
+---
+
+## 9.16 Edge Function canonical response envelope � 2026-06-24 (PR #1488)
+
+The module-state route in omnilink-port, and the core endpoints in pex-agent, create-checkout, and platform-health, now return a standardized JSON envelope ({ ok: true, data: ... } or { ok: false, error: ... }) via _shared/response.ts.
+>>>>>>> Stashed changes
