@@ -9,10 +9,15 @@
     />
     <meta name="theme-color" content="#0f1729" />
     <link rel="icon" type="image/png" href="/icon.png" />
+    <!-- Font: preload + display=optional eliminates font-swap CLS site-wide.
+         display=optional: use font if cached/fast; no later swap = no layout shift. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=optional"
+    />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=optional"
       rel="stylesheet"
     />
     <title>APEX OmniHub - Intelligence, Designed.</title>
