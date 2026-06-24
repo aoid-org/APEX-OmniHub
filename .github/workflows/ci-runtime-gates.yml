@@ -162,6 +162,26 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
+      # ── Folded from the retired Production Readiness Gate (production-readiness.yml).
+      # These are the unique checks that workflow added on top of build-and-test;
+      # they now live here so retiring it loses no coverage.
+      - name: Documentation drift check
+        run: npm run docs:check
+
+      - name: Cloudflare Pages SPA redirect check
+        run: test -f apps/omnihub-site/public/_redirects
+
+      - name: Guardrail — no TS suppression in config files
+        run: |
+          if grep -r "@ts-ignore\|@ts-expect-error" vitest.config.ts vite.config.ts 2>/dev/null; then
+            echo "::error::TS suppression comments found in config files"
+            exit 1
+          fi
+          echo "✅ No TS suppression in config files"
+
+      - name: Security posture check
+        run: bash scripts/security/security-posture-check.sh
+
       - name: Cache Turborepo
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
@@ -288,6 +308,14 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
           VITE_CONNECT_AI_ENABLED: 'true'
+
+      # Folded from the retired Production Readiness Gate: the SSG bundle build is
+      # a distinct artifact (apps/omnihub-site) not produced by the root build above.
+      - name: Build SSG bundle (apps/omnihub-site)
+        working-directory: apps/omnihub-site
+        run: |
+          npm ci --ignore-scripts --legacy-peer-deps
+          bun run build:ssg
 
       - name: Bundle size check
         run: |

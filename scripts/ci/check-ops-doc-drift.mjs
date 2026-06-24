@@ -54,6 +54,12 @@ const EXEMPT = [
   /^\.github\/workflows\/apex-governance\.yml$/,
 ];
 
+// Manifests whose change is exempt when it is purely a SemVer version bump.
+// An owner release cut touches only the "version" field of package.json (and the
+// mirrored "version" entries in package-lock.json); that is not an operational-
+// contract drift, so it must not require an APEX_AGENT_OPERATIONS.md update.
+const SEMVER_EXEMPT = [/^package\.json$/, /^package-lock\.json$/];
+
 function changedFiles() {
   const base = process.env.GITHUB_BASE_REF;
   let range;
@@ -66,18 +72,46 @@ function changedFiles() {
       range = `${mergeBase}...HEAD`;
     }
     const out = execSync(`git diff --name-only ${range}`, { encoding: 'utf8' });
-    return out.split('\n').map((l) => l.trim()).filter(Boolean);
+    const files = out.split('\n').map((l) => l.trim()).filter(Boolean);
+    return { files, range };
   } catch (err) {
     console.error(`[ops-doc-guard] Could not compute changed files: ${err.message}`);
     process.exit(2);
   }
 }
 
-const files = changedFiles();
+// True when the only added/removed lines in `file` over `range` are "version": "…"
+// lines — i.e. a pure SemVer bump with no other content change.
+function isVersionOnlyBump(range, file) {
+  let diff;
+  try {
+    diff = execSync(`git diff ${range} -- ${file}`, { encoding: 'utf8' });
+  } catch {
+    return false;
+  }
+  const changed = diff
+    .split('\n')
+    .filter(
+      (l) =>
+        (l.startsWith('+') || l.startsWith('-')) &&
+        !l.startsWith('+++') &&
+        !l.startsWith('---'),
+    );
+  if (changed.length === 0) return false;
+  return changed.every((l) => /^[+-]\s*"version":\s*"[^"]+",?\s*$/.test(l));
+}
+
+const { files, range } = changedFiles();
 const isExempt = (f) => EXEMPT.some((re) => re.test(f));
 const isCritical = (f) => !isExempt(f) && CRITICAL.some((re) => re.test(f));
 
-const criticalChanged = files.filter(isCritical);
+const criticalChanged = files.filter(isCritical).filter((f) => {
+  if (SEMVER_EXEMPT.some((re) => re.test(f)) && isVersionOnlyBump(range, f)) {
+    console.log(`• ops-doc-guard: exempting ${f} (version-only SemVer bump)`);
+    return false;
+  }
+  return true;
+});
 const opsDocChanged = files.includes(OPS_DOC);
 
 if (criticalChanged.length === 0) {

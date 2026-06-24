@@ -789,7 +789,82 @@ than an external host. (`capacitor.config.ts` has no `server.url`, so the native
 shell already loads the local `dist/` bundle — no live redirect existed; this
 removes the copy-paste hazard.)
 
-Subsequent tiers (B: scanner + build/test dedup; C: ops-doc SemVer exemption;
-mobile Android-on-PR/iOS-nightly; Lighthouse a11y+best-practices blocking with
-perf+seo advisory; compliance micro-job consolidation) are recorded as they land.
+**Tier B — scanner + build/test deduplication:**
+- `secret-scanning.yml` is now secrets-only. Its `scan-dependencies` job (Snyk
+  informational + npm audit) was removed; dependency auditing is owned solely by
+  `security-regression-guard.yml`'s `dependency-audit` job (the single canonical
+  `npm audit --omit=dev --audit-level=high` gate plus the Python lockfile /
+  security-floor checks). The `report` job's `needs` was trimmed accordingly.
+- `security-regression-guard.yml`'s `code-quality` job (tsc + tests + build) was
+  removed — it exactly duplicated `ci-runtime-gates.yml`'s `build-and-test`
+  (TypeScript type check, unit tests, production build). Build/test/typecheck now
+  live in CI Runtime Gates only.
+- `production-readiness.yml` was **retired**. Its unique checks were folded into
+  `ci-runtime-gates.yml`'s `build-and-test`: documentation drift (`docs:check`),
+  Cloudflare Pages `_redirects` existence, the "no TS suppression in config files"
+  guardrail, `security-posture-check.sh`, and the `apps/omnihub-site` SSG bundle
+  build (`bun run build:ssg`). Its TruffleHog + npm-audit steps were duplicates
+  (already covered by secret-scanning + security-regression-guard) and were dropped.
+
+**Tier C — `ops-doc-guard` SemVer exemption:**
+- `scripts/ci/check-ops-doc-drift.mjs` now exempts a **version-only** change to
+  `package.json` / `package-lock.json` (an owner release cut) from the ops-doc
+  drift requirement. The diff is inspected; if the only added/removed lines are
+  `"version": "…"` lines, the manifest is not treated as a runtime-contract change.
+  Any non-version change to those manifests still requires an ops-doc update.
+
+**Mobile split (`mobile-build-verify.yml`):** Android (Gradle `assembleDebug`)
+still verifies on every PR/push; iOS (`xcodebuild`) now verifies **nightly only**
+(`schedule: 0 5 * * *`) or on demand (`workflow_dispatch`), to conserve scarce
+macOS runner minutes. On PRs the `iOS Build (Simulator)` job is skipped (reports
+`skipped`, which branch protection treats as passing); the real verdict is the
+`Mobile Build Gate` job. OmniLink behaviour is unchanged.
+
+**Lighthouse split (`lighthouse.yml`):** On PR/push, `.lighthouserc.json` makes
+**accessibility + best-practices blocking** (`error`) and does not assert
+performance/SEO. Nightly (`schedule: 0 6 * * *`) runs `.lighthouserc.nightly.json`
+— the full audit incl. performance + SEO — fully **advisory** (`warn`), reporting
+regressions without blocking.
+
+**Compliance consolidation (`compliance.yml`):** four single-step micro-jobs
+(`legal-drift-gate`, `retention-evidence-gate`, `claims-proof-gate`,
+`rls-posture-gate`) were merged into one `Compliance Gates` job (four runner
+spin-ups → one). The deactivated (`if: false`) `Generate Readiness Report` job was
+deleted. `sbom-gate`, `sonarcloud-gate`, and `ruff-gate` are unchanged.
+`security-guards.yml` was retired — its "Block DEV BYPASS" grep was folded into
+`security-regression-guard.yml`'s `Security Invariant Checks` job.
+
+### 9.16.1 Branch-protection required-check changes (ACTION REQUIRED on merge)
+
+These status-check **contexts no longer report** once this PR merges. Remove them
+from `main` branch protection → "Require status checks to pass before merging",
+or the branch will block on checks that never arrive:
+
+| Removed context | Was defined in | Coverage now provided by |
+| --- | --- | --- |
+| `Quality Gates` | production-readiness.yml | `build-and-test` (CI Runtime Gates) |
+| `Security Gates` | production-readiness.yml | `Scan for Exposed Secrets` + `Dependency Security Audit` |
+| `Smoke Tests` | production-readiness.yml | `build-and-test` (Playwright E2E) |
+| `Production Readiness Summary` | production-readiness.yml | — (aggregator; no longer needed) |
+| `Code Quality Gates` | security-regression-guard.yml | `build-and-test` (CI Runtime Gates) |
+| `Scan Dependencies for Vulnerabilities` | secret-scanning.yml | `Dependency Security Audit` |
+| `guardrails` | security-guards.yml | `Security Invariant Checks` (DEV BYPASS folded in) |
+| `legal-drift-gate` | compliance.yml | `Compliance Gates` |
+| `retention-evidence-gate` | compliance.yml | `Compliance Gates` |
+| `claims-proof-gate` | compliance.yml | `Compliance Gates` |
+| `rls-posture-gate` | compliance.yml | `Compliance Gates` |
+| `Generate Readiness Report` | compliance.yml | — (was deactivated `if: false`) |
+
+**Add** to required checks (new consolidated context): `Compliance Gates`.
+
+**Adjust:** if `iOS Build (Simulator)` was a required check, require
+`Mobile Build Gate` instead — `iOS Build (Simulator)` now only runs nightly and
+will report `skipped` on PRs.
+
+**Unchanged / still required** (no action): `Architectural Boundary Enforcement`,
+`Terraform Expression Drift Gate`, `build-and-test`, `Security Invariant Checks`,
+`Dependency Security Audit`, `Scan for Exposed Secrets`, `Verify No .env Files`,
+`Security Report`, `Build Web Assets`, `Android Build (Debug)`, `Mobile Build Gate`,
+`Lighthouse Audit`, `sbom-gate`, `sonarcloud-gate`, `ruff-gate`, and the
+`apex-governance` contexts.
 

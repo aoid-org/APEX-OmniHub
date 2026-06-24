@@ -1,10 +1,16 @@
 name: Lighthouse CI
 
+# On PR/push: accessibility + best-practices are BLOCKING (.lighthouserc.json).
+# Nightly (schedule): full advisory audit incl. Performance + SEO
+# (.lighthouserc.nightly.json) — reports regressions without blocking.
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
   lighthouse:
@@ -32,7 +38,16 @@ jobs:
           VITE_CONNECT_AI_ENABLED: 'true'
 
       - name: Run Lighthouse CI
-        run: npm exec --no --ignore-scripts -- lhci autorun
+        run: |
+          # Nightly runs the full advisory audit (perf + seo); PR/push runs the
+          # strict blocking config (accessibility + best-practices).
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            CONFIG=.lighthouserc.nightly.json
+          else
+            CONFIG=.lighthouserc.json
+          fi
+          echo "Using Lighthouse config: $CONFIG"
+          npm exec --no --ignore-scripts -- lhci autorun --config="$CONFIG"
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
