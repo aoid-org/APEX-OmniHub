@@ -723,3 +723,32 @@ read-contract migration remains the source of truth. Apply guidance per §10.
 `bun install --frozen-lockfile`, `uv lock --check`, and
 `pytest tests/omniboard -q` (38 passed) all passed during remediation.
 
+---
+
+## 9.15 Release version bump 1.8.1 → 1.8.2 + SBOM attach-only gate — 2026-06-24 (PR #1487)
+
+Two critical-path edits, recorded here to satisfy the Ops Doc Drift Guard
+(which treats `package.json` and `.github/workflows/compliance.yml` as
+operational source-of-truth).
+
+**`package.json` version bump 1.8.1 → 1.8.2 (SemVer string only).** Aligns the
+declared version with the already-written `1.8.2` CHANGELOG section. **No
+dependency, env var, secret, DB table/migration, start command, or deployed
+service topology change** — version-string bump only. The release cut itself
+remains **manual / owner-driven** (`changeset version` → `chore: version
+packages`); CI validates, the owner certifies.
+
+**`compliance.yml` `sbom-gate` → SBOM step is now attach-only.** Previously the
+step used `softprops/action-gh-release`, which *creates a missing tag by
+default*; a `main` push carrying a new `package.json` version with no matching
+tag would therefore have auto-created the tag, bypassing the manual cut. The
+step is now preceded by a `git ls-remote --tags` existence check and gated on
+`steps.tagcheck.outputs.exists == 'true'`, so the action runs **only when
+`v<version>` already exists** — it can attach SBOM evidence but can never create
+a tag. When the tag is absent it logs a notice and skips.
+
+**Operational contract change:** none to deployed services. The behavioral
+change is to the **release pipeline**: CI no longer materializes release tags as
+a side effect of SBOM attachment. Release authority is the owner. **Law: CI
+validates. Owner certifies.**
+
