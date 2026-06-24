@@ -137,7 +137,7 @@ async function testGateway(): Promise<void> {
       ({ done, value } = await Promise.race([
         readPromise,
         timeoutPromise,
-      ]) as ReadableStreamReadResult<Uint8Array>);
+      ]));
     } catch {
       console.log('  (read timed out — checking deadline)');
       continue;
@@ -221,7 +221,9 @@ async function testGateway(): Promise<void> {
   }
 }
 
-testGateway().catch((err: unknown) => {
+try {
+  await testGateway();
+} catch (err: unknown) {
   console.error('❌ Unhandled exception in testGateway:', err);
   process.exit(1);
-});
+}

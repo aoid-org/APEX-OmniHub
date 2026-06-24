@@ -55,8 +55,8 @@ describe('MCP Client Gateway Enforcement', () => {
     mockJsonFetch({ status: 'completed', reply: 'Mock reply' });
     await invokeMcpIntent({ prompt: 'test' });
     
-    expect(global.fetch).toHaveBeenCalled();
-    const calledUrl = (global.fetch as any).mock.calls[0][0];
+    expect(globalThis.fetch).toHaveBeenCalled();
+    const calledUrl = (globalThis.fetch as any).mock.calls[0][0];
     
     expect(calledUrl).toBe('/api/mcp/invoke');
   });
@@ -66,7 +66,7 @@ describe('MCP Client Gateway Enforcement', () => {
     const payload = { prompt: 'test', context: { customField: 'value' } };
     await invokeMcpIntent(payload);
 
-    const callArgs = (global.fetch as any).mock.calls[0][1];
+    const callArgs = (globalThis.fetch as any).mock.calls[0][1];
     expect(callArgs.body).toBe(JSON.stringify(payload));
   });
 

@@ -9,7 +9,7 @@ import OmniTraceFeed from '../../apps/omnihub-site/dashboard/components/OmniTrac
 import { OmniDashTopHeader } from '../../apps/omnihub-site/dashboard/components/TopHeader';
 
 // Mock matchMedia for components that might use it
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(globalThis, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
     matches: false,

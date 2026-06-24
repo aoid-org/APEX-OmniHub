@@ -23,7 +23,7 @@ export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseC
 
   // Security Guard: Still warn if someone tries to pass service role key in browser,
   // even though we are ignoring it, to alert developer of bad practice.
-  if (typeof globalThis.window !== 'undefined' && options?.serviceRoleKey) {
+  if (globalThis.window !== undefined && options?.serviceRoleKey) {
      console.error('CRITICAL SECURITY WARNING: Service Role Key passed to client factory in browser environment. It is ignored, but this is a security risk.');
   }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
   getModuleActionCapability,
   isModuleActionSupported,
@@ -92,7 +92,7 @@ describe('Global Drift Guards', () => {
     const resolver = readRepoFile('supabase/functions/omnilink-port/index.ts');
 
     // Isolate the resolveLinks function body.
-    const match = resolver.match(/function resolveLinks[\s\S]*?\n}/);
+    const match = /function resolveLinks[\s\S]*?\n}/.exec(resolver);
     expect(match).toBeTruthy();
     const body = match![0];
 
