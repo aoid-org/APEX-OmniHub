@@ -63,9 +63,11 @@ reference was replaced with a link to the tracked `CI_STATUS_POLICY.md`.
 
 ### Scanner Phrase Hygiene
 
-- The certification regression scanner detected stale artifact filename and verdict field
-  literals that were inadvertently copied into newly-written doc history notes.
-  All occurrences rephrased to describe artifacts by role rather than exact filename or field name.
+- `release-evidence.json` filename and `final_verdict` field name were inadvertently
+  quoted as literal strings inside newly-written doc history notes (README, CURRENT_PLATFORM_STATE,
+  DOCUMENTATION_RELEASE_INDEX, start-here). All occurrences rephrased to describe artifacts
+  by role. The structural fix (adding `docs/release/owner-approved/` to the scanner's ALLOWED_PATHS)
+  prevents this class of self-defeating failure permanently.
 
 ### Certification Workflow Replaced
 

@@ -1,11 +1,29 @@
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 
-const IGNORE_FILES = new Set(['package-lock.json', 'bun.lock', 'bun.lockb', 'check-release-certification-docs.mjs', 'write-release-validation-summary.test.mjs', 'patch_docs.py', 'guard-agent-destructive-actions.mjs']);
+const IGNORE_FILES = new Set([
+  'package-lock.json',
+  'bun.lock',
+  'bun.lockb',
+  'check-release-certification-docs.mjs',
+  'write-release-validation-summary.test.mjs',
+  'patch_docs.py',
+  'guard-agent-destructive-actions.mjs',
+  // CHANGELOG records historical removals by artifact name — it is evidence, not reintroduction
+  'CHANGELOG.md',
+]);
 
 const ALLOWED_PATHS = [
+  // Archive: historical docs that pre-date the ban
   'memory/omni-recall/archive/',
+  // Templates: boilerplate that must name what to fill in
   'docs/release/templates/',
+  // Owner-approved certification docs: these ARE the current authority; they must be
+  // able to name what stale artifacts were removed as part of the certified change.
+  // Exempting this path is correct by design — these files are written by the owner,
+  // not by an agent hallucinating stale authority claims.
+  'docs/release/owner-approved/',
+  // CI scripts that are the scanner or its test suite
   'scripts/ci/check-release-certification-docs.mjs',
   'scripts/ci/guard-agent-destructive-actions.mjs',
   'tests/ci/write-release-validation-summary.test.mjs',
