@@ -1,3 +1,5 @@
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
+
 # APEX Agent — Operations & Anti-Drift Reference
 
 **Status:** LIVE / demo-ready · **Last verified end-to-end:** 2026-06-19

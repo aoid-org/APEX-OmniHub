@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 last_audited: 2026-06-12
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Doc Reconciliation Matrix (Phase 2)
 
@@ -36,5 +40,5 @@ Last Updated: 2026-06-01
 | `README.md` | current | Updated top-level docs links and repo statistics to match current tree counts. | maintain with repo-count changes |
 | `docs/README.md` | current | Updated docs index to point to the documentation release index and certification authority. | maintain with docs inventory changes |
 | `docs/rsi/BRANCH_PROTECTION_REQUIRED.md` | current | Updated from stale snapshot/proposal-only language to current `mode: live` RSI workflow evidence while preserving manual branch-protection caveat. | maintain with RSI workflow/check changes |
-| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | current authority | Certification verdict remains authoritative; this documentation audit does not convert `NOT_CERTIFIED_BLOCKED` to certified. | update only with release evidence |
+| `docs/project-status/release-validation-summary.json` | current authority | Certification verdict remains authoritative; this documentation audit does not convert `NOT_VALIDATED_BLOCKED` to certified. | update only with release evidence |
 | `.github/pull_request_template.md` | current | Link to developer onboarding corrected relative to `.github/`. | maintain with onboarding path changes |

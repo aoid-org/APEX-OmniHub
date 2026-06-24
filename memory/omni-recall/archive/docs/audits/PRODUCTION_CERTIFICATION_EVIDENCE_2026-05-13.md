@@ -3,6 +3,7 @@ version: 1.0.0
 last_audited: 2026-06-12
 status: verified
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 > Last reviewed: 2026-05-20. B-1 and B-3 have been RESOLVED since this audit was written (see notes below). B-2 remains pending. No new code changes affect the certification gate logic documented here.
 

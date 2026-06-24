@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.3.1
 last_audited: 2026-06-22
@@ -5,6 +7,8 @@ status: verified
 ---
 
 <!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-22 -->
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # APEX OmniHub Documentation
 
@@ -14,7 +18,7 @@ status: verified
 - **Platform Version:** 1.8.1 (1.8.2 in progress)
 - **Last Updated:** 2026-06-22
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
-- **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
+- **Current Certification Authority:** [Production Certification Status](project-status/release-validation-summary.json)
 - **Current Platform Snapshot:** [Current Platform State — 2026-06-21](CURRENT_PLATFORM_STATE_2026_06_21.md) (HEAD `7bf395cf`; PR #1462 SkillForge/OmniSkills cap & Groq routing; APEX Agent LIVE carried forward)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
@@ -87,7 +91,7 @@ Current deployment state and ecosystem overview:
 
 | Document                                                    | Description              |
 | ----------------------------------------------------------- | ------------------------ |
-| [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [Production Certification Status](project-status/release-validation-summary.json) | Current certification authority |
 | [Release Readiness v1.6.1](project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md) | Current release readiness report |
 | [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation |
 
@@ -306,7 +310,7 @@ docs/
 
 ## Documentation Governance
 
-- All strategic status changes must be reflected in `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
+- All strategic status changes must be reflected in `docs/project-status/release-validation-summary.json`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
 - Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
 

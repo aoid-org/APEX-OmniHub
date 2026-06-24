@@ -1,7 +1,11 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 status: completed
 completed_date: 2026-06-21
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Release Remediation Follow-up — Claim Hygiene, CI Integrity, Secret Scan
 
@@ -17,7 +21,7 @@ Actions taken:
 - Hardened `verify-ci-integrity` so documented PR-required checks must be backed by workflows with `pull_request` triggers.
 - Removed broad docs/tests/agent/skills secret-scan exclusions; only exact known synthetic fixture files are exempted.
 - Wired `test:secret-scan` into `verify:security`.
-- Required Terraform apply outcome `success` in addition to apply result `pass` before release evidence can be `CERTIFIED`.
+- Required Terraform apply outcome `success` in addition to apply result `pass` before release evidence can be `VALIDATED`.
 - Added retry/backoff around mobile workflow `npm ci` installs to reduce transient registry `ECONNRESET` failures without masking build failures.
 
 Remaining operator requirement: do not add externally certified/compliant claims back to public copy unless separate certification evidence artifacts are committed and referenced by the claim hygiene allowlist.

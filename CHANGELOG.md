@@ -5,7 +5,7 @@
 
 - fix(omnidash): production-mode flip + honest surfaces. Demo mode now defaults off and is hard-disabled in production builds (`import.meta.env.PROD`); the Demo ops toggle is hidden in prod; three hardcoded "(Simulated)" status labels are gated on demo state; the fabricated `syncedMinutesAgo` metric is replaced with an honest value. OmniBoard connect wizard maps opaque Supabase transport errors ("non-2xx status code", relay/fetch) to honest user copy instead of leaking them. Links staging persists to `omnilink_links` and refreshes in place via `useOmniModuleState().refetch()` (no full-page reload). No visual/layout drift.
 - feat(identity): ES256 WebAuthn assertion signature verification — ECDSA/P-256/SHA-256 over `authenticatorData ‖ SHA-256(clientDataJSON)` using Web Crypto API. Sign-counter monotonicity rejects replay and cloned-credential attacks. Challenge is single-use and time-bound. Only public-key metadata stored; no private keys or biometric data.
-- feat(memory): OmniTrace `audit_logs` idempotent read-contract migration (`20260621000002_omnitrace_audit_read_contract.sql`). Guarantees table shape, RLS, `actor_id = auth.uid()` SELECT policy, and guarded indexes on a fresh, partial, or already-provisioned DB. OmniTrace panel CERTIFIED_FUNCTIONING; production DB apply remains owner action.
+- feat(memory): OmniTrace `audit_logs` idempotent read-contract migration (`20260621000002_omnitrace_audit_read_contract.sql`). Guarantees table shape, RLS, `actor_id = auth.uid()` SELECT policy, and guarded indexes on a fresh, partial, or already-provisioned DB. OmniTrace panel VALIDATED_FUNCTIONING; production DB apply remains owner action.
 
 ## 1.8.1
 ### Patch Changes
@@ -206,8 +206,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
-- `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
+- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/release-validation-summary.json`.
+- `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/release-validation-summary.json`.
 - `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. 8-week phased rollout timeline starting 2026-03-01; all phases elapsed. Vercel-centric deployment model superseded by Cloudflare Pages.
 - `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. Duplicate phased rollout timeline; superseded by `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`.
 - `docs/infrastructure/CICD_PIPELINE_DESIGN.md` — permanently deleted 2026-05-20. Design-phase CI/CD planning document predating the current live `.github/workflows/` configuration. Current CI truth is `docs/infrastructure/CI_RUNTIME_GATES.md`.
@@ -916,7 +916,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 ### Added — Armageddon Level 7 Temporal Certification
 
-- **CERTIFIED** — 0.0000% escape rate across 40,000 adversarial iterations
+- **VALIDATED** — 0.0000% escape rate across 40,000 adversarial iterations
   - Battery 10 (Goal Hijack/PAIR): 10,000 attempts, 0 escapes → PASS
   - Battery 11 (Tool Misuse/SQL/API): 10,000 attempts, 0 escapes → PASS
   - Battery 12 (Memory Poison/VectorDB): 10,000 attempts, 0 escapes → PASS

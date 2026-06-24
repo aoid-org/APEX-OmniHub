@@ -129,8 +129,8 @@ async function main() {
     }
   }
 
-  // B-2 (release-evidence.json not yet produced) is intentionally not checked here.
-  // It is a downstream outcome — write-release-evidence.mjs computes the verdict
+  // B-2 (release-validation-summary.json not yet produced) is intentionally not checked here.
+  // It is a downstream outcome — write-release-validation-summary.mjs computes the verdict
   // after the release run completes and B-1/B-3 are satisfied.
   const status = blockers.length === 0 ? 'pass' : 'blocked';
   const result = {

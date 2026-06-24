@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 created: 2026-06-22
@@ -5,6 +7,8 @@ last_audited: 2026-06-22
 status: verified
 supersedes: CURRENT_PLATFORM_STATE_2026_06_21.md
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Current Platform State — 2026-06-22
 
@@ -33,7 +37,7 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_21.md
 | Root package version | `1.8.1` (root `package.json`; both `main` and branch) — `1.8.2` in progress (`CHANGELOG.md`) |
 | App package version | `1.3.10` (`apps/omnihub-site/package.json`) |
 | Package manager posture | npm-first for CI (`package-lock.json` canonical); bun optional for local dev |
-| Certification authority | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification authority | `docs/project-status/release-validation-summary.json` |
 | Architecture authority | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` + `architecture/CANONICAL_TRUTH.md` |
 
 ## ⚠️ Branch Divergence & Pending Merge Reconciliation (NEW — key finding)
@@ -140,7 +144,7 @@ Cloud (ns `apex-omnihub-temporal.i7ero`, ca-central-1) → Render worker → Sup
 
 | Concern | Authority |
 |---|---|
-| Certification verdict | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification verdict | `docs/project-status/release-validation-summary.json` |
 | Architecture topology | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` |
 | APEX Agent operations | `docs/APEX_AGENT_OPERATIONS.md` |
 | Portability/swap evidence | `docs/infrastructure/PORTABILITY_MATRIX.md` (branch version — evidence-scoped) |

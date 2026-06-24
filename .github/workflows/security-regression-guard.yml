@@ -108,6 +108,11 @@ jobs:
           fi
           [ "$fail" -eq 0 ] && echo "✅ Platform invariants hold" || exit 1
 
+      - name: Release certification authority regression guard
+        run: |
+          echo "Checking for stale release certification authority docs..."
+          node scripts/ci/check-release-certification-docs.mjs
+
   dependency-audit:
     name: Dependency Security Audit
     runs-on: ubuntu-22.04

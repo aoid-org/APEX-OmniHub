@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.3.0
 last_audited: 2026-06-21
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # CI Status Policy
 
@@ -10,22 +14,22 @@ status: verified
 
 Current certification state is determined ONLY by:
 1. Latest `main` branch CI passing all required gates (see CLAUDE.md §6)
-2. `release-evidence.json` artifact from the most recent release workflow run
+2. `release-validation-summary.json` artifact from the most recent release workflow run
 
 ## Forbidden
 
 - Static or manually-set build/test/security/certification badges in README or docs
-- Claims of "CERTIFIED" status in docs without a `release-evidence.json` artifact proving it
+- Claims of "VALIDATED" status in docs without a `release-validation-summary.json` artifact proving it
 - Historical audit docs (even recent ones) are NOT current certification proof
 
-## Required for CERTIFIED status
+## Required for VALIDATED status
 
 All of the following must be true simultaneously:
 - `ci-runtime-gates.yml` → all jobs green on latest `main`
 - `production-readiness.yml` → quality-gates + security-gates both green
 - `orchestrator-ci.yml` → rls-posture-gate + ruff-gate + legal-drift-gate + claims-proof-gate green
-- `release-evidence.json` artifact exists with `"final_verdict": "CERTIFICATION_PENDING_FINAL_MAIN_CI"` or `"CERTIFIED"`
-- No open P0 blockers in `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
+- `release-validation-summary.json` artifact exists with `"validation_result": "VALIDATION_PENDING_FINAL_MAIN_CI"` or `"VALIDATED"`
+- No open P0 blockers in `docs/project-status/release-validation-summary.json`
 
 ## Badge Policy
 
@@ -50,7 +54,7 @@ The License badge is exempt (it is not a CI claim).
 
 > Note: exact per-check tallies are quoted only where re-verified via the check-runs API. For #1438/#1439/#1441 the merge itself is the green signal (branch protection blocks non-green merges); they were not re-tallied check-by-check in this pass.
 
-Verdict: `NOT_CERTIFIED_NO_RELEASE_CUT` (package is `1.7.1`; these were frontend/edge/docs changes, not a `chore: version packages` release cut — verdict unchanged from 2026-06-14).
+Verdict: `NOT_VALIDATED_NO_RELEASE_CUT` (package is `1.7.1`; these were frontend/edge/docs changes, not a `chore: version packages` release cut — verdict unchanged from 2026-06-14).
 
 ### Prior CI State (2026-06-14, preserved)
 

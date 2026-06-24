@@ -1,3 +1,5 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.0.0
 created: 2026-06-14
@@ -8,9 +10,11 @@ supersedes: docs/CURRENT_PLATFORM_STATE_2026_06_06.md
 superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 ---
 
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 # Current Platform State — 2026-06-14
 
-> **Canonical drift-control snapshot for `main` HEAD as of 2026-06-14.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_06.md`. Historical docs remain valid as point-in-time evidence only where they do not conflict with this snapshot, `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`.
+> **Canonical drift-control snapshot for `main` HEAD as of 2026-06-14.** Supersedes `CURRENT_PLATFORM_STATE_2026_06_06.md`. Historical docs remain valid as point-in-time evidence only where they do not conflict with this snapshot, `docs/project-status/release-validation-summary.json`, or `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`.
 
 ## Verification Metadata
 
@@ -23,7 +27,7 @@ superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 | Package version | `1.7.0` (root `package.json`) |
 | App package version | `1.3.10` (`apps/omnihub-site/package.json`) |
 | Package manager posture | npm-first for CI (`package-lock.json` canonical); bun optional for local dev |
-| Certification authority | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification authority | `docs/project-status/release-validation-summary.json` |
 | Architecture authority | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` + `docs/architecture/CANONICAL_TRUTH.md` |
 
 ## Commits Since 2026-06-06 Snapshot (Key)
@@ -54,9 +58,9 @@ superseded_by: CURRENT_PLATFORM_STATE_2026_06_22.md
 
 | Run | Workflow | SHA | Result |
 |---|---|---|---|
-| #898 | Clean-Room Final Certification | 726d7cc0 | ❌ 3 SSRF test failures |
-| #899 | Clean-Room Final Certification | 50013c4c | ❌ Same SSRF failures |
-| #900 | Clean-Room Final Certification | 16f06b6f | 🔄 in_progress — all 3 fixes present |
+| #898 | Release Validation | 726d7cc0 | ❌ 3 SSRF test failures |
+| #899 | Release Validation | 50013c4c | ❌ Same SSRF failures |
+| #900 | Release Validation | 16f06b6f | 🔄 in_progress — all 3 fixes present |
 
 **Main was red for 20+ consecutive runs (#878–#897) due to pyOpenSSL GEN_EMAIL crash. All root causes now fixed.**
 
@@ -101,7 +105,7 @@ In `_check_ip()`, moved the `ipv4_mapped` guard **before** `is_reserved`. Python
 
 ## Current Certification Verdict
 
-**`NOT_CERTIFIED_NO_RELEASE_CUT`** — `chore: version packages` merged 2026-06-05. CI run #900 in progress with all blockers fixed. On green: shadow deploy executes → health check → Terraform plan/apply → `write-release-evidence.mjs` → verdict updated.
+**`NOT_VALIDATED_NO_RELEASE_CUT`** — `chore: version packages` merged 2026-06-05. CI run #900 in progress with all blockers fixed. On green: shadow deploy executes → health check → Terraform plan/apply → `write-release-validation-summary.mjs` → verdict updated.
 
 ## Repo Facts (carried forward from 2026-06-06, unchanged)
 
@@ -118,7 +122,7 @@ In `_check_ip()`, moved the `ipv4_mapped` guard **before** `is_reserved`. Python
 
 | Concern | Authority |
 |---|---|
-| Certification verdict | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| Certification verdict | `docs/project-status/release-validation-summary.json` |
 | Architecture topology | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` |
 | CI/release gate | `.github/workflows/release.yml` |
 | Shadow deployment blockers | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |

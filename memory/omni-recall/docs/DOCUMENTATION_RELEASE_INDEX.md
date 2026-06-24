@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.4.0
 last_audited: 2026-06-22
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Documentation Release Index
 
@@ -35,7 +39,7 @@ status: verified
 ## Documentation Authority Order
 
 0. `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_20.md` and earlier are now historical.)
-1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
+1. `docs/project-status/release-validation-summary.json` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
 4. `docs/architecture/DOC_RECONCILIATION_MATRIX.md` for which legacy docs remain active, historical, or deprecated.
@@ -61,7 +65,7 @@ status: verified
 - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
 - `docs/architecture/CANONICAL_TRUTH.md`
 - `docs/architecture/CANONICAL_TRUTH_MATRIX.md`
-- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
+- `docs/project-status/release-validation-summary.json`
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(historical release-readiness point-in-time report — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
 - `docs/APEX_AGENT_OPERATIONS.md` _(APEX Agent anti-drift operations reference — added 2026-06-19)_
@@ -101,9 +105,9 @@ status: verified
 ## Status and release documents
 
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` _(status update addendum added 2026-05-20)_
-- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW — created 2026-05-20; current onboarding entry point alongside PRODUCTION_CERTIFICATION_STATUS.md)_
+- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW — created 2026-05-20; current onboarding entry point alongside release-validation-summary.json)_
 - `docs/project-status/CI_STATUS_POLICY.md` _(updated 2026-05-20)_
-- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` _(current certification authority — branch-state addendum updated 2026-06-01)_
+- `docs/project-status/release-validation-summary.json` _(current certification authority — branch-state addendum updated 2026-06-01)_
 - `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` _(B-1/B-3 resolved — updated 2026-05-20)_
 - `docs/releases/RELEASE_NOTES_v1.6.0.md`
 
@@ -172,7 +176,7 @@ status: verified
 - `docs/onboarding/` — 2 Markdown file(s): `BRANCH_PROTECTION.md`, `DEVELOPER_ONBOARDING.md`
 - `docs/ops/` — 10 Markdown file(s): `INCIDENT_RESPONSE.md`, `OPEN_PR_GOVERNANCE_2026-05-13.md`, `OPERATIONAL_EXCELLENCE.md`, `OPS_RUNBOOK.md`, `OPS_RUNBOOKS_CI_GUARDRAILS.md`, `OPS_RUNBOOK_v1.3.8.md`, `PR_TRIAGE.md`, `adaptive-nightly-eval.md`, `omnidash-asset-rca.md`, `repo-scope-context.md`
 - `docs/platform/` — 12 Markdown file(s): `CONNECTOR_KIT.md`, `OMNIBOARD.md`, `OMNIDASH.md`, `OMNIEVAL.md`, `OMNIHUB_PROTOCOL_CONFORMANCE.md`, `OMNILINK_MANIFESTO_LITE.md`, `OMNILINK_MOBILE_PWA.md`, `OMNILINK_PORT_DISCIPLINE.md`, `OMNIPOLICY.md`, `OMNIPORT_API_REFERENCE.md`, `OMNISENTRY.md`, `OMNITRACE.md`
-- `docs/project-status/` — 4 Markdown file(s): `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW 2026-05-20)_, `CI_STATUS_POLICY.md`, `PRODUCTION_CERTIFICATION_STATUS.md`
+- `docs/project-status/` — 4 Markdown file(s): `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW 2026-05-20)_, `CI_STATUS_POLICY.md`, `release-validation-summary.json`
 - `docs/quality/` — 1 Markdown file(s): `QUALITY_ASSURANCE_FRAMEWORK.md`
 - `docs/release/` — 1 Markdown file(s): `SHADOW_DEPLOYMENT_BLOCKERS.md`
 - `docs/releases/` — 1 Markdown file(s): `RELEASE_NOTES_v1.6.0.md`
@@ -199,7 +203,7 @@ Full repo-truth documentation sync performed against `main` @ `966d695f` (PR #14
 | `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Header → `main` @ `966d695f` / v1.7.1; Source-of-Truth statement **21** added (module-keyed capability map, honest Links resolver, OmniBoard wizard hardening); conflict-resolution pointer → 2026-06-21 |
 | `memory/omni-recall/start-here.md` | Last Verified Session → 2026-06-21 / `966d695f` / PR #1441 |
 | `memory/omni-recall/state/checkpoints/current-status.md` | Appended 2026-06-21 session block (PR #1441 corrective commit + docs sync) |
-| `memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | 2026-06-21 addendum added — HEAD `966d695f`, #1439/#1441 merges, verified repo facts; verdict **unchanged** (`NOT_CERTIFIED_NO_RELEASE_CUT`, no release cut) |
+| `memory/omni-recall/docs/project-status/release-validation-summary.json` | 2026-06-21 addendum added — HEAD `966d695f`, #1439/#1441 merges, verified repo facts; verdict **unchanged** (`NOT_VALIDATED_NO_RELEASE_CUT`, no release cut) |
 | `memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md` | Current CI State → HEAD `966d695f` (#1441 merged 2026-06-21); #1438/#1439/#1441 rows added (merge = green signal under branch protection; tallies only where API-verified); workflow registry re-stamped 2026-06-21 |
 | `CLAUDE.md` (root) | `last_audited` → 2026-06-21 (core protocols re-verified accurate; no content drift) |
 | `orchestrator/README.md` | Production-runtime note added (points to canonical ops doc; flags semantic cache disabled in prod + Temporal Cloud); `last_audited` → 2026-06-21 |
@@ -245,7 +249,7 @@ Full OMEGA SCAN audit performed against `main` @ `c8d753c5`. All local quality g
 | File | Change |
 |---|---|
 | `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` | **NEW** — supersedes 2026-06-02 snapshot; includes 2026-06-06 gate results, repo counts, OmniDash real-data status table, and drift resolutions |
-| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | 2026-06-06 addendum added; verdict updated to `NOT_CERTIFIED_NO_RELEASE_CUT`; gate audit updated to 2,561 tests; hono CVE advisory added; path-to-CERTIFIED step 6 marked DONE |
+| `docs/project-status/release-validation-summary.json` | 2026-06-06 addendum added; verdict updated to `NOT_VALIDATED_NO_RELEASE_CUT`; gate audit updated to 2,561 tests; hono CVE advisory added; path-to-VALIDATED step 6 marked DONE |
 | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` | B-2 status updated: `chore: version packages` merged; CI execution is the final remaining step |
 | `docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — canonical start point updated to 2026-06-06 snapshot |
 | `README.md` | Stats snapshot updated to 2026-06-06 counts; canonical map link updated |
@@ -287,7 +291,7 @@ Documents created, modified, or archived in this audit pass:
 | `CLAUDE.md` | `omega/` and `orchestrator/` disambiguation added |
 | `vitest.config.ts` | Coverage thresholds raised (branches 60→63, north-star 75%) |
 | `.changeset/shadow-slot-coverage-docs.md` | v1.6.1 changeset |
-| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | B-1 RESOLVED, B-3 RESOLVED |
+| `docs/project-status/release-validation-summary.json` | B-1 RESOLVED, B-3 RESOLVED |
 | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` | B-1/B-3 resolved |
 | `DRIFT_MATRIX.md` | 2026-05-20 entry added |
 | `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` | Status update addendum added |
@@ -307,12 +311,12 @@ Documents created, modified, or archived in this audit pass:
 ### Permanently Deleted
 | File | Reason |
 |---|---|
-| `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | v1.4.1 snapshot, 71 days stale — superseded by PRODUCTION_CERTIFICATION_STATUS.md |
-| `docs/project-status/PRODUCTION_STATUS.md` | v1.5.1 snapshot, 56 days stale — superseded by PRODUCTION_CERTIFICATION_STATUS.md |
+| `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | v1.4.1 snapshot, 71 days stale — superseded by release-validation-summary.json |
+| `docs/project-status/PRODUCTION_STATUS.md` | v1.5.1 snapshot, 56 days stale — superseded by release-validation-summary.json |
 | `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` | 8-week phased rollout from 2026-03-01 — all phases elapsed; Vercel-centric |
 | `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` | Duplicate phased rollout — superseded by PRODUCTION_DEPLOYMENT_GUIDE.md |
 | `docs/infrastructure/CICD_PIPELINE_DESIGN.md` | Design-phase planning doc predating live workflows — superseded by CI_RUNTIME_GATES.md |
-| `docs/project-status/PRODUCTION_STATUS.md` | Superseded by PRODUCTION_CERTIFICATION_STATUS.md |
+| `docs/project-status/PRODUCTION_STATUS.md` | Superseded by release-validation-summary.json |
 | `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | Superseded by APEX_RELEASE_READINESS_REPORT_v1.6.1.md |
 | `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` | Superseded by current deployment guides |
 | `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` | Superseded by current deployment guides |

@@ -1,8 +1,12 @@
+> CI validates release readiness. Production certification is manual and owner-approved only.
+
 ---
 version: 1.3.0
 last_audited: 2026-06-21
 status: verified
 ---
+
+> CI validates release readiness. Production certification is manual and owner-approved only.
 
 # Current Status
 
@@ -32,7 +36,7 @@ status: verified
 - scope: Executed M-03 Real-Time Observability Upgrade, integrated 7 Recharts panels, removed non-deterministic mock data, verified build and typing.
 - key outcome: 100/100 production ready build, typescript definitions fixed, strict typings enforced.
 - verification: `tsc --noEmit` exit 0, `npm run build` exit 0.
-- release rubric: M-03 completed, release-evidence.json generated.
+- release rubric: M-03 completed, release-validation-summary.json generated.
 
 ## Latest session (2026-05-30) — APEX Agent Global Rename + OmniSlate Fix
 - branch: claude/tender-goldberg-dYWdK
@@ -153,7 +157,7 @@ status: verified
   table designation (no DB change — see below).
 - key outcomes:
   - `docs/release/branch-protection.md` created at root — scanner reports `verify:ci-integrity PASSED` (exit 0). All 6 required job IDs verified present in their workflows.
-  - cert fix pushed to `main` (`50ffe39..b66870b`) — `Release` job should run and unblock `Atomic Routing Flip` -> Clean-Room Final Certification (pending Actions confirmation).
+  - cert fix pushed to `main` (`50ffe39..b66870b`) — `Release` job should run and unblock `Atomic Routing Flip` -> Release Validation (pending Actions confirmation).
   - as-any: 90 -> 79 (src/ 24 -> 13, all 11 removed via real root fixes; remaining 13 documented). @ts-ignore: 0 -> 0. @ts-expect-error: 16 -> 16 (all already reasoned). eslint-disable: 139 -> 128. .skip: 19 -> 18 (one re-enabled). it.todo: 29 (formal backlog). .only: 0.
   - NOTE on type fixes: the crypto BufferSource `as any` were stale only under the looser `typecheck` script; the real gate `verify:types` (`tsc -b`) required typing byte-helpers `Uint8Array<ArrayBuffer>` — applied as the root fix (confirms prior correction that `typecheck` is a false-green no-op).
   - P3-1: physiomni_telemetry partitions RLS verified already remediated by migration `20260528000000` (fail-closed: RLS enabled, no child policy -> direct access denied, reads go through parent's tenant-scoped policies). The triage protocol's fallback policy SQL references a non-existent `user_id` column (isolation column is `tenant_id`) — NOT applied. Live pg_policies confirmation pending Supabase auth (owner action).
@@ -181,7 +185,7 @@ status: verified
 | #1391 | fix/routing-flip-interlock-unhardcode | 50013c4c | Un-hardcoded `ENABLE_ATOMIC_ROUTING_FLIP` in `release.yml` at L64, L136, L154, L157. Now reads `vars.ENABLE_ATOMIC_ROUTING_FLIP`; gate is live once TF infra confirmed. |
 | #1393 | fix/ssrf-ipv4-mapped-classification | 16f06b6f | `_check_ip()` in `orchestrator/security/ssrf.py`: moved `ipv4_mapped` guard before `is_reserved`. Python marks `::ffff:0:0/96` as `is_reserved`, incorrectly blocking public IPv4-mapped and misclassifying private ones. Fixes 3 pytest tests. |
 
-### CI run ledger (Clean-Room Final Certification, main)
+### CI run ledger (Release Validation, main)
 
 | Run | Head SHA | Result | Root cause |
 |---|---|---|---|
@@ -201,7 +205,7 @@ status: verified
 
 ### Certification verdict (2026-06-14)
 
-`NOT_CERTIFIED_NO_RELEASE_CUT` — verify:test gate pending run #900. Once green, shadow deploy runs → health check → `write-release-evidence.mjs` → CERTIFIED or CERTIFICATION_PENDING_FINAL_MAIN_CI.
+`NOT_VALIDATED_NO_RELEASE_CUT` — verify:test gate pending run #900. Once green, shadow deploy runs → health check → `write-release-validation-summary.mjs` → VALIDATED or VALIDATION_PENDING_FINAL_MAIN_CI.
 
 ## Session (2026-06-15) — DEFCON 4 Remediation Complete (Clean PR)
 - branch: `apex/omnihub/defcon4-clean-remediation`
@@ -404,7 +408,7 @@ Conditioned on `modal.description` (optional field in `OmniModalConfig`) so exis
 - apex_orchestrator_worker: ✅ Running (`SEMANTIC_CACHE_ENABLED=false`, 512 MB Starter)
 - temporal_cloud: ✅ Connected (ns `apex-omnihub-temporal.i7ero`, ca-central-1, API-key auth)
 - ops_doc_guard_ci: ✅ Active — fails PRs that change runtime contracts without updating `docs/APEX_AGENT_OPERATIONS.md`
-- docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_20.md (new), DOCUMENTATION_RELEASE_INDEX.md, PRODUCTION_CERTIFICATION_STATUS.md
+- docs_updated: README.md, CURRENT_PLATFORM_STATE_2026_06_20.md (new), DOCUMENTATION_RELEASE_INDEX.md, release-validation-summary.json
 
 ## Session (2026-06-21) — PR #1441 corrective commit + repo-truth documentation sync
 - branch: `claude/affectionate-einstein-cmrqp9` (corrective commit, also pushed to PR branch `fix/omnidash-canonical-widget-rescue`); docs sync on `docs/repo-truth-sync-2026-06-21`

@@ -35,7 +35,7 @@ status: verified
 - [CURRENT_PLATFORM_STATE_2026_06_24.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
-- **[Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
+- **[Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json)** (Current Production Authority)
 - [CI Status Policy](./memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md)
 
 ---
@@ -277,7 +277,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 | [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
-| [Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json) | Current certification authority |
 | [Documentation Release Index](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md)                  | Current docs map, READMEs, status, audits, runbooks |
 | [Testing Evidence & Armageddon Reports](./memory/omni-recall/docs/testing/README.md)                    | Validation history    |
 | [PR Triage Report](./memory/omni-recall/docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |

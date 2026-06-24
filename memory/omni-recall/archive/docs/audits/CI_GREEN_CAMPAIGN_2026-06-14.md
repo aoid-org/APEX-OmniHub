@@ -3,6 +3,7 @@ version: 1.0.0
 created: 2026-06-14
 status: active
 ---
+> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
 
 # CI Green Campaign — Audit Report 2026-06-14
 

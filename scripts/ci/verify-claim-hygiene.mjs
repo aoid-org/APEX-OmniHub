@@ -145,7 +145,7 @@ function stripCodeComments(line, fileExt) {
 
 // Detect internal non-rendered metadata: the notes: field in featureTruth
 // data objects. These engineering notes are explicitly excluded from public
-// rendering by the featureTruth ledger (only CERTIFIED_FUNCTIONING +
+// rendering by the featureTruth ledger (only VALIDATED_FUNCTIONING +
 // releaseCopy fields are surfaced to users). Scanning notes: values would
 // produce only false positives.
 //
