@@ -1,6 +1,6 @@
 ---
-version: 1.3.0
-last_audited: 2026-06-22
+version: 1.3.1
+last_audited: 2026-06-24
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-23
+**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-24
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -32,7 +32,7 @@ status: verified
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_21.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_24.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -68,7 +68,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 39 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 100 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** `main` HEAD `5870a8ec` — PR #1476 "Rebrand SkillForge to OmniSkills and update modal styling". Release line is **1.8.1** (`package.json`). Active fix branch: `fix/release-gate-claim-hygiene-omniskills-v2` (PR #1477, open) — 2 commits: (1) restores `verify-claim-hygiene` CI gate, completes OmniSkills rebrand, wires OmniSentry end-to-end; (2) Stripe checkout fail-closed (`BILLING_NOT_CONFIGURED` 503 when env vars absent, removes fake `price_123456789` fallback), fixes `ApexRealtimeGateway` env var (`process.env.VITE_ORCHESTRATOR_BASE_URL` → `import.meta.env.VITE_ORCHESTRATOR_URL`), removes `console.warn` noise on OmniSupportWidget connect path. All 7 local CI gates ✅. Merging PR #1477 resolves the `release.yml` CI failures on `main`. See [`CURRENT_PLATFORM_STATE_2026_06_23.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `5870a8ec` — PR #1476 "Rebrand SkillForge to OmniSkills and update modal styling". Release line is **1.8.1** (`package.json`). Active fix branch: `fix/prod-readiness-omniboard-links-demoflip-20260623` (PR #1482, open) — OmniBoard FSM production-readiness: standardises payload contract (`payload.user_input` key to match FSM `_handle_idle_listen`), normalises `connection_spec` at the top level of `/omniboard/{id}/next` response (previously absent — wizard silently ignored completed connections), removes the false `VITE_ORCHESTRATOR_URL` client-side gate in `OmniBoardModule` (edge function owns orchestrator routing), and ships 13 new router contract tests (38/38 pass). TypeScript errors in `s3.ts` and `supabase/client.ts` are pre-existing on the base branch (confirmed via `git stash` verification) and out of scope for this PR. See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
 
 ---
 
@@ -274,7 +274,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |

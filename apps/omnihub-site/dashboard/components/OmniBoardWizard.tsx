@@ -116,15 +116,18 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     if (!context || !input.trim()) return;
     setLoading(true);
     try {
+      // Contract: event_type=USER_INPUT, payload.user_input matches FSM
+      // event.payload.get("user_input") in _handle_idle_listen / _handle_app_disambiguation.
       type TurnResponse = { context: FSMContext; message: string; connection_spec?: Record<string, unknown> };
       const { data, error } = await invokeWithTimeout<TurnResponse>(
         'omnilink-port/omniboard-next',
-        { session_id: context.session_id, event_type: 'user_input', payload: { text: input.trim() } },
+        { session_id: context.session_id, event_type: 'USER_INPUT', payload: { user_input: input.trim() } },
       );
       if (error || !data) throw error ?? new Error('No response from connection gateway.');
       setContext(data.context);
       setMessage(data.message);
       setInput('');
+      // connection_spec is normalised by the edge function from context.final_spec.
       if (data.context.state === 'COMPLETION' && data.connection_spec) {
         onComplete(data.connection_spec);
       }

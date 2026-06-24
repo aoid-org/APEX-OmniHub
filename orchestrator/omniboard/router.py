@@ -37,7 +37,11 @@ _404_RESPONSE: dict[int | str, dict[str, str]] = {404: {"description": SESSION_N
 async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     """
     Process a user turn and advance the FSM.
-    Returns the updated context and the system's response message.
+    Returns the updated context, the system's response message, and — when the
+    FSM reaches COMPLETION — a top-level `connection_spec` key containing the
+    canonical ConnectionSpec dict.  The frontend OmniBoardWizard reads
+    `data.connection_spec` to call onComplete(); without this field the wizard
+    would silently ignore the completed connection.
     """
     redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
     try:
@@ -54,7 +58,18 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     finally:
         await redis_client.aclose()  # type: ignore[attr-defined]
 
-    return {"context": next_context.model_dump(), "message": message}
+    return {
+        "context": next_context.model_dump(),
+        "message": message,
+        # Normalize contract: expose final_spec as connection_spec at the top level
+        # so the frontend reads data.connection_spec (not data.context.final_spec).
+        **(
+            {"connection_spec": next_context.final_spec.model_dump()}
+            if next_context.final_spec is not None
+            else {}
+        ),
+    }
+    return response
 
 
 @router.get("/{session_id}", responses=_404_RESPONSE)

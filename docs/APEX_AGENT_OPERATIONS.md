@@ -601,7 +601,6 @@ accumulated CLS 0.264 — failing Core Web Vitals (threshold 0.1).
 **Operational impact:** None. Frontend-only changes. No services, env vars,
 secrets, DB tables/migrations, or start commands changed.
 
-<<<<<<< fix/prod-readiness-omniboard-links-demoflip-20260623
 
 ## 9.12 OmniBoard connect proxy — omnilink-port → orchestrator FSM (2026-06-23)
 
@@ -634,12 +633,12 @@ honest taxonomy: 401 unauthorized, 503 `connect_unavailable` (no `ORCHESTRATOR_U
 ### Verification gate
 - `deno check supabase/functions/omnilink-port/index.ts` (could not run in the agent sandbox — no deno binary).
 - Staging e2e: wizard `start` → `next` turns → `COMPLETION` with a Connection Spec.
-=======
+
 ---
 
-## 9.12 Audit readiness closure — 2026-06-23 (PR #1483)
+## 9.13 Audit readiness closure — 2026-06-23 (PR #1483)
 
-### 9.12.1 `public.tenant_entitlements` — OmniConnect tenant feature contract
+### 9.13.1 `public.tenant_entitlements` — OmniConnect tenant feature contract
 
 **New DB object entry:** `tenant_entitlements`.
 
@@ -665,7 +664,7 @@ the standard Supabase migration path only; do not run a full reset or disable
 RLS. If production history drift appears, follow §10 migration repair/baseline
 rules before applying.
 
-### 9.12.2 `production-readiness.yml` — isolated site SSG smoke gate
+### 9.13.2 `production-readiness.yml` — isolated site SSG smoke gate
 
 **Workflow contract:** the `Smoke Tests` job now installs root dependencies,
 installs the isolated `apps/omnihub-site` dependencies, then runs
@@ -680,4 +679,4 @@ before invoking the SSG CLI.
 
 **Operational impact:** CI-only deployment safety improvement. No Cloudflare
 Pages project name, start command, runtime secret, or production URL changes.
->>>>>>> main
+

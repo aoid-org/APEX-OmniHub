@@ -456,7 +456,10 @@ export class SupabaseStorage implements IStorage {
       }
 
       return {
-        data: data.map((item) => item.signedUrl),
+        // Supabase Storage createSignedUrls returns { signedUrl: string | null }[]
+        // — signedUrl is null when signing fails for a specific path.
+        // Filter nulls so callers receive only successfully-signed URLs.
+        data: data.map((item) => item.signedUrl).filter((url): url is string => url !== null),
         error: null,
       }
     } catch (err) {
