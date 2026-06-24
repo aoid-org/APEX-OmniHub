@@ -1,7 +1,10 @@
 name: Mobile Build Verification
 
-# Verifies that the Capacitor web-to-native sync compiles cleanly for both
-# Android (Gradle) and iOS (xcodebuild) on every PR and main-branch push.
+# Verifies that the Capacitor web-to-native sync compiles cleanly.
+#   - Android (Gradle) is verified on every PR and main-branch push.
+#   - iOS (xcodebuild) is verified nightly only — macOS runners are scarce and
+#     expensive, and the iOS path changes rarely. It can also be triggered on
+#     demand via workflow_dispatch.
 # This replaces the "Capacitor is merely CONFIGURED" state with a
 # continuously-verified, CI-enforced build pipeline.
 
@@ -24,6 +27,10 @@ on:
       - 'android/**'
       - 'ios/**'
       - '.github/workflows/mobile-build-verify.yml'
+  schedule:
+    # iOS verification runs nightly only (see build-ios `if` guard). Android still
+    # runs on every PR/push above; schedule events ignore the paths filters.
+    - cron: '0 5 * * *'
   workflow_dispatch:
     inputs:
       skip_android:
@@ -102,7 +109,9 @@ jobs:
     name: Android Build (Debug)
     runs-on: ubuntu-22.04
     needs: build-web
-    if: github.event.inputs.skip_android != 'true'
+    # Android verifies on every PR/push, but not on the nightly schedule (that run
+    # exists for iOS). workflow_dispatch can still run it unless skip_android is set.
+    if: github.event_name != 'schedule' && github.event.inputs.skip_android != 'true'
     timeout-minutes: 30
 
     steps:
@@ -193,7 +202,9 @@ jobs:
     name: iOS Build (Simulator)
     runs-on: macos-14
     needs: build-web
-    if: github.event.inputs.skip_ios != 'true'
+    # iOS verifies nightly (schedule) or on demand (workflow_dispatch) only — not on
+    # every PR/push — to conserve scarce macOS runner minutes.
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.event.inputs.skip_ios != 'true'
     timeout-minutes: 45
 
     steps:

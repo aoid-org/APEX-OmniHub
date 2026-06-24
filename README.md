@@ -1,5 +1,5 @@
 ---
-version: 1.3.1
+version: 1.3.2
 last_audited: 2026-06-24
 status: verified
 ---
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.8.1 (1.8.2 in progress) | **package.json version:** 1.8.1 | **App package:** 1.3.10 | **Docs audit:** 2026-06-24
+**Release line:** 1.8.2 | **package.json version:** 1.8.2 | **App package:** 1.3.10 | **Docs audit:** 2026-06-24
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -68,7 +68,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~107 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** `main` HEAD `726b10ee` — PR #1484 "chore: pin Bun runtime & add security regression guards". Release line is **1.8.1** (`package.json`). Active fix branch: `fix/release-certification-owner-approval` (PR #1485, open) — replaces automated certification with owner-approval workflow, resolves CI gate failures caused by stale committed evidence artifacts, deploys proactive agent-destructive-action guardrails, and hardens IDE warnings across TypeScript and test files. **Law: CI validates. Owner certifies.** See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `8bfb1a6` — PR #1486 "fix(sonar): resolve SonarQube code smells across omnihub-site components". Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence to the release. CI does not decide or certify releases. No open PRs; the development branch tracks `main` at the same commit. Owner-approved certification for this commit lives at [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). The owner-approval certification workflow (PR #1485) is merged: automated self-certification is removed, agent-destructive-action guardrails are deployed, and the two release guards' exemptions are aligned. **Law: CI validates. Owner certifies.** See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.8.1",
+  "version": "1.8.2",
   "type": "module",
   "engines": {
     "node": ">=22 <25"

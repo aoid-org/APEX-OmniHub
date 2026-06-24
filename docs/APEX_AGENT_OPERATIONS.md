@@ -723,3 +723,148 @@ read-contract migration remains the source of truth. Apply guidance per §10.
 `bun install --frozen-lockfile`, `uv lock --check`, and
 `pytest tests/omniboard -q` (38 passed) all passed during remediation.
 
+---
+
+## 9.15 Release version bump 1.8.1 → 1.8.2 + SBOM attach-only gate — 2026-06-24 (PR #1487)
+
+Two critical-path edits, recorded here to satisfy the Ops Doc Drift Guard
+(which treats `package.json` and `.github/workflows/compliance.yml` as
+operational source-of-truth).
+
+**`package.json` version bump 1.8.1 → 1.8.2 (SemVer string only).** Aligns the
+declared version with the already-written `1.8.2` CHANGELOG section. **No
+dependency, env var, secret, DB table/migration, start command, or deployed
+service topology change** — version-string bump only. The release cut itself
+remains **manual / owner-driven** (`changeset version` → `chore: version
+packages`); CI validates, the owner certifies.
+
+**`compliance.yml` `sbom-gate` → SBOM step is now attach-only.** Previously the
+step used `softprops/action-gh-release`, which *creates a missing tag by
+default*; a `main` push carrying a new `package.json` version with no matching
+tag would therefore have auto-created the tag, bypassing the manual cut. The
+step is now preceded by a `git ls-remote --tags` existence check and gated on
+`steps.tagcheck.outputs.exists == 'true'`, so the action runs **only when
+`v<version>` already exists** — it can attach SBOM evidence but can never create
+a tag. When the tag is absent it logs a notice and skips.
+
+**Operational contract change:** none to deployed services. The behavioral
+change is to the **release pipeline**: CI no longer materializes release tags as
+a side effect of SBOM attachment. Release authority is the owner. **Law: CI
+validates. Owner certifies.**
+
+---
+
+## 9.16 CI gate optimization — deduplication + dead-gate removal (2026-06-24, PR #1487)
+
+Owner-approved, deductive optimization of the CI surface (~37 PR checks → ~18–20)
+with **identical real coverage**: every unique security/correctness/governance
+gate still runs exactly once. The waste removed was duplication and structurally
+dead (no-op) gates, not governance. Applied incrementally, tier by tier, with a
+CI re-run between tiers. **No deployed service, env var, DB table/migration, or
+start command changed** — these are CI-pipeline topology edits only.
+
+**Tier A (this section's first landing) — delete provably-dead gates:**
+- Removed `.github/workflows/dependency-review.yml`: the GitHub-native dependency
+  review requires GitHub Advanced Security, which is not enabled, so the job only
+  printed a notice and always passed. Dependency-vuln coverage remains via
+  osv-scanner (`apex-governance`), npm audit (`security-regression-guard`), and
+  Dependabot.
+- Removed the `sast` (CodeQL) job from `apex-governance.yml`: CodeQL upload also
+  requires GHAS (disabled) → job always skipped/green, and it was already excluded
+  from the `governance-gate` aggregation. SAST coverage remains via SonarCloud
+  (`ci-runtime-gates`), ESLint security rules, and osv-scanner. Dropped from
+  `governance-gate` `needs`/echo accordingly.
+- Removed the `verify-secrets-manager` job from `secret-scanning.yml`: a warn-only
+  regex grep that never failed the build, fully dominated by the blocking
+  TruffleHog (verified-only) + gitleaks scanners in the same workflow.
+
+**OmniLink (bundled in Tier A):** `apps/omnihub-site/.env.example` and root
+`.env.example` documented `VITE_DASHBOARD_URL` as an external host
+(`app.apexomnihub.icu` / absolute `apexomnihub.icu/omnidash`). Changed both to the
+same-origin relative `/omnidash`, matching the code default in
+`apps/omnihub-site/src/pages/Login.tsx` and `.../components/Layout.tsx`
+(`VITE_DASHBOARD_URL ?? '/omnidash'`). This guarantees the OmniLink Capacitor
+native shell deep-links into the internal authenticated `/omnidash` shell rather
+than an external host. (`capacitor.config.ts` has no `server.url`, so the native
+shell already loads the local `dist/` bundle — no live redirect existed; this
+removes the copy-paste hazard.)
+
+**Tier B — scanner + build/test deduplication:**
+- `secret-scanning.yml` is now secrets-only. Its `scan-dependencies` job (Snyk
+  informational + npm audit) was removed; dependency auditing is owned solely by
+  `security-regression-guard.yml`'s `dependency-audit` job (the single canonical
+  `npm audit --omit=dev --audit-level=high` gate plus the Python lockfile /
+  security-floor checks). The `report` job's `needs` was trimmed accordingly.
+- `security-regression-guard.yml`'s `code-quality` job (tsc + tests + build) was
+  removed — it exactly duplicated `ci-runtime-gates.yml`'s `build-and-test`
+  (TypeScript type check, unit tests, production build). Build/test/typecheck now
+  live in CI Runtime Gates only.
+- `production-readiness.yml` was **retired**. Its unique checks were folded into
+  `ci-runtime-gates.yml`'s `build-and-test`: documentation drift (`docs:check`),
+  Cloudflare Pages `_redirects` existence, the "no TS suppression in config files"
+  guardrail, `security-posture-check.sh`, and the `apps/omnihub-site` SSG bundle
+  build (`bun run build:ssg`). Its TruffleHog + npm-audit steps were duplicates
+  (already covered by secret-scanning + security-regression-guard) and were dropped.
+
+**Tier C — `ops-doc-guard` SemVer exemption:**
+- `scripts/ci/check-ops-doc-drift.mjs` now exempts a **version-only** change to
+  `package.json` / `package-lock.json` (an owner release cut) from the ops-doc
+  drift requirement. The diff is inspected; if the only added/removed lines are
+  `"version": "…"` lines, the manifest is not treated as a runtime-contract change.
+  Any non-version change to those manifests still requires an ops-doc update.
+
+**Mobile split (`mobile-build-verify.yml`):** Android (Gradle `assembleDebug`)
+still verifies on every PR/push; iOS (`xcodebuild`) now verifies **nightly only**
+(`schedule: 0 5 * * *`) or on demand (`workflow_dispatch`), to conserve scarce
+macOS runner minutes. On PRs the `iOS Build (Simulator)` job is skipped (reports
+`skipped`, which branch protection treats as passing); the real verdict is the
+`Mobile Build Gate` job. OmniLink behaviour is unchanged.
+
+**Lighthouse split (`lighthouse.yml`):** On PR/push, `.lighthouserc.json` makes
+**accessibility + best-practices blocking** (`error`) and does not assert
+performance/SEO. Nightly (`schedule: 0 6 * * *`) runs `.lighthouserc.nightly.json`
+— the full audit incl. performance + SEO — fully **advisory** (`warn`), reporting
+regressions without blocking.
+
+**Compliance consolidation (`compliance.yml`):** four single-step micro-jobs
+(`legal-drift-gate`, `retention-evidence-gate`, `claims-proof-gate`,
+`rls-posture-gate`) were merged into one `Compliance Gates` job (four runner
+spin-ups → one). The deactivated (`if: false`) `Generate Readiness Report` job was
+deleted. `sbom-gate`, `sonarcloud-gate`, and `ruff-gate` are unchanged.
+`security-guards.yml` was retired — its "Block DEV BYPASS" grep was folded into
+`security-regression-guard.yml`'s `Security Invariant Checks` job.
+
+### 9.16.1 Branch-protection required-check changes (ACTION REQUIRED on merge)
+
+These status-check **contexts no longer report** once this PR merges. Remove them
+from `main` branch protection → "Require status checks to pass before merging",
+or the branch will block on checks that never arrive:
+
+| Removed context | Was defined in | Coverage now provided by |
+| --- | --- | --- |
+| `Quality Gates` | production-readiness.yml | `build-and-test` (CI Runtime Gates) |
+| `Security Gates` | production-readiness.yml | `Scan for Exposed Secrets` + `Dependency Security Audit` |
+| `Smoke Tests` | production-readiness.yml | `build-and-test` (Playwright E2E) |
+| `Production Readiness Summary` | production-readiness.yml | — (aggregator; no longer needed) |
+| `Code Quality Gates` | security-regression-guard.yml | `build-and-test` (CI Runtime Gates) |
+| `Scan Dependencies for Vulnerabilities` | secret-scanning.yml | `Dependency Security Audit` |
+| `guardrails` | security-guards.yml | `Security Invariant Checks` (DEV BYPASS folded in) |
+| `legal-drift-gate` | compliance.yml | `Compliance Gates` |
+| `retention-evidence-gate` | compliance.yml | `Compliance Gates` |
+| `claims-proof-gate` | compliance.yml | `Compliance Gates` |
+| `rls-posture-gate` | compliance.yml | `Compliance Gates` |
+| `Generate Readiness Report` | compliance.yml | — (was deactivated `if: false`) |
+
+**Add** to required checks (new consolidated context): `Compliance Gates`.
+
+**Adjust:** if `iOS Build (Simulator)` was a required check, require
+`Mobile Build Gate` instead — `iOS Build (Simulator)` now only runs nightly and
+will report `skipped` on PRs.
+
+**Unchanged / still required** (no action): `Architectural Boundary Enforcement`,
+`Terraform Expression Drift Gate`, `build-and-test`, `Security Invariant Checks`,
+`Dependency Security Audit`, `Scan for Exposed Secrets`, `Verify No .env Files`,
+`Security Report`, `Build Web Assets`, `Android Build (Debug)`, `Mobile Build Gate`,
+`Lighthouse Audit`, `sbom-gate`, `sonarcloud-gate`, `ruff-gate`, and the
+`apex-governance` contexts.
+

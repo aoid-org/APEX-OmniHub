@@ -96,3 +96,13 @@ The system should:
 - **Comprehensive doc sync complete:** README.md stats (2026-06-24 git-verified: src 328, tsx 94, edge 36, migrations 100, CI 23, hooks 23), `CURRENT_PLATFORM_STATE_2026_06_24.md` v1.1.0, `DOCUMENTATION_RELEASE_INDEX.md` v1.5.0
 - **`.understand-anything/`:** Audited — auto-generated visualization tool; no manual corrections required
 
+## Session 2026-06-24 (Session 3 — v1.8.2 Release Cut + Guard Alignment)
+
+- Branch: development branch tracks `main` at the same commit (`8bfb1a6`, PR #1486); no open PRs.
+- **Truth state frozen at `8bfb1a6`.** Local gates run against HEAD: `tsc -b --noEmit` exit 0, `eslint .` exit 0, `check-release-certification-docs.mjs` PASSED, `verify-claim-hygiene.mjs` PASSED (302 files), `check-supabase-migration-versions.mjs` PASSED (96 versions), `docs:check` PASSED, `guard-agent-destructive-actions.mjs` PASSED.
+- **CI on `8bfb1a6`:** 9/10 workflows green; `integration-harness` (run #341) pending (`in_progress`, not failing) — recorded as accepted known item.
+- **Guard-alignment fix:** `guard-agent-destructive-actions.mjs` exemptions aligned with `check-release-certification-docs.mjs` (owner-approved/, templates/, CHANGELOG.md) — resolves a false-positive on the owner-approved cert doc; both guards now pass full-tree.
+- **Release:** `package.json` bumped `1.8.1` → `1.8.2` (CHANGELOG `1.8.2` already written). Release cut is **manual / owner-driven** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence **attach-only** (gated on the tag already existing via `git ls-remote`, so CI can never create a tag — owner decision, resolved 2026-06-24).
+- **Owner certification:** `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` rewritten to be HEAD-accurate (scope `8bfb1a6` / `v1.8.2`, real CI + local evidence, calibrated language — scoped certification, not a standing/permanent guarantee).
+- **Docs synced:** root `README.md`, `CURRENT_PLATFORM_STATE_2026_06_24.md` (v1.2.0), `DOCUMENTATION_RELEASE_INDEX.md` (v1.6.0), omni-recall `docs/README.md`, `architecture/CANONICAL_TRUTH.md`, this file, and `memory/omni-recall/CLAUDE.md` audit line.
+

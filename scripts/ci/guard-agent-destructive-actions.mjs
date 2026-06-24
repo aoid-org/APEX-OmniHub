@@ -29,10 +29,18 @@ function scanFiles() {
     const files = execSync('git ls-files', { encoding: 'utf8' }).split('\n').filter(Boolean);
     
     for (const file of files) {
-      // Exclude self and known historical logs that genuinely document the incident
+      // Exclude self and known historical logs that genuinely document the incident.
+      // The owner-approved certification docs and release templates are an
+      // intentional exemption that mirrors scripts/ci/check-release-certification-docs.mjs:
+      // these files ARE the current certification authority and must be able to name
+      // the stale artifacts removed as part of the certified change. CHANGELOG.md records
+      // historical removals by artifact name as evidence, not reintroduction.
       if (
         file === 'scripts/ci/guard-agent-destructive-actions.mjs' ||
         file === 'patch_docs.py' ||
+        file === 'CHANGELOG.md' ||
+        file.startsWith('docs/release/owner-approved/') ||
+        file.startsWith('docs/release/templates/') ||
         file.includes('.system_generated') ||
         file.includes('archive/') ||
         file.includes('tasks/') ||
