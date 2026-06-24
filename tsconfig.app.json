@@ -36,6 +36,6 @@
     },
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src", "tests", "apps/omnihub-site/src", "apps/omnihub-site/dashboard"],
+  "include": ["src", "tests"],
   "exclude": ["tests/contracts"]
 }
