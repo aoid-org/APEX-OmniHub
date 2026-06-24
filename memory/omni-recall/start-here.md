@@ -62,3 +62,23 @@ The system should:
   3. Dual `@supabase/supabase-js` instance (root 2.98.0 vs app-local 2.108.2) — fixed via `tsconfig.app.json` `paths` alias pinning `@supabase/supabase-js` to `apps/omnihub-site/node_modules` (canonical 2.108.2); affects `src/lib/supabase/client.ts`, `src/lib/database/providers/supabase.ts`, `src/lib/storage/providers/supabase.ts`
 - **Docs updated:** `README.md` (v1.3.1, 2026-06-24 audit date, PR #1482 history note), `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md` (new), `memory/omni-recall/start-here.md` (this file)
 - Typecheck gate: running (tsc -b --noEmit) — see `CURRENT_PLATFORM_STATE_2026_06_24.md` for final result
+
+## Session 2026-06-24 (post-merge security + CI remediation)
+
+- Branch: `claude/bold-archimedes-apgm34`
+- **8 aiohttp Dependabot alerts resolved:** root cause was stale
+  `orchestrator/requirements.lock` (aiohttp 3.13.3); bumped to patched floor
+  **3.14.1** (uv.lock + `local-agents` were already 3.14.1). All 8 GHSAs verified
+  via OSV.dev as fixed in 3.14.1. Live Dependabot API was policy-denied this
+  session (403); ground truth came from OSV.dev + PyPI (no fabrication).
+- **Post-CI fixes:** removed Bun-unsupported nested protobufjs overrides →
+  flat `"protobufjs": "^7.6.4"` (unifies to 7.6.4); pinned `packageManager`
+  `bun@1.x → bun@1.3.14` and all 7 workflow `bun-version: latest → 1.3.14`;
+  regenerated bun.lock (frozen-lockfile clean); deleted duplicate migration
+  `20260621000000_omnitrace_audit_read_contract.sql` (canonical at `...000002`).
+- **New guards:** `scripts/ci/check-python-dependency-security.py`,
+  `scripts/ci/check-supabase-migration-versions.mjs`, and defensive pre-commit
+  hooks (`20-dependency-security.sh`, `30-destructive-action-guard.sh`), wired
+  into `security-regression-guard.yml`.
+- **Drift cleanup:** removed tracked stale `package.json.bak`.
+- **Full record:** `memory/omni-recall/post-merge-security-ci-remediation-2026-06-24.md`
