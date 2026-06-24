@@ -1,12 +1,12 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.3.1
-last_audited: 2026-06-22
+version: 1.3.2
+last_audited: 2026-06-24
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-22 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.8-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-24 -->
 
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
@@ -14,12 +14,12 @@ status: verified
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.10.1
-- **Platform Version:** 1.8.1 (1.8.2 in progress)
-- **Last Updated:** 2026-06-22
+- **Document Version:** 2.10.2
+- **Platform Version:** 1.8.2
+- **Last Updated:** 2026-06-24
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
-- **Current Certification Authority:** [CI Status Policy](project-status/CI_STATUS_POLICY.md) _(release-validation-summary.json is CI-generated; not a tracked file)_
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-24](CURRENT_PLATFORM_STATE_2026_06_24.md) (HEAD `d5d2684e`; PR #1485 certification owner-approval + agent guardrails; APEX Agent LIVE carried forward)
+- **Current Certification Authority:** Owner-approved certification — [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](../../../docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md) (scoped to HEAD `8bfb1a6` / `v1.8.2`); CI is validation evidence only ([CI Status Policy](project-status/CI_STATUS_POLICY.md))
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-24](CURRENT_PLATFORM_STATE_2026_06_24.md) (HEAD `8bfb1a6`; PRs #1485/#1486 merged; `v1.8.2`; APEX Agent LIVE carried forward)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -304,8 +304,8 @@ docs/
 
 ---
 
-**Last Updated:** June 22, 2026
-**Release:** v1.8.1 (v1.8.2 in progress)
+**Last Updated:** June 24, 2026
+**Release:** v1.8.2 (HEAD `8bfb1a6`)
 
 ## Documentation Governance
 

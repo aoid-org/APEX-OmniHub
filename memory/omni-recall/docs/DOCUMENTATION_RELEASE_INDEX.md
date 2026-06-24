@@ -1,7 +1,7 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.5.0
+version: 1.6.0
 last_audited: 2026-06-24
 status: verified
 ---
@@ -10,7 +10,7 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-06-24** (Session 2: PR #1485 certification owner-approval + agent guardrails + comprehensive doc sync). Previous refresh: 2026-06-22 (storage provider portability + README version correction 1.7.1 → 1.8.1). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_24.md`.
+> Current repo-truth index refreshed **2026-06-24** (Session 3: v1.8.2 release cut + guard alignment; PRs #1485/#1486 merged to `main`). Previous refresh: 2026-06-24 Session 2 (PR #1485 certification owner-approval + agent guardrails + comprehensive doc sync). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_24.md`.
 
 ## Current Repo Facts Verified in This Pass (2026-06-24)
 
@@ -18,11 +18,11 @@ status: verified
 
 | Fact | Current repo evidence |
 |---|---|
-| `main` HEAD | `726b10ee` — PR #1484 "chore: pin Bun runtime & add security regression guards" |
-| Active fix branch HEAD | `d5d2684e` on `fix/release-certification-owner-approval` (PR #1485) |
+| `main` HEAD | `8bfb1a6` — PR #1486 "fix(sonar): resolve SonarQube code smells across omnihub-site components" |
+| Active fix branch HEAD | none — development branch tracks `main` at the same commit; no open PRs |
 | Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
 | GitHub workflow files | **23** files in `.github/workflows/` |
-| Release/package versions | Root `package.json` declares **`1.8.1`** (1.8.2 in progress); app package `apps/omnihub-site/package.json` declares `1.3.10` |
+| Release/package versions | Root `package.json` declares **`1.8.2`** (`v1.8.2` tag + release auto-cut from `package.json` on push to `main` via `compliance.yml`); app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | SQL migrations | **100** `.sql` files = **96 forward** + **4 rollback** (`migrations/rollback/`) |
 | Edge function dirs | **36** (35 function dirs + `_shared`) |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
@@ -34,7 +34,8 @@ status: verified
 | `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485 |
+| Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485; exemptions aligned with `check-release-certification-docs.mjs` (owner-approved/, templates/, CHANGELOG.md) Session 3 |
+| Owner-approved certification | `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` — scoped to `main` HEAD `8bfb1a6` / `v1.8.2` |
 
 ## Documentation Authority Order
 

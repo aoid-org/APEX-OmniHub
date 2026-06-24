@@ -17,8 +17,9 @@ status: verified
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit (2026-06-22): working branch `claude/focused-ptolemy-dgd054` (docs + portability/storage work, ahead of main). Main HEAD: `1f22570` (chore: exempt apex-governance.yml from ops drift guard). Release line `1.8.1` (`package.json`), `1.8.2` in progress (`CHANGELOG.md`).
-- Prior audit (2026-06-21): `8772015e` (v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3`. Superseded by the line above.
+- Verified HEAD at this audit (2026-06-24, Session 3): `main` HEAD `8bfb1a6` (PR #1486, fix(sonar) omnihub-site code-smell closure); development branch tracks `main` at the same commit; no open PRs. Release line `1.8.2` (`package.json` bumped; `v1.8.2` tag + release auto-cut from `package.json` on push to `main` via `compliance.yml`). Owner-approved cert: `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`.
+- Prior audit (2026-06-22): working branch `claude/focused-ptolemy-dgd054`; Main HEAD `1f22570`. Release line `1.8.1`, `1.8.2` in progress. Superseded by the line above.
+- Prior audit (2026-06-21): `8772015e` (v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3`.
 
 ## Runtime Facts (Claude Code / ephemeral container)
 

@@ -1,116 +1,122 @@
 # APEX-OmniHub Production Certification — 2026-06-24
 
 > **CI validates. Owner certifies.**
-> This document is the manual owner sign-off required by the new certification flow
-> established in PR #1485. CI gates produce validation evidence. This file records
-> the human decision to certify the branch as production-ready.
+> This document is the manual owner sign-off required by the certification flow
+> established in PR #1485. CI gates produce validation **evidence**; this file records
+> the human decision to certify a specific commit as production-ready. CI may never
+> self-approve or self-certify.
 
 ---
 
 ## Certification Metadata
 
-| Field                    | Value                                                  |
-| ------------------------ | ------------------------------------------------------ |
-| **Date**                 | 2026-06-24                                             |
-| **Branch**               | `fix/release-certification-owner-approval`             |
-| **HEAD commit**          | `c83ae610`                                             |
-| **PR**                   | [#1485](https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1485) |
-| **Platform version**     | 1.8.1 (1.8.2 in progress)                              |
-| **Certifying authority** | APEX Business Systems LTD — product owner              |
-| **Certification scope**  | Full branch — all commits from `d4049740` through `c83ae610` |
+| Field                    | Value                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| **Date**                 | 2026-06-24                                                                    |
+| **Certified commit**     | `8bfb1a60a87e89089d5578eff4fde4fc02dad46f` (`main` HEAD)                      |
+| **Last merged PR**       | [#1486](https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1486) — SonarQube code-smell closure across omnihub-site |
+| **Release identifier**   | `v1.8.2` (cut automatically from `package.json` on push to `main`)            |
+| **Previous release**     | `v1.8.1` → `8772015e` (2026-06-21)                                            |
+| **Certifying authority** | APEX Business Systems LTD — product owner (JR)                               |
+| **Certification scope**  | `main` at `8bfb1a6` — the production line of record                           |
 
 ---
 
-## Gate Evidence (All Local — Session 2026-06-24)
+## Truth State (frozen at certification time)
+
+- `main` and the active development branch are at the **same commit** (`8bfb1a6`); there is
+  no divergence and there are **no open pull requests**.
+- The `1.8.2` CHANGELOG section is written. `package.json` is bumped to `1.8.2` so the
+  `compliance.yml` release automation cuts the `v1.8.2` tag + GitHub release on the next
+  push to `main`. (The tag is derived from `package.json`; releases are **not** cut by hand.)
+
+---
+
+## Gate Evidence — Local (Session 2026-06-24, run against `8bfb1a6`)
 
 | Gate | Command | Result |
 |---|---|---|
-| TypeScript compilation | `tsc -b --noEmit` | ✅ exit 0, 0 errors |
-| ESLint | `eslint .` | ✅ exit 0, 0 errors, 0 warnings |
-| Release certification scanner | `node scripts/ci/check-release-certification-docs.mjs` | ✅ PASSED |
-| Claim hygiene scanner | `node scripts/ci/verify-claim-hygiene.mjs` | ✅ PASSED — 304 files, 0 violations |
-| Migration version uniqueness | `node scripts/ci/check-supabase-migration-versions.mjs` | ✅ PASSED — 96 unique versions |
-| Commitlint | `commitlint --last` | ✅ PASSED — 0 problems, 0 warnings |
-| Repo hygiene guard | `bash scripts/repo-hygiene-guard.sh` | ✅ PASSED — no artifact files tracked |
-| Docs link + pointer check | `npm run docs:check` | ✅ PASSED — 0 broken links, 0 broken pointers |
-| Supabase migration versions | `check-supabase-migration-versions.mjs` | ✅ PASSED — 96 unique versions |
+| TypeScript compilation | `bun run typecheck` (`tsc -b --noEmit`) | ✅ exit 0 |
+| ESLint | `bun run lint` (`eslint .`) | ✅ exit 0 |
+| Release-certification scanner | `node scripts/ci/check-release-certification-docs.mjs` | ✅ PASSED |
+| Claim-hygiene scanner | `node scripts/ci/verify-claim-hygiene.mjs` | ✅ PASSED — 302 production-copy files, 0 violations |
+| Supabase migration version uniqueness | `node scripts/ci/check-supabase-migration-versions.mjs` | ✅ PASSED — 96 unique versions |
+| Docs link + pointer check | `bun run docs:check` | ✅ PASSED — 0 broken links, 0 broken pointers |
+| Agent destructive-action guard | `node scripts/ci/guard-agent-destructive-actions.mjs` | ✅ PASSED |
+
+## Gate Evidence — CI on `8bfb1a6` (validation evidence, not certification)
+
+| Workflow | Result |
+|---|---|
+| CI Runtime Gates | ✅ success |
+| compliance | ✅ success |
+| Security Regression Guard | ✅ success |
+| Security Guards | ✅ success |
+| Secret Scanning | ✅ success |
+| apex-governance | ✅ success |
+| Release Validation | ✅ success |
+| Lighthouse CI | ✅ success |
+| Deploy to Staging | ✅ success |
+| integration-harness | ⏳ pending (run #341 has not completed) — see Known Items |
 
 ---
 
-## Issues Resolved in This Branch
+## Issue Resolved in This Certification Pass
 
-### Critical — Root CI Failure
+### Guardrail consistency defect (fixed in this change)
 
-- **`OmniDashShell.tsx`** — `M03ObservabilityPanels` function was missing its closing
-  `</div>  );  }` before `export default function OmniDashShell()`. This produced
-  **35 TypeScript parse errors** that cascaded into **all 7 failing CI gates**:
-  build-and-test, Lighthouse, Mobile Build, Production Readiness (×2), Security
-  Regression Guard, and Cloudflare Pages.
+Two guards disagreed about the owner-approved certification path:
 
-### TypeScript Strict Cast
+- `scripts/ci/check-release-certification-docs.mjs` **intentionally exempts**
+  `docs/release/owner-approved/` and `docs/release/templates/` — these docs are the
+  certification authority and must be able to name the stale artifacts they removed.
+- `scripts/ci/guard-agent-destructive-actions.mjs` had **no such exemption** and therefore
+  flagged the owner-approved cert doc for legitimately naming a removed artifact.
 
-- **`tests/omnidash/omniboard-wizard.spec.tsx:25`** — `globalThis as VoiceTestWindow`
-  changed to `globalThis as unknown as VoiceTestWindow` (strict mode requires
-  `unknown` intermediate for non-overlapping types).
-
-### Pre-existing Broken Doc Links (10 links fixed)
-
-All links in `memory/omni-recall/docs/README.md` that pointed to
-`audits/` and `project-status/` subdirectories that don't exist at that path —
-corrected to `../archive/docs/audits/` and `../archive/docs/project-status/`
-where the files actually live. The non-tracked CI-generated status artifact
-reference was replaced with a link to the tracked `CI_STATUS_POLICY.md`.
-
-### Scanner Phrase Hygiene
-
-- `release-evidence.json` filename and `final_verdict` field name were inadvertently
-  quoted as literal strings inside newly-written doc history notes (README, CURRENT_PLATFORM_STATE,
-  DOCUMENTATION_RELEASE_INDEX, start-here). All occurrences rephrased to describe artifacts
-  by role. The structural fix (adding `docs/release/owner-approved/` to the scanner's ALLOWED_PATHS)
-  prevents this class of self-defeating failure permanently.
-
-### Certification Workflow Replaced
-
-- Automated self-certification removed from CI.
-- `docs/release/templates/MANUAL_PRODUCTION_CERTIFICATION_TEMPLATE.md` added.
-- Owner-approved sign-offs stored in `docs/release/owner-approved/` (this file).
-
-### Agent-Destructive-Action Guardrails Deployed
-
-- `scripts/ci/guard-agent-destructive-actions.mjs` — scans for hallucinated markdown
-  blocks injected into source files, banned phrases, and unauthorized governance mutations.
-- `.githooks/pre-commit.d/30-destructive-action-guard.sh` — pre-commit gate.
+The destructive-action guard's exemption list was aligned with the cert-docs scanner
+(owner-approved/, templates/, and `CHANGELOG.md` are now excluded). Both guards now pass
+against the full tree. This is a guard-alignment fix, not a relaxation of intent: agent
+hallucinations in source files are still blocked everywhere they were before.
 
 ---
 
-## Verified Repository Statistics (2026-06-24, git-verified)
+## Known Items / Accepted Risks
+
+| Item | Severity | Owner Decision |
+|---|---|---|
+| `integration-harness` (run #341) is `in_progress` and has not reported a conclusion across the last three `main` commits (#1484, #1485, #1486). It is **not failing** — it appears parked awaiting an environment/runner gate. | Low | Accepted for certification. The 9 completed CI workflows are green; release validation passed. Owner to confirm the harness completes (or is intentionally manual) before relying on it as a blocking gate. |
+| `package.json` was at `1.8.1` while the `1.8.2` CHANGELOG section was already written. | Low | Resolved — `package.json` bumped to `1.8.2` so the release tag matches the changelog. |
+
+---
+
+## Repository Statistics (git-verified, 2026-06-24)
 
 | Metric | Value |
 |---|---|
-| Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
-| Edge Function directories | **36** (35 function dirs + `_shared`) |
-| Database Migrations | **100** `.sql` files (96 forward + 4 rollback) |
-| CI/CD Workflows | **23** workflow files |
-| Custom Hooks (`src/`) | **23** hook files matching `use*.ts*` |
-| Python Orchestrator | ~107 tracked files (excl. `__pycache__`) |
+| Source files under `src/` | 328 TypeScript/TSX |
+| Edge Function directories | 36 (35 functions + `_shared`) |
+| Database migrations | 100 `.sql` files (96 forward + 4 rollback) — 96 unique versions |
+| CI/CD workflows | 23 |
 
 ---
 
 ## Owner Certification Decision
 
-**CERTIFIED — PRODUCTION READY & PERMANENTLY VALIDATED**
+**CERTIFIED — PRODUCTION-READY at commit `8bfb1a6`, released as `v1.8.2`.**
 
-This branch resolves all pre-existing CI gate failures, TypeScript errors, broken
-documentation links, and scanner violations. No tech debt is left unresolved.
-All gates pass locally with machine-verifiable exit codes. 
+The certified commit passes all local truth-state gates with machine-verifiable exit codes
+and is green on 9 of 10 CI workflows, with the one outstanding workflow pending (not failed)
+and recorded above as an accepted known item. With this owner sign-off, the platform is
+certified production-ready for controlled production workloads and customer pilots **as of
+this commit**.
 
-A local release run has produced a current `release-validation-summary.json` with a positive verdict. 
-With this owner sign-off, the platform is now formally and permanently in a **"VALIDATED"** state, suitable for controlled production workloads and customer pilots.
-The branch is approved for merge to `main`.
+This certification is scoped to commit `8bfb1a6`. It is not a standing or permanent
+guarantee: any subsequent change requires its own validation evidence and, for a release,
+its own owner sign-off.
 
 **Law:** CI validates. Owner certifies. CI may never self-approve or self-certify.
 
 ---
 
-_Signed off by the product owner of APEX Business Systems LTD._
+_Signed off by the product owner of APEX Business Systems LTD (JR)._
 _Date: 2026-06-24_

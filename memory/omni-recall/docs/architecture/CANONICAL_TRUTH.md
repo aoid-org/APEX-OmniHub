@@ -1,15 +1,15 @@
 ---
-version: 1.3.0
+version: 1.3.1
 last_audited: 2026-06-24
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.8.1 (1.8.2 in progress)
-**Last Updated:** 2026-06-22
+**Version:** 1.8.2
+**Last Updated:** 2026-06-24
 
-**Latest verified branch/head:** `main` @ `1f22570` (`chore: exempt apex-governance.yml from ops drift guard`). Prior landmark `966d695f` (#1441). See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (2026-06-22 refresh pending).
+**Latest verified branch/head:** `main` @ `8bfb1a6` (`fix(sonar): resolve SonarQube code smells across omnihub-site components`, #1486). Release `v1.8.2` (auto-cut from `package.json` on push to `main`). See `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current authoritative snapshot.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
