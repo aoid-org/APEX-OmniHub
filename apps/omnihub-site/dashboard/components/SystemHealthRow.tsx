@@ -1,11 +1,5 @@
 import { memo } from 'react';
-import type { KpiSummary } from '../types/dashboard.types';
-
-function resolveSystemHealth(demoMode: boolean, kpi: KpiSummary): string {
-  if (demoMode) return '100%';
-  if (kpi.ops_sev1_incidents <= 0) return '100%';
-  return `${Math.max(0, 100 - kpi.ops_sev1_incidents * 2.9).toFixed(1)}%`;
-}
+import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
 
 interface MetricCardProps {
   value: string | number;
@@ -33,15 +27,17 @@ function MetricCard({ value, label, valueColor, sublabel }: MetricCardProps) {
 export const SystemHealthRow = memo(function SystemHealthRow({
   demoMode,
   kpi,
+  systemHealth,
 }: {
   demoMode: boolean;
   kpi: KpiSummary;
+  systemHealth?: SystemHealthState;
 }) {
   const eventsTracked = demoMode ? 0 : (kpi.tradeline_paid_starts ?? 0);
-  const systemHealth = resolveSystemHealth(demoMode, kpi);
+  const healthDisplay = demoMode ? 'Healthy' : systemHealth ? systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) : 'Unknown';
   const guardianLoops = demoMode ? 1 : (kpi.tradeline_active_pilots ?? 0);
   const staleChecks = demoMode ? 0 : (kpi.tradeline_churn_risks ?? 0);
-  const healthIsGreen = systemHealth === '100%';
+  const healthIsGreen = demoMode || systemHealth === 'healthy';
 
   return (
     <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12 }}>
@@ -53,7 +49,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
           valueColor="var(--od-text-primary)"
         />
         <MetricCard
-          value={systemHealth}
+          value={healthDisplay}
           label={`System Health${demoMode ? ' (Simulated)' : ''}`}
           valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
         />

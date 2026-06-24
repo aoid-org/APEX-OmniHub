@@ -21,6 +21,16 @@ export type DashboardNavSection =
   | 'Runs'
   | 'Integrations';
 
+// ── Health State ───────────────────────────────────────────────────────────────
+
+export type SystemHealthState = 'healthy' | 'degraded' | 'incident' | 'unknown';
+
+export interface SliceStatus {
+  key: string;
+  state: SystemHealthState;
+  updatedAt: number;
+}
+
 // ── Ops State ────────────────────────────────────────────────────────────────
 
 export interface OmniDashOpsState {

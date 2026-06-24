@@ -231,7 +231,11 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           return;
         }
 
-        const live = data as Partial<ModuleContent>;
+        const rawData = (data as { ok?: boolean; data?: unknown }).ok === true 
+          ? (data as { data: unknown }).data 
+          : data;
+
+        const live = rawData as Partial<ModuleContent>;
         safeSetLiveState({
           headline: live.headline,
           stats: live.stats,

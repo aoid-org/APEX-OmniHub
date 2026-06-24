@@ -13,19 +13,19 @@ const kpiWithIncidents: KpiSummary = {
 };
 
 describe('SystemHealthRow', () => {
-  it('shows 100% health in demo mode regardless of kpi', () => {
+  it('shows Healthy health in demo mode regardless of kpi', () => {
     render(<SystemHealthRow demoMode={true} kpi={kpiWithIncidents} />);
-    expect(screen.getByText('100%')).toBeTruthy();
+    expect(screen.getByText('Healthy')).toBeTruthy();
   });
 
-  it('shows 100% health in live mode with 0 incidents', () => {
-    render(<SystemHealthRow demoMode={false} kpi={EMPTY_KPI_SUMMARY} />);
-    expect(screen.getByText('100%')).toBeTruthy();
+  it('shows Healthy health in live mode with healthy systemHealth', () => {
+    render(<SystemHealthRow demoMode={false} kpi={EMPTY_KPI_SUMMARY} systemHealth="healthy" />);
+    expect(screen.getByText('Healthy')).toBeTruthy();
   });
 
-  it('shows 94.2% health in live mode with sev1 incidents', () => {
-    render(<SystemHealthRow demoMode={false} kpi={kpiWithIncidents} />);
-    expect(screen.getByText('94.2%')).toBeTruthy();
+  it('shows Degraded health in live mode with degraded systemHealth', () => {
+    render(<SystemHealthRow demoMode={false} kpi={kpiWithIncidents} systemHealth="degraded" />);
+    expect(screen.getByText('Degraded')).toBeTruthy();
   });
 
   it('renders zero events tracked in demo mode', () => {

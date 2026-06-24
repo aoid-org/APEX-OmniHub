@@ -2,12 +2,14 @@ import { encodeBase64Url } from 'https://deno.land/std@0.224.0/encoding/base64ur
 import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed } from '../_shared/cors.ts';
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
-import { normalizeOmniPortIntent, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
   checkRateLimit,
   rateLimitExceededResponse,
   RATE_LIMIT_CONFIGS,
 } from '../_shared/rate-limit.ts';
+import { okResponse, errResponse } from '../_shared/response.ts';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,7 +37,7 @@ interface ApiKeyRecord {
 /** Canonical response shape for every module-state call */
 interface ModuleStateResponse {
   State: string;
-  items: unknown[];
+  items: NormalizedModuleItem[] | unknown[];
   actions: string[];
   count: number;
   message?: string;
@@ -226,14 +228,14 @@ async function resolveAudits(
 
   return {
     State: 'Online',
-    items: rows.map((r) => ({
+    items: normalizeModuleItems(rows.map((r) => ({
       id: r.id,
       action: r.action_type,
       resource: r.resource_type ?? 'unknown',
       resource_id: r.resource_id,
       metadata: r.metadata,
       at: r.created_at,
-    })),
+    }))),
     actions: ['export-audit', 'run-compliance'],
     count: rows.length,
   };
@@ -260,12 +262,12 @@ async function resolveLinks(
 
   return {
     State: 'Online',
-    items: rows.map(r => ({
+    items: normalizeModuleItems(rows.map(r => ({
       id: r.id,
       label: r.url,
       status: r.status,
       timestamp: r.created_at,
-    })),
+    }))),
     actions: ['add-link', 'send-to-omnislate'],
     count: rows.length,
   };
@@ -294,14 +296,14 @@ async function resolveAutomations(
 
   return {
     State: 'Online',
-    items: autos.map((a) => ({
+    items: normalizeModuleItems(autos.map((a) => ({
       id: a.id,
       name: a.name,
       trigger: a.trigger_type,
       action: a.action_type,
       active: a.is_active,
       created_at: a.created_at,
-    })),
+    }))),
     actions: ['create-automation', 'view-logs'],
     count: autos.length,
   };
@@ -346,10 +348,10 @@ async function resolveWorkflows(
 
   return {
     State: 'Online',
-    items: defs.map((w) => ({
+    items: normalizeModuleItems(defs.map((w) => ({
       ...w,
       recentRun: runs.find((r) => r.workflow_id === w.id) ?? null,
-    })),
+    }))),
     actions: ['create_workflow', 'trigger_run'],
     count: defs.length,
   };
@@ -384,12 +386,12 @@ async function resolveFiles(
 
   return {
     State: 'Online',
-    items: files.map((f) => ({
+    items: normalizeModuleItems(files.map((f) => ({
       name: f.name,
       size: (f.metadata?.size as number | undefined) ?? 0,
       mime: (f.metadata?.mimetype as string | undefined) ?? null,
       created_at: f.created_at,
-    })),
+    }))),
     actions: ['upload_file', 'delete_file'],
     count: files.length,
   };
@@ -430,7 +432,7 @@ async function resolveBilling(
 
   return {
     State: sub ? 'Online' : 'NoSubscription',
-    items,
+    items: normalizeModuleItems(items),
     actions: ['manage-plan', 'billing-portal'],
     count: items.length,
   };
@@ -473,7 +475,7 @@ async function resolveSettings(
 
   return {
     State: 'Online',
-    items,
+    items: normalizeModuleItems(items),
     actions: ['save-settings', 'reset-defaults'],
     count: items.length,
   };
@@ -503,7 +505,7 @@ async function resolvePhysioMni(
 
   return {
     State: 'Online',
-    items: rows.map((d) => ({
+    items: normalizeModuleItems(rows.map((d) => ({
       id: d.id,
       serial: d.device_serial,
       name: d.device_name,
@@ -511,7 +513,7 @@ async function resolvePhysioMni(
       active: d.is_active,
       last_seen: d.last_seen_at,
       location: d.location_tag,
-    })),
+    }))),
     actions: ['provision-device', 'export-telemetry'],
     count: rows.length,
   };
@@ -540,14 +542,14 @@ async function resolveOmniTrace(
 
   return {
     State: 'Online',
-    items: events.map((e) => ({
+    items: normalizeModuleItems(events.map((e) => ({
       id: e.id,
       type: e.event_type,
       text: e.event_text,
       severity: e.severity,
       color: e.color_token,
       at: e.created_at,
-    })),
+    }))),
     actions: ['search-traces', 'export-spans'],
     count: events.length,
   };
@@ -574,12 +576,12 @@ async function resolveAgent(
 
   return {
     State: 'Online',
-    items: rows.map((s) => ({
+    items: normalizeModuleItems(rows.map((s) => ({
       id: s.id,
       status: s.status,
       started_at: s.started_at,
       updated_at: s.updated_at,
-    })),
+    }))),
     actions: ['new-session', 'view-history'],
     count: rows.length,
   };
@@ -658,12 +660,12 @@ async function resolveOmniSkills(
 
     return {
       State: 'Online',
-      items: e ? [
+      items: e ? normalizeModuleItems([
         { key: 'tier', value: e.tier },
         { key: 'used', value: e.free_skills_used },
         { key: 'limit', value: e.free_skills_limit },
         { key: 'total', value: e.total_skills_created },
-      ] : [],
+      ]) : [],
       actions: ['forge-skill', 'manage-bundles'],
       count: e ? e.total_skills_created : 0,
     };
@@ -695,13 +697,13 @@ async function resolveIntegrations(
 
   return {
     State: 'Online',
-    items: rows.map((c) => ({
+    items: normalizeModuleItems(rows.map((c) => ({
       id: c.id,
       connector: c.connector_id,
       provider: c.provider,
       scopes: c.scopes,
       last_sync: c.last_sync_at,
-    })),
+    }))),
     actions: ['add-integration', 'sync-all'],
     count: rows.length,
   };
@@ -738,35 +740,35 @@ async function resolveModuleState(
 
 // ── Module-state handler ──────────────────────────────────────────────────────
 
-async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+async function handleModuleState(req: Request, _corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return errResponse('unauthorized', 'Unauthorized', 401, req.headers.get('origin'));
 
   // Resolve user to validate JWT (don't pass uid manually — RLS handles it)
   const userClient = createAnonClient(authHeader);
   const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return errResponse('unauthorized', 'Unauthorized', 401, req.headers.get('origin'));
 
   // API-key path: check omnilink key, verify module_state:read permission
   const token = authHeader.replace('Bearer ', '').trim();
   const apiKey = await loadApiKey(token);
   if (apiKey && !enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
-    return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+    return errResponse('permission_denied', 'Permission Denied', 403, req.headers.get('origin'));
   }
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
   const payload = (body ?? {}) as Record<string, unknown>;
   const moduleKey = payload.module_key as string | undefined;
-  if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
+  if (!moduleKey) return errResponse('module_key_required', 'Module key is required', 400, req.headers.get('origin'));
 
   try {
     // Pass user.id so file resolver can scope storage list to the correct prefix
     const data = await resolveModuleState(moduleKey, authHeader, user.id);
-    return jsonResponse(data, 200, corsHeaders);
+    return okResponse(data, req.headers.get('origin'), 200);
   } catch (err) {
     // Sanitize — never leak raw DB errors to the client
     const sanitized = err instanceof Error ? err.message : 'module_error';
-    return jsonResponse({ State: 'Error', message: sanitized, items: [], actions: [], count: 0 }, 500, corsHeaders);
+    return errResponse('module_error', sanitized, 500, req.headers.get('origin'));
   }
 }
 

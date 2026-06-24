@@ -17,7 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
-import type { KpiSummary } from '../types/dashboard.types';
+import type { KpiSummary, SystemHealthState, SliceStatus } from '../types/dashboard.types';
 import { EMPTY_KPI_SUMMARY } from '../types/dashboard.types';
 
 // ── Minimal local types (mirrors src/omnidash/types.ts) ─────────────────────
@@ -65,6 +65,8 @@ export interface DashboardData {
   readonly kpiHistory: KpiDaily[];
   readonly openIncidents: Incident[];
   readonly memoryHealth: MemoryHealthStats | null;
+  readonly systemHealth: SystemHealthState;
+  readonly sliceStatuses: Record<string, SliceStatus>;
   readonly isLoading: boolean;
   readonly error: string | null;
   readonly refresh: () => void;
@@ -149,14 +151,14 @@ export function useDashboardData(options?: { enabled?: boolean }): DashboardData
 
     void load();
 
-    const channel = supabase.channel('dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_kpi_daily' }, () => {
+    const channel = supabase.channel(`dashboard-realtime-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_kpi_daily', filter: `user_id=eq.${userId}` }, () => {
         if (!cancelled) setRefreshKey(k => k + 1);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_incidents' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_incidents', filter: `user_id=eq.${userId}` }, () => {
         if (!cancelled) setRefreshKey(k => k + 1);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_settings' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_settings', filter: `user_id=eq.${userId}` }, () => {
         if (!cancelled) setRefreshKey(k => k + 1);
       })
       .subscribe();
@@ -179,12 +181,21 @@ export function useDashboardData(options?: { enabled?: boolean }): DashboardData
       }
     : EMPTY_KPI_SUMMARY;
 
+  const systemHealth: SystemHealthState = 
+    openIncidents.some(i => i.severity === 'sev1') ? 'incident' :
+    openIncidents.length > 0 ? 'degraded' :
+    'healthy';
+
+  const sliceStatuses: Record<string, SliceStatus> = {};
+
   return {
     settings,
     kpiSummary,
     kpiHistory,
     openIncidents,
     memoryHealth,
+    systemHealth,
+    sliceStatuses,
     isLoading,
     error,
     refresh,

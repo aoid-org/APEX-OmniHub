@@ -8,6 +8,7 @@ export interface OmniMediaItem {
   type: MediaType;
   title: string;
   provider?: string;
+  poster?: string;
 }
 
 interface OmniMediaState {

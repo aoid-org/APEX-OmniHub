@@ -73,8 +73,12 @@ export function OnboardingWizard() {
 
         if (error) throw error;
 
-        if (data?.url) {
-          globalThis.location.href = data.url; // Redirect to Stripe
+        const rawData = (data as { ok?: boolean; data?: unknown }).ok === true
+          ? (data as { data: { url?: string } }).data
+          : data;
+
+        if (rawData?.url) {
+          globalThis.location.href = rawData.url; // Redirect to Stripe
         } else {
           throw new Error('No checkout URL returned');
         }
