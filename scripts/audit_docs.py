@@ -1,7 +1,5 @@
 import os
-import re
 from datetime import datetime
-import shutil
 
 EXCLUDE_DIRS = {'node_modules', '.git', 'venv', 'local-agents', '.pytest_cache'}
 
@@ -17,7 +15,7 @@ def has_frontmatter(content):
 
 def process_file(filepath):
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             content = f.read()
             
         if not has_frontmatter(content):

@@ -46,7 +46,19 @@ function describeConnectionError(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message === 'omniboard_timeout') {
     return 'Connection service timed out. The OmniBoard integration gateway did not respond.';
   }
-  return err instanceof Error ? err.message : fallback;
+  const raw = err instanceof Error ? err.message : '';
+  // supabase-js surfaces opaque transport strings for Edge Function failures
+  // (e.g. "Edge Function returned a non-2xx status code"). These are not user
+  // copy — map them to an honest message instead of leaking transport detail.
+  // Genuinely descriptive errors still pass through unchanged.
+  if (
+    /non-2xx status code|Relay Error invoking the Edge Function|Failed to send a request to the Edge Function/i.test(
+      raw,
+    )
+  ) {
+    return 'OmniBoard could not complete the connection \u2014 the integration gateway is unavailable right now. No app was connected.';
+  }
+  return raw || fallback;
 }
 
 interface FSMContext {
@@ -104,15 +116,18 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     if (!context || !input.trim()) return;
     setLoading(true);
     try {
+      // Contract: event_type=USER_INPUT, payload.user_input matches FSM
+      // event.payload.get("user_input") in _handle_idle_listen / _handle_app_disambiguation.
       type TurnResponse = { context: FSMContext; message: string; connection_spec?: Record<string, unknown> };
       const { data, error } = await invokeWithTimeout<TurnResponse>(
         'omnilink-port/omniboard-next',
-        { session_id: context.session_id, event_type: 'user_input', payload: { text: input.trim() } },
+        { session_id: context.session_id, event_type: 'USER_INPUT', payload: { user_input: input.trim() } },
       );
       if (error || !data) throw error ?? new Error('No response from connection gateway.');
       setContext(data.context);
       setMessage(data.message);
       setInput('');
+      // connection_spec is normalised by the edge function from context.final_spec.
       if (data.context.state === 'COMPLETION' && data.connection_spec) {
         onComplete(data.connection_spec);
       }
@@ -177,7 +192,7 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
           disabled={loading}
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold"
         >
-          {loading ? 'Starting session…' : 'Start Connecting'}
+          {loading ? 'Starting session…' : error ? 'Retry Connection' : 'Start Connecting'}
         </button>
       )}
       <p className="text-[10px] text-muted-foreground text-center">

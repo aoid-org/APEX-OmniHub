@@ -1,6 +1,6 @@
 ---
-version: 1.2.0
-last_audited: 2026-06-22
+version: 1.3.0
+last_audited: 2026-06-24
 status: verified
 ---
 
@@ -130,3 +130,51 @@ If any other document conflicts with this file, this file wins unless explicitly
 - `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
 
 **Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` for the current canonical snapshot.
+
+## Source-of-Truth Statement 24 (2026-06-23)
+
+**Links is now live-persisted (supersedes the Links portion of Statement 21).** `apps/omnihub-site/dashboard/components/modules/LinksModule.tsx` writes validated `http(s)` URLs to the Supabase `omnilink_links` table (migration `20260622102600_omnilink_links_persistence.sql`; own-row RLS for insert/select/update/delete). The `omnilink-port` `module-state` `resolveLinks` resolver SELECTs from `omnilink_links` (JWT forwarded via `createAnonClient(authHeader)` → RLS-scoped to the owner). Add Link refreshes the panel in place via `useOmniModuleState().refetch()` — **no full-page reload**. The earlier "staged locally until link-context persistence is connected" copy and the "empty link-context" resolver claim are retired.
+
+**Production demo-state is hard-disabled in production builds.** `DemoModeContext` defaults `demoMode:false` and force-disables demo in production (`import.meta.env.PROD`); a stale localStorage value cannot re-enable it and the Demo Mode ops toggle is hidden in prod (`SentinelPanel`). The three previously hardcoded "(Simulated)" status labels in `OmniDashShell` (header Zero Trust badge + footer Guardian/Zero-Trust) are now gated on `demoMode`. The fabricated `syncedMinutesAgo` metric in `useAppRegistryHealth` is replaced with an honest `null` (rendered as "—"). No visual/layout drift.
+
+**OmniBoard connect-wizard errors are honest (refines Statement 21 taxonomy).** `OmniBoardWizard.describeConnectionError` maps opaque Supabase transport strings ("Edge Function returned a non-2xx status code", relay/fetch failures) to user-facing copy and never leaks them; genuinely descriptive errors still pass through. The retry control reads "Retry Connection" after a failure. The underlying `omniboard-start` edge availability remains a separate backend item.
+
+## Source-of-Truth Statement 25 (2026-06-24)
+
+**PR #1482 production-readiness — 3 pre-existing TypeScript defects resolved + OmniBoard FSM contract hardened.**
+
+### TypeScript defects resolved
+
+| Defect | Files | Resolution |
+|---|---|---|
+| `TS2307` — `@aws-sdk/client-s3`, `s3-request-presigner`, `s3-presigned-post` not installed | `src/lib/storage/providers/s3.ts` | `npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @aws-sdk/s3-presigned-post` — 33 packages added; `node_modules/@aws-sdk/client-s3` now present |
+| `TS7006` — implicit `any` in two lambda callbacks | `src/lib/storage/providers/s3.ts` lines 116, 250 | Explicit types: `(b: { Name?: string })` and `(obj: { Key?: string; Size?: number; LastModified?: Date })` |
+| `TS2322` — dual `@supabase/supabase-js` instance (root v2.98.0 vs app-local v2.108.2) causing structural incompatibility across 3 files | `src/lib/supabase/client.ts`, `src/lib/database/providers/supabase.ts`, `src/lib/storage/providers/supabase.ts` | `tsconfig.app.json` `paths` alias pins `@supabase/supabase-js` to `./apps/omnihub-site/node_modules/@supabase/supabase-js` (canonical v2.108.2) across all three files |
+| `TS2322` — `createSignedUrls` returned `(string\|null)[]` instead of `string[]` | `src/lib/storage/providers/supabase.ts` | Null-filter: `.filter((item): item is { signedUrl: string } => item.signedUrl !== null)` before mapping to `string[]` |
+
+**Total tsc errors resolved: 9 → 0.** Gate `tsc -b --noEmit` PASSED, exit 0.
+
+### OmniBoard FSM contract bugs fixed (3)
+
+| Bug | Root Cause | Fix |
+|---|---|---|
+| `payload.text` sent to FSM that reads `event.payload.get("user_input")` | `OmniBoardWizard.tsx` used wrong key | Changed to `{ user_input: input }` + `event_type: 'USER_INPUT'` (uppercase) |
+| `connection_spec` never reached frontend on COMPLETION | `router.py` returned only `{context, message}` | `next_turn` now spreads `connection_spec: next_context.final_spec.model_dump()` at top level when not None |
+| False `VITE_ORCHESTRATOR_URL` client-side gate blocked wizard | Client-side env check is wrong architectural layer | Gate removed from `OmniBoardModule.tsx`; edge function 503 surfaces honestly via wizard error taxonomy |
+
+**New test suite:** `orchestrator/tests/omniboard/test_router_contract.py` — 13 tests. Total: 38/38 PASSED.
+
+### Merge-conflict resolution in `docs/APEX_AGENT_OPERATIONS.md`
+
+PR #1483 added §9.12 (audit readiness closure) to `main` while PR #1482 added §9.12 (OmniBoard proxy) to the fix branch. Fast-forward merge produced a conflict. Resolution: both sections retained; PR #1483's section renumbered §9.13. All conflict markers removed. File verified conflict-free at commit `4cfad404`.
+
+### Gate evidence (commit `4cfad404`, branch `fix/prod-readiness-omniboard-links-demoflip-20260623`)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| `tsc -b --noEmit` | ✅ PASSED | 0 errors (was 9) |
+| `eslint .` | ✅ PASSED | 0 violations |
+| `pytest tests/omniboard` | ✅ PASSED | 38/38 |
+| `git push` | ✅ SUCCEEDED | `d1baf346..4cfad404` on remote |
+
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current canonical snapshot. If that file is absent, fall back to `2026_06_23`.

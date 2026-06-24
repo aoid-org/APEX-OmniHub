@@ -113,7 +113,7 @@ export class S3Storage implements IStorage {
       const { ListBucketsCommand } = await this.mod()
       const client = await this.client()
       const res = await client.send(new ListBucketsCommand({}))
-      return { data: (res.Buckets ?? []).map((b) => b.Name ?? ''), error: null }
+      return { data: (res.Buckets ?? []).map((b: { Name?: string }) => b.Name ?? ''), error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
     }
@@ -247,7 +247,7 @@ export class S3Storage implements IStorage {
       )
       const contents = res.Contents ?? []
       const offset = options?.offset ?? 0
-      const files: StorageFile[] = contents.slice(offset).map((obj) => ({
+      const files: StorageFile[] = contents.slice(offset).map((obj: { Key?: string; Size?: number; LastModified?: Date }) => ({
         name: (obj.Key ?? '').split('/').pop() ?? (obj.Key ?? ''),
         path: obj.Key ?? '',
         size: obj.Size ?? 0,

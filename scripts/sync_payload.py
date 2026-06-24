@@ -7,8 +7,6 @@ Args: <input_json_path> <mapping_schema_path>
 import json
 import re
 import sys
-from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Type coercion helpers

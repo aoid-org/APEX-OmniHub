@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 # ------------------------------------------------------------------ constants
@@ -85,7 +85,7 @@ def parse_rls(raw: dict[str, Any] | list[Any]) -> dict[str, bool]:
 def scan(data: dict[str, Any]) -> dict[str, Any]:
     """Run all scan checks and return structured findings."""
     findings: dict[str, Any] = {
-        "scanned_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "scanned_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "version": VERSION,
         "platform_status": "UNKNOWN",
         "modules": [],

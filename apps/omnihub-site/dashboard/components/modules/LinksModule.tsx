@@ -90,8 +90,10 @@ export default function LinksModule({ onClose }: Props) {
       setUrl('');
       setTouched(false);
       setIsStaging(false);
-      // Force reload to validate readback from durable storage
-      window.location.reload();
+      // Refresh module state in place (re-reads durable storage via the
+      // omnilink-port resolver) — keeps the modal open and the dashboard
+      // intact instead of a jarring full-page reload.
+      state.refetch?.();
     }
   };
 

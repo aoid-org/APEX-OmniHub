@@ -448,6 +448,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
     });
   };
 
+  const { demoMode } = useDemoMode();
   const notifications = useNotificationStore(state => state.notifications);
   const unreadCount = useNotificationStore(state => state.getUnreadCount());
   const markAllAsRead = useNotificationStore(state => state.markAllAsRead);
@@ -602,7 +603,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
             boxShadow:`0 0 ${pulse?8:4}px ${T.green}`,
             transition:"box-shadow .5s",
           }} />
-          Zero Trust Active (Simulated)
+          Zero Trust Active{demoMode ? ' (Simulated)' : ''}
         </div>
 
         {/* Connect AI */}
@@ -1664,9 +1665,9 @@ export default function OmniDashShell() {
         <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
           <span>Edmonton, AB</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE (Simulated)</span>
+          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
           <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON (Simulated)</span>
+          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON{demoMode ? ' (Simulated)' : ''}</span>
         </div>
       </div>
 

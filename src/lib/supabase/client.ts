@@ -11,8 +11,10 @@ type SupabaseClientOptions = {
 };
 
 // Phase 2: Database Client Convergence
-// This factory now returns the singleton instance from integrations/supabase/client.ts
-// to eliminate "Split Brain" architecture and enforce a Single Source of Truth.
+// Returns the singleton instance from integrations/supabase/client.ts to
+// eliminate "Split Brain" architecture and enforce a Single Source of Truth.
+// @supabase/supabase-js is pinned to apps/omnihub-site/node_modules via
+// tsconfig.app.json paths alias — eliminates dual-instance structural mismatch.
 // Options are intentionally ignored to prevent configuration drift.
 export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseClient {
   if (options?.debug) {

@@ -15,7 +15,6 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import sync_payload as sp  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

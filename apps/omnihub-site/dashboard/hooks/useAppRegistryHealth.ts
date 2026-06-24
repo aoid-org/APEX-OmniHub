@@ -10,7 +10,7 @@ import { APP_REGISTRY, type AppRegistryEntry, type AppHealthStatus, type Dashboa
 interface LiveHealthEntry {
   key: string;
   health: AppHealthStatus;
-  syncedMinutesAgo: number;
+  syncedMinutesAgo: number | null;
   status: DashboardStatus;
 }
 
@@ -41,7 +41,9 @@ export function useAppRegistryHealth(): readonly (AppRegistryEntry & { _live?: L
         map.set(entry.key, {
           key: entry.key,
           health: openCount > 0 ? 'yellow' : 'green',
-          syncedMinutesAgo: (entry.key.length % 5) + 1, // Simulated metric until backend event tracking is active
+          // No backend event-tracking timestamp exists yet — report unknown
+          // (null) instead of fabricating a sync time. UI renders "\u2014".
+          syncedMinutesAgo: null,
           status: 'Live',
         });
       }

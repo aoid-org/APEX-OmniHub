@@ -601,11 +601,44 @@ accumulated CLS 0.264 — failing Core Web Vitals (threshold 0.1).
 **Operational impact:** None. Frontend-only changes. No services, env vars,
 secrets, DB tables/migrations, or start commands changed.
 
+
+## 9.12 OmniBoard connect proxy — omnilink-port → orchestrator FSM (2026-06-23)
+
+### supabase/functions/omnilink-port/index.ts — new routes `omniboard-start`, `omniboard-next`
+
+OmniBoardWizard (`apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`) calls
+`omnilink-port/omniboard-start` and `omnilink-port/omniboard-next`. These routes did not
+exist, so the function returned `404 not_found`, which supabase-js surfaces as
+"Edge Function returned a non-2xx status code".
+
+This proxy bridges those routes to the orchestrator FSM
+(`orchestrator/omniboard/router.py`: `POST /omniboard/start`, `POST /omniboard/{session_id}/next`):
+
+- `handleOmniBoardStart` — validates the user JWT (`createAnonClient(authHeader).auth.getUser()`),
+  then `POST ${ORCHESTRATOR_URL}/omniboard/start?tenant_id=<auth.uid>&trace_id=<uuid>`
+  (orchestrator takes these as query params). `tenant_id` is bound to the authenticated user.
+- `handleOmniBoardNext` — validates JWT, requires `session_id` in the body, forwards the
+  `FSMEvent` shape `{ event_type, payload }` to `${ORCHESTRATOR_URL}/omniboard/{session_id}/next`.
+
+`/omniboard/*` is NOT in the orchestrator signed-path set (`orchestrator/security/request_signing.py`
+`_SIGNED_PATHS = {/api/v1/goals, /api/v1/intents}`), so no HMAC is required. Failures map to
+honest taxonomy: 401 unauthorized, 503 `connect_unavailable` (no `ORCHESTRATOR_URL`),
+502 `connect_unavailable` (orchestrator non-2xx / unreachable) — never a leaked transport string.
+
+### Required configuration (owner action)
+- Set `ORCHESTRATOR_URL=https://apex-orchestrator-api.onrender.com` as a secret on the
+  `omnilink-port` edge function.
+- `UPSTASH_REDIS_URL` must be live on the orchestrator (FSM session store).
+
+### Verification gate
+- `deno check supabase/functions/omnilink-port/index.ts` (could not run in the agent sandbox — no deno binary).
+- Staging e2e: wizard `start` → `next` turns → `COMPLETION` with a Connection Spec.
+
 ---
 
-## 9.12 Audit readiness closure — 2026-06-23 (PR #1483)
+## 9.13 Audit readiness closure — 2026-06-23 (PR #1483)
 
-### 9.12.1 `public.tenant_entitlements` — OmniConnect tenant feature contract
+### 9.13.1 `public.tenant_entitlements` — OmniConnect tenant feature contract
 
 **New DB object entry:** `tenant_entitlements`.
 
@@ -631,7 +664,7 @@ the standard Supabase migration path only; do not run a full reset or disable
 RLS. If production history drift appears, follow §10 migration repair/baseline
 rules before applying.
 
-### 9.12.2 `production-readiness.yml` — isolated site SSG smoke gate
+### 9.13.2 `production-readiness.yml` — isolated site SSG smoke gate
 
 **Workflow contract:** the `Smoke Tests` job now installs root dependencies,
 installs the isolated `apps/omnihub-site` dependencies, then runs
@@ -646,3 +679,4 @@ before invoking the SSG CLI.
 
 **Operational impact:** CI-only deployment safety improvement. No Cloudflare
 Pages project name, start command, runtime secret, or production URL changes.
+

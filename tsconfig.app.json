@@ -24,6 +24,7 @@
 
     "baseUrl": ".",
     "paths": {
+      "@supabase/supabase-js": ["./apps/omnihub-site/node_modules/@supabase/supabase-js"],
       "dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@omniconnect/*": ["./src/omniconnect/*"],

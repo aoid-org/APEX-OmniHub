@@ -43,13 +43,16 @@ export const SentinelPanel = memo(function SentinelPanel() {
     <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 16 }}>
       <div className="sentinel-section-title">Ops Controls</div>
 
-      <OpsToggle
-        label="Demo Mode"
-        sublabel="Simulated data feed"
-        enabled={demoMode}
-        onToggle={() => setDemoMode(!demoMode)}
-        ariaLabel="Toggle demo mode"
-      />
+      {/* Demo Mode is not exposed in production builds — no demo state ships. */}
+      {!import.meta.env.PROD && (
+        <OpsToggle
+          label="Demo Mode"
+          sublabel="Simulated data feed"
+          enabled={demoMode}
+          onToggle={() => setDemoMode(!demoMode)}
+          ariaLabel="Toggle demo mode"
+        />
+      )}
       <OpsToggle
         label="Auto-Pilot"
         sublabel="Autonomous task handling"

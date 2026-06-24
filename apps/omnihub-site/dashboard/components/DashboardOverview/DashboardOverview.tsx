@@ -97,7 +97,9 @@ export const DashboardOverview = memo(function DashboardOverview({
         name: e.label,
         cat: e.category,
         logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
-        synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+        synced: e._live
+          ? (e._live.syncedMinutesAgo != null ? `${e._live.syncedMinutesAgo}m` : '\u2014')
+          : `${e.dashboard.syncedMinutesAgo}m`,
         status: finalStatus,
       } as AppEntry;
     });

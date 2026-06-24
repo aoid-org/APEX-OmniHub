@@ -23,6 +23,8 @@ export interface OmniModuleState {
   readonly loading: boolean;
   readonly error: string | null;
   readonly stateKind: 'live' | 'demo' | 'local' | 'unavailable';
+  /** Mirrors canonical: optional in-place refresh (no-op in the stub). */
+  readonly refetch?: () => void;
 }
 
 export function useOmniModuleState(moduleKey: string): OmniModuleState {

@@ -12,10 +12,11 @@ import json
 import re
 import sys
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-from _forge_rubric import rubric_checks as _rubric_checks, run_rubric  # noqa: E402
+from _forge_rubric import rubric_checks as _rubric_checks  # noqa: E402
+from _forge_rubric import run_rubric
 
 # ---------------------------------------------------------------- constants
 DESC_BUDGET = 500          # APEX budget (spec hard limit below)
@@ -274,7 +275,7 @@ def write_scorecard(skill_dir: Path) -> Path:
     trig_f, trig_stats = validate_triggers(skill_dir)
     card = {
         "skill": skill_dir.name,
-        "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generated_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "tooling": "apex-skill-forge v9 forge.py",
         "lint": {"fails": lint.fails, "warns": lint.warns,
                  "findings": lint.items},
@@ -358,9 +359,12 @@ def init_skill(name: str, target: Path, templates: Path) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(prog="forge.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    p_init = sub.add_parser("init"); p_init.add_argument("name"); p_init.add_argument("--dir", default=".")
+    p_init = sub.add_parser("init")
+    p_init.add_argument("name")
+    p_init.add_argument("--dir", default=".")
     for c in ("lint", "tokens", "triggers", "score", "rubric", "pack"):
-        p = sub.add_parser(c); p.add_argument("skill_dir")
+        p = sub.add_parser(c)
+        p.add_argument("skill_dir")
         if c == "lint":
             p.add_argument("--strict", action="store_true")
         if c == "pack":
@@ -372,7 +376,8 @@ def main() -> int:
                           Path(__file__).resolve().parent.parent / "templates")
     d = Path(a.skill_dir).resolve()
     if not d.is_dir():
-        print(f"ERROR: not a directory: {d}"); return 2
+        print(f"ERROR: not a directory: {d}")
+        return 2
     if a.cmd == "lint":
         f = lint_skill(d, strict=a.strict)
         print(f"LINT {'(strict) ' if a.strict else ''}{d.name}: "
@@ -389,7 +394,9 @@ def main() -> int:
         print(f.render())
         return 1 if f.fails else 0
     if a.cmd == "score":
-        out = write_scorecard(d); print(f"Wrote {out}"); return 0
+        out = write_scorecard(d)
+        print(f"Wrote {out}")
+        return 0
     if a.cmd == "rubric":
         return run_rubric(d)
     if a.cmd == "pack":
