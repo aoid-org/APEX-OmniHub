@@ -78,6 +78,36 @@ jobs:
           fi
           echo "✅ Terraform backend check complete"
 
+      - name: Supabase migration version uniqueness
+        run: |
+          echo "Checking for duplicate Supabase migration version prefixes..."
+          node scripts/ci/check-supabase-migration-versions.mjs
+
+      - name: Forbidden platform regressions (defensive invariants)
+        run: |
+          echo "Enforcing platform invariants that must never regress..."
+          fail=0
+          if [ -f wrangler.toml ]; then
+            echo "::error::Root-level wrangler.toml is forbidden (use per-app wrangler configs)."
+            fail=1
+          fi
+          # Anchored to the real YAML mapping line so detection strings don't self-match.
+          if grep -rnE '^[[:space:]]*bun-version:[[:space:]]+latest[[:space:]]*$' .github/workflows/ 2>/dev/null; then
+            echo "::error::Floating 'bun-version: latest' detected. Pin an exact Bun version."
+            fail=1
+          fi
+          # Nested override == an overrides/resolutions entry whose value is an object.
+          nested=$(node -e '
+            const p=require("./package.json");const bad=[];
+            for(const sec of ["overrides","resolutions"]){const o=p[sec]||{};
+              for(const[k,v]of Object.entries(o)) if(v&&typeof v==="object") bad.push(sec+"."+k);}
+            if(bad.length){console.log(bad.join(", "));process.exitCode=0;}' 2>/dev/null)
+          if [ -n "$nested" ]; then
+            echo "::error::Bun-unsupported nested override(s) in package.json: ${nested}. Use flat overrides."
+            fail=1
+          fi
+          [ "$fail" -eq 0 ] && echo "✅ Platform invariants hold" || exit 1
+
   dependency-audit:
     name: Dependency Security Audit
     runs-on: ubuntu-22.04
@@ -122,6 +152,11 @@ jobs:
             exit 1
           fi
           echo "Lockfile is clean."
+
+      - name: Python dependency security floors and lock consistency
+        run: |
+          echo "Enforcing Python security floors (aiohttp >= patched) and lock parity..."
+          python3 scripts/ci/check-python-dependency-security.py
 
   code-quality:
     name: Code Quality Gates

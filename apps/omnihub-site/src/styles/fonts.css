@@ -6,14 +6,30 @@
  *
  */
 
+/*
+ * Calibrated fallback for Space Grotesk.
+ * Metrics tuned to match Space Grotesk's cap-height / x-height / descent so
+ * that the local system font takes up the same line-box space — making any
+ * font swap (if it occurs) produce zero visible layout shift.
+ */
+@font-face {
+  font-family: "Space Grotesk Fallback";
+  src: local("Arial");
+  size-adjust: 97%;
+  ascent-override: 94%;
+  descent-override: 23%;
+  line-gap-override: 0%;
+}
 
 /* System UI Font Stack - Modern, Professional */
 :root {
-  /* Primary: Space Grotesk - strictly enforced */
-  --font-sans: "Space Grotesk", sans-serif;
+  /* Primary: Space Grotesk - strictly enforced.
+     Fallback sits between the web font and the generic so any swap
+     produces identical line-box dimensions. */
+  --font-sans: "Space Grotesk", "Space Grotesk Fallback", sans-serif;
 
   /* Monospace: Space Grotesk per user request for ALL TEXT */
-  --font-mono: "Space Grotesk", monospace;
+  --font-mono: "Space Grotesk", "Space Grotesk Fallback", monospace;
 }
 
 /*
