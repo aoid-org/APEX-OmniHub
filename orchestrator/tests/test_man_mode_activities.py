@@ -55,6 +55,7 @@ def _load_man_mode_activities():
         import importlib.util
 
         import os
+
         base_dir = os.path.dirname(__file__)
         activities_path = os.path.join(base_dir, "..", "activities", "man_mode.py")
 

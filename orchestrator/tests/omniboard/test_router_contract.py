@@ -11,6 +11,7 @@ Covers the five required contract scenarios per the PR directive:
 All tests mock Redis using pytest-mock / monkeypatching to avoid requiring
 a live Upstash connection in CI.
 """
+
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,6 +34,7 @@ client = TestClient(app)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
 
 def _make_context(state: OmniBoardState = OmniBoardState.IDLE_LISTEN, **kwargs) -> FSMContext:
     return FSMContext(
@@ -62,6 +64,7 @@ def _redis_not_found() -> MagicMock:
 
 
 # ── Contract 1: FSM progression on USER_INPUT ─────────────────────────────────
+
 
 class TestFSMProgressionUserInput:
     """USER_INPUT event in IDLE_LISTEN must advance to APP_IDENTIFICATION."""
@@ -122,6 +125,7 @@ class TestFSMProgressionUserInput:
 
 # ── Contract 2: Provider not found ────────────────────────────────────────────
 
+
 class TestProviderNotFound:
     """APP_IDENTIFICATION with no match returns honest message, stays in state."""
 
@@ -169,6 +173,7 @@ class TestProviderNotFound:
 
 # ── Contract 3: Missing session config (session not found) ────────────────────
 
+
 class TestMissingConfig:
     """Session not found must return 404 — not 200, not 500."""
 
@@ -195,6 +200,7 @@ class TestMissingConfig:
 
 
 # ── Contract 4: Verification failure ─────────────────────────────────────────
+
 
 class TestVerificationFailure:
     """VERIFICATION_RESULT verified=False must route back to AUTH_SETUP."""
@@ -250,6 +256,7 @@ class TestVerificationFailure:
 
 
 # ── Contract 5: Successful completion with connection_spec ────────────────────
+
 
 class TestSuccessfulCompletion:
     """

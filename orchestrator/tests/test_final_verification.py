@@ -22,6 +22,7 @@ class TestBootStability:
     def test_dependencies_pinned(self):
         """FastAPI and Uvicorn must be pinned in pyproject.toml."""
         import os
+
         pyproject_path = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
         with open(pyproject_path) as f:
             content = f.read()
@@ -253,6 +254,7 @@ class TestCodeQuality:
     def test_no_pass_in_persistence(self):
         """Audit persistence should not have placeholder 'pass'."""
         import os
+
         audit_path = os.path.join(os.path.dirname(__file__), "..", "models", "audit.py")
         with open(audit_path) as f:
             content = f.read()
