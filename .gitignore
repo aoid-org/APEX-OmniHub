@@ -152,3 +152,6 @@ shadow-preflight.json
 # AI IDE / Local Secrets
 .claude/settings.local.json
 .env
+
+# .understand-anything build artifacts
+.understand-anything/knowledge-graph.json
