@@ -1462,6 +1462,8 @@ export default function OmniDashShell() {
       { id: 'inc-2', severity: 'sev3' as const, status: 'open' as const, title: 'High memory usage in worker-pool-b', occurred_at: new Date().toISOString() }
     ],
     memoryHealth: null,
+    systemHealth: 'degraded' as const,
+    sliceStatuses: {},
     isLoading: false,
     error: null,
     refresh: () => {}
@@ -1539,7 +1541,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1614,7 +1616,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1679,7 +1681,7 @@ export default function OmniDashShell() {
           title="Insights & Controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             <OmniTraceFeed />
             <SentinelPanel />
           </div>

@@ -15,14 +15,12 @@ import {
   HiddenValue,
 } from '@/dashboard/components/HiddenMetric';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import type { LucideIcon } from 'lucide-react';
-
-const MockIcon: LucideIcon = Object.assign(
+const MockIcon = Object.assign(
   ({ className }: { className?: string }) => (
     <svg data-testid="mock-icon" className={className} aria-hidden="true" />
   ),
   { displayName: 'MockIcon' },
-) as unknown as LucideIcon;
+) as React.ElementType<{ className?: string }>;
 
 function wrap(ui: React.ReactElement) {
   return render(<TooltipProvider>{ui}</TooltipProvider>);

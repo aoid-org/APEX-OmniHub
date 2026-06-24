@@ -1,5 +1,6 @@
 // Re-defined for Edge environment to avoid direct dependency on src/
 export type SOmniPortChannel = 'voice' | 'text' | 'api';
+import type { NormalizedModuleItem } from './types/module-item.ts';
 
 interface BaseInput {
   userId?: string;
@@ -111,4 +112,44 @@ export function normalizeOmniPortIntent(input: SOmniPortInput): CanonicalOmniPor
       };
     }
   }
+}
+
+/**
+ * Normalizes heterogeneous module items into a Canonical shape for OmniDash UI.
+ * Pure function that coerces item fields and maps them to a defined status set.
+ */
+export function normalizeModuleItems(items: unknown[]): NormalizedModuleItem[] {
+  if (!Array.isArray(items)) return [];
+  
+  return items.map((rawItem: unknown, i) => {
+    if (!rawItem || typeof rawItem !== 'object') {
+      return { id: `item-${i}`, label: String(rawItem), status: 'pending' };
+    }
+    
+    const item = rawItem as Record<string, unknown>;
+    
+    // Attempt to extract meaningful fields
+    const id = String(item.id || item.key || item.name || item.url || `item-${i}`);
+    const label = String(item.label || item.title || item.name || item.url || id);
+    const detail = item.detail || item.description || item.subtitle || undefined;
+    
+    // Coerce status
+    let status: NormalizedModuleItem['status'] = 'pending';
+    const rawStatus = String(item.status || item.state || (item.active ? 'active' : '') || (item.is_active ? 'active' : '')).toLowerCase();
+    
+    if (['active', 'ok', 'running', 'online', 'success', 'healthy', 'true'].includes(rawStatus)) {
+      status = 'active';
+    } else if (['inactive', 'stopped', 'offline', 'paused', 'false'].includes(rawStatus)) {
+      status = 'inactive';
+    } else if (['error', 'failed', 'degraded', 'incident'].includes(rawStatus)) {
+      status = 'error';
+    }
+
+    return {
+      id,
+      label,
+      status,
+      ...(detail ? { detail: String(detail) } : {})
+    };
+  });
 }

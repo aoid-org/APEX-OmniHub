@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
-import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { handlePreflight } from "../_shared/cors.ts";
+import { okResponse, errResponse } from '../_shared/response.ts';
 
 // Enhanced rate limiting with cleanup
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -75,7 +76,7 @@ async function checkOrchestratorConnection(requestId: string, orchestratorUrl?: 
 Deno.serve(async (req: Request) => {
   const requestId = generateRequestId();
   const startTime = Date.now();
-  const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
+
 
   console.log(`[${requestId}] Health check started`);
   // Handle CORS preflight
@@ -102,27 +103,14 @@ Deno.serve(async (req: Request) => {
     // Rate limiting check
     const rateCheck = checkRateLimit(userId ?? 'anonymous');
     if (!rateCheck.allowed) {
-      const retryAfter = Math.ceil((rateCheck.resetAt - Date.now()) / 1000);
       console.warn(`[${requestId}] Rate limit exceeded for user ${userId ?? 'anonymous'}`);
 
-      return new Response(
-        JSON.stringify({
-          error: 'Rate limit exceeded. Try again later.',
-          retryAfter
-        }),
-        {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-            'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(rateCheck.resetAt).toISOString(),
-            'Retry-After': retryAfter.toString(),
-            'X-Request-ID': requestId
-          }
-        }
-      );
+      return errResponse('RATE_LIMIT_EXCEEDED', 'Rate limit exceeded. Try again later.', 429, req.headers.get('origin'), {
+        'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
+        'X-RateLimit-Remaining': rateCheck.remaining.toString(),
+        'X-RateLimit-Reset': rateCheck.resetAt.toString(),
+        'X-Request-ID': requestId,
+      });
     }
 
     // FIX: Dedicated admin client for DB probe — service role bypasses RLS so
@@ -139,14 +127,7 @@ Deno.serve(async (req: Request) => {
 
     if (dbError) {
       console.error('❌ Database health check failed:', dbError);
-      return new Response(
-        JSON.stringify({
-          status: 'error',
-          component: 'database',
-          error: dbError.message
-        }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errResponse('DB_UNREACHABLE', dbError.message, 503, req.headers.get('origin'), { 'X-Request-ID': requestId });
     }
 
     // Test 2: Orchestrator health - check Python service endpoint (NON-BLOCKING)
@@ -157,15 +138,7 @@ Deno.serve(async (req: Request) => {
     const overallStatus = orchestratorStatus === 'healthy' ? 'OK' : 'OK_WITH_WARNINGS';
     console.log(`[${requestId}] ✅ Health check passed (${duration}ms) - Status: ${overallStatus}`);
 
-    const securityHeaders = {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-      'X-Request-ID': requestId
-    };
+
 
     const responseBody: Record<string, unknown> = {
       status: overallStatus,
@@ -183,30 +156,13 @@ Deno.serve(async (req: Request) => {
       responseBody.warnings = [`orchestrator: ${orchestratorWarning}`];
     }
 
-    return new Response(
-      JSON.stringify(responseBody),
-      { status: 200, headers: securityHeaders }
-    );
+    return okResponse(responseBody, req.headers.get('origin'), 200, { 'X-Request-ID': requestId });
 
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] ❌ Health check failed (${duration}ms):`, error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({
-        status: 'error',
-        error: errorMessage,
-        requestId
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId
-        }
-      }
-    );
+    return errResponse('INTERNAL_ERROR', errorMessage, 500, req.headers.get('origin'), { 'X-Request-ID': requestId });
   }
 });

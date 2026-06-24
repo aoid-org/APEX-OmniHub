@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { handlePreflight } from "../_shared/cors.ts";
 import { createAnonClient } from "../_shared/supabaseClient.ts";
 import { buildSignedHeaders } from "../_shared/requestSigning.ts";
 import { isValidUUID } from "../_shared/validation.ts";
@@ -9,21 +9,9 @@ import {
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
 import { checkRequest } from "./guardian.ts";
+import { okResponse, errResponse } from "../_shared/response.ts";
 
-/** Build a JSON response with CORS headers. */
-function jsonResponse(
-  body: Record<string, unknown>,
-  status: number,
-  origin: string | null,
-): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...buildCorsHeaders(origin),
-      "Content-Type": "application/json",
-    },
-  });
-}
+
 
 /**
  * Handle oauth_exchange action dispatched from api/omniconnect/exchange.ts.
@@ -38,16 +26,16 @@ async function handleOAuthExchange(
   const authPayload = body.auth_payload as Record<string, unknown> | undefined;
 
   if (typeof provider !== "string" || !provider) {
-    return jsonResponse({ error: "bad_request", details: "missing provider" }, 400, origin);
+    return errResponse("bad_request", "missing provider", 400, origin);
   }
   if (!authPayload || typeof authPayload.proxy_token !== "string") {
-    return jsonResponse({ error: "bad_request", details: "missing auth_payload.proxy_token" }, 400, origin);
+    return errResponse("bad_request", "missing auth_payload.proxy_token", 400, origin);
   }
 
   const supabase = createAnonClient(authHeader);
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
-    return jsonResponse({ error: "unauthorized" }, 401, origin);
+    return errResponse("unauthorized", "Unauthorized", 401, origin);
   }
 
   // Log the exchange attempt
@@ -60,12 +48,12 @@ async function handleOAuthExchange(
     if (error) console.error("[apex-agent] audit log error:", error.message);
   });
 
-  return jsonResponse({
+  return okResponse({
     status: "exchanged",
     provider,
     scopes: [],
     user_id: user.id,
-  }, 200, origin);
+  }, origin, 200);
 }
 
 serve(async (req) => {
@@ -80,7 +68,7 @@ serve(async (req) => {
     // 1. Auth validation — missing auth must return 401, not 500
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return jsonResponse({ error: "unauthorized" }, 401, origin);
+      return errResponse("unauthorized", "Unauthorized", 401, origin);
     }
 
     const supabase = createAnonClient(authHeader);
@@ -90,7 +78,7 @@ serve(async (req) => {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return jsonResponse({ error: "unauthorized" }, 401, origin);
+      return errResponse("unauthorized", "Unauthorized", 401, origin);
     }
 
     // Distributed rate limiting — per authenticated user, before any business logic
@@ -102,7 +90,7 @@ serve(async (req) => {
     // 2. Content-Type validation
     const contentType = req.headers.get("content-type");
     if (!contentType?.includes("application/json")) {
-      return jsonResponse({ error: "unsupported_media_type" }, 415, origin);
+      return errResponse("unsupported_media_type", "Unsupported media type", 415, origin);
     }
 
     // 3. Safe JSON parse
@@ -110,7 +98,7 @@ serve(async (req) => {
     try {
       body = await req.json();
     } catch {
-      return jsonResponse({ error: "bad_request" }, 400, origin);
+      return errResponse("bad_request", "Bad request", 400, origin);
     }
 
     // 4. Action dispatch — oauth_exchange bypasses query/traceId validation
@@ -124,7 +112,7 @@ serve(async (req) => {
       typeof body.traceId !== "string" ||
       !isValidUUID(body.traceId)
     ) {
-      return jsonResponse({ error: "bad_request" }, 400, origin);
+      return errResponse("bad_request", "Bad request", 400, origin);
     }
 
     const query = body.query;
@@ -135,7 +123,7 @@ serve(async (req) => {
     if (guardianEnabled) {
       const guardianResult = await checkRequest(query, authHeader);
       if (!guardianResult.allowed) {
-        return jsonResponse({ error: "request_blocked" }, 429, origin);
+        return errResponse("request_blocked", "Request blocked", 429, origin);
       }
     }
 
@@ -156,7 +144,7 @@ serve(async (req) => {
     const orchestratorUrl = Deno.env.get("ORCHESTRATOR_URL");
     if (!orchestratorUrl) {
       console.error("ORCHESTRATOR_URL not configured");
-      return jsonResponse({ error: "server_error" }, 500, origin);
+      return errResponse("server_error", "Server error", 500, origin);
     }
 
     const requestPath = "/api/v1/goals";
@@ -183,7 +171,7 @@ serve(async (req) => {
       console.error(
         `Orchestrator returned ${response.status}`,
       );
-      return jsonResponse({ error: "upstream_error" }, 502, origin);
+      return errResponse("upstream_error", "Upstream error", 502, origin);
     }
 
     const data = await response.json();
@@ -205,9 +193,9 @@ serve(async (req) => {
     }
 
     // Return orchestrator response
-    return jsonResponse(data, 200, origin);
+    return okResponse(data, origin, 200);
   } catch (err) {
     console.error("Router error:", err instanceof Error ? err.message : err);
-    return jsonResponse({ error: "server_error" }, 500, origin);
+    return errResponse("server_error", "Server error", 500, origin);
   }
 });

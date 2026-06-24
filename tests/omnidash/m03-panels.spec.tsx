@@ -42,6 +42,8 @@ const defaultDashData = {
   openIncidents: [],
   settings: null,
   memoryHealth: null,
+  systemHealth: 'healthy' as const,
+  sliceStatuses: {},
   isLoading: false,
   error: null,
   refresh: vi.fn(),

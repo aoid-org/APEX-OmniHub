@@ -1,12 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import Stripe from "https://esm.sh/stripe@14.18.0?target=deno";
-import { buildCorsHeaders, handlePreflight, corsErrorResponse } from "../_shared/cors.ts";
+import { handlePreflight } from "../_shared/cors.ts";
 import {
   checkRateLimit,
   rateLimitExceededResponse,
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
+import { okResponse, errResponse } from "../_shared/response.ts";
 
 const stripeSecretKey    = Deno.env.get('STRIPE_SECRET_KEY');
 const stripePriceIdPro   = Deno.env.get('STRIPE_PRICE_ID_PRO');  // $99 CAD/mo
@@ -24,18 +25,11 @@ serve(async (req) => {
   }
 
   const origin = req.headers.get("origin");
-  const corsHeaders = buildCorsHeaders(origin);
 
   // Fail-closed: require the Stripe secret key. Individual price IDs are
   // validated per-request based on the requested tier below.
   if (!stripeSecretKey) {
-    return new Response(
-      JSON.stringify({
-        error: 'BILLING_NOT_CONFIGURED',
-        message: 'Billing is not configured. Contact support at billing@apexbusiness.systems.',
-      }),
-      { status: 503, headers: { ...buildCorsHeaders(origin), 'Content-Type': 'application/json' } }
-    );
+    return errResponse('BILLING_NOT_CONFIGURED', 'Billing is not configured. Contact support at billing@apexbusiness.systems.', 503, origin);
   }
 
   const stripe = new Stripe(stripeSecretKey, {
@@ -46,7 +40,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return corsErrorResponse('UNAUTHORIZED', 'Missing authorization header', 401, origin);
+      return errResponse('UNAUTHORIZED', 'Missing authorization header', 401, origin);
     }
 
     const client = createClient(
@@ -58,7 +52,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await client.auth.getUser();
 
     if (authError || !user) {
-      return corsErrorResponse('UNAUTHORIZED', 'Invalid authentication token', 401, origin);
+      return errResponse('UNAUTHORIZED', 'Invalid authentication token', 401, origin);
     }
 
     const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.createCheckout);
@@ -69,22 +63,13 @@ serve(async (req) => {
     const body = await req.json() as RequestBody;
 
     if (body.tier !== 'PRO' && body.tier !== 'BUS') {
-      return new Response(
-        JSON.stringify({ error: 'INVALID_TIER', message: 'tier must be PRO or BUS' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errResponse('INVALID_TIER', 'tier must be PRO or BUS', 400, origin);
     }
 
     // Select price ID for the requested tier. Fail-closed if not configured.
     const stripePriceId = body.tier === 'BUS' ? stripePriceIdBus : stripePriceIdPro;
     if (!stripePriceId) {
-      return new Response(
-        JSON.stringify({
-          error: 'BILLING_NOT_CONFIGURED',
-          message: `Price ID for tier ${body.tier} is not configured. Contact support at billing@apexbusiness.systems.`,
-        }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errResponse('BILLING_NOT_CONFIGURED', `Price ID for tier ${body.tier} is not configured. Contact support at billing@apexbusiness.systems.`, 503, origin);
     }
 
     // Determine the base URL for success/cancel redirects.
@@ -142,19 +127,10 @@ serve(async (req) => {
       }
     });
 
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return okResponse({ url: session.url }, origin, 200);
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred. Please try again.',
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errResponse('INTERNAL_SERVER_ERROR', 'An unexpected error occurred. Please try again.', 500, origin);
   }
 });
