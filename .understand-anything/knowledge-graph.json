@@ -1,13 +1,15 @@
 {
   "meta": {
     "name": "apex-omnihub",
-    "generatedAt": "2026-05-23T04:16:31.747Z",
+    "generatedAt": "2026-06-24T03:39:06.252Z",
     "version": "1.0.0",
-    "totalFiles": 1748,
-    "analyzedNodes": 204,
-    "edges": 180,
+    "totalFiles": 2339,
+    "analyzedNodes": 232,
+    "edges": 188,
     "languages": [
       "batch",
+      "c",
+      "conf",
       "config",
       "css",
       "dockerfile",
@@ -23,6 +25,7 @@
       "jsonc",
       "jsonl",
       "jsonld",
+      "lockfile",
       "makefile",
       "markdown",
       "pbxproj",
@@ -41,6 +44,7 @@
       "toml",
       "typescript",
       "unknown",
+      "vtt",
       "webmanifest",
       "xcconfig",
       "xml",
@@ -56,6 +60,7 @@
       "Hardhat",
       "OpenTelemetry",
       "Playwright",
+      "Pytest",
       "React",
       "React Router",
       "Ruff",
@@ -299,28 +304,51 @@
     },
     {
       "id": "n1",
+      "label": ".agents / skills",
+      "path": ".agents/skills",
+      "layerId": "L6",
+      "layerName": "Agent System",
+      "domain": "agent-system",
+      "color": "#ec4899",
+      "fileCount": 4,
+      "lineCount": 428,
+      "languages": [
+        "python",
+        "shell"
+      ],
+      "size": 8,
+      "files": [
+        ".agents/skills/apex-dev/apex-dev/drift-check.py",
+        ".agents/skills/apex-dev/apex-dev/verify-build.sh",
+        ".agents/skills/apex-frontend/apex-frontend/scripts/validate_artifact.py",
+        ".agents/skills/apex-user-shoes-validation/scripts/create_validation_pack.py"
+      ]
+    },
+    {
+      "id": "n2",
       "label": ".claude / skills",
       "path": ".claude/skills",
       "layerId": "L6",
       "layerName": "Agent System",
       "domain": "agent-system",
       "color": "#ec4899",
-      "fileCount": 7,
-      "lineCount": 2459,
+      "fileCount": 12,
+      "lineCount": 1918,
       "languages": [
-        "python"
+        "python",
+        "shell"
       ],
-      "size": 15.681198933755034,
+      "size": 13.849187701811251,
       "files": [
-        ".claude/skills/apex-skill-forge-v8/install_to_omnihub.py",
-        ".claude/skills/apex-skill-forge-v8/omnihub_integration/health_checks.py",
-        ".claude/skills/apex-skill-forge-v8/scripts/audit.py",
-        ".claude/skills/apex-skill-forge-v8/scripts/executor.py",
-        ".claude/skills/apex-skill-forge-v8/scripts/forge.py"
+        ".claude/skills/apex-skill-forge-v9-claude/scripts/_forge_rubric.py",
+        ".claude/skills/apex-skill-forge-v9-claude/scripts/forge.py",
+        ".claude/skills/apex-skill-forge-v9-claude/scripts/run_trigger_eval.py",
+        ".claude/skills/apex-skill-forge-v9-universal/scripts/_forge_rubric.py",
+        ".claude/skills/apex-skill-forge-v9-universal/scripts/forge.py"
       ]
     },
     {
-      "id": "n2",
+      "id": "n3",
       "label": ".cursor / superpowers",
       "path": ".cursor/superpowers",
       "layerId": "L6",
@@ -342,15 +370,15 @@
       ]
     },
     {
-      "id": "n3",
+      "id": "n4",
       "label": ".githooks / pre-commit.d",
       "path": ".githooks/pre-commit.d",
       "layerId": "L5",
       "layerName": "Infra / CI",
       "domain": "state-management",
       "color": "#ef4444",
-      "fileCount": 3,
-      "lineCount": 39,
+      "fileCount": 5,
+      "lineCount": 156,
       "languages": [
         "shell"
       ],
@@ -358,11 +386,13 @@
       "files": [
         ".githooks/pre-commit.d/00-ruff.sh",
         ".githooks/pre-commit.d/10-commitlint.sh",
+        ".githooks/pre-commit.d/20-dependency-security.sh",
+        ".githooks/pre-commit.d/30-destructive-action-guard.sh",
         ".githooks/pre-commit.d/cross-domain-boundary.sh"
       ]
     },
     {
-      "id": "n4",
+      "id": "n5",
       "label": ".github / scripts",
       "path": ".github/scripts",
       "layerId": "L5",
@@ -380,7 +410,45 @@
       ]
     },
     {
-      "id": "n5",
+      "id": "n6",
+      "label": ".understand-anything / graph-features.mjs",
+      "path": ".understand-anything/graph-features.mjs",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 169,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        ".understand-anything/graph-features.mjs"
+      ]
+    },
+    {
+      "id": "n7",
+      "label": ".understand-anything / tmp",
+      "path": ".understand-anything/tmp",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "ui-components",
+      "color": "#6366f1",
+      "fileCount": 3,
+      "lineCount": 827,
+      "languages": [
+        "javascript"
+      ],
+      "size": 9.093954035511725,
+      "files": [
+        ".understand-anything/tmp/ua-build-graph.mjs",
+        ".understand-anything/tmp/ua-project-scan.mjs",
+        ".understand-anything/tmp/ua-watch-server.mjs"
+      ]
+    },
+    {
+      "id": "n8",
       "label": "apex-resilience / config",
       "path": "apex-resilience/config",
       "layerId": "L0",
@@ -398,7 +466,7 @@
       ]
     },
     {
-      "id": "n6",
+      "id": "n9",
       "label": "apex-resilience / core",
       "path": "apex-resilience/core",
       "layerId": "L0",
@@ -418,7 +486,7 @@
       ]
     },
     {
-      "id": "n7",
+      "id": "n10",
       "label": "apex-resilience / index.ts",
       "path": "apex-resilience/index.ts",
       "layerId": "L0",
@@ -436,7 +504,7 @@
       ]
     },
     {
-      "id": "n8",
+      "id": "n11",
       "label": "apex-resilience / integrations",
       "path": "apex-resilience/integrations",
       "layerId": "L2",
@@ -454,7 +522,7 @@
       ]
     },
     {
-      "id": "n9",
+      "id": "n12",
       "label": "apex-resilience / scripts",
       "path": "apex-resilience/scripts",
       "layerId": "L0",
@@ -462,7 +530,7 @@
       "domain": "chaos-testing",
       "color": "#6366f1",
       "fileCount": 3,
-      "lineCount": 283,
+      "lineCount": 287,
       "languages": [
         "typescript",
         "shell"
@@ -475,7 +543,7 @@
       ]
     },
     {
-      "id": "n10",
+      "id": "n13",
       "label": "apex-resilience / tests",
       "path": "apex-resilience/tests",
       "layerId": "L0",
@@ -496,7 +564,7 @@
       ]
     },
     {
-      "id": "n11",
+      "id": "n14",
       "label": "api / cors.ts",
       "path": "api/cors.ts",
       "layerId": "L1",
@@ -504,7 +572,7 @@
       "domain": "core",
       "color": "#f59e0b",
       "fileCount": 1,
-      "lineCount": 323,
+      "lineCount": 333,
       "languages": [
         "typescript"
       ],
@@ -514,7 +582,7 @@
       ]
     },
     {
-      "id": "n12",
+      "id": "n15",
       "label": "api / middleware",
       "path": "api/middleware",
       "layerId": "L1",
@@ -532,7 +600,7 @@
       ]
     },
     {
-      "id": "n13",
+      "id": "n16",
       "label": "api / omnibridge",
       "path": "api/omnibridge",
       "layerId": "L1",
@@ -550,7 +618,7 @@
       ]
     },
     {
-      "id": "n14",
+      "id": "n17",
       "label": "api / omniconnect",
       "path": "api/omniconnect",
       "layerId": "L1",
@@ -568,7 +636,7 @@
       ]
     },
     {
-      "id": "n15",
+      "id": "n18",
       "label": "apps / omnihub-proof",
       "path": "apps/omnihub-proof",
       "layerId": "L0",
@@ -576,7 +644,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 3,
-      "lineCount": 195,
+      "lineCount": 208,
       "languages": [
         "typescript"
       ],
@@ -588,15 +656,15 @@
       ]
     },
     {
-      "id": "n16",
+      "id": "n19",
       "label": "apps / omnihub-site",
       "path": "apps/omnihub-site",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "dashboard",
       "color": "#6366f1",
-      "fileCount": 205,
-      "lineCount": 23637,
+      "fileCount": 254,
+      "lineCount": 35494,
       "languages": [
         "python",
         "javascript",
@@ -613,31 +681,32 @@
       ]
     },
     {
-      "id": "n17",
+      "id": "n20",
       "label": "root",
       "path": "root",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "infra-ci",
       "color": "#6366f1",
-      "fileCount": 16,
-      "lineCount": 1257,
+      "fileCount": 21,
+      "lineCount": 1655,
       "languages": [
         "typescript",
         "javascript",
-        "shell"
+        "shell",
+        "python"
       ],
-      "size": 11.211601134539169,
+      "size": 12.864680330268607,
       "files": [
         "capacitor.config.ts",
         "commitlint.config.cjs",
         "deploy-lambda.sh",
-        "deploy-lambda.sh",
-        "deploy-lambda.sh"
+        "ecosystem.config.js",
+        "eslint.config.js"
       ]
     },
     {
-      "id": "n18",
+      "id": "n21",
       "label": "contracts / APEXMembershipNFT.sol",
       "path": "contracts/APEXMembershipNFT.sol",
       "layerId": "L4",
@@ -655,27 +724,7 @@
       ]
     },
     {
-      "id": "n19",
-      "label": "docs / knowledge",
-      "path": "docs/knowledge",
-      "layerId": "L0",
-      "layerName": "Client Apps",
-      "domain": "core",
-      "color": "#6366f1",
-      "fileCount": 3,
-      "lineCount": 735,
-      "languages": [
-        "python"
-      ],
-      "size": 8.573214099741124,
-      "files": [
-        "docs/knowledge/scripts/debug.py",
-        "docs/knowledge/scripts/project-init.py",
-        "docs/knowledge/scripts/quality-check.py"
-      ]
-    },
-    {
-      "id": "n20",
+      "id": "n22",
       "label": "e2e / capture_preview.spec.ts",
       "path": "e2e/capture_preview.spec.ts",
       "layerId": "L0",
@@ -693,7 +742,7 @@
       ]
     },
     {
-      "id": "n21",
+      "id": "n23",
       "label": "e2e / omnilink-mobile-pwa.spec.ts",
       "path": "e2e/omnilink-mobile-pwa.spec.ts",
       "layerId": "L0",
@@ -711,44 +760,66 @@
       ]
     },
     {
-      "id": "n22",
+      "id": "n24",
       "label": "edge / cors-proxy",
       "path": "edge/cors-proxy",
       "layerId": "L1",
       "layerName": "Edge & Gateway",
       "domain": "core",
       "color": "#f59e0b",
-      "fileCount": 1,
-      "lineCount": 89,
+      "fileCount": 2,
+      "lineCount": 239,
       "languages": [
+        "typescript",
         "javascript"
       ],
       "size": 8,
       "files": [
+        "edge/cors-proxy/edge-cors-proxy.d.ts",
         "edge/cors-proxy/edge-cors-proxy.js"
       ]
     },
     {
-      "id": "n23",
+      "id": "n25",
       "label": "functions / api",
       "path": "functions/api",
       "layerId": "L1",
       "layerName": "Edge & Gateway",
-      "domain": "omni-protocol",
+      "domain": "core",
       "color": "#f59e0b",
-      "fileCount": 2,
-      "lineCount": 419,
+      "fileCount": 3,
+      "lineCount": 856,
       "languages": [
         "typescript"
       ],
-      "size": 8,
+      "size": 9.252026804976301,
       "files": [
+        "functions/api/mcp/invoke.ts",
         "functions/api/omnibridge/ingest.ts",
         "functions/api/omnibridge/sync.ts"
       ]
     },
     {
-      "id": "n24",
+      "id": "n26",
+      "label": "governance / ci",
+      "path": "governance/ci",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "infra-ci",
+      "color": "#6366f1",
+      "fileCount": 2,
+      "lineCount": 521,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "governance/ci/scripts/apex_policy_check.py",
+        "governance/ci/scripts/apex_validate_manifest.py"
+      ]
+    },
+    {
+      "id": "n27",
       "label": "integration-harness / fixtures.ts",
       "path": "integration-harness/fixtures.ts",
       "layerId": "L0",
@@ -756,7 +827,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 60,
+      "lineCount": 57,
       "languages": [
         "typescript"
       ],
@@ -766,7 +837,7 @@
       ]
     },
     {
-      "id": "n25",
+      "id": "n28",
       "label": "integration-harness / helpers",
       "path": "integration-harness/helpers",
       "layerId": "L0",
@@ -774,7 +845,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 2,
-      "lineCount": 56,
+      "lineCount": 60,
       "languages": [
         "typescript"
       ],
@@ -785,25 +856,27 @@
       ]
     },
     {
-      "id": "n26",
+      "id": "n29",
       "label": "integration-harness / lib",
       "path": "integration-harness/lib",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 24,
+      "fileCount": 2,
+      "lineCount": 620,
       "languages": [
+        "javascript",
         "typescript"
       ],
       "size": 8,
       "files": [
+        "integration-harness/lib/deterministic-validator.mjs",
         "integration-harness/lib/helpers.ts"
       ]
     },
     {
-      "id": "n27",
+      "id": "n30",
       "label": "integration-harness / playwright.config.ts",
       "path": "integration-harness/playwright.config.ts",
       "layerId": "L0",
@@ -821,27 +894,25 @@
       ]
     },
     {
-      "id": "n28",
+      "id": "n31",
       "label": "integration-harness / run.sh",
       "path": "integration-harness/run.sh",
       "layerId": "L5",
       "layerName": "Infra / CI",
       "domain": "core",
       "color": "#ef4444",
-      "fileCount": 3,
-      "lineCount": 237,
+      "fileCount": 1,
+      "lineCount": 77,
       "languages": [
         "shell"
       ],
       "size": 8,
       "files": [
-        "integration-harness/run.sh",
-        "integration-harness/run.sh",
         "integration-harness/run.sh"
       ]
     },
     {
-      "id": "n29",
+      "id": "n32",
       "label": "integration-harness / specs",
       "path": "integration-harness/specs",
       "layerId": "L0",
@@ -863,7 +934,7 @@
       ]
     },
     {
-      "id": "n30",
+      "id": "n33",
       "label": "lib / media",
       "path": "lib/media",
       "layerId": "L0",
@@ -881,7 +952,7 @@
       ]
     },
     {
-      "id": "n31",
+      "id": "n34",
       "label": "local-agents / apex_sales_agent.py",
       "path": "local-agents/apex_sales_agent.py",
       "layerId": "L6",
@@ -899,7 +970,7 @@
       ]
     },
     {
-      "id": "n32",
+      "id": "n35",
       "label": "local-agents / benchmark_connector.py",
       "path": "local-agents/benchmark_connector.py",
       "layerId": "L6",
@@ -907,7 +978,7 @@
       "domain": "agent-system",
       "color": "#ec4899",
       "fileCount": 1,
-      "lineCount": 185,
+      "lineCount": 187,
       "languages": [
         "python"
       ],
@@ -917,7 +988,7 @@
       ]
     },
     {
-      "id": "n33",
+      "id": "n36",
       "label": "local-agents / lead_gen_agent.py",
       "path": "local-agents/lead_gen_agent.py",
       "layerId": "L6",
@@ -935,7 +1006,7 @@
       ]
     },
     {
-      "id": "n34",
+      "id": "n37",
       "label": "local-agents / omnihub_connector.py",
       "path": "local-agents/omnihub_connector.py",
       "layerId": "L6",
@@ -953,7 +1024,25 @@
       ]
     },
     {
-      "id": "n35",
+      "id": "n38",
+      "label": "local-agents / test_benchmark_connector.py",
+      "path": "local-agents/test_benchmark_connector.py",
+      "layerId": "L6",
+      "layerName": "Agent System",
+      "domain": "testing",
+      "color": "#ec4899",
+      "fileCount": 1,
+      "lineCount": 87,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "local-agents/test_benchmark_connector.py"
+      ]
+    },
+    {
+      "id": "n39",
       "label": "local-agents / verify_integration.sh",
       "path": "local-agents/verify_integration.sh",
       "layerId": "L6",
@@ -971,7 +1060,27 @@
       ]
     },
     {
-      "id": "n36",
+      "id": "n40",
+      "label": "memory / omni-recall",
+      "path": "memory/omni-recall",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 3,
+      "lineCount": 735,
+      "languages": [
+        "python"
+      ],
+      "size": 8.573214099741124,
+      "files": [
+        "memory/omni-recall/docs/knowledge/scripts/debug.py",
+        "memory/omni-recall/docs/knowledge/scripts/project-init.py",
+        "memory/omni-recall/docs/knowledge/scripts/quality-check.py"
+      ]
+    },
+    {
+      "id": "n41",
       "label": "omega / __init__.py",
       "path": "omega/__init__.py",
       "layerId": "L0",
@@ -989,7 +1098,7 @@
       ]
     },
     {
-      "id": "n37",
+      "id": "n42",
       "label": "omega / dashboard.py",
       "path": "omega/dashboard.py",
       "layerId": "L0",
@@ -1007,7 +1116,7 @@
       ]
     },
     {
-      "id": "n38",
+      "id": "n43",
       "label": "omega / engine.py",
       "path": "omega/engine.py",
       "layerId": "L0",
@@ -1015,7 +1124,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 306,
+      "lineCount": 307,
       "languages": [
         "python"
       ],
@@ -1025,7 +1134,7 @@
       ]
     },
     {
-      "id": "n39",
+      "id": "n44",
       "label": "omega / examples",
       "path": "omega/examples",
       "layerId": "L0",
@@ -1043,7 +1152,7 @@
       ]
     },
     {
-      "id": "n40",
+      "id": "n45",
       "label": "omega / test_omega.sh",
       "path": "omega/test_omega.sh",
       "layerId": "L5",
@@ -1061,19 +1170,19 @@
       ]
     },
     {
-      "id": "n41",
+      "id": "n46",
       "label": "orchestrator / activities",
       "path": "orchestrator/activities",
       "layerId": "L2",
       "layerName": "Orchestration",
       "domain": "orchestration",
       "color": "#10b981",
-      "fileCount": 12,
-      "lineCount": 2465,
+      "fileCount": 13,
+      "lineCount": 2877,
       "languages": [
         "python"
       ],
-      "size": 15.700318468107582,
+      "size": 16.9617216107328,
       "files": [
         "orchestrator/activities/__init__.py",
         "orchestrator/activities/compensation_catalog.py",
@@ -1083,7 +1192,7 @@
       ]
     },
     {
-      "id": "n42",
+      "id": "n47",
       "label": "orchestrator / config.py",
       "path": "orchestrator/config.py",
       "layerId": "L2",
@@ -1091,7 +1200,7 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 1,
-      "lineCount": 114,
+      "lineCount": 140,
       "languages": [
         "python"
       ],
@@ -1101,15 +1210,15 @@
       ]
     },
     {
-      "id": "n43",
+      "id": "n48",
       "label": "orchestrator / core",
       "path": "orchestrator/core",
       "layerId": "L2",
       "layerName": "Orchestration",
       "domain": "orchestration",
       "color": "#10b981",
-      "fileCount": 3,
-      "lineCount": 241,
+      "fileCount": 4,
+      "lineCount": 388,
       "languages": [
         "python"
       ],
@@ -1117,11 +1226,12 @@
       "files": [
         "orchestrator/core/__init__.py",
         "orchestrator/core/intent_registry.py",
-        "orchestrator/core/intents.py"
+        "orchestrator/core/intents.py",
+        "orchestrator/core/model_registry.py"
       ]
     },
     {
-      "id": "n44",
+      "id": "n49",
       "label": "orchestrator / infrastructure",
       "path": "orchestrator/infrastructure",
       "layerId": "L2",
@@ -1129,11 +1239,11 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 3,
-      "lineCount": 779,
+      "lineCount": 792,
       "languages": [
         "python"
       ],
-      "size": 8.826097665446492,
+      "size": 8.899438184514796,
       "files": [
         "orchestrator/infrastructure/__init__.py",
         "orchestrator/infrastructure/cache.py",
@@ -1141,7 +1251,7 @@
       ]
     },
     {
-      "id": "n45",
+      "id": "n50",
       "label": "orchestrator / main.py",
       "path": "orchestrator/main.py",
       "layerId": "L2",
@@ -1149,7 +1259,7 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 1,
-      "lineCount": 324,
+      "lineCount": 362,
       "languages": [
         "python"
       ],
@@ -1159,7 +1269,7 @@
       ]
     },
     {
-      "id": "n46",
+      "id": "n51",
       "label": "orchestrator / metrics.py",
       "path": "orchestrator/metrics.py",
       "layerId": "L2",
@@ -1167,7 +1277,7 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 1,
-      "lineCount": 131,
+      "lineCount": 87,
       "languages": [
         "python"
       ],
@@ -1177,7 +1287,7 @@
       ]
     },
     {
-      "id": "n47",
+      "id": "n52",
       "label": "orchestrator / models",
       "path": "orchestrator/models",
       "layerId": "L2",
@@ -1185,11 +1295,11 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 5,
-      "lineCount": 1249,
+      "lineCount": 1261,
       "languages": [
         "python"
       ],
-      "size": 11.175866856758809,
+      "size": 11.229425630903835,
       "files": [
         "orchestrator/models/__init__.py",
         "orchestrator/models/audit.py",
@@ -1199,7 +1309,7 @@
       ]
     },
     {
-      "id": "n48",
+      "id": "n53",
       "label": "orchestrator / observability",
       "path": "orchestrator/observability",
       "layerId": "L2",
@@ -1218,7 +1328,7 @@
       ]
     },
     {
-      "id": "n49",
+      "id": "n54",
       "label": "orchestrator / omniboard",
       "path": "orchestrator/omniboard",
       "layerId": "L2",
@@ -1226,11 +1336,11 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 4,
-      "lineCount": 869,
+      "lineCount": 921,
       "languages": [
         "python"
       ],
-      "size": 9.322016949137135,
+      "size": 9.596874491208062,
       "files": [
         "orchestrator/omniboard/fsm.py",
         "orchestrator/omniboard/router.py",
@@ -1239,7 +1349,7 @@
       ]
     },
     {
-      "id": "n50",
+      "id": "n55",
       "label": "orchestrator / omnilink",
       "path": "orchestrator/omnilink",
       "layerId": "L2",
@@ -1257,7 +1367,7 @@
       ]
     },
     {
-      "id": "n51",
+      "id": "n56",
       "label": "orchestrator / policies",
       "path": "orchestrator/policies",
       "layerId": "L2",
@@ -1276,27 +1386,29 @@
       ]
     },
     {
-      "id": "n52",
+      "id": "n57",
       "label": "orchestrator / providers",
       "path": "orchestrator/providers",
       "layerId": "L2",
       "layerName": "Orchestration",
       "domain": "orchestration",
       "color": "#10b981",
-      "fileCount": 3,
-      "lineCount": 577,
+      "fileCount": 5,
+      "lineCount": 913,
       "languages": [
         "python"
       ],
-      "size": 8,
+      "size": 9.555103348473002,
       "files": [
+        "orchestrator/providers/database/_validation.py",
         "orchestrator/providers/database/base.py",
         "orchestrator/providers/database/factory.py",
+        "orchestrator/providers/database/postgres_provider.py",
         "orchestrator/providers/database/supabase_provider.py"
       ]
     },
     {
-      "id": "n53",
+      "id": "n58",
       "label": "orchestrator / sandbox_test.py",
       "path": "orchestrator/sandbox_test.py",
       "layerId": "L2",
@@ -1314,7 +1426,7 @@
       ]
     },
     {
-      "id": "n54",
+      "id": "n59",
       "label": "orchestrator / security",
       "path": "orchestrator/security",
       "layerId": "L2",
@@ -1322,11 +1434,11 @@
       "domain": "auth-security",
       "color": "#10b981",
       "fileCount": 6,
-      "lineCount": 899,
+      "lineCount": 914,
       "languages": [
         "python"
       ],
-      "size": 9.481561052906848,
+      "size": 9.560334722173696,
       "files": [
         "orchestrator/security/__init__.py",
         "orchestrator/security/guardian_fabric.py",
@@ -1336,7 +1448,7 @@
       ]
     },
     {
-      "id": "n55",
+      "id": "n60",
       "label": "orchestrator / server.py",
       "path": "orchestrator/server.py",
       "layerId": "L2",
@@ -1344,7 +1456,7 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 1,
-      "lineCount": 232,
+      "lineCount": 236,
       "languages": [
         "python"
       ],
@@ -1354,29 +1466,47 @@
       ]
     },
     {
-      "id": "n56",
+      "id": "n61",
+      "label": "orchestrator / sitecustomize.py",
+      "path": "orchestrator/sitecustomize.py",
+      "layerId": "L2",
+      "layerName": "Orchestration",
+      "domain": "orchestration",
+      "color": "#10b981",
+      "fileCount": 1,
+      "lineCount": 14,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "orchestrator/sitecustomize.py"
+      ]
+    },
+    {
+      "id": "n62",
       "label": "orchestrator / tests",
       "path": "orchestrator/tests",
       "layerId": "L4",
       "layerName": "Web3 / Chain",
       "domain": "web3",
       "color": "#8b5cf6",
-      "fileCount": 47,
-      "lineCount": 13721,
+      "fileCount": 49,
+      "lineCount": 15291,
       "languages": [
         "python"
       ],
-      "size": 37.04186820342624,
+      "size": 39.103708264050866,
       "files": [
         "orchestrator/tests/conftest.py",
         "orchestrator/tests/omniboard/test_fsm.py",
+        "orchestrator/tests/omniboard/test_router_contract.py",
         "orchestrator/tests/omniboard/test_router.py",
-        "orchestrator/tests/omniboard/test_service.py",
-        "orchestrator/tests/test_activities_security.py"
+        "orchestrator/tests/omniboard/test_service.py"
       ]
     },
     {
-      "id": "n57",
+      "id": "n63",
       "label": "orchestrator / workflows",
       "path": "orchestrator/workflows",
       "layerId": "L2",
@@ -1384,20 +1514,20 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 4,
-      "lineCount": 1706,
+      "lineCount": 1922,
       "languages": [
         "python"
       ],
-      "size": 13.061393493804557,
+      "size": 13.863621460498695,
       "files": [
         "orchestrator/workflows/__init__.py",
         "orchestrator/workflows/agent_saga.py",
-        "orchestrator/workflows/sub_workflows.py",
+        "orchestrator/workflows/physiomni_saga.py",
         "orchestrator/workflows/universal_saga.py"
       ]
     },
     {
-      "id": "n58",
+      "id": "n64",
       "label": "packages / apex-sales",
       "path": "packages/apex-sales",
       "layerId": "L1",
@@ -1405,17 +1535,17 @@
       "domain": "core",
       "color": "#f59e0b",
       "fileCount": 1,
-      "lineCount": 705,
+      "lineCount": 703,
       "languages": [
         "typescript"
       ],
-      "size": 8.396427811873332,
+      "size": 8.384509526501834,
       "files": [
         "packages/apex-sales/src/worker.ts"
       ]
     },
     {
-      "id": "n59",
+      "id": "n65",
       "label": "packages / core",
       "path": "packages/core",
       "layerId": "L1",
@@ -1436,7 +1566,7 @@
       ]
     },
     {
-      "id": "n60",
+      "id": "n66",
       "label": "packages / infrastructure",
       "path": "packages/infrastructure",
       "layerId": "L1",
@@ -1458,25 +1588,26 @@
       ]
     },
     {
-      "id": "n61",
-      "label": "public / sw.js",
-      "path": "public/sw.js",
-      "layerId": "L0",
-      "layerName": "Client Apps",
+      "id": "n67",
+      "label": "packages / schema",
+      "path": "packages/schema",
+      "layerId": "L1",
+      "layerName": "Edge & Gateway",
       "domain": "core",
-      "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 280,
+      "color": "#f59e0b",
+      "fileCount": 2,
+      "lineCount": 60,
       "languages": [
-        "javascript"
+        "typescript"
       ],
       "size": 8,
       "files": [
-        "public/sw.js"
+        "packages/schema/byom/registry.ts",
+        "packages/schema/physiomni/telemetry.ts"
       ]
     },
     {
-      "id": "n62",
+      "id": "n68",
       "label": "sandbox / chaotic-client-simulation.ts",
       "path": "sandbox/chaotic-client-simulation.ts",
       "layerId": "L0",
@@ -1494,7 +1625,7 @@
       ]
     },
     {
-      "id": "n63",
+      "id": "n69",
       "label": "sandbox / run-simulation.cjs",
       "path": "sandbox/run-simulation.cjs",
       "layerId": "L0",
@@ -1502,17 +1633,35 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 767,
+      "lineCount": 770,
       "languages": [
         "javascript"
       ],
-      "size": 8.757853618324527,
+      "size": 8.774964387392123,
       "files": [
         "sandbox/run-simulation.cjs"
       ]
     },
     {
-      "id": "n64",
+      "id": "n70",
+      "label": "scripts / audit_docs.py",
+      "path": "scripts/audit_docs.py",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 50,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/audit_docs.py"
+      ]
+    },
+    {
+      "id": "n71",
       "label": "scripts / audit-features.ts",
       "path": "scripts/audit-features.ts",
       "layerId": "L0",
@@ -1530,7 +1679,7 @@
       ]
     },
     {
-      "id": "n65",
+      "id": "n72",
       "label": "scripts / backup",
       "path": "scripts/backup",
       "layerId": "L0",
@@ -1548,7 +1697,7 @@
       ]
     },
     {
-      "id": "n66",
+      "id": "n73",
       "label": "scripts / benchmark-apex.ts",
       "path": "scripts/benchmark-apex.ts",
       "layerId": "L0",
@@ -1566,7 +1715,7 @@
       ]
     },
     {
-      "id": "n67",
+      "id": "n74",
       "label": "scripts / benchmark-logger.ts",
       "path": "scripts/benchmark-logger.ts",
       "layerId": "L0",
@@ -1584,7 +1733,7 @@
       ]
     },
     {
-      "id": "n68",
+      "id": "n75",
       "label": "scripts / check-env-root.mjs",
       "path": "scripts/check-env-root.mjs",
       "layerId": "L0",
@@ -1592,7 +1741,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 60,
+      "lineCount": 105,
       "languages": [
         "javascript"
       ],
@@ -1602,7 +1751,7 @@
       ]
     },
     {
-      "id": "n69",
+      "id": "n76",
       "label": "scripts / check-react-singleton.mjs",
       "path": "scripts/check-react-singleton.mjs",
       "layerId": "L0",
@@ -1620,30 +1769,31 @@
       ]
     },
     {
-      "id": "n70",
+      "id": "n77",
       "label": "scripts / ci",
       "path": "scripts/ci",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "infra-ci",
       "color": "#6366f1",
-      "fileCount": 5,
-      "lineCount": 310,
+      "fileCount": 24,
+      "lineCount": 2942,
       "languages": [
         "python",
-        "javascript"
+        "javascript",
+        "typescript"
       ],
-      "size": 8,
+      "size": 17.15225932639779,
       "files": [
         "scripts/ci/assert_no_stubbed_provider_impls.py",
         "scripts/ci/check_doc_code_pointers.mjs",
         "scripts/ci/check_docs_links.mjs",
-        "scripts/ci/ci-utils.mjs",
-        "scripts/ci/release-lattice.mjs"
+        "scripts/ci/check-additive-migrations.ts",
+        "scripts/ci/check-coverage-integrity.mjs"
       ]
     },
     {
-      "id": "n71",
+      "id": "n78",
       "label": "scripts / compliance",
       "path": "scripts/compliance",
       "layerId": "L0",
@@ -1664,7 +1814,25 @@
       ]
     },
     {
-      "id": "n72",
+      "id": "n79",
+      "label": "scripts / debug",
+      "path": "scripts/debug",
+      "layerId": "L5",
+      "layerName": "Infra / CI",
+      "domain": "core",
+      "color": "#ef4444",
+      "fileCount": 1,
+      "lineCount": 128,
+      "languages": [
+        "shell"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/debug/probe-cors-login.sh"
+      ]
+    },
+    {
+      "id": "n80",
       "label": "scripts / deploy-web3-functions.sh",
       "path": "scripts/deploy-web3-functions.sh",
       "layerId": "L4",
@@ -1682,7 +1850,7 @@
       ]
     },
     {
-      "id": "n73",
+      "id": "n81",
       "label": "scripts / dev",
       "path": "scripts/dev",
       "layerId": "L0",
@@ -1701,7 +1869,7 @@
       ]
     },
     {
-      "id": "n74",
+      "id": "n82",
       "label": "scripts / dr",
       "path": "scripts/dr",
       "layerId": "L0",
@@ -1721,7 +1889,7 @@
       ]
     },
     {
-      "id": "n75",
+      "id": "n83",
       "label": "scripts / extensibility",
       "path": "scripts/extensibility",
       "layerId": "L5",
@@ -1739,7 +1907,79 @@
       ]
     },
     {
-      "id": "n76",
+      "id": "n84",
+      "label": "scripts / fix_eslint.mjs",
+      "path": "scripts/fix_eslint.mjs",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 34,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/fix_eslint.mjs"
+      ]
+    },
+    {
+      "id": "n85",
+      "label": "scripts / fix_jsonl.mjs",
+      "path": "scripts/fix_jsonl.mjs",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 28,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/fix_jsonl.mjs"
+      ]
+    },
+    {
+      "id": "n86",
+      "label": "scripts / fix_sonar_issues.mjs",
+      "path": "scripts/fix_sonar_issues.mjs",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 44,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/fix_sonar_issues.mjs"
+      ]
+    },
+    {
+      "id": "n87",
+      "label": "scripts / fix-cf-pages-env.sh",
+      "path": "scripts/fix-cf-pages-env.sh",
+      "layerId": "L5",
+      "layerName": "Infra / CI",
+      "domain": "ui-components",
+      "color": "#ef4444",
+      "fileCount": 1,
+      "lineCount": 74,
+      "languages": [
+        "shell"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/fix-cf-pages-env.sh"
+      ]
+    },
+    {
+      "id": "n88",
       "label": "scripts / generate-apple-secret.ts",
       "path": "scripts/generate-apple-secret.ts",
       "layerId": "L0",
@@ -1757,7 +1997,7 @@
       ]
     },
     {
-      "id": "n77",
+      "id": "n89",
       "label": "scripts / generate-readiness-report.mjs",
       "path": "scripts/generate-readiness-report.mjs",
       "layerId": "L0",
@@ -1775,7 +2015,7 @@
       ]
     },
     {
-      "id": "n78",
+      "id": "n90",
       "label": "scripts / generate-sitemap.mjs",
       "path": "scripts/generate-sitemap.mjs",
       "layerId": "L0",
@@ -1793,7 +2033,7 @@
       ]
     },
     {
-      "id": "n79",
+      "id": "n91",
       "label": "scripts / guardian",
       "path": "scripts/guardian",
       "layerId": "L0",
@@ -1811,7 +2051,7 @@
       ]
     },
     {
-      "id": "n80",
+      "id": "n92",
       "label": "scripts / harden-docs.cjs",
       "path": "scripts/harden-docs.cjs",
       "layerId": "L0",
@@ -1829,7 +2069,7 @@
       ]
     },
     {
-      "id": "n81",
+      "id": "n93",
       "label": "scripts / hardhat",
       "path": "scripts/hardhat",
       "layerId": "L4",
@@ -1850,7 +2090,7 @@
       ]
     },
     {
-      "id": "n82",
+      "id": "n94",
       "label": "scripts / install-githooks.sh",
       "path": "scripts/install-githooks.sh",
       "layerId": "L5",
@@ -1868,7 +2108,7 @@
       ]
     },
     {
-      "id": "n83",
+      "id": "n95",
       "label": "scripts / omega",
       "path": "scripts/omega",
       "layerId": "L0",
@@ -1886,7 +2126,7 @@
       ]
     },
     {
-      "id": "n84",
+      "id": "n96",
       "label": "scripts / omnidash-blast-radius.ts",
       "path": "scripts/omnidash-blast-radius.ts",
       "layerId": "L0",
@@ -1904,7 +2144,7 @@
       ]
     },
     {
-      "id": "n85",
+      "id": "n97",
       "label": "scripts / omnilink",
       "path": "scripts/omnilink",
       "layerId": "L0",
@@ -1922,15 +2162,15 @@
       ]
     },
     {
-      "id": "n86",
+      "id": "n98",
       "label": "scripts / ops",
       "path": "scripts/ops",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
-      "fileCount": 3,
-      "lineCount": 375,
+      "fileCount": 4,
+      "lineCount": 441,
       "languages": [
         "javascript",
         "shell"
@@ -1939,11 +2179,12 @@
       "files": [
         "scripts/ops/activate_iron_dome.mjs",
         "scripts/ops/deploy_iron_dome.sh",
-        "scripts/ops/health-check-monitor.sh"
+        "scripts/ops/health-check-monitor.sh",
+        "scripts/ops/provision-shadow-env.sh"
       ]
     },
     {
-      "id": "n87",
+      "id": "n99",
       "label": "scripts / patch-capacitor-tar.cjs",
       "path": "scripts/patch-capacitor-tar.cjs",
       "layerId": "L0",
@@ -1961,7 +2202,7 @@
       ]
     },
     {
-      "id": "n88",
+      "id": "n100",
       "label": "scripts / patch-capacitor-tar.js",
       "path": "scripts/patch-capacitor-tar.js",
       "layerId": "L0",
@@ -1979,7 +2220,7 @@
       ]
     },
     {
-      "id": "n89",
+      "id": "n101",
       "label": "scripts / prompt-defense",
       "path": "scripts/prompt-defense",
       "layerId": "L0",
@@ -1997,7 +2238,25 @@
       ]
     },
     {
-      "id": "n90",
+      "id": "n102",
+      "label": "scripts / qa",
+      "path": "scripts/qa",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 105,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/qa/verify-omnihub-marketing-fixes.mjs"
+      ]
+    },
+    {
+      "id": "n103",
       "label": "scripts / quality",
       "path": "scripts/quality",
       "layerId": "L5",
@@ -2015,7 +2274,7 @@
       ]
     },
     {
-      "id": "n91",
+      "id": "n104",
       "label": "scripts / record_app_demo.ts",
       "path": "scripts/record_app_demo.ts",
       "layerId": "L0",
@@ -2033,7 +2292,7 @@
       ]
     },
     {
-      "id": "n92",
+      "id": "n105",
       "label": "scripts / record_sim.ts",
       "path": "scripts/record_sim.ts",
       "layerId": "L0",
@@ -2051,7 +2310,25 @@
       ]
     },
     {
-      "id": "n93",
+      "id": "n106",
+      "label": "scripts / remediate_tests.mjs",
+      "path": "scripts/remediate_tests.mjs",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 30,
+      "languages": [
+        "javascript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/remediate_tests.mjs"
+      ]
+    },
+    {
+      "id": "n107",
       "label": "scripts / repo_inventory.sh",
       "path": "scripts/repo_inventory.sh",
       "layerId": "L5",
@@ -2069,7 +2346,7 @@
       ]
     },
     {
-      "id": "n94",
+      "id": "n108",
       "label": "scripts / repo-hygiene-guard.sh",
       "path": "scripts/repo-hygiene-guard.sh",
       "layerId": "L5",
@@ -2087,7 +2364,7 @@
       ]
     },
     {
-      "id": "n95",
+      "id": "n109",
       "label": "scripts / scalability",
       "path": "scripts/scalability",
       "layerId": "L5",
@@ -2105,7 +2382,7 @@
       ]
     },
     {
-      "id": "n96",
+      "id": "n110",
       "label": "scripts / secret-scan.mjs",
       "path": "scripts/secret-scan.mjs",
       "layerId": "L0",
@@ -2113,7 +2390,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 91,
+      "lineCount": 182,
       "languages": [
         "javascript"
       ],
@@ -2123,7 +2400,7 @@
       ]
     },
     {
-      "id": "n97",
+      "id": "n111",
       "label": "scripts / security",
       "path": "scripts/security",
       "layerId": "L5",
@@ -2142,7 +2419,25 @@
       ]
     },
     {
-      "id": "n98",
+      "id": "n112",
+      "label": "scripts / set-cf-pages-env.sh",
+      "path": "scripts/set-cf-pages-env.sh",
+      "layerId": "L5",
+      "layerName": "Infra / CI",
+      "domain": "ui-components",
+      "color": "#ef4444",
+      "fileCount": 1,
+      "lineCount": 66,
+      "languages": [
+        "shell"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/set-cf-pages-env.sh"
+      ]
+    },
+    {
+      "id": "n113",
       "label": "scripts / smoke-test.ts",
       "path": "scripts/smoke-test.ts",
       "layerId": "L0",
@@ -2160,7 +2455,43 @@
       ]
     },
     {
-      "id": "n99",
+      "id": "n114",
+      "label": "scripts / sync_payload.py",
+      "path": "scripts/sync_payload.py",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 169,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/sync_payload.py"
+      ]
+    },
+    {
+      "id": "n115",
+      "label": "scripts / test-gateway.ts",
+      "path": "scripts/test-gateway.ts",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 228,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "scripts/test-gateway.ts"
+      ]
+    },
+    {
+      "id": "n116",
       "label": "scripts / validate-blockchain-env.sh",
       "path": "scripts/validate-blockchain-env.sh",
       "layerId": "L5",
@@ -2178,7 +2509,7 @@
       ]
     },
     {
-      "id": "n100",
+      "id": "n117",
       "label": "scripts / verify_cron.sql",
       "path": "scripts/verify_cron.sql",
       "layerId": "L0",
@@ -2196,7 +2527,7 @@
       ]
     },
     {
-      "id": "n101",
+      "id": "n118",
       "label": "scripts / verify-built-assets.mjs",
       "path": "scripts/verify-built-assets.mjs",
       "layerId": "L0",
@@ -2214,7 +2545,7 @@
       ]
     },
     {
-      "id": "n102",
+      "id": "n119",
       "label": "scripts / verify-changelog-paths.js",
       "path": "scripts/verify-changelog-paths.js",
       "layerId": "L0",
@@ -2232,7 +2563,7 @@
       ]
     },
     {
-      "id": "n103",
+      "id": "n120",
       "label": "scripts / verify-dashboard.py",
       "path": "scripts/verify-dashboard.py",
       "layerId": "L0",
@@ -2250,7 +2581,7 @@
       ]
     },
     {
-      "id": "n104",
+      "id": "n121",
       "label": "scripts / worldwide-wildcard",
       "path": "scripts/worldwide-wildcard",
       "layerId": "L0",
@@ -2268,7 +2599,7 @@
       ]
     },
     {
-      "id": "n105",
+      "id": "n122",
       "label": "scripts / zero-trust",
       "path": "scripts/zero-trust",
       "layerId": "L0",
@@ -2286,7 +2617,7 @@
       ]
     },
     {
-      "id": "n106",
+      "id": "n123",
       "label": "services / orchestrator",
       "path": "services/orchestrator",
       "layerId": "L3",
@@ -2306,7 +2637,7 @@
       ]
     },
     {
-      "id": "n107",
+      "id": "n124",
       "label": "sim / anomaly-detector.ts",
       "path": "sim/anomaly-detector.ts",
       "layerId": "L0",
@@ -2324,7 +2655,7 @@
       ]
     },
     {
-      "id": "n108",
+      "id": "n125",
       "label": "sim / chaos-engine.ts",
       "path": "sim/chaos-engine.ts",
       "layerId": "L0",
@@ -2332,7 +2663,7 @@
       "domain": "chaos-testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 517,
+      "lineCount": 508,
       "languages": [
         "typescript"
       ],
@@ -2342,7 +2673,7 @@
       ]
     },
     {
-      "id": "n109",
+      "id": "n126",
       "label": "sim / circuit-breaker.ts",
       "path": "sim/circuit-breaker.ts",
       "layerId": "L0",
@@ -2360,7 +2691,7 @@
       ]
     },
     {
-      "id": "n110",
+      "id": "n127",
       "label": "sim / cli.ts",
       "path": "sim/cli.ts",
       "layerId": "L0",
@@ -2378,7 +2709,7 @@
       ]
     },
     {
-      "id": "n111",
+      "id": "n128",
       "label": "sim / contracts.ts",
       "path": "sim/contracts.ts",
       "layerId": "L0",
@@ -2396,7 +2727,7 @@
       ]
     },
     {
-      "id": "n112",
+      "id": "n129",
       "label": "sim / eval-runner.ts",
       "path": "sim/eval-runner.ts",
       "layerId": "L0",
@@ -2404,7 +2735,7 @@
       "domain": "chaos-testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 611,
+      "lineCount": 574,
       "languages": [
         "typescript"
       ],
@@ -2414,7 +2745,7 @@
       ]
     },
     {
-      "id": "n113",
+      "id": "n130",
       "label": "sim / evidence.ts",
       "path": "sim/evidence.ts",
       "layerId": "L0",
@@ -2432,7 +2763,7 @@
       ]
     },
     {
-      "id": "n114",
+      "id": "n131",
       "label": "sim / guard-rails.ts",
       "path": "sim/guard-rails.ts",
       "layerId": "L0",
@@ -2450,7 +2781,7 @@
       ]
     },
     {
-      "id": "n115",
+      "id": "n132",
       "label": "sim / idempotency.ts",
       "path": "sim/idempotency.ts",
       "layerId": "L0",
@@ -2468,7 +2799,7 @@
       ]
     },
     {
-      "id": "n116",
+      "id": "n133",
       "label": "sim / index.ts",
       "path": "sim/index.ts",
       "layerId": "L0",
@@ -2486,7 +2817,7 @@
       ]
     },
     {
-      "id": "n117",
+      "id": "n134",
       "label": "sim / metrics.ts",
       "path": "sim/metrics.ts",
       "layerId": "L0",
@@ -2504,7 +2835,7 @@
       ]
     },
     {
-      "id": "n118",
+      "id": "n135",
       "label": "sim / runner.ts",
       "path": "sim/runner.ts",
       "layerId": "L0",
@@ -2522,7 +2853,7 @@
       ]
     },
     {
-      "id": "n119",
+      "id": "n136",
       "label": "sim / telemetry.ts",
       "path": "sim/telemetry.ts",
       "layerId": "L0",
@@ -2540,7 +2871,7 @@
       ]
     },
     {
-      "id": "n120",
+      "id": "n137",
       "label": "sim / tests",
       "path": "sim/tests",
       "layerId": "L0",
@@ -2562,7 +2893,7 @@
       ]
     },
     {
-      "id": "n121",
+      "id": "n138",
       "label": "src / adapters",
       "path": "src/adapters",
       "layerId": "L0",
@@ -2582,7 +2913,7 @@
       ]
     },
     {
-      "id": "n122",
+      "id": "n139",
       "label": "src / api",
       "path": "src/api",
       "layerId": "L0",
@@ -2600,7 +2931,7 @@
       ]
     },
     {
-      "id": "n123",
+      "id": "n140",
       "label": "src / armageddon",
       "path": "src/armageddon",
       "layerId": "L2",
@@ -2622,7 +2953,7 @@
       ]
     },
     {
-      "id": "n124",
+      "id": "n141",
       "label": "src / automation",
       "path": "src/automation",
       "layerId": "L0",
@@ -2640,7 +2971,7 @@
       ]
     },
     {
-      "id": "n125",
+      "id": "n142",
       "label": "src / components",
       "path": "src/components",
       "layerId": "L0",
@@ -2648,11 +2979,11 @@
       "domain": "ui-components",
       "color": "#6366f1",
       "fileCount": 83,
-      "lineCount": 8983,
+      "lineCount": 9033,
       "languages": [
         "typescript"
       ],
-      "size": 29.971653274385783,
+      "size": 30.05494967555261,
       "files": [
         "src/components/access/AccessGate.tsx",
         "src/components/AppSidebar.tsx",
@@ -2662,7 +2993,7 @@
       ]
     },
     {
-      "id": "n126",
+      "id": "n143",
       "label": "src / contexts",
       "path": "src/contexts",
       "layerId": "L0",
@@ -2670,7 +3001,7 @@
       "domain": "state-management",
       "color": "#6366f1",
       "fileCount": 2,
-      "lineCount": 425,
+      "lineCount": 363,
       "languages": [
         "typescript"
       ],
@@ -2681,37 +3012,38 @@
       ]
     },
     {
-      "id": "n127",
+      "id": "n144",
       "label": "src / contracts",
       "path": "src/contracts",
       "layerId": "L4",
       "layerName": "Web3 / Chain",
       "domain": "web3",
       "color": "#8b5cf6",
-      "fileCount": 1,
-      "lineCount": 216,
+      "fileCount": 2,
+      "lineCount": 229,
       "languages": [
         "typescript"
       ],
       "size": 8,
       "files": [
+        "src/contracts/omnidash-sidebar-widgets.ts",
         "src/contracts/omnidash.contract.ts"
       ]
     },
     {
-      "id": "n128",
+      "id": "n145",
       "label": "src / core",
       "path": "src/core",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
-      "fileCount": 26,
-      "lineCount": 4658,
+      "fileCount": 28,
+      "lineCount": 4993,
       "languages": [
         "typescript"
       ],
-      "size": 21.582400237230335,
+      "size": 22.345021816950638,
       "files": [
         "src/core/cognition/CognitionManager.ts",
         "src/core/cognition/compressionEngine.ts",
@@ -2721,7 +3053,7 @@
       ]
     },
     {
-      "id": "n129",
+      "id": "n146",
       "label": "src / features",
       "path": "src/features",
       "layerId": "L0",
@@ -2729,17 +3061,17 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 591,
+      "lineCount": 666,
       "languages": [
         "typescript"
       ],
-      "size": 8,
+      "size": 8.160882305241266,
       "files": [
         "src/features/registry.ts"
       ]
     },
     {
-      "id": "n130",
+      "id": "n147",
       "label": "src / guardian",
       "path": "src/guardian",
       "layerId": "L0",
@@ -2758,19 +3090,19 @@
       ]
     },
     {
-      "id": "n131",
+      "id": "n148",
       "label": "src / hooks",
       "path": "src/hooks",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "state-management",
       "color": "#6366f1",
-      "fileCount": 13,
-      "lineCount": 1610,
+      "fileCount": 14,
+      "lineCount": 1660,
       "languages": [
         "typescript"
       ],
-      "size": 12.68857754044952,
+      "size": 12.884098726725126,
       "files": [
         "src/hooks/use-mobile.tsx",
         "src/hooks/use-toast.ts",
@@ -2780,7 +3112,7 @@
       ]
     },
     {
-      "id": "n132",
+      "id": "n149",
       "label": "src / i18n",
       "path": "src/i18n",
       "layerId": "L0",
@@ -2800,29 +3132,29 @@
       ]
     },
     {
-      "id": "n133",
+      "id": "n150",
       "label": "src / integrations",
       "path": "src/integrations",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
-      "fileCount": 11,
-      "lineCount": 1393,
+      "fileCount": 12,
+      "lineCount": 1778,
       "languages": [
         "typescript"
       ],
-      "size": 11.802542099056458,
+      "size": 13.334166640626627,
       "files": [
         "src/integrations/maestro/execution/engine.ts",
         "src/integrations/maestro/execution/man-mode-dispatcher.ts",
+        "src/integrations/maestro/execution/TreeSearchPlanner.ts",
         "src/integrations/maestro/index.ts",
-        "src/integrations/maestro/safety/index.ts",
-        "src/integrations/maestro/safety/injection-detection.ts"
+        "src/integrations/maestro/safety/index.ts"
       ]
     },
     {
-      "id": "n134",
+      "id": "n151",
       "label": "src / layouts",
       "path": "src/layouts",
       "layerId": "L0",
@@ -2840,19 +3172,19 @@
       ]
     },
     {
-      "id": "n135",
+      "id": "n152",
       "label": "src / lib",
       "path": "src/lib",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
-      "fileCount": 73,
-      "lineCount": 14081,
+      "fileCount": 81,
+      "lineCount": 14968,
       "languages": [
         "typescript"
       ],
-      "size": 37.52465855940597,
+      "size": 38.68849958320948,
       "files": [
         "src/lib/apex/client-persistence.ts",
         "src/lib/apex/control-plane.ts",
@@ -2862,7 +3194,7 @@
       ]
     },
     {
-      "id": "n136",
+      "id": "n153",
       "label": "src / libs",
       "path": "src/libs",
       "layerId": "L0",
@@ -2880,7 +3212,7 @@
       ]
     },
     {
-      "id": "n137",
+      "id": "n154",
       "label": "src / main.tsx",
       "path": "src/main.tsx",
       "layerId": "L0",
@@ -2888,7 +3220,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 22,
+      "lineCount": 38,
       "languages": [
         "typescript"
       ],
@@ -2898,7 +3230,7 @@
       ]
     },
     {
-      "id": "n138",
+      "id": "n155",
       "label": "src / middleware.ts",
       "path": "src/middleware.ts",
       "layerId": "L0",
@@ -2916,7 +3248,7 @@
       ]
     },
     {
-      "id": "n139",
+      "id": "n156",
       "label": "src / middleware",
       "path": "src/middleware",
       "layerId": "L0",
@@ -2935,19 +3267,19 @@
       ]
     },
     {
-      "id": "n140",
+      "id": "n157",
       "label": "src / omniconnect",
       "path": "src/omniconnect",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "omni-protocol",
       "color": "#6366f1",
-      "fileCount": 25,
-      "lineCount": 5064,
+      "fileCount": 27,
+      "lineCount": 5415,
       "languages": [
         "typescript"
       ],
-      "size": 22.503333086456326,
+      "size": 23.27015255644019,
       "files": [
         "src/omniconnect/connectors/base.ts",
         "src/omniconnect/connectors/meta-business.ts",
@@ -2957,7 +3289,7 @@
       ]
     },
     {
-      "id": "n141",
+      "id": "n158",
       "label": "src / omnidash",
       "path": "src/omnidash",
       "layerId": "L0",
@@ -2965,11 +3297,11 @@
       "domain": "dashboard",
       "color": "#6366f1",
       "fileCount": 10,
-      "lineCount": 1807,
+      "lineCount": 1804,
       "languages": [
         "typescript"
       ],
-      "size": 13.442470011125186,
+      "size": 13.431306712304652,
       "files": [
         "src/omnidash/agentPrefs.ts",
         "src/omnidash/api.ts",
@@ -2979,7 +3311,7 @@
       ]
     },
     {
-      "id": "n142",
+      "id": "n159",
       "label": "src / omnihub-gateway",
       "path": "src/omnihub-gateway",
       "layerId": "L0",
@@ -2987,11 +3319,11 @@
       "domain": "agent-system",
       "color": "#6366f1",
       "fileCount": 16,
-      "lineCount": 4222,
+      "lineCount": 4596,
       "languages": [
         "typescript"
       ],
-      "size": 20.547505931377657,
+      "size": 21.438283513378586,
       "files": [
         "src/omnihub-gateway/AgentCard.ts",
         "src/omnihub-gateway/IdempotencyManager.ts",
@@ -3001,7 +3333,7 @@
       ]
     },
     {
-      "id": "n143",
+      "id": "n160",
       "label": "src / providers",
       "path": "src/providers",
       "layerId": "L0",
@@ -3019,7 +3351,7 @@
       ]
     },
     {
-      "id": "n144",
+      "id": "n161",
       "label": "src / scripts",
       "path": "src/scripts",
       "layerId": "L0",
@@ -3038,7 +3370,7 @@
       ]
     },
     {
-      "id": "n145",
+      "id": "n162",
       "label": "src / security",
       "path": "src/security",
       "layerId": "L0",
@@ -3059,19 +3391,19 @@
       ]
     },
     {
-      "id": "n146",
+      "id": "n163",
       "label": "src / stores",
       "path": "src/stores",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "state-management",
       "color": "#6366f1",
-      "fileCount": 9,
-      "lineCount": 1481,
+      "fileCount": 8,
+      "lineCount": 1309,
       "languages": [
         "typescript"
       ],
-      "size": 12.16963434126104,
+      "size": 11.441153787970862,
       "files": [
         "src/stores/demoStore.ts",
         "src/stores/notificationStore.ts",
@@ -3081,7 +3413,25 @@
       ]
     },
     {
-      "id": "n147",
+      "id": "n164",
+      "label": "src / swInit.ts",
+      "path": "src/swInit.ts",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "core",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 21,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "src/swInit.ts"
+      ]
+    },
+    {
+      "id": "n165",
       "label": "src / utils",
       "path": "src/utils",
       "layerId": "L0",
@@ -3100,7 +3450,7 @@
       ]
     },
     {
-      "id": "n148",
+      "id": "n166",
       "label": "src / vite-env.d.ts",
       "path": "src/vite-env.d.ts",
       "layerId": "L0",
@@ -3108,7 +3458,7 @@
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 14,
+      "lineCount": 28,
       "languages": [
         "typescript"
       ],
@@ -3118,7 +3468,7 @@
       ]
     },
     {
-      "id": "n149",
+      "id": "n167",
       "label": "src / worker.ts",
       "path": "src/worker.ts",
       "layerId": "L0",
@@ -3136,7 +3486,7 @@
       ]
     },
     {
-      "id": "n150",
+      "id": "n168",
       "label": "src / zero-trust",
       "path": "src/zero-trust",
       "layerId": "L0",
@@ -3155,56 +3505,69 @@
       ]
     },
     {
-      "id": "n151",
+      "id": "n169",
       "label": "supabase / functions",
       "path": "supabase/functions",
       "layerId": "L3",
       "layerName": "Data & Auth",
       "domain": "database",
       "color": "#3b82f6",
-      "fileCount": 64,
-      "lineCount": 12127,
+      "fileCount": 79,
+      "lineCount": 17249,
       "languages": [
         "typescript"
       ],
-      "size": 34.82384240717845,
+      "size": 40,
       "files": [
         "supabase/functions/_shared/apex-control-plane.ts",
         "supabase/functions/_shared/auth.ts",
         "supabase/functions/_shared/cockpit-crypto.ts",
-        "supabase/functions/_shared/cors.ts",
-        "supabase/functions/_shared/emergency-controls.ts",
-        "supabase/functions/generate-business-skills/index.ts",
-        "supabase/functions/generate-business-skills/onboarding-wizard.ts",
-        "supabase/functions/generate-business-skills/skill-provider.ts",
-        "supabase/functions/generate-business-skills/http-helpers.ts"
+        "supabase/functions/_shared/compress.ts",
+        "supabase/functions/_shared/cors.ts"
       ]
     },
     {
-      "id": "n152",
+      "id": "n170",
       "label": "supabase / migrations",
       "path": "supabase/migrations",
       "layerId": "L3",
       "layerName": "Data & Auth",
       "domain": "database",
       "color": "#3b82f6",
-      "fileCount": 76,
-      "lineCount": 9464,
+      "fileCount": 97,
+      "lineCount": 11473,
       "languages": [
         "sql"
       ],
-      "size": 30.763614872118,
+      "size": 33.871817193649356,
       "files": [
         "supabase/migrations/20240315_idempotency_ledger.sql",
         "supabase/migrations/20251003094610_9ce8947e-f3b6-46cc-8bfa-b93d2677bdd9.sql",
         "supabase/migrations/20251004032712_3d6dc06d-21cd-4fbb-b80d-f4a12307f8d8.sql",
         "supabase/migrations/20251004072520_8fcd5084-a6fc-4a13-a994-3cb1d7e12125.sql",
-        "supabase/migrations/20251004223440_1b0177ed-f035-453c-b7a2-a3702234d41e.sql",
-        "supabase/migrations/20260622000000_skill_entitlement_free_cap_5.sql"
+        "supabase/migrations/20251004223440_1b0177ed-f035-453c-b7a2-a3702234d41e.sql"
       ]
     },
     {
-      "id": "n153",
+      "id": "n171",
+      "label": "tests / __mocks__",
+      "path": "tests/__mocks__",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 38,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/__mocks__/recharts.tsx"
+      ]
+    },
+    {
+      "id": "n172",
       "label": "tests / agent-rag-test.ts",
       "path": "tests/agent-rag-test.ts",
       "layerId": "L0",
@@ -3222,29 +3585,48 @@
       ]
     },
     {
-      "id": "n154",
+      "id": "n173",
       "label": "tests / api",
       "path": "tests/api",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 7,
-      "lineCount": 1217,
+      "fileCount": 8,
+      "lineCount": 1372,
       "languages": [
         "typescript"
       ],
-      "size": 11.031772296417289,
+      "size": 11.713240371477058,
       "files": [
         "tests/api/cors.test.ts",
+        "tests/api/invoke-contract.spec.ts",
         "tests/api/omnibridge-ingest.test.ts",
         "tests/api/omnibridge-roundtrip.test.ts",
-        "tests/api/omnibridge-sync.test.ts",
-        "tests/api/omnibridge-token.test.ts"
+        "tests/api/omnibridge-sync.test.ts"
       ]
     },
     {
-      "id": "n155",
+      "id": "n174",
+      "label": "tests / apps",
+      "path": "tests/apps",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 2,
+      "lineCount": 122,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/apps/omnihub-proof/App.spec.tsx",
+        "tests/apps/omnihub-proof/main.spec.tsx"
+      ]
+    },
+    {
+      "id": "n175",
       "label": "tests / automation",
       "path": "tests/automation",
       "layerId": "L0",
@@ -3263,47 +3645,52 @@
       ]
     },
     {
-      "id": "n156",
+      "id": "n176",
+      "label": "tests / ci",
+      "path": "tests/ci",
+      "layerId": "L3",
+      "layerName": "Data & Auth",
+      "domain": "testing",
+      "color": "#3b82f6",
+      "fileCount": 5,
+      "lineCount": 657,
+      "languages": [
+        "typescript",
+        "javascript"
+      ],
+      "size": 8.105553651663778,
+      "files": [
+        "tests/ci/check-additive-migrations.test.ts",
+        "tests/ci/claim-hygiene-fixtures.test.mjs",
+        "tests/ci/omniskills-rebrand-fixtures.test.mjs",
+        "tests/ci/secret-scan-fixtures.test.mjs",
+        "tests/ci/write-release-evidence.test.mjs"
+      ]
+    },
+    {
+      "id": "n177",
       "label": "tests / components",
       "path": "tests/components",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 16,
-      "lineCount": 2987,
+      "fileCount": 17,
+      "lineCount": 3100,
       "languages": [
         "typescript"
       ],
-      "size": 17.28293956478469,
+      "size": 17.60681686165901,
       "files": [
         "tests/components/AccessGate.spec.tsx",
         "tests/components/ConnectorKit.spec.tsx",
-        "tests/components/DashboardOverview.spec.tsx",
         "tests/components/DemoModeBanner.spec.tsx",
-        "tests/components/Integrations.spec.tsx"
+        "tests/components/Integrations.spec.tsx",
+        "tests/components/LocalAgents.spec.tsx"
       ]
     },
     {
-      "id": "n157",
-      "label": "tests / contexts",
-      "path": "tests/contexts",
-      "layerId": "L0",
-      "layerName": "Client Apps",
-      "domain": "auth-security",
-      "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 188,
-      "languages": [
-        "typescript"
-      ],
-      "size": 8,
-      "files": [
-        "tests/contexts/AuthContext.spec.tsx"
-      ]
-    },
-    {
-      "id": "n158",
+      "id": "n178",
       "label": "tests / contracts",
       "path": "tests/contracts",
       "layerId": "L0",
@@ -3321,19 +3708,19 @@
       ]
     },
     {
-      "id": "n159",
+      "id": "n179",
       "label": "tests / core",
       "path": "tests/core",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 25,
-      "lineCount": 4708,
+      "fileCount": 21,
+      "lineCount": 4528,
       "languages": [
         "typescript"
       ],
-      "size": 21.69792616818483,
+      "size": 21.279097725232617,
       "files": [
         "tests/core/app-registry.spec.ts",
         "tests/core/cognition/CognitionManager.spec.ts",
@@ -3343,29 +3730,29 @@
       ]
     },
     {
-      "id": "n160",
+      "id": "n180",
       "label": "tests / e2e-playwright",
       "path": "tests/e2e-playwright",
       "layerId": "L0",
       "layerName": "Client Apps",
-      "domain": "dashboard",
+      "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 6,
-      "lineCount": 506,
+      "fileCount": 15,
+      "lineCount": 1380,
       "languages": [
         "typescript"
       ],
-      "size": 8,
+      "size": 11.74734012447073,
       "files": [
+        "tests/e2e-playwright/byom-login-flow.spec.ts",
+        "tests/e2e-playwright/diag-console.spec.ts",
+        "tests/e2e-playwright/helpers/auth.ts",
         "tests/e2e-playwright/helpers/omnidash-helpers.ts",
-        "tests/e2e-playwright/omniboard-wiring.spec.ts",
-        "tests/e2e-playwright/omnidash-ui.spec.ts",
-        "tests/e2e-playwright/ops-widgets-smoke.spec.ts",
-        "tests/e2e-playwright/render.spec.ts"
+        "tests/e2e-playwright/marketing-smoke.spec.ts"
       ]
     },
     {
-      "id": "n161",
+      "id": "n181",
       "label": "tests / e2e",
       "path": "tests/e2e",
       "layerId": "L2",
@@ -3373,11 +3760,11 @@
       "domain": "orchestration",
       "color": "#10b981",
       "fileCount": 3,
-      "lineCount": 1020,
+      "lineCount": 1028,
       "languages": [
         "typescript"
       ],
-      "size": 10.099504938362077,
+      "size": 10.13903348450926,
       "files": [
         "tests/e2e/enterprise-workflows.spec.ts",
         "tests/e2e/errorHandling.spec.ts",
@@ -3385,7 +3772,7 @@
       ]
     },
     {
-      "id": "n162",
+      "id": "n182",
       "label": "tests / edge-functions",
       "path": "tests/edge-functions",
       "layerId": "L1",
@@ -3403,7 +3790,7 @@
       ]
     },
     {
-      "id": "n163",
+      "id": "n183",
       "label": "tests / error-boundary.spec.tsx",
       "path": "tests/error-boundary.spec.tsx",
       "layerId": "L0",
@@ -3411,7 +3798,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 118,
+      "lineCount": 117,
       "languages": [
         "typescript"
       ],
@@ -3421,7 +3808,7 @@
       ]
     },
     {
-      "id": "n164",
+      "id": "n184",
       "label": "tests / final-closure.test.ts",
       "path": "tests/final-closure.test.ts",
       "layerId": "L0",
@@ -3439,7 +3826,7 @@
       ]
     },
     {
-      "id": "n165",
+      "id": "n185",
       "label": "tests / guardian",
       "path": "tests/guardian",
       "layerId": "L0",
@@ -3458,7 +3845,7 @@
       ]
     },
     {
-      "id": "n166",
+      "id": "n186",
       "label": "tests / home-hero-badge.test.ts",
       "path": "tests/home-hero-badge.test.ts",
       "layerId": "L0",
@@ -3466,7 +3853,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 20,
+      "lineCount": 23,
       "languages": [
         "typescript"
       ],
@@ -3476,78 +3863,61 @@
       ]
     },
     {
-      "id": "n167",
+      "id": "n187",
       "label": "tests / infrastructure",
       "path": "tests/infrastructure",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 2,
-      "lineCount": 83,
+      "fileCount": 3,
+      "lineCount": 136,
       "languages": [
         "typescript"
       ],
       "size": 8,
       "files": [
         "tests/infrastructure/cloudflare-ratelimit-ruleset.test.ts",
-        "tests/infrastructure/lambda-dispatch-context-branch.test.ts"
+        "tests/infrastructure/lambda-dispatch-context-branch.test.ts",
+        "tests/infrastructure/production-domain-alignment.test.ts"
       ]
     },
     {
-      "id": "n168",
+      "id": "n188",
       "label": "tests / integration",
       "path": "tests/integration",
-      "layerId": "L0",
-      "layerName": "Client Apps",
-      "domain": "testing",
-      "color": "#6366f1",
-      "fileCount": 7,
-      "lineCount": 1683,
+      "layerId": "L2",
+      "layerName": "Orchestration",
+      "domain": "orchestration",
+      "color": "#10b981",
+      "fileCount": 8,
+      "lineCount": 1933,
       "languages": [
         "typescript"
       ],
-      "size": 12.973048986263793,
+      "size": 13.903237033151669,
       "files": [
+        "tests/integration/apex-agent-workflow.spec.ts",
         "tests/integration/byom-cockpit.test.ts",
         "tests/integration/database.integration.spec.ts",
         "tests/integration/mcp-e2e.test.ts",
-        "tests/integration/omni-convergence.test.tsx",
-        "tests/integration/omniport-omnidash.e2e.ts"
+        "tests/integration/omni-convergence.test.tsx"
       ]
     },
     {
-      "id": "n169",
-      "label": "tests / integrations",
-      "path": "tests/integrations",
-      "layerId": "L0",
-      "layerName": "Client Apps",
-      "domain": "testing",
-      "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 149,
-      "languages": [
-        "typescript"
-      ],
-      "size": 8,
-      "files": [
-        "tests/integrations/maestro/safety/injection-detection.spec.ts"
-      ]
-    },
-    {
-      "id": "n170",
+      "id": "n189",
       "label": "tests / lib",
       "path": "tests/lib",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 42,
-      "lineCount": 7975,
+      "fileCount": 39,
+      "lineCount": 7309,
       "languages": [
         "typescript"
       ],
-      "size": 28.240042492885877,
+      "size": 27.035162289137457,
       "files": [
         "tests/lib/apex-control-plane.spec.ts",
         "tests/lib/apex-persistence.spec.ts",
@@ -3557,7 +3927,7 @@
       ]
     },
     {
-      "id": "n171",
+      "id": "n190",
       "label": "tests / login-page-fixes.test.ts",
       "path": "tests/login-page-fixes.test.ts",
       "layerId": "L0",
@@ -3575,7 +3945,7 @@
       ]
     },
     {
-      "id": "n172",
+      "id": "n191",
       "label": "tests / login-runtime.test.tsx",
       "path": "tests/login-runtime.test.tsx",
       "layerId": "L0",
@@ -3583,7 +3953,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 143,
+      "lineCount": 196,
       "languages": [
         "typescript"
       ],
@@ -3593,7 +3963,7 @@
       ]
     },
     {
-      "id": "n173",
+      "id": "n192",
       "label": "tests / login-supabase-config.test.ts",
       "path": "tests/login-supabase-config.test.ts",
       "layerId": "L0",
@@ -3601,7 +3971,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 136,
+      "lineCount": 224,
       "languages": [
         "typescript"
       ],
@@ -3611,7 +3981,7 @@
       ]
     },
     {
-      "id": "n174",
+      "id": "n193",
       "label": "tests / maestro",
       "path": "tests/maestro",
       "layerId": "L0",
@@ -3619,11 +3989,11 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 14,
-      "lineCount": 2266,
+      "lineCount": 2225,
       "languages": [
         "typescript"
       ],
-      "size": 15.05323885414697,
+      "size": 14.916433890176299,
       "files": [
         "tests/maestro/__helpers__/setup.ts",
         "tests/maestro/__helpers__/test-factories.ts",
@@ -3633,7 +4003,7 @@
       ]
     },
     {
-      "id": "n175",
+      "id": "n194",
       "label": "tests / middleware",
       "path": "tests/middleware",
       "layerId": "L0",
@@ -3641,7 +4011,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 98,
+      "lineCount": 102,
       "languages": [
         "typescript"
       ],
@@ -3651,51 +4021,51 @@
       ]
     },
     {
-      "id": "n176",
+      "id": "n195",
       "label": "tests / omniconnect",
       "path": "tests/omniconnect",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "auth-security",
       "color": "#6366f1",
-      "fileCount": 12,
-      "lineCount": 2601,
+      "fileCount": 14,
+      "lineCount": 2903,
       "languages": [
         "typescript"
       ],
-      "size": 16.127616066858735,
+      "size": 17.03819239238717,
       "files": [
         "tests/omniconnect/auth-session-storage.test.ts",
         "tests/omniconnect/correlation.test.ts",
         "tests/omniconnect/encrypted-storage.test.ts",
-        "tests/omniconnect/fixtures/test-data.ts",
-        "tests/omniconnect/meta-business-connector.test.ts"
+        "tests/omniconnect/entitlements-service.spec.ts",
+        "tests/omniconnect/fixtures/test-data.ts"
       ]
     },
     {
-      "id": "n177",
+      "id": "n196",
       "label": "tests / omnidash",
       "path": "tests/omnidash",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "dashboard",
       "color": "#6366f1",
-      "fileCount": 41,
-      "lineCount": 6294,
+      "fileCount": 77,
+      "lineCount": 9728,
       "languages": [
         "typescript"
       ],
-      "size": 25.087845662790578,
+      "size": 31.189741903388683,
       "files": [
+        "tests/omnidash/_speech-recognition-test-helpers.ts",
         "tests/omnidash/_test-helpers.ts",
         "tests/omnidash/admin-unification.spec.ts",
-        "tests/omnidash/agentPrefs.spec.ts",
-        "tests/omnidash/apex-agent-avatar.spec.tsx",
-        "tests/omnidash/api-extended.test.ts"
+        "tests/omnidash/agent-avatar-assets.contract.spec.ts",
+        "tests/omnidash/apex-agent-avatar-selector.spec.tsx"
       ]
     },
     {
-      "id": "n178",
+      "id": "n197",
       "label": "tests / omnilink-port.test.ts",
       "path": "tests/omnilink-port.test.ts",
       "layerId": "L0",
@@ -3713,7 +4083,7 @@
       ]
     },
     {
-      "id": "n179",
+      "id": "n198",
       "label": "tests / omnilink-scopes.test.ts",
       "path": "tests/omnilink-scopes.test.ts",
       "layerId": "L0",
@@ -3731,7 +4101,7 @@
       ]
     },
     {
-      "id": "n180",
+      "id": "n199",
       "label": "tests / omnilink",
       "path": "tests/omnilink",
       "layerId": "L0",
@@ -3750,7 +4120,7 @@
       ]
     },
     {
-      "id": "n181",
+      "id": "n200",
       "label": "tests / omniport-engine.spec.ts",
       "path": "tests/omniport-engine.spec.ts",
       "layerId": "L0",
@@ -3768,7 +4138,7 @@
       ]
     },
     {
-      "id": "n182",
+      "id": "n201",
       "label": "tests / omniport.adapter.test.ts",
       "path": "tests/omniport.adapter.test.ts",
       "layerId": "L0",
@@ -3786,7 +4156,26 @@
       ]
     },
     {
-      "id": "n183",
+      "id": "n202",
+      "label": "tests / physiomni",
+      "path": "tests/physiomni",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 2,
+      "lineCount": 223,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/physiomni/physiomni-paywall.spec.ts",
+        "tests/physiomni/safety-gating.spec.ts"
+      ]
+    },
+    {
+      "id": "n203",
       "label": "tests / prompt-defense",
       "path": "tests/prompt-defense",
       "layerId": "L0",
@@ -3804,7 +4193,25 @@
       ]
     },
     {
-      "id": "n184",
+      "id": "n204",
+      "label": "tests / pwa",
+      "path": "tests/pwa",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 98,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/pwa/swInit.spec.ts"
+      ]
+    },
+    {
+      "id": "n205",
       "label": "tests / quality",
       "path": "tests/quality",
       "layerId": "L0",
@@ -3823,25 +4230,51 @@
       ]
     },
     {
-      "id": "n185",
-      "label": "tests / rsi",
-      "path": "tests/rsi",
+      "id": "n206",
+      "label": "tests / release",
+      "path": "tests/release",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 71,
+      "fileCount": 5,
+      "lineCount": 747,
       "languages": [
-        "python"
+        "typescript"
       ],
-      "size": 8,
+      "size": 8.64291617453276,
       "files": [
-        "tests/rsi/test_model_gateway.py"
+        "tests/release/claim-truth.spec.ts",
+        "tests/release/eyes-vision-surface.spec.ts",
+        "tests/release/identity-webauthn-surface.spec.ts",
+        "tests/release/omni-sentry-surface.spec.ts",
+        "tests/release/omni-trace-surface.spec.ts"
       ]
     },
     {
-      "id": "n186",
+      "id": "n207",
+      "label": "tests / rsi",
+      "path": "tests/rsi",
+      "layerId": "L4",
+      "layerName": "Web3 / Chain",
+      "domain": "web3",
+      "color": "#8b5cf6",
+      "fileCount": 5,
+      "lineCount": 827,
+      "languages": [
+        "python"
+      ],
+      "size": 9.093954035511725,
+      "files": [
+        "tests/rsi/conftest.py",
+        "tests/rsi/test_build_evidence.py",
+        "tests/rsi/test_decision.py",
+        "tests/rsi/test_model_gateway.py",
+        "tests/rsi/test_policy_engine.py"
+      ]
+    },
+    {
+      "id": "n208",
       "label": "tests / runtime-remediation.spec.ts",
       "path": "tests/runtime-remediation.spec.ts",
       "layerId": "L0",
@@ -3849,7 +4282,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 84,
+      "lineCount": 93,
       "languages": [
         "typescript"
       ],
@@ -3859,7 +4292,7 @@
       ]
     },
     {
-      "id": "n187",
+      "id": "n209",
       "label": "tests / security",
       "path": "tests/security",
       "layerId": "L0",
@@ -3867,21 +4300,21 @@
       "domain": "auth-security",
       "color": "#6366f1",
       "fileCount": 8,
-      "lineCount": 693,
+      "lineCount": 726,
       "languages": [
         "typescript"
       ],
-      "size": 8.324662155306964,
+      "size": 8.520563361656317,
       "files": [
         "tests/security/auditLog.spec.ts",
         "tests/security/chart-xss.test.tsx",
         "tests/security/debug-logger-extended.test.ts",
         "tests/security/debug-logger.test.ts",
-        "tests/security/promptDefense.spec.ts"
+        "tests/security/production-hardening-regression.test.ts"
       ]
     },
     {
-      "id": "n188",
+      "id": "n210",
       "label": "tests / setup.ts",
       "path": "tests/setup.ts",
       "layerId": "L0",
@@ -3889,7 +4322,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 46,
+      "lineCount": 56,
       "languages": [
         "typescript"
       ],
@@ -3899,45 +4332,66 @@
       ]
     },
     {
-      "id": "n189",
+      "id": "n211",
+      "label": "tests / setup",
+      "path": "tests/setup",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 10,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/setup/vitest.setup.ts"
+      ]
+    },
+    {
+      "id": "n212",
       "label": "tests / smoke",
       "path": "tests/smoke",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 1,
-      "lineCount": 161,
+      "fileCount": 5,
+      "lineCount": 245,
       "languages": [
-        "javascript"
+        "javascript",
+        "typescript"
       ],
       "size": 8,
       "files": [
-        "tests/smoke/assets-check.mjs"
+        "tests/smoke/assets-check.mjs",
+        "tests/smoke/prompt16-rls-tenant-isolation-secrets-retention-privacy-migrations.test.ts",
+        "tests/smoke/prompt17-claims.test.ts",
+        "tests/smoke/prompt17-launch-claims-capability-badges-demo-gating-pwa-assets-accessibility.test.ts",
+        "tests/smoke/prompt17-pwa-seo-assets.test.ts"
       ]
     },
     {
-      "id": "n190",
+      "id": "n213",
       "label": "tests / stores",
       "path": "tests/stores",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "testing",
       "color": "#6366f1",
-      "fileCount": 3,
-      "lineCount": 243,
+      "fileCount": 1,
+      "lineCount": 127,
       "languages": [
         "typescript"
       ],
       "size": 8,
       "files": [
-        "tests/stores/notificationStore.spec.ts",
-        "tests/stores/omniBoardStore.spec.ts",
-        "tests/stores/userRoleStore.spec.ts"
+        "tests/stores/omniBoardStore.spec.ts"
       ]
     },
     {
-      "id": "n191",
+      "id": "n214",
       "label": "tests / stress",
       "path": "tests/stress",
       "layerId": "L0",
@@ -3945,11 +4399,11 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 7,
-      "lineCount": 1703,
+      "lineCount": 1529,
       "languages": [
         "typescript"
       ],
-      "size": 13.049904214207858,
+      "size": 12.365273955719704,
       "files": [
         "tests/stress/battery.spec.ts",
         "tests/stress/integration-stress.spec.ts",
@@ -3959,7 +4413,44 @@
       ]
     },
     {
-      "id": "n192",
+      "id": "n215",
+      "label": "tests / supabase",
+      "path": "tests/supabase",
+      "layerId": "L3",
+      "layerName": "Data & Auth",
+      "domain": "testing",
+      "color": "#3b82f6",
+      "fileCount": 2,
+      "lineCount": 222,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/supabase/skill-entitlement-migration.spec.ts",
+        "tests/supabase/skill-provider.spec.ts"
+      ]
+    },
+    {
+      "id": "n216",
+      "label": "tests / telemetry",
+      "path": "tests/telemetry",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 88,
+      "languages": [
+        "typescript"
+      ],
+      "size": 8,
+      "files": [
+        "tests/telemetry/observability.test.ts"
+      ]
+    },
+    {
+      "id": "n217",
       "label": "tests / test_dashboard.py",
       "path": "tests/test_dashboard.py",
       "layerId": "L0",
@@ -3977,7 +4468,7 @@
       ]
     },
     {
-      "id": "n193",
+      "id": "n218",
       "label": "tests / test_guard_rail_alert.py",
       "path": "tests/test_guard_rail_alert.py",
       "layerId": "L0",
@@ -3985,7 +4476,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 68,
+      "lineCount": 72,
       "languages": [
         "python"
       ],
@@ -3995,7 +4486,7 @@
       ]
     },
     {
-      "id": "n194",
+      "id": "n219",
       "label": "tests / test_idempotency_metrics.py",
       "path": "tests/test_idempotency_metrics.py",
       "layerId": "L0",
@@ -4003,7 +4494,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 58,
+      "lineCount": 71,
       "languages": [
         "python"
       ],
@@ -4013,7 +4504,25 @@
       ]
     },
     {
-      "id": "n195",
+      "id": "n220",
+      "label": "tests / test_patch_docs.py",
+      "path": "tests/test_patch_docs.py",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 313,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "tests/test_patch_docs.py"
+      ]
+    },
+    {
+      "id": "n221",
       "label": "tests / test_receipt_cleanup.py",
       "path": "tests/test_receipt_cleanup.py",
       "layerId": "L0",
@@ -4031,7 +4540,25 @@
       ]
     },
     {
-      "id": "n196",
+      "id": "n222",
+      "label": "tests / test_sync_payload.py",
+      "path": "tests/test_sync_payload.py",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "testing",
+      "color": "#6366f1",
+      "fileCount": 1,
+      "lineCount": 295,
+      "languages": [
+        "python"
+      ],
+      "size": 8,
+      "files": [
+        "tests/test_sync_payload.py"
+      ]
+    },
+    {
+      "id": "n223",
       "label": "tests / today.spec.tsx",
       "path": "tests/today.spec.tsx",
       "layerId": "L0",
@@ -4039,7 +4566,7 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 146,
+      "lineCount": 136,
       "languages": [
         "typescript"
       ],
@@ -4049,7 +4576,7 @@
       ]
     },
     {
-      "id": "n197",
+      "id": "n224",
       "label": "tests / triforce",
       "path": "tests/triforce",
       "layerId": "L0",
@@ -4068,7 +4595,7 @@
       ]
     },
     {
-      "id": "n198",
+      "id": "n225",
       "label": "tests / unit",
       "path": "tests/unit",
       "layerId": "L0",
@@ -4076,11 +4603,11 @@
       "domain": "testing",
       "color": "#6366f1",
       "fileCount": 5,
-      "lineCount": 656,
+      "lineCount": 619,
       "languages": [
         "typescript"
       ],
-      "size": 8.099382692526634,
+      "size": 8,
       "files": [
         "tests/unit/connector-scope-drift.spec.ts",
         "tests/unit/maestro-execution.test.ts",
@@ -4090,7 +4617,7 @@
       ]
     },
     {
-      "id": "n199",
+      "id": "n226",
       "label": "tests / ute.test.ts",
       "path": "tests/ute.test.ts",
       "layerId": "L0",
@@ -4108,7 +4635,7 @@
       ]
     },
     {
-      "id": "n200",
+      "id": "n227",
       "label": "tests / web3",
       "path": "tests/web3",
       "layerId": "L4",
@@ -4116,11 +4643,11 @@
       "domain": "web3",
       "color": "#8b5cf6",
       "fileCount": 3,
-      "lineCount": 699,
+      "lineCount": 707,
       "languages": [
         "typescript"
       ],
-      "size": 8.360621986431392,
+      "size": 8.408329203831164,
       "files": [
         "tests/web3/signature-verification.test.ts",
         "tests/web3/siwe-message.test.ts",
@@ -4128,7 +4655,7 @@
       ]
     },
     {
-      "id": "n201",
+      "id": "n228",
       "label": "tests / worldwide-wildcard",
       "path": "tests/worldwide-wildcard",
       "layerId": "L0",
@@ -4136,11 +4663,11 @@
       "domain": "i18n",
       "color": "#6366f1",
       "fileCount": 11,
-      "lineCount": 691,
+      "lineCount": 690,
       "languages": [
         "typescript"
       ],
-      "size": 8.312640976248161,
+      "size": 8.306623862918075,
       "files": [
         "tests/worldwide-wildcard/playwright/e2e.spec.ts",
         "tests/worldwide-wildcard/playwright/playwright.config.ts",
@@ -4150,7 +4677,7 @@
       ]
     },
     {
-      "id": "n202",
+      "id": "n229",
       "label": "tests / zero-trust",
       "path": "tests/zero-trust",
       "layerId": "L0",
@@ -4169,744 +4696,798 @@
       ]
     },
     {
-      "id": "n203",
-      "label": "tools / rsi",
-      "path": "tools/rsi",
+      "id": "n230",
+      "label": "tools / provisioning",
+      "path": "tools/provisioning",
       "layerId": "L0",
       "layerName": "Client Apps",
       "domain": "core",
       "color": "#6366f1",
       "fileCount": 1,
-      "lineCount": 67,
+      "lineCount": 254,
       "languages": [
         "python"
       ],
       "size": 8,
       "files": [
-        "tools/rsi/model_gateway.py"
+        "tools/provisioning/provision_pilot_nodes.py"
+      ]
+    },
+    {
+      "id": "n231",
+      "label": "tools / rsi",
+      "path": "tools/rsi",
+      "layerId": "L0",
+      "layerName": "Client Apps",
+      "domain": "ui-components",
+      "color": "#6366f1",
+      "fileCount": 5,
+      "lineCount": 1202,
+      "languages": [
+        "python"
+      ],
+      "size": 10.963576058932597,
+      "files": [
+        "tools/rsi/build_evidence.py",
+        "tools/rsi/decision.py",
+        "tools/rsi/model_gateway.py",
+        "tools/rsi/policy_engine.py",
+        "tools/rsi/types.py"
       ]
     }
   ],
   "edges": [
     {
-      "source": "n6",
-      "target": "n5"
-    },
-    {
-      "source": "n7",
-      "target": "n6"
-    },
-    {
-      "source": "n7",
+      "source": "n9",
       "target": "n8"
     },
     {
-      "source": "n7",
-      "target": "n5"
-    },
-    {
-      "source": "n8",
-      "target": "n6"
-    },
-    {
-      "source": "n9",
-      "target": "n6"
+      "source": "n10",
+      "target": "n9"
     },
     {
       "source": "n10",
-      "target": "n6"
+      "target": "n11"
+    },
+    {
+      "source": "n10",
+      "target": "n8"
+    },
+    {
+      "source": "n11",
+      "target": "n9"
+    },
+    {
+      "source": "n12",
+      "target": "n9"
     },
     {
       "source": "n13",
-      "target": "n135"
+      "target": "n9"
     },
     {
       "source": "n16",
-      "target": "n128"
+      "target": "n152"
     },
     {
-      "source": "n23",
-      "target": "n135"
+      "source": "n19",
+      "target": "n65"
     },
     {
-      "source": "n29",
-      "target": "n24"
-    },
-    {
-      "source": "n29",
-      "target": "n25"
-    },
-    {
-      "source": "n36",
-      "target": "n37"
-    },
-    {
-      "source": "n36",
-      "target": "n38"
-    },
-    {
-      "source": "n37",
-      "target": "n38"
-    },
-    {
-      "source": "n41",
-      "target": "n42"
-    },
-    {
-      "source": "n41",
-      "target": "n47"
-    },
-    {
-      "source": "n41",
-      "target": "n51"
-    },
-    {
-      "source": "n41",
-      "target": "n52"
-    },
-    {
-      "source": "n41",
-      "target": "n54"
-    },
-    {
-      "source": "n41",
-      "target": "n48"
-    },
-    {
-      "source": "n41",
-      "target": "n43"
-    },
-    {
-      "source": "n41",
-      "target": "n46"
-    },
-    {
-      "source": "n41",
-      "target": "n44"
-    },
-    {
-      "source": "n43",
-      "target": "n41"
-    },
-    {
-      "source": "n45",
-      "target": "n41"
-    },
-    {
-      "source": "n45",
-      "target": "n42"
-    },
-    {
-      "source": "n45",
-      "target": "n46"
-    },
-    {
-      "source": "n45",
-      "target": "n57"
-    },
-    {
-      "source": "n45",
-      "target": "n44"
-    },
-    {
-      "source": "n45",
-      "target": "n55"
-    },
-    {
-      "source": "n45",
-      "target": "n43"
-    },
-    {
-      "source": "n47",
-      "target": "n52"
-    },
-    {
-      "source": "n48",
-      "target": "n52"
-    },
-    {
-      "source": "n49",
-      "target": "n52"
-    },
-    {
-      "source": "n51",
-      "target": "n47"
-    },
-    {
-      "source": "n52",
-      "target": "n44"
-    },
-    {
-      "source": "n53",
-      "target": "n44"
-    },
-    {
-      "source": "n54",
-      "target": "n47"
-    },
-    {
-      "source": "n54",
-      "target": "n52"
-    },
-    {
-      "source": "n55",
-      "target": "n42"
-    },
-    {
-      "source": "n55",
-      "target": "n43"
-    },
-    {
-      "source": "n55",
-      "target": "n46"
-    },
-    {
-      "source": "n55",
-      "target": "n49"
-    },
-    {
-      "source": "n55",
-      "target": "n54"
-    },
-    {
-      "source": "n55",
-      "target": "n57"
-    },
-    {
-      "source": "n56",
-      "target": "n52"
-    },
-    {
-      "source": "n56",
-      "target": "n49"
-    },
-    {
-      "source": "n56",
-      "target": "n54"
-    },
-    {
-      "source": "n56",
-      "target": "n41"
-    },
-    {
-      "source": "n56",
-      "target": "n57"
-    },
-    {
-      "source": "n56",
-      "target": "n47"
-    },
-    {
-      "source": "n56",
-      "target": "n44"
-    },
-    {
-      "source": "n56",
-      "target": "n42"
-    },
-    {
-      "source": "n56",
-      "target": "n43"
-    },
-    {
-      "source": "n56",
-      "target": "n46"
-    },
-    {
-      "source": "n56",
-      "target": "n51"
-    },
-    {
-      "source": "n56",
-      "target": "n37"
-    },
-    {
-      "source": "n56",
-      "target": "n50"
-    },
-    {
-      "source": "n56",
-      "target": "n48"
-    },
-    {
-      "source": "n56",
-      "target": "n55"
-    },
-    {
-      "source": "n57",
-      "target": "n47"
-    },
-    {
-      "source": "n57",
-      "target": "n41"
-    },
-    {
-      "source": "n60",
-      "target": "n142"
-    },
-    {
-      "source": "n64",
-      "target": "n129"
-    },
-    {
-      "source": "n65",
+      "source": "n19",
       "target": "n145"
     },
     {
-      "source": "n74",
-      "target": "n145"
+      "source": "n19",
+      "target": "n159"
     },
     {
-      "source": "n79",
-      "target": "n130"
+      "source": "n19",
+      "target": "n163"
     },
     {
-      "source": "n84",
-      "target": "n127"
+      "source": "n25",
+      "target": "n152"
     },
     {
-      "source": "n89",
-      "target": "n145"
+      "source": "n32",
+      "target": "n27"
     },
     {
-      "source": "n104",
-      "target": "n201"
+      "source": "n32",
+      "target": "n28"
     },
     {
-      "source": "n105",
-      "target": "n150"
+      "source": "n41",
+      "target": "n42"
     },
     {
-      "source": "n108",
-      "target": "n111"
+      "source": "n41",
+      "target": "n43"
     },
     {
-      "source": "n108",
-      "target": "n119"
+      "source": "n42",
+      "target": "n43"
     },
     {
-      "source": "n108",
-      "target": "n107"
+      "source": "n46",
+      "target": "n47"
     },
     {
-      "source": "n109",
-      "target": "n111"
+      "source": "n46",
+      "target": "n52"
     },
     {
-      "source": "n110",
-      "target": "n118"
+      "source": "n46",
+      "target": "n56"
     },
     {
-      "source": "n110",
-      "target": "n114"
+      "source": "n46",
+      "target": "n57"
     },
     {
-      "source": "n110",
-      "target": "n108"
-    },
-    {
-      "source": "n110",
-      "target": "n112"
-    },
-    {
-      "source": "n110",
-      "target": "n111"
-    },
-    {
-      "source": "n111",
+      "source": "n46",
       "target": "n59"
     },
     {
-      "source": "n112",
-      "target": "n145"
+      "source": "n46",
+      "target": "n53"
     },
     {
-      "source": "n115",
-      "target": "n111"
+      "source": "n46",
+      "target": "n48"
     },
     {
-      "source": "n116",
-      "target": "n118"
+      "source": "n46",
+      "target": "n49"
     },
     {
-      "source": "n116",
-      "target": "n108"
+      "source": "n48",
+      "target": "n46"
     },
     {
-      "source": "n116",
-      "target": "n114"
+      "source": "n50",
+      "target": "n46"
     },
     {
-      "source": "n116",
-      "target": "n115"
+      "source": "n50",
+      "target": "n47"
     },
     {
-      "source": "n116",
-      "target": "n109"
+      "source": "n50",
+      "target": "n51"
     },
     {
-      "source": "n116",
-      "target": "n117"
+      "source": "n50",
+      "target": "n63"
     },
     {
-      "source": "n116",
-      "target": "n111"
+      "source": "n50",
+      "target": "n49"
     },
     {
-      "source": "n116",
-      "target": "n113"
+      "source": "n50",
+      "target": "n60"
     },
     {
-      "source": "n117",
-      "target": "n111"
+      "source": "n50",
+      "target": "n48"
     },
     {
-      "source": "n118",
-      "target": "n114"
+      "source": "n52",
+      "target": "n57"
     },
     {
-      "source": "n118",
-      "target": "n108"
+      "source": "n53",
+      "target": "n57"
     },
     {
-      "source": "n118",
-      "target": "n109"
+      "source": "n54",
+      "target": "n57"
     },
     {
-      "source": "n118",
-      "target": "n115"
+      "source": "n56",
+      "target": "n52"
     },
     {
-      "source": "n118",
-      "target": "n117"
+      "source": "n57",
+      "target": "n49"
     },
     {
-      "source": "n118",
-      "target": "n111"
+      "source": "n58",
+      "target": "n49"
     },
     {
-      "source": "n119",
-      "target": "n111"
+      "source": "n59",
+      "target": "n52"
     },
     {
-      "source": "n120",
-      "target": "n114"
+      "source": "n59",
+      "target": "n57"
     },
     {
-      "source": "n120",
-      "target": "n107"
+      "source": "n60",
+      "target": "n47"
     },
     {
-      "source": "n120",
-      "target": "n108"
+      "source": "n60",
+      "target": "n48"
     },
     {
-      "source": "n120",
-      "target": "n111"
+      "source": "n60",
+      "target": "n51"
     },
     {
-      "source": "n120",
-      "target": "n119"
+      "source": "n60",
+      "target": "n54"
     },
     {
-      "source": "n120",
-      "target": "n117"
+      "source": "n60",
+      "target": "n59"
     },
     {
-      "source": "n120",
-      "target": "n118"
+      "source": "n60",
+      "target": "n63"
     },
     {
-      "source": "n122",
-      "target": "n128"
+      "source": "n62",
+      "target": "n57"
     },
     {
-      "source": "n124",
-      "target": "n140"
+      "source": "n62",
+      "target": "n54"
     },
     {
-      "source": "n124",
-      "target": "n133"
+      "source": "n62",
+      "target": "n59"
     },
     {
-      "source": "n125",
+      "source": "n62",
+      "target": "n46"
+    },
+    {
+      "source": "n62",
+      "target": "n63"
+    },
+    {
+      "source": "n62",
+      "target": "n52"
+    },
+    {
+      "source": "n62",
+      "target": "n49"
+    },
+    {
+      "source": "n62",
+      "target": "n47"
+    },
+    {
+      "source": "n62",
+      "target": "n48"
+    },
+    {
+      "source": "n62",
+      "target": "n51"
+    },
+    {
+      "source": "n62",
+      "target": "n56"
+    },
+    {
+      "source": "n62",
+      "target": "n42"
+    },
+    {
+      "source": "n62",
+      "target": "n55"
+    },
+    {
+      "source": "n62",
+      "target": "n53"
+    },
+    {
+      "source": "n62",
+      "target": "n60"
+    },
+    {
+      "source": "n63",
+      "target": "n52"
+    },
+    {
+      "source": "n63",
+      "target": "n46"
+    },
+    {
+      "source": "n66",
+      "target": "n159"
+    },
+    {
+      "source": "n71",
       "target": "n146"
     },
     {
-      "source": "n125",
-      "target": "n16"
+      "source": "n72",
+      "target": "n162"
+    },
+    {
+      "source": "n82",
+      "target": "n162"
+    },
+    {
+      "source": "n91",
+      "target": "n147"
+    },
+    {
+      "source": "n96",
+      "target": "n144"
+    },
+    {
+      "source": "n101",
+      "target": "n162"
+    },
+    {
+      "source": "n121",
+      "target": "n228"
+    },
+    {
+      "source": "n122",
+      "target": "n168"
     },
     {
       "source": "n125",
+      "target": "n128"
+    },
+    {
+      "source": "n125",
+      "target": "n136"
+    },
+    {
+      "source": "n125",
+      "target": "n124"
+    },
+    {
+      "source": "n126",
+      "target": "n128"
+    },
+    {
+      "source": "n127",
       "target": "n135"
     },
     {
       "source": "n127",
-      "target": "n59"
+      "target": "n131"
     },
     {
-      "source": "n128",
-      "target": "n122"
-    },
-    {
-      "source": "n133",
-      "target": "n151"
-    },
-    {
-      "source": "n133",
-      "target": "n16"
-    },
-    {
-      "source": "n140",
-      "target": "n133"
-    },
-    {
-      "source": "n140",
-      "target": "n135"
-    },
-    {
-      "source": "n140",
-      "target": "n115"
-    },
-    {
-      "source": "n140",
-      "target": "n124"
-    },
-    {
-      "source": "n141",
-      "target": "n146"
-    },
-    {
-      "source": "n141",
-      "target": "n133"
-    },
-    {
-      "source": "n141",
-      "target": "n59"
-    },
-    {
-      "source": "n142",
-      "target": "n128"
-    },
-    {
-      "source": "n144",
-      "target": "n123"
-    },
-    {
-      "source": "n144",
-      "target": "n149"
-    },
-    {
-      "source": "n149",
-      "target": "n123"
-    },
-    {
-      "source": "n150",
-      "target": "n135"
-    },
-    {
-      "source": "n150",
-      "target": "n136"
-    },
-    {
-      "source": "n150",
-      "target": "n133"
-    },
-    {
-      "source": "n153",
-      "target": "n151"
-    },
-    {
-      "source": "n154",
-      "target": "n11"
-    },
-    {
-      "source": "n154",
-      "target": "n23"
-    },
-    {
-      "source": "n154",
-      "target": "n135"
-    },
-    {
-      "source": "n154",
-      "target": "n13"
-    },
-    {
-      "source": "n154",
-      "target": "n14"
-    },
-    {
-      "source": "n154",
-      "target": "n128"
-    },
-    {
-      "source": "n155",
-      "target": "n133"
-    },
-    {
-      "source": "n156",
-      "target": "n16"
-    },
-    {
-      "source": "n157",
-      "target": "n126"
-    },
-    {
-      "source": "n157",
-      "target": "n133"
-    },
-    {
-      "source": "n157",
-      "target": "n150"
-    },
-    {
-      "source": "n157",
-      "target": "n145"
-    },
-    {
-      "source": "n159",
-      "target": "n59"
-    },
-    {
-      "source": "n159",
-      "target": "n128"
-    },
-    {
-      "source": "n159",
-      "target": "n142"
-    },
-    {
-      "source": "n160",
-      "target": "n129"
-    },
-    {
-      "source": "n161",
-      "target": "n135"
-    },
-    {
-      "source": "n161",
-      "target": "n145"
-    },
-    {
-      "source": "n163",
-      "target": "n16"
-    },
-    {
-      "source": "n164",
-      "target": "n140"
-    },
-    {
-      "source": "n165",
-      "target": "n130"
-    },
-    {
-      "source": "n168",
-      "target": "n128"
-    },
-    {
-      "source": "n168",
-      "target": "n134"
-    },
-    {
-      "source": "n170",
-      "target": "n135"
-    },
-    {
-      "source": "n170",
-      "target": "n16"
-    },
-    {
-      "source": "n174",
-      "target": "n133"
-    },
-    {
-      "source": "n175",
-      "target": "n12"
-    },
-    {
-      "source": "n176",
-      "target": "n140"
-    },
-    {
-      "source": "n177",
-      "target": "n16"
-    },
-    {
-      "source": "n177",
-      "target": "n141"
-    },
-    {
-      "source": "n177",
-      "target": "n133"
-    },
-    {
-      "source": "n177",
-      "target": "n146"
-    },
-    {
-      "source": "n177",
-      "target": "n59"
-    },
-    {
-      "source": "n177",
-      "target": "n127"
-    },
-    {
-      "source": "n177",
-      "target": "n147"
-    },
-    {
-      "source": "n181",
-      "target": "n140"
-    },
-    {
-      "source": "n183",
-      "target": "n145"
-    },
-    {
-      "source": "n187",
-      "target": "n145"
-    },
-    {
-      "source": "n187",
+      "source": "n127",
       "target": "n125"
     },
     {
-      "source": "n187",
+      "source": "n127",
+      "target": "n129"
+    },
+    {
+      "source": "n127",
+      "target": "n128"
+    },
+    {
+      "source": "n128",
+      "target": "n65"
+    },
+    {
+      "source": "n129",
+      "target": "n162"
+    },
+    {
+      "source": "n132",
+      "target": "n128"
+    },
+    {
+      "source": "n133",
       "target": "n135"
     },
     {
-      "source": "n192",
-      "target": "n37"
+      "source": "n133",
+      "target": "n125"
     },
     {
-      "source": "n196",
-      "target": "n16"
+      "source": "n133",
+      "target": "n131"
     },
     {
-      "source": "n198",
-      "target": "n147"
+      "source": "n133",
+      "target": "n132"
     },
     {
-      "source": "n198",
-      "target": "n117"
+      "source": "n133",
+      "target": "n126"
     },
     {
-      "source": "n198",
-      "target": "n111"
+      "source": "n133",
+      "target": "n134"
     },
     {
-      "source": "n199",
+      "source": "n133",
+      "target": "n128"
+    },
+    {
+      "source": "n133",
+      "target": "n130"
+    },
+    {
+      "source": "n134",
+      "target": "n128"
+    },
+    {
+      "source": "n135",
+      "target": "n131"
+    },
+    {
+      "source": "n135",
+      "target": "n125"
+    },
+    {
+      "source": "n135",
+      "target": "n126"
+    },
+    {
+      "source": "n135",
+      "target": "n132"
+    },
+    {
+      "source": "n135",
+      "target": "n134"
+    },
+    {
+      "source": "n135",
+      "target": "n128"
+    },
+    {
+      "source": "n136",
+      "target": "n128"
+    },
+    {
+      "source": "n137",
+      "target": "n131"
+    },
+    {
+      "source": "n137",
+      "target": "n124"
+    },
+    {
+      "source": "n137",
+      "target": "n125"
+    },
+    {
+      "source": "n137",
+      "target": "n128"
+    },
+    {
+      "source": "n137",
+      "target": "n136"
+    },
+    {
+      "source": "n137",
+      "target": "n134"
+    },
+    {
+      "source": "n137",
+      "target": "n135"
+    },
+    {
+      "source": "n139",
+      "target": "n145"
+    },
+    {
+      "source": "n141",
+      "target": "n150"
+    },
+    {
+      "source": "n142",
+      "target": "n163"
+    },
+    {
+      "source": "n142",
+      "target": "n152"
+    },
+    {
+      "source": "n144",
+      "target": "n65"
+    },
+    {
+      "source": "n145",
+      "target": "n139"
+    },
+    {
+      "source": "n145",
+      "target": "n152"
+    },
+    {
+      "source": "n150",
+      "target": "n145"
+    },
+    {
+      "source": "n150",
+      "target": "n159"
+    },
+    {
+      "source": "n150",
+      "target": "n169"
+    },
+    {
+      "source": "n150",
+      "target": "n19"
+    },
+    {
+      "source": "n152",
+      "target": "n145"
+    },
+    {
+      "source": "n154",
+      "target": "n164"
+    },
+    {
+      "source": "n154",
+      "target": "n152"
+    },
+    {
+      "source": "n157",
+      "target": "n150"
+    },
+    {
+      "source": "n157",
+      "target": "n152"
+    },
+    {
+      "source": "n157",
+      "target": "n132"
+    },
+    {
+      "source": "n157",
+      "target": "n141"
+    },
+    {
+      "source": "n158",
+      "target": "n150"
+    },
+    {
+      "source": "n158",
+      "target": "n65"
+    },
+    {
+      "source": "n159",
+      "target": "n145"
+    },
+    {
+      "source": "n159",
+      "target": "n150"
+    },
+    {
+      "source": "n161",
       "target": "n140"
     },
     {
-      "source": "n201",
-      "target": "n114"
+      "source": "n161",
+      "target": "n167"
+    },
+    {
+      "source": "n163",
+      "target": "n19"
+    },
+    {
+      "source": "n167",
+      "target": "n140"
+    },
+    {
+      "source": "n169",
+      "target": "n67"
+    },
+    {
+      "source": "n172",
+      "target": "n169"
+    },
+    {
+      "source": "n173",
+      "target": "n14"
+    },
+    {
+      "source": "n173",
+      "target": "n25"
+    },
+    {
+      "source": "n173",
+      "target": "n152"
+    },
+    {
+      "source": "n173",
+      "target": "n16"
+    },
+    {
+      "source": "n173",
+      "target": "n17"
+    },
+    {
+      "source": "n173",
+      "target": "n145"
+    },
+    {
+      "source": "n174",
+      "target": "n18"
+    },
+    {
+      "source": "n175",
+      "target": "n150"
+    },
+    {
+      "source": "n176",
+      "target": "n77"
+    },
+    {
+      "source": "n177",
+      "target": "n19"
+    },
+    {
+      "source": "n179",
+      "target": "n65"
+    },
+    {
+      "source": "n179",
+      "target": "n145"
+    },
+    {
+      "source": "n179",
+      "target": "n159"
+    },
+    {
+      "source": "n180",
+      "target": "n146"
+    },
+    {
+      "source": "n181",
+      "target": "n152"
+    },
+    {
+      "source": "n181",
+      "target": "n162"
+    },
+    {
+      "source": "n184",
+      "target": "n157"
+    },
+    {
+      "source": "n185",
+      "target": "n147"
+    },
+    {
+      "source": "n188",
+      "target": "n145"
+    },
+    {
+      "source": "n188",
+      "target": "n151"
+    },
+    {
+      "source": "n189",
+      "target": "n152"
+    },
+    {
+      "source": "n189",
+      "target": "n164"
+    },
+    {
+      "source": "n191",
+      "target": "n19"
+    },
+    {
+      "source": "n193",
+      "target": "n150"
+    },
+    {
+      "source": "n194",
+      "target": "n15"
+    },
+    {
+      "source": "n195",
+      "target": "n157"
+    },
+    {
+      "source": "n195",
+      "target": "n152"
+    },
+    {
+      "source": "n196",
+      "target": "n19"
+    },
+    {
+      "source": "n196",
+      "target": "n158"
+    },
+    {
+      "source": "n196",
+      "target": "n150"
+    },
+    {
+      "source": "n196",
+      "target": "n65"
+    },
+    {
+      "source": "n196",
+      "target": "n144"
+    },
+    {
+      "source": "n196",
+      "target": "n165"
+    },
+    {
+      "source": "n200",
+      "target": "n157"
     },
     {
       "source": "n202",
-      "target": "n150"
+      "target": "n19"
+    },
+    {
+      "source": "n202",
+      "target": "n67"
+    },
+    {
+      "source": "n203",
+      "target": "n162"
+    },
+    {
+      "source": "n204",
+      "target": "n164"
+    },
+    {
+      "source": "n206",
+      "target": "n152"
+    },
+    {
+      "source": "n207",
+      "target": "n231"
+    },
+    {
+      "source": "n209",
+      "target": "n162"
+    },
+    {
+      "source": "n209",
+      "target": "n142"
+    },
+    {
+      "source": "n209",
+      "target": "n152"
+    },
+    {
+      "source": "n216",
+      "target": "n152"
+    },
+    {
+      "source": "n217",
+      "target": "n42"
+    },
+    {
+      "source": "n225",
+      "target": "n165"
+    },
+    {
+      "source": "n225",
+      "target": "n134"
+    },
+    {
+      "source": "n225",
+      "target": "n128"
+    },
+    {
+      "source": "n226",
+      "target": "n157"
+    },
+    {
+      "source": "n228",
+      "target": "n131"
+    },
+    {
+      "source": "n229",
+      "target": "n168"
     }
   ]
 }
