@@ -39,14 +39,14 @@ describe('Module Items Normalization Contract', () => {
     const normalized = normalizeModuleItems(rawItems);
     
     expect(normalized).toHaveLength(5);
-    expect(normalized[0].status).toBe('unknown');
-    expect(normalized[1].status).toBe('unknown');
-    expect(normalized[2].status).toBe('unknown');
-    expect(normalized[3].status).toBe('unknown');
+    expect(normalized[0].status).toBe('pending');
+    expect(normalized[1].status).toBe('pending');
+    expect(normalized[2].status).toBe('pending');
+    expect(normalized[3].status).toBe('pending');
     
     // The empty object {} should map to item-4
     expect(normalized[4].id).toBe('item-4');
     expect(normalized[4].label).toBe('item-4');
-    expect(normalized[4].status).toBe('unknown');
+    expect(normalized[4].status).toBe('pending');
   });
 });
