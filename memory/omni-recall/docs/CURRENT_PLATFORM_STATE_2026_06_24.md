@@ -189,7 +189,7 @@ unless a newer dated file exists.
 | Dev branch vs `main` | even (0 ahead / 0 behind) — same commit |
 | Open PRs | none |
 | Root package version | `1.8.2` (was `1.8.1`; CHANGELOG `1.8.2` section was already written) |
-| Release cut model | **Manual / owner-driven** — deliberate version bump (`changeset version` → `chore: version packages`). CI validates; `compliance.yml` attaches SBOM evidence. See note below on the `softprops/action-gh-release` create-on-missing-tag side effect. |
+| Release cut model | **Manual / owner-driven** — deliberate version bump (`changeset version` → `chore: version packages`). CI validates; `compliance.yml` attaches SBOM evidence **attach-only** (gated so it can never create a tag — see note below). |
 | Previous release | `v1.8.1` → `8772015e` (2026-06-21) |
 
 ### Local gate evidence (run against `8bfb1a6`)
@@ -221,15 +221,14 @@ The documented, intended model is **manual / owner-driven**:
    to run shadow validation / Terraform-flip. **CI validates; it does not certify or decide.**
 3. Owner certifies via `docs/release/owner-approved/`.
 
-**Known side effect (latent gap):** the only piece that is automatic is `compliance.yml` →
-`sbom-gate` → step **"Attach SBOM to GitHub Release (on main push)"**, which uses
-`softprops/action-gh-release@v2` with `tag_name: v<package.json version>`. That action
-*updates assets if the tag exists* but *creates the tag + release if it does not* (its
-default; no flag here disables creation). So a `main` push carrying a `package.json` version
-with no matching tag will auto-create that tag as a side effect — which is **not** the
-intended manual-release authority. If strictly manual tag creation is desired, this step
-should be constrained to attach-only (e.g. only run when the tag already exists). Tracked
-as an open decision for the owner.
+**SBOM step — attach-only (resolved 2026-06-24, owner decision):** the only automatic piece
+is `compliance.yml` → `sbom-gate` → the SBOM attach step, which uses
+`softprops/action-gh-release@v2`. That action *creates a missing tag by default*, so a `main`
+push carrying a new `package.json` version with no matching tag would have auto-created the
+tag — bypassing the manual cut. **Fixed:** the step is now preceded by a
+`git ls-remote --tags` existence check and gated on `steps.tagcheck.outputs.exists == 'true'`,
+so `softprops` runs only when `v<version>` already exists. It can attach SBOM evidence but
+**can never create a tag**. Release cuts remain manual/owner-driven.
 
 ### Guard-alignment fix (this session)
 

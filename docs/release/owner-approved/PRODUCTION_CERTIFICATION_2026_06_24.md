@@ -30,8 +30,8 @@
   **Releases are cut manually by the owner** — the deliberate version bump
   (`changeset version` → `chore: version packages`) is the cut; CI validates and
   `compliance.yml` attaches SBOM evidence to the release. CI does not decide or certify
-  releases. (Caveat: the `softprops/action-gh-release` SBOM step will create a missing tag
-  as a side effect of attaching artifacts — see Known Items.)
+  releases. The `compliance.yml` SBOM step is gated to **attach-only** (it runs only when the
+  `v<version>` tag already exists), so it can never create a tag — see Known Items.
 
 ---
 
@@ -89,7 +89,7 @@ hallucinations in source files are still blocked everywhere they were before.
 |---|---|---|
 | `integration-harness` (run #341) is `in_progress` and has not reported a conclusion across the last three `main` commits (#1484, #1485, #1486). It is **not failing** — it appears parked awaiting an environment/runner gate. | Low | Accepted for certification. The 9 completed CI workflows are green; release validation passed. Owner to confirm the harness completes (or is intentionally manual) before relying on it as a blocking gate. |
 | `package.json` was at `1.8.1` while the `1.8.2` CHANGELOG section was already written. | Low | Resolved — `package.json` bumped to `1.8.2` so the release version matches the changelog. |
-| `compliance.yml` `sbom-gate` uses `softprops/action-gh-release` with `tag_name: v<package.json version>`. That action attaches SBOMs to an existing release but **creates the tag + release if it does not exist** (action default). A `main` push carrying `1.8.2` with no `v1.8.2` tag will therefore auto-create the tag as a side effect — which is not the intended manual-release authority. | Medium | **Open decision for owner.** If strictly manual tagging is required, constrain the step to attach-only (run only when the tag already exists, or create releases by hand and let CI attach SBOMs). |
+| `compliance.yml` `sbom-gate` used `softprops/action-gh-release` (creates a missing tag by default), so a `main` push carrying `1.8.2` with no `v1.8.2` tag would auto-create the tag — bypassing the manual cut. | Medium | **Resolved (owner decision: attach-only).** The SBOM step is now gated on a `git ls-remote` tag-existence check; `softprops` runs only when `v<version>` already exists, so it can attach but never create. Release cuts stay manual/owner-driven. |
 
 ---
 

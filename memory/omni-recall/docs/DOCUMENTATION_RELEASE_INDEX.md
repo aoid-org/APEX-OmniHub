@@ -23,7 +23,7 @@ status: verified
 | Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
 | GitHub workflow files | **23** files in `.github/workflows/` |
 | Release/package versions | Root `package.json` declares **`1.8.2`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. (Note: the `softprops/action-gh-release` SBOM step will create a missing tag as a side effect — see `CURRENT_PLATFORM_STATE_2026_06_24.md`.) |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_24.md`. |
 | SQL migrations | **100** `.sql` files = **96 forward** + **4 rollback** (`migrations/rollback/`) |
 | Edge function dirs | **36** (35 function dirs + `_shared`) |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |

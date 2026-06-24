@@ -105,8 +105,22 @@ jobs:
             build-artifacts/sbom-python.cdx.json
       - name: Get package version
         run: echo "npm_package_version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-      - name: Attach SBOM to GitHub Release (on main push)
+      # Release cuts are MANUAL / owner-driven. This SBOM step attaches evidence to a
+      # release the owner has already cut; it must NEVER create a tag. We therefore gate
+      # softprops/action-gh-release (which creates a missing tag by default) on the tag
+      # already existing. CI validates; owner certifies.
+      - name: Check release tag exists (attach-only; never create)
+        id: tagcheck
         if: github.ref == 'refs/heads/main'
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${npm_package_version}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No tag v${npm_package_version} yet — skipping SBOM attach. Release cuts are manual (owner-driven); CI validates, owner certifies."
+          fi
+      - name: Attach SBOM to GitHub Release (attach-only; existing tag)
+        if: github.ref == 'refs/heads/main' && steps.tagcheck.outputs.exists == 'true'
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           tag_name: v${{ env.npm_package_version }}
