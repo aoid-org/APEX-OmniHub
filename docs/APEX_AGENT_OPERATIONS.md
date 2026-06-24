@@ -623,7 +623,8 @@ grant/revoke flows. No anon grant is added.
 **Operational behavior:** grants are upserted on
 `(tenant_id, user_id, app_id, feature_key)` and revokes are soft revokes
 (`is_active = false`). Missing Supabase credentials, missing rows, or query
-errors remain fail-closed.
+errors remain fail-closed. The `auth.users` foreign key uses `ON DELETE RESTRICT`
+so entitlement rows are not silently purged by user deletion.
 
 **Apply guidance:** this is a new additive/idempotent migration. Apply through
 the standard Supabase migration path only; do not run a full reset or disable

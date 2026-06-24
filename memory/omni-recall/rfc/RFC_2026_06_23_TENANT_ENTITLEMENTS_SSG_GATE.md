@@ -61,6 +61,7 @@ OmniConnect owns tenant connector feature entitlements. Web3 owns wallet/device/
 
 - Table: `public.tenant_entitlements(id, tenant_id, user_id, app_id, feature_key, is_active, created_at, updated_at)`.
 - Unique contract: `(tenant_id, user_id, app_id, feature_key)`.
+- Auth user foreign key uses `ON DELETE RESTRICT` to avoid silent entitlement data loss.
 - RLS: authenticated own-row SELECT; service-role full access.
 - CI: `production-readiness.yml` smoke job installs root + site dependencies and runs `bun run build:ssg` in `apps/omnihub-site`.
 - Spatial: `SpatialEntity.data.id` is required for id-based removal.

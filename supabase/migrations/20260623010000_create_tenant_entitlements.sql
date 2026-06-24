@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS public.tenant_entitlements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id text NOT NULL,
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
   app_id text NOT NULL,
   feature_key text NOT NULL,
   is_active boolean NOT NULL DEFAULT true,
@@ -47,26 +47,55 @@ ALTER TABLE public.tenant_entitlements ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON public.tenant_entitlements TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.tenant_entitlements TO service_role;
 
-DROP POLICY IF EXISTS "Users can view own tenant entitlements" ON public.tenant_entitlements;
-CREATE POLICY "Users can view own tenant entitlements"
-  ON public.tenant_entitlements
-  FOR SELECT
-  TO authenticated
-  USING ((select auth.uid()) = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'tenant_entitlements'
+      AND policyname = 'Users can view own tenant entitlements'
+  ) THEN
+    CREATE POLICY "Users can view own tenant entitlements"
+      ON public.tenant_entitlements
+      FOR SELECT
+      TO authenticated
+      USING ((select auth.uid()) = user_id);
+  END IF;
+END $$;
 
-DROP POLICY IF EXISTS "Service role has full access to tenant entitlements" ON public.tenant_entitlements;
-CREATE POLICY "Service role has full access to tenant entitlements"
-  ON public.tenant_entitlements
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'tenant_entitlements'
+      AND policyname = 'Service role has full access to tenant entitlements'
+  ) THEN
+    CREATE POLICY "Service role has full access to tenant entitlements"
+      ON public.tenant_entitlements
+      FOR ALL
+      TO service_role
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
 
-DROP TRIGGER IF EXISTS update_tenant_entitlements_updated_at ON public.tenant_entitlements;
-CREATE TRIGGER update_tenant_entitlements_updated_at
-  BEFORE UPDATE ON public.tenant_entitlements
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'update_tenant_entitlements_updated_at'
+      AND tgrelid = 'public.tenant_entitlements'::regclass
+  ) THEN
+    CREATE TRIGGER update_tenant_entitlements_updated_at
+      BEFORE UPDATE ON public.tenant_entitlements
+      FOR EACH ROW
+      EXECUTE FUNCTION public.update_updated_at_column();
+  END IF;
+END $$;
 
 COMMENT ON TABLE public.tenant_entitlements IS 'Tenant-scoped OmniConnect feature entitlements by user, app, and feature key';
 COMMENT ON COLUMN public.tenant_entitlements.is_active IS 'Soft-revocation flag; only active rows grant access';
