@@ -197,16 +197,11 @@ function validateEmail(email: string): boolean {
  */
 function sanitizeInput(input: string): string {
   return input
-    .split('&')
-    .join('&amp;')
-    .split('<')
-    .join('&lt;')
-    .split('>')
-    .join('&gt;')
-    .split('"')
-    .join('&quot;')
-    .split("'")
-    .join('&#x27;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;');
 }
 
 /** Allowed protocol for mailto redirects */
