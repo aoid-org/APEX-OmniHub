@@ -1431,6 +1431,10 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
       )}
       {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
       {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
+    </div>
+  );
+}
+
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);

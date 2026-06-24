@@ -54,21 +54,21 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-22, git-verified)
+## Platform Statistics (Repository Snapshot 2026-06-24, git-verified)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 322 TypeScript/TSX files                          |
-| **React Components (`src/`)**                    | 92 `.tsx` component files                         |
+| **Source Files (`src/`)**                        | 328 TypeScript/TSX files (234 `.ts` + 94 `.tsx`)  |
+| **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 33 directories (32 function dirs + `_shared`)     |
-| **Database Migrations (`supabase/migrations/`)** | 98 `.sql` files (94 forward + 4 rollback under `migrations/rollback/`) |
+| **Edge Functions (`supabase/functions/`)**       | 36 directories (35 function dirs + `_shared`)     |
+| **Database Migrations (`supabase/migrations/`)** | 100 `.sql` files (96 forward + 4 rollback under `migrations/rollback/`) |
 | **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 373 spec/test source files (312 TS + 61 Python, git-verified 2026-06-22); latest pass counts are recorded in certification status |
-| **Custom Hooks (`src/` + app surfaces)**         | 39 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 100 files (Temporal workers, activities, security) |
+| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 373+ spec/test source files; latest pass counts are recorded in certification status |
+| **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
+| **Orchestrator (Python)**                        | ~107 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** `main` HEAD `5870a8ec` — PR #1476 "Rebrand SkillForge to OmniSkills and update modal styling". Release line is **1.8.1** (`package.json`). Active fix branch: `fix/prod-readiness-omniboard-links-demoflip-20260623` (PR #1482, open) — OmniBoard FSM production-readiness, Python syntax/linter cleanup (`E702`, `E402`, `S310`, `C901`), and test infrastructure stability checks. The build achieves a 100/100 production-ready, enterprise-grade APEX-OmniHub Platform validation. See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `726b10ee` — PR #1484 "chore: pin Bun runtime & add security regression guards". Release line is **1.8.1** (`package.json`). Active fix branch: `fix/release-certification-owner-approval` (PR #1485, open) — replaces automated certification with owner-approval workflow, resolves CI gate failures caused by stale committed evidence artifacts, deploys proactive agent-destructive-action guardrails, and hardens IDE warnings across TypeScript and test files. **Law: CI validates. Owner certifies.** See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
 
 ---
 

@@ -22,7 +22,7 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-const voiceWindow = globalThis as VoiceTestWindow;
+const voiceWindow = globalThis as unknown as VoiceTestWindow;
 
 const fsmContext = {
   session_id: 'session-1',

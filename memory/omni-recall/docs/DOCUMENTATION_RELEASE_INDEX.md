@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.4.0
-last_audited: 2026-06-22
+version: 1.5.0
+last_audited: 2026-06-24
 status: verified
 ---
 
@@ -10,35 +10,35 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed 2026-06-22 (comprehensive docs pass: repo-truth re-verification of README + omni-recall canonical files; version line corrected 1.7.1 → 1.8.1; portability/storage provider work landed on branch `claude/focused-ptolemy-dgd054`). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_21.md` (a 2026-06-22 refresh is pending).
+> Current repo-truth index refreshed **2026-06-24** (Session 2: PR #1485 certification owner-approval + agent guardrails + comprehensive doc sync). Previous refresh: 2026-06-22 (storage provider portability + README version correction 1.7.1 → 1.8.1). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_24.md`.
 
-## Current Repo Facts Verified in This Pass (2026-06-22)
+## Current Repo Facts Verified in This Pass (2026-06-24)
 
-> Repository counts, HEAD, and versions were directly verified this session against the working tree and `git log`. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked in this docs pass (no live credentials used).
+> Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| `main` HEAD | `1f22570` — chore: exempt apex-governance.yml from ops drift guard |
-| Source files under `src/` | **322** TypeScript/TSX |
+| `main` HEAD | `726b10ee` — PR #1484 "chore: pin Bun runtime & add security regression guards" |
+| Active fix branch HEAD | `d5d2684e` on `fix/release-certification-owner-approval` (PR #1485) |
+| Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
 | GitHub workflow files | **23** files in `.github/workflows/` |
 | Release/package versions | Root `package.json` declares **`1.8.1`** (1.8.2 in progress); app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| SQL migrations | **98** `.sql` files = **94 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **33** (32 function dirs + `_shared`) |
-| Custom hooks (`src/` + `apps/`) | **39** (`use*.ts*`) |
-| Python orchestrator files | **100** |
-| Test/spec source files | **373** (312 TS `.test/.spec` + 61 Python `test_*/_test`) |
-| Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441 replaced the global whitelist; unsupported actions fail-closed with module-specific copy, never call `trigger-workflow` |
-| Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
+| SQL migrations | **100** `.sql` files = **96 forward** + **4 rollback** (`migrations/rollback/`) |
+| Edge function dirs | **36** (35 function dirs + `_shared`) |
+| Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
+| Python orchestrator files | ~107 tracked (excl. `__pycache__`) |
+| Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441; unsupported actions fail-closed, never call `trigger-workflow` |
+| Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed, pinned `bun@1.3.14`) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
 | APEX Agent (carried forward) | **LIVE / demo-ready** — verified end-to-end 2026-06-19; traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed |
 | `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| PR #1462 corrective gates (local) | typecheck exit 0; eslint exit 0; build success; ops-doc-guard PASS |
+| Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485 |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_20.md` and earlier are now historical.)
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are now historical.)
 1. `docs/project-status/release-validation-summary.json` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -56,7 +56,10 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` _(current — supersedes 2026-06-20 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(current — supersedes 2026-06-23 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_22.md` _(historical — 2026-06-22 snapshot)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` _(historical — 2026-06-21 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_20.md` _(historical — 2026-06-20 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_14.md` _(historical — 2026-06-14 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(historical — 2026-06-06 snapshot)_
@@ -371,6 +374,34 @@ Full release-rescue audit performed against `main` @ `5870a8ec` (PR #1476, "Rebr
 
 ### Current canonical start point
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (supersedes 2026-06-22 snapshot)
+
+---
+
+## 2026-06-24 Session 2 Doc Sync (PR #1485 — Certification Owner Approval + Agent Guardrails)
+
+Full repo-truth documentation sync performed against branch `fix/release-certification-owner-approval` HEAD `d5d2684e`. Repository counts directly git-verified.
+
+| File | Change |
+|---|---|
+| `README.md` | Stats snapshot → 2026-06-24 (src: 328, tsx: 94, edge fns: 36, migrations: 100, hooks: 23); repo-history note → PR #1485 (owner-approval certification) |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md` | v1.0.0 → v1.1.0; PR #1485 session block appended with full change table + verified repo stats |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | v1.4.0 → v1.5.0; facts table → 2026-06-24 verified counts; authority order + start points → 2026-06-24 current; 06-24 sync section added |
+| `memory/omni-recall/start-here.md` | PR #1485 session block appended |
+| `.understand-anything/` | Audited \u2014 `graph-meta.json` rebuilt 2026-06-24T03:39Z (auto-generated, no manual edits needed); `graph-features.mjs` is correct as-is (static tour copy with legacy node counts is acceptable for the visualization tool) |
+
+### PR #1485 summary
+
+- **Deleted** stale committed evidence artifact (triggered banned-phrase scanner + certification CI gate failure)
+- **Replaced** automated release certification with explicit owner-approval workflow (`release-certification.yml`)
+- **Deployed** `scripts/ci/guard-agent-destructive-actions.mjs` — proactive scanner for hallucinated source-file injections, banned phrases, unauthorized governance mutations
+- **Added** `.githooks/pre-commit.d/30-destructive-action-guard.sh` pre-commit gate
+- **Exempted** guard scripts from claim-hygiene scanner (false-positive suppression for pattern literals in test strings)
+- **Fixed** IDE warnings: `OmniBoardWizard.tsx` JSX, `omniboard-wizard.spec.tsx` + `ui-surface-integrity.test.tsx` `window` → `globalThis`, `src/lib/supabase/client.ts` `typeof` simplification
+- **CI law:** `CI validates. Owner certifies.` — reaffirmed in all canonical docs
+
+### Current canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md` (Session 2 block is the latest state)
 
 ---
 

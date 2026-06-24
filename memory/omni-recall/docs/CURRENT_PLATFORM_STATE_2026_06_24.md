@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 created: 2026-06-24
 last_audited: 2026-06-24
 status: verified
@@ -129,3 +129,41 @@ The following contracts are now enforced in code and tests:
 
 This document (2026-06-24) supersedes all prior `CURRENT_PLATFORM_STATE_*.md` files
 unless a newer dated file exists.
+
+---
+
+## PR #1485 — Certification Owner Approval + Agent Guardrails + Doc Sync (2026-06-24 Session 2)
+
+### Branch
+
+`fix/release-certification-owner-approval` — active, HEAD `d5d2684e`, pushed to `origin`.
+
+### Key Changes
+
+| Change | File(s) | Reason |
+|---|---|---|
+| **Deleted** stale evidence artifact | _(evidence JSON file, now removed)_ | File contained stale certification claim fields and a `Historical Note:` header that triggered both the banned-phrase scanner and the certification CI gate |
+| **Replaced** automated release CI gate | `.github/workflows/release-certification.yml` | Old gate self-certified via committed JSON; new gate requires explicit human/owner sign-off |
+| **Deployed** agent-destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` | Scans for hallucinated markdown blocks injected into source files, banned phrases, and unauthorized governance doc mutations; runs pre-commit + CI |
+| **Exempted** guard scripts from scanner | `scripts/ci/verify-claim-hygiene.mjs` | Guard files legitimately contain the forbidden pattern literals as test strings; exempted to prevent false-positive scanner trips |
+| **Fixed IDE warnings** | `OmniBoardWizard.tsx`, `TopHeader.tsx`, `omniboard-wizard.spec.tsx`, `ui-surface-integrity.test.tsx`, `src/lib/supabase/client.ts` | JSX logic extracted to pre-return variable; `typeof` comparison simplified; `window` → `globalThis` in test files |
+| **Updated docs** | `README.md`, `DOCUMENTATION_RELEASE_INDEX.md`, `CURRENT_PLATFORM_STATE_2026_06_24.md`, `start-here.md` | 2026-06-24 comprehensive doc sync; stats corrected from 06-22 snapshot to current git-verified counts |
+
+### Verified Repo Statistics (2026-06-24, git-verified)
+
+| Metric | Value |
+|---|---|
+| Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
+| React Components (`.tsx`) | **94** |
+| Edge Function directories | **36** (35 function dirs + `_shared`) |
+| Database Migrations | **100** `.sql` files |
+| CI/CD Workflows | **23** |
+| Custom Hooks (`use*.ts*` in `src/`) | **23** |
+| `main` HEAD | `726b10ee` — PR #1484 (chore: pin Bun + security regression guards) |
+| Active fix branch HEAD | `d5d2684e` — PR #1485 (certification owner approval + guardrails) |
+
+### Law Reaffirmed
+
+> **CI validates. Owner certifies.**
+> Automated scripts and agents do **not** certify releases. Only the human owner does, explicitly, after reviewing CI gate results.
+
