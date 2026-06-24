@@ -1,5 +1,5 @@
 import os
-import re
+import subprocess
 
 ACTIVE_DOCS = [
     'README.md',
@@ -35,59 +35,93 @@ BANNED_PHRASES = [
   'write-release-evidence'
 ]
 
+IGNORED_FILES = {
+    'package-lock.json',
+    'bun.lock',
+    'bun.lockb',
+    'check-release-certification-docs.mjs',
+    'PRODUCTION_CERTIFICATION_STATUS_2026_06_21_RETIRED.md',
+    'MANUAL_PRODUCTION_CERTIFICATION_TEMPLATE.md',
+    'write-release-validation-summary.test.mjs'
+}
+
+def _apply_active_doc_replacements(content: str, filepath: str) -> str:
+    """Applies necessary string replacements for active documentation."""
+    replacements = {
+        'PRODUCTION_CERTIFICATION_STATUS.md': 'release-validation-summary.json',
+        'NOT_CERTIFIED_NO_RELEASE_CUT': 'NOT_VALIDATED_NO_RELEASE_CUT',
+        'release-evidence.json': 'release-validation-summary.json',
+        'final_verdict': 'validation_result',
+        'Clean-Room Final Certification': 'Release Validation',
+        'canonical source for current certification state': 'canonical source for current validation state',
+        'write-release-evidence': 'write-release-validation-summary',
+        'CERTIFICATION_PENDING': 'VALIDATION_PENDING',
+        'CERTIFIED': 'VALIDATED'
+    }
+    
+    for old, new in replacements.items():
+        content = content.replace(old, new)
+        
+    policy_statement = "> CI validates release readiness. Production certification is manual and owner-approved only."
+    if policy_statement not in content and 'memory/omni-recall/' in filepath:
+        content = content.replace('# ', f"{policy_statement}\n\n# ", 1)
+        if not content.startswith('> CI validates'):
+            content = f"{policy_statement}\n\n" + content
+            
+    return content
+
+def _apply_historical_note(content: str) -> str:
+    """Prepends historical notes to legacy documents."""
+    note = "> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.\n\n"
+    if "Historical Note:" in content:
+        return content
+        
+    if content.startswith('---'):
+        parts = content.split('---', 2)
+        if len(parts) >= 3:
+            parts[2] = '\n' + note + parts[2].lstrip()
+            return '---'.join(parts)
+            
+    return note + content
+
 def process_file(filepath):
-    if not os.path.isfile(filepath): return
-    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+    if not os.path.isfile(filepath):
+        return
+        
+    with open(filepath, encoding='utf-8', errors='ignore') as f:
         content = f.read()
 
     has_banned = any(b in content for b in BANNED_PHRASES) or 'CERTIFIED' in content
-    if not has_banned: return
+    if not has_banned:
+        return
 
-    is_active = any(filepath.replace('\\', '/').endswith(doc) for doc in ACTIVE_DOCS) or 'package.json' in filepath or 'scripts/ci/' in filepath
+    normalized_path = filepath.replace('\\', '/')
+    is_active = (
+        any(normalized_path.endswith(doc) for doc in ACTIVE_DOCS) or 
+        'package.json' in normalized_path or 
+        'scripts/ci/' in normalized_path
+    )
 
     if is_active:
         print(f"Aligning active doc: {filepath}")
-        content = content.replace('PRODUCTION_CERTIFICATION_STATUS.md', 'release-validation-summary.json')
-        content = content.replace('NOT_CERTIFIED_NO_RELEASE_CUT', 'NOT_VALIDATED_NO_RELEASE_CUT')
-        content = content.replace('release-evidence.json', 'release-validation-summary.json')
-        content = content.replace('final_verdict', 'validation_result')
-        content = content.replace('Clean-Room Final Certification', 'Release Validation')
-        content = content.replace('canonical source for current certification state', 'canonical source for current validation state')
-        content = content.replace('write-release-evidence', 'write-release-validation-summary')
-        content = content.replace('CERTIFICATION_PENDING', 'VALIDATION_PENDING')
-        content = content.replace('CERTIFIED', 'VALIDATED')
-        
-        # Add policy statement if not there
-        policy_statement = "> CI validates release readiness. Production certification is manual and owner-approved only."
-        if policy_statement not in content and 'memory/omni-recall/' in filepath:
-            content = content.replace('# ', f"{policy_statement}\n\n# ", 1)
-            if not content.startswith('> CI validates'):
-                content = f"{policy_statement}\n\n" + content
+        content = _apply_active_doc_replacements(content, filepath)
     else:
         print(f"Adding historical note to: {filepath}")
-        note = "> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.\n\n"
-        if "Historical Note:" not in content:
-            if content.startswith('---'):
-                parts = content.split('---', 2)
-                if len(parts) >= 3:
-                    parts[2] = '\n' + note + parts[2].lstrip()
-                    content = '---'.join(parts)
-            else:
-                content = note + content
+        content = _apply_historical_note(content)
 
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 
-import subprocess
-
 def scan_all():
     try:
-        files = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+        git_cmd = 'git'
+        if os.name == 'nt':
+            git_cmd = 'git.exe'
+            
+        files = subprocess.check_output([git_cmd, 'ls-files'], text=True).splitlines()
         for file in files:
-            if file in ['package-lock.json', 'bun.lock', 'bun.lockb', 'check-release-certification-docs.mjs']: continue
-            if file == 'PRODUCTION_CERTIFICATION_STATUS_2026_06_21_RETIRED.md': continue
-            if file == 'MANUAL_PRODUCTION_CERTIFICATION_TEMPLATE.md': continue
-            if file == 'write-release-validation-summary.test.mjs': continue
+            if file in IGNORED_FILES:
+                continue
             process_file(file)
     except Exception as e:
         print("Error:", e)
