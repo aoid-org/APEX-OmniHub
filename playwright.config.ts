@@ -65,6 +65,7 @@ const ciProjects = allProjects
 
 export default defineConfig({
   testDir: './tests/e2e-playwright',
+  testIgnore: '**/__sentinels__/**',
   globalSetup: path.resolve('./tests/e2e-playwright/global-setup.ts'),
   fullyParallel: true,
   forbidOnly: isCI,
