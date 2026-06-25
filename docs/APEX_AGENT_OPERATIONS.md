@@ -907,3 +907,15 @@ The module-state route in omnilink-port, and the core endpoints in pex-agent, c
 - Cache MISS: system deps (~30s) + browser download+extract (~12 min) → ≤15 min.
 
 **Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard.
+
+---
+
+## 9.19 Integration harness browser timeout increase 15→25 min — 2026-06-25
+
+**Scope:** `.github/workflows/integration.yml` only. No deployed service, environment variable, database table/migration, or start command changed.
+
+**Root cause:** On GitHub-hosted Ubuntu 22.04 runners, zip extraction of the 170 MiB Chromium binary takes ~6 minutes, making the total cold-cache time ~15 minutes (download ~9 min + extraction ~6 min). The `timeout-minutes: 15` backstop was ≤12 seconds from the observed execution time, so any variation in runner speed caused a timeout kill mid-extraction.
+
+**Fix:** `timeout-minutes: 15 → 25` on the "Install Playwright browser (cache miss only)" step. This provides a ~10-minute safety margin over the observed worst-case. The cache-hit path is already protected: when `steps.playwright-cache.outputs.cache-hit == 'true'`, the browser step is skipped entirely via the `if:` condition, so the timeout is irrelevant for all warm-cache runs.
+
+**Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard.
