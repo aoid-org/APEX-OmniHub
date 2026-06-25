@@ -43,10 +43,7 @@ async function createRealSupabaseSession(config: SupabaseBrowserConfig): Promise
 }
 
 export function skipWithoutSupabaseConfig(): void {
-  test.skip(
-    !getSupabaseBrowserConfig(),
-    'Requires SUPABASE_URL plus SUPABASE_ANON_KEY/PUBLISHABLE_KEY for authenticated Supabase UI flows.',
-  );
+  // Setup guarantees backend; no skips allowed.
 }
 
 export async function signInWithSupabaseSession(page: Page): Promise<void> {
@@ -59,8 +56,6 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
   try {
     session = await createRealSupabaseSession(config);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown error';
-    test.skip(true, `Supabase Auth is not reachable/enabled from this runner: ${message}`);
     throw error;
   }
 

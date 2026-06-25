@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 /**
  * Playwright configuration for OmniLink APEX runtime smoke tests.
@@ -64,6 +65,7 @@ const ciProjects = allProjects
 
 export default defineConfig({
   testDir: './tests/e2e-playwright',
+  globalSetup: path.resolve('./tests/e2e-playwright/global-setup.ts'),
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,

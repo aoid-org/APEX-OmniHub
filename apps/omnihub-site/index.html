@@ -29,6 +29,12 @@
         if (!theme) theme = "light";
         document.documentElement.dataset.theme = theme;
       })();
+      // Capture PWA install prompt if it fires before React mounts
+      window.__deferredPWAEvent = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__deferredPWAEvent = e;
+      });
     </script>
 
     <!-- Open Graph -->

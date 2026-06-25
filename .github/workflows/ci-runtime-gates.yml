@@ -138,6 +138,30 @@ jobs:
       - name: Verify changelog paths exist
         run: node scripts/verify-changelog-paths.js CHANGELOG.md
 
+      - name: Doc-Path Guard (Phase 1)
+        run: bash scripts/ci/check-doc-paths.sh
+
+      - name: Test Integrity Doctrine - Banned fail() (R1)
+        run: |
+          if grep -rn "\.fail(" tests/ 2>/dev/null; then
+            echo "::error::test.fail() is banned by APEX Test Integrity Doctrine (R1)."
+            exit 1
+          fi
+
+      - name: Test Integrity Doctrine - Banned Placeholder Skips (R2)
+        run: |
+          if grep -rn "\.skip(" tests/ 2>/dev/null | grep -v "APEX-"; then
+            echo "::error::Placeholder skips or TKT-000 are banned. All skips must carry an APEX-#### ticket (R2)."
+            exit 1
+          fi
+
+      - name: Test Integrity Doctrine - Sentinels (R3)
+        run: |
+          if [ ! -d "tests/e2e-playwright/__sentinels__" ] || [ -z "$(ls -A tests/e2e-playwright/__sentinels__ 2>/dev/null)" ]; then
+            echo "NO SENTINELS FOUND"
+            exit 1
+          fi
+
       - name: Repo Hygiene Guard
         run: bash scripts/repo-hygiene-guard.sh
 
@@ -226,9 +250,9 @@ jobs:
       - name: Run unit tests
         run: npm run test
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
@@ -304,9 +328,9 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://ci-placeholder.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://ci-placeholder.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'ci-placeholder-publishable-key' }}
           VITE_CONNECT_AI_ENABLED: 'true'
 
       # Folded from the retired Production Readiness Gate: the SSG bundle build is
@@ -383,7 +407,8 @@ jobs:
         env:
           BASE_URL: http://localhost:4173
           # Match build-time VITE_SUPABASE_URL so stub-session storage keys align.
-          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://ci-placeholder.supabase.co' }}
+          SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://ci-placeholder.supabase.co' }}
+          E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Stop preview server
         if: always()
@@ -403,6 +428,15 @@ jobs:
             exit 1
           fi
           echo "No guard rail violations detected"
+
+      - name: Run K6 Performance Tests (SOFT gate / p99<800ms)
+        run: |
+          if command -v k6 &> /dev/null; then
+            k6 run loadtest.js
+          else
+            echo "k6 not-yet-accessible: missing from runner image"
+          fi
+
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

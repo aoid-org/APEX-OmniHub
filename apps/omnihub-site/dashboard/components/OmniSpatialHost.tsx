@@ -133,23 +133,11 @@ export function OmniSpatialHost() {
   const [isDialogDragging, setIsDialogDragging] = useState(false);
   const [isDialogPinned, setIsDialogPinned] = useState(false);
 
-  // Root issue: Native click events on triggers bubble up and immediately trigger
-  // Radix Dialog's InteractOutside handler. We use a ref to track mount time and ignore
-  // outside clicks that happen instantly after opening.
-  const mountTime = useRef(0);
-
   // Determine render mode when modal changes
   const renderMode = useMemo(
     () => (activeModal ? resolveRenderMode(activeModal) : 'dialog'),
     [activeModal],
   );
-
-  // Synchronously track when the modal opens to prevent bubbled clicks from instantly closing it
-  const prevIsOpen = useRef(isOpen);
-  if (isOpen && !prevIsOpen.current) {
-    mountTime.current = Date.now();
-  }
-  prevIsOpen.current = isOpen;
 
   // Reset local UI state on modal close
   useEffect(() => {
@@ -171,6 +159,54 @@ export function OmniSpatialHost() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen, isMinimized, renderMode]);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus-trap logic: trap focus within the dialog node
+  useEffect(() => {
+    if (!isOpen || renderMode !== 'dialog' || isMinimized) return;
+    const dialogNode = dialogRef.current;
+    if (!dialogNode) return;
+
+    // Small delay to allow framer-motion mount before focusing
+    const timer = setTimeout(() => {
+      const focusableElements = dialogNode.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      firstElement.focus();
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      };
+
+      dialogNode.addEventListener('keydown', handleTab);
+      // We attach it to the node, so we need to return the cleanup
+      dialogNode._cleanupTab = () => dialogNode.removeEventListener('keydown', handleTab);
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      if (dialogNode && (dialogNode as any)._cleanupTab) {
+        (dialogNode as any)._cleanupTab();
+      }
+    };
+  }, [isOpen, renderMode, isMinimized]);
 
   // Get the portal container
   const portalRoot = useMemo(() => {
@@ -245,7 +281,7 @@ export function OmniSpatialHost() {
               aria-label="Close modal"
               className="fixed inset-0 z-[9000] w-full h-full border-none bg-transparent cursor-default animate-in fade-in-0"
               onClick={(e) => {
-                if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
+                if (e.target === e.currentTarget) {
                   minimizeModal();
                 }
               }}
@@ -269,7 +305,8 @@ export function OmniSpatialHost() {
               data-testid="omni-dialog"
               data-state={isMinimized ? 'minimized' : isDialogDragging ? 'dragging' : isDialogPinned ? 'pinned' : 'open'}
               {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
-              className={`pointer-events-auto relative w-full border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
+              ref={dialogRef}
+              className={`pointer-events-auto relative w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] mx-auto border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto sm:w-full ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
               style={{ backgroundColor: '#0b1220', display: isMinimized ? 'none' : undefined, cursor: isDialogDragging ? 'grabbing' : 'default' }}
             >
               {/* Draggable title bar — grab to reposition; buttons stop propagation so they don't drag */}

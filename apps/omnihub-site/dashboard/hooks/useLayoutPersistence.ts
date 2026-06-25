@@ -40,6 +40,8 @@ interface UseLayoutPersistenceReturn {
   hiddenWidgets: readonly string[];
   toggleWidget: (id: string) => void;
   resetWidgetPositions: () => void;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: Dispatch<SetStateAction<boolean>>;
 }
 
 function loadPersistedState(key: string): PersistedLayoutState {
@@ -60,6 +62,7 @@ function loadPersistedState(key: string): PersistedLayoutState {
       ops: persistedOps ? { ...DEFAULT_OPS_STATE, ...persistedOps } : DEFAULT_OPS_STATE,
       panelLayout,
       hiddenWidgets,
+      hasSeenOnboarding: parsed.hasSeenOnboarding ?? DEFAULT_PERSISTED_LAYOUT.hasSeenOnboarding,
     };
   } catch {
     return defaultState();
@@ -79,6 +82,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
   const [ops, setOps] = useState<OmniDashOpsState>(initial.ops);
   const [panelLayout, setPanelLayout] = useState<PanelLayout>(initial.panelLayout);
   const [hiddenWidgets, setHiddenWidgets] = useState<readonly string[]>(initial.hiddenWidgets);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean>(initial.hasSeenOnboarding);
 
   const persist = useCallback(
     (
@@ -88,6 +92,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
       opsState: OmniDashOpsState,
       layout: PanelLayout,
       hidden: readonly string[],
+      seenOnboarding: boolean,
     ) => {
       try {
         const state: PersistedLayoutState = {
@@ -96,6 +101,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
           ops: opsState,
           panelLayout: layout,
           hiddenWidgets: hidden,
+          hasSeenOnboarding: seenOnboarding,
         };
         localStorage.setItem(key, JSON.stringify(state));
       } catch {
@@ -106,11 +112,11 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
   );
 
   useEffect(() => {
-    persist(storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets);
+    persist(storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets, hasSeenOnboarding);
 
     // Apply theme system tokens globally
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
-  }, [storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets, persist]);
+  }, [storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets, hasSeenOnboarding, persist]);
 
 
 
@@ -150,5 +156,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
     hiddenWidgets,
     toggleWidget,
     resetWidgetPositions,
+    hasSeenOnboarding,
+    setHasSeenOnboarding,
   };
 }

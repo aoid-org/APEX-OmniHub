@@ -70,12 +70,12 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
       justifyContent: 'center',
       zIndex: 9999,
       backdropFilter: 'blur(4px)',
-    }}>
+    }} role="dialog" aria-modal="true">
       <div style={{
         backgroundColor: 'var(--color-surface-elevated)',
         padding: '32px',
         borderRadius: '16px',
-        width: '100%',
+        width: 'calc(100% - 2rem)',
         maxWidth: '480px',
         boxShadow: 'var(--shadow-xl)',
         border: '1px solid var(--color-border)',

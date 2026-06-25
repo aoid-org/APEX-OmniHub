@@ -289,6 +289,20 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 ---
 
+## Canonical E2E Testing Truth (APEX Build Doctrine)
+
+To prevent test rot, rogue agent edits, and signal inversion (e.g., masking product bugs to achieve green CI), the following rules apply to all E2E testing:
+
+1. **Test Integrity over Green CI**: `test.fail()` is banned. A test suite must be green *and* provably able to go red against a real backend. Never skip a failing test just to pass a CI gate.
+2. **Strict Skip/Fixme Vocabulary**: `test.skip()` and `test.fixme()` are only permitted if they carry a formal tracking ID (e.g., `BLOCKED(APEX-1xxx): <reason>`). Generic skips or "PARTIAL PASS" verdicts are banned.
+3. **Identity-Tested Modals**: Modals cannot be asserted using generic locators (e.g., `[role="dialog"]`). They must use `assertModalIdentityAndIsolation` to prove rendering fidelity, isolation (no overlapping z-index issues), and portal-mount stability.
+4. **No Real DB Mocks**: The E2E suite requires a live backend (e.g. `apex-omnihub-e2e`). Auth tests rely on genuine session acquisition (`signInWithSupabaseSession`), not UI bypasses.
+5. **Idempotent Seed Harness**: CI setup uses an Admin client to dynamically seed tests (creating test users, files, and `workflows`), ensuring clean run-state separation and proper RLS/append-only audit verification. 
+6. **Responsive Modal Traps**: Universal Modals (like BYOM) use `<sm` responsive overrides (e.g., `w-[calc(100%-2rem)] max-w-md mx-auto`) to avoid off-canvas rendering on mobile viewports like iPads.
+7. **PWA Hydration Stability**: PWA install logic relies on `window.__deferredPWAEvent` capture in `index.html` to prevent `beforeinstallprompt` race conditions during React hydration.
+
+---
+
 ## Contributing (APEX Standard)
 
 1. Fork the repo
