@@ -47,9 +47,11 @@ jobs:
 
       # Browser binary (~170 MiB) is cached in ~/.cache/ms-playwright.
       # Only download+extract on cache miss; cache hits skip this step entirely.
+      # Observed cold-cache time: download ~9 min + zip extraction ~6 min = ~15 min.
+      # 25-minute timeout gives a ~10-minute safety margin for slow runners.
       - name: Install Playwright browser (cache miss only)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: cd integration-harness && npx --no -- playwright install chromium
 
       - name: Run harness
