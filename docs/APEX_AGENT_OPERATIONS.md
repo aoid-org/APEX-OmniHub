@@ -874,3 +874,18 @@ will report `skipped` on PRs.
 ## 9.16 Edge Function canonical response envelope � 2026-06-24 (PR #1488)
 
 The module-state route in omnilink-port, and the core endpoints in pex-agent, create-checkout, and platform-health, now return a standardized JSON envelope ({ ok: true, data: ... } or { ok: false, error: ... }) via _shared/response.ts.
+
+---
+
+## 9.17 Integration harness CI hang fix — 2026-06-25 (PR #1490)
+
+**Scope:** `.github/workflows/integration.yml` only. No deployed service, environment variable, database table/migration, or start command changed.
+
+**Root cause:** `playwright install chromium` (without `--with-deps`) caused the post-download browser verification subprocess to deadlock indefinitely on Ubuntu 22.04 runners when required system libraries (`libglib2.0-0`, `libnss3`, `libgbm1`, `libatk1.0-0`, etc.) were absent. The job consumed the GitHub Actions 6-hour hard limit (observed: 5h 26m 52s stall).
+
+**Fix applied:**
+- Added `actions/cache@v4` for `~/.cache/ms-playwright` (keyed by `integration-harness/package-lock.json` hash) — eliminates the 170 MB re-download on cache hit.
+- Switched to `npx playwright install --with-deps chromium` — installs required system libraries via apt-get before browser verification runs.
+- Added `timeout-minutes: 10` backstop — future regressions fail fast rather than consuming the runner limit.
+
+**Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard, which treats all `.github/workflows/` changes as critical-path edits regardless of runtime impact.
