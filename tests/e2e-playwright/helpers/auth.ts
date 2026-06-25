@@ -98,7 +98,7 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
     { key: storageKey, value: session },
   );
 
-  // Use 'domcontentloaded' instead of 'networkidle' to avoid hanging in CI when
+  // Use 'domcontentloaded' instead of 'domcontentloaded' to avoid hanging in CI when
   // the preview server has long-polling, SSE, or WebSocket connections that prevent
   // the network from ever going idle. The toHaveURL assertion below confirms navigation
   // succeeded with an explicit 30s timeout.
