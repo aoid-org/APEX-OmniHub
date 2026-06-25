@@ -1,15 +1,15 @@
 ---
-version: 1.3.1
-last_audited: 2026-06-24
+version: 1.3.2
+last_audited: 2026-06-25
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
 **Version:** 1.8.2
-**Last Updated:** 2026-06-24
+**Last Updated:** 2026-06-25
 
-**Latest verified branch/head:** `main` @ `8bfb1a6` (`fix(sonar): resolve SonarQube code smells across omnihub-site components`, #1486). Release line `1.8.2` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. See `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current authoritative snapshot and the release-cut mechanism note.
+**Latest verified branch/head:** `main` @ `4c0d481` (`chore(cert): Production Hardening Sprint & Codebase Determinism`, #1488). Active dev branch: `claude/kind-feynman-h5gcbs` @ `6074e0c` (fix(ci): integration-harness playwright install hang resolved). Release line `1.8.2` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing). See `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current authoritative snapshot.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -129,7 +129,7 @@ If any other document conflicts with this file, this file wins unless explicitly
 - `src/lib/omni-sentry.ts` stores all state in `sessionStorage` — enforced by security rule NS-M-008 (no cross-tab persistence of error/circuit state).
 - `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current canonical snapshot.
 
 ## Source-of-Truth Statement 24 (2026-06-23)
 
@@ -176,5 +176,32 @@ PR #1483 added §9.12 (audit readiness closure) to `main` while PR #1482 added �
 | `eslint .` | ✅ PASSED | 0 violations |
 | `pytest tests/omniboard` | ✅ PASSED | 38/38 |
 | `git push` | ✅ SUCCEEDED | `d1baf346..4cfad404` on remote |
+
+## Source-of-Truth Statement 26 (2026-06-25)
+
+**Integration harness CI hang is resolved.** The `.github/workflows/integration.yml`
+`playwright install chromium` step was stalling for 5h 26m+ because the browser
+verification subprocess deadlocked on missing Ubuntu 22.04 system libraries (libglib,
+libnss3, libgbm1, libatk, etc.) — absent without `--with-deps`. Fix (commit `6074e0c`,
+branch `claude/kind-feynman-h5gcbs`):
+- `actions/cache@v4` caches `~/.cache/ms-playwright` keyed by `package-lock.json` hash — eliminates 170 MB re-download on cache hit.
+- `playwright install --with-deps chromium` installs all required system libraries via apt-get before verification runs.
+- `timeout-minutes: 10` added as a hard backstop; future regressions fail fast.
+
+**CI/CD workflow count is now 20** (was 23). Removed in PRs #1487/#1488:
+- `dependency-review.yml` (GitHub native dependency review supersedes)
+- `production-readiness.yml` (functionality absorbed into `ci-runtime-gates.yml`)
+- `security-guards.yml` (consolidated into `security-regression-guard.yml`)
+The broken `production-readiness.yml` badge was removed from `README.md`.
+
+**Edge function directory count is now 33** (32 function dirs + `_shared`). Previously
+documented as 36 — count corrected from live tree verification. `lovable-healthcheck`
+directory is no longer present.
+
+**Active canonical skill set for Claude Code sessions updated.** Root `CLAUDE.md`
+skill routing updated: `apex-dev` is superseded by `apex-boost-claude`,
+`apex-master-debug-claude`, and `omnidev-apex-pro-1.0.0` (all in `.claude/skills/`).
+
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current canonical snapshot.
 
 **Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current canonical snapshot. If that file is absent, fall back to `2026_06_23`.

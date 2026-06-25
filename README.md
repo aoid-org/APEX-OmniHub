@@ -1,6 +1,6 @@
 ---
-version: 1.3.2
-last_audited: 2026-06-24
+version: 1.3.3
+last_audited: 2026-06-25
 status: verified
 ---
 
@@ -21,7 +21,6 @@ status: verified
 **Release line:** 1.8.2 | **package.json version:** 1.8.2 | **App package:** 1.3.10 | **Docs audit:** 2026-06-24
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
-[![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
 [![Security Regression Guard](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml)
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
@@ -32,7 +31,7 @@ status: verified
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_24.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_25.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json)** (Current Production Authority)
@@ -61,14 +60,14 @@ The platform relies on a "Holy Trinity" architecture:
 | **Source Files (`src/`)**                        | 328 TypeScript/TSX files (234 `.ts` + 94 `.tsx`)  |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 36 directories (35 function dirs + `_shared`)     |
+| **Edge Functions (`supabase/functions/`)**       | 33 directories (32 function dirs + `_shared`)     |
 | **Database Migrations (`supabase/migrations/`)** | 100 `.sql` files (96 forward + 4 rollback under `migrations/rollback/`) |
-| **CI/CD Workflows (`.github/workflows/`)**       | 23 workflow files                                 |
+| **CI/CD Workflows (`.github/workflows/`)**       | 20 workflow files                                 |
 | **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 373+ spec/test source files; latest pass counts are recorded in certification status |
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~107 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** `main` HEAD `8bfb1a6` — PR #1486 "fix(sonar): resolve SonarQube code smells across omnihub-site components". Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence to the release. CI does not decide or certify releases. No open PRs; the development branch tracks `main` at the same commit. Owner-approved certification for this commit lives at [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). The owner-approval certification workflow (PR #1485) is merged: automated self-certification is removed, agent-destructive-action guardrails are deployed, and the two release guards' exemptions are aligned. **Law: CI validates. Owner certifies.** See [`CURRENT_PLATFORM_STATE_2026_06_24.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md) for the full assessment.
+**Latest repo-history note:** `main` HEAD `4c0d481` — PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism". Previous PRs since last full doc sync: PR #1487 "v1.8.2 release: guard alignment & SBOM attach-only gate" (`b43bf6a`). Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Owner-approved certification: [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). **Law: CI validates. Owner certifies.** Active dev branch: `claude/kind-feynman-h5gcbs` — CI fix: `integration.yml` playwright install hang resolved (2026-06-25, `6074e0c`): added `actions/cache` for `~/.cache/ms-playwright`, switched to `playwright install --with-deps chromium`, added `timeout-minutes: 10`. `dependency-review.yml`, `production-readiness.yml`, and `security-guards.yml` removed in PRs #1487/#1488; workflow count is now **20**. Edge function directory count is now **33** (32 function dirs + `_shared`). See [`CURRENT_PLATFORM_STATE_2026_06_25.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) for the current authoritative assessment.
 
 ---
 
@@ -147,7 +146,7 @@ Client-side infrastructure for deterministic media delivery:
 | `verify-nft`             | NFT ownership check        |
 | `web3-verify`            | SIWE authentication        |
 | `send-push-notification` | Mobile push delivery       |
-| `lovable-healthcheck`    | Integration health         |
+| `ops-voice-health`       | Ops voice health check     |
 | `execute-automation`     | Workflow execution         |
 
 ---
@@ -160,17 +159,16 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 ## Repository Layout
 
 ```
-/src                 - Core frontend/domain source tree (322 files)
+/src                 - Core frontend/domain source tree (328 files: 234 .ts + 94 .tsx)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
-
-/supabase/migrations - Database schema (98 .sql files: 94 forward + 4 rollback)
-/supabase/functions  - Edge functions (32 function directories + _shared = 33)
-/orchestrator        - Temporal workers and orchestration services (100 Python files)
+/supabase/migrations - Database schema (100 .sql files: 96 forward + 4 rollback)
+/supabase/functions  - Edge functions (32 function directories + _shared = 33 total)
+/orchestrator        - Temporal workers and orchestration services (~107 Python files)
 /tests               - Automated test suite
-/.github/workflows   - CI/CD workflows (23 workflow files)
+/.github/workflows   - CI/CD workflows (20 workflow files)
 ```
 
 ---
@@ -256,15 +254,17 @@ npm run build      # Production build
 
 ### CI/CD Pipelines (Selected Workflows)
 
-| Workflow                | Trigger         | Purpose                      |
-| ----------------------- | --------------- | ---------------------------- |
-| `ci-runtime-gates`      | PR/Push         | Build, test, lint, typecheck |
-| `cd-staging`            | Push to develop | Staging deployment           |
-| `deploy-web3-functions` | Push to main    | Edge function deployment     |
-| `secret-scanning`       | PR              | Security scanning            |
-| `chaos-simulation-ci`   | Scheduled       | Resilience testing           |
-| `sonarqube-analysis`    | PR              | Code quality audit           |
-| `guardrail-alert`       | CI failure      | Guardrail violation alerting |
+| Workflow                        | Trigger         | Purpose                      |
+| ------------------------------- | --------------- | ---------------------------- |
+| `ci-runtime-gates`              | PR/Push         | Build, test, lint, typecheck |
+| `cd-staging`                    | Push to develop | Staging deployment           |
+| `deploy-web3-functions`         | Push to main    | Edge function deployment     |
+| `secret-scanning`               | PR              | Security scanning            |
+| `chaos-simulation-ci`           | Scheduled       | Resilience testing           |
+| `alert-guard-rail-violation`    | CI failure      | Guardrail violation alerting |
+| `integration`                   | Push to main/work/develop | Integration E2E harness |
+| `security-regression-guard`     | PR/Push         | Security + dependency guards |
+| `orchestrator-ci`               | Push            | Orchestrator Python test suite |
 
 ---
 
@@ -274,7 +274,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json) | Current certification authority |

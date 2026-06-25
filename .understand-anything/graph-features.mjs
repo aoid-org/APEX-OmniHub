@@ -113,7 +113,7 @@ export function heatmapLegend() {
 export const TOUR_STEPS = [
   {
     title: '⬡ Welcome to APEX-OmniHub',
-    body: 'This graph maps 1,743 source files across 204 modules and 3 architecture pillars. Use arrow keys or click Next to explore.',
+    body: 'This graph maps 2,339 source files across 3 architecture layers (graph node count is dynamic — see header). Use arrow keys or click Next to explore.',
     highlight: null,
     layer: null,
   },
@@ -125,7 +125,7 @@ export const TOUR_STEPS = [
   },
   {
     title: '② Edge Functions — Layer 1',
-    body: '28 Deno-hosted Supabase Edge Functions. Key ones: apex-agent (APEX Agent AI orchestration), stripe-webhook (billing), verify-nft (NFT gating), mcp-proxy (MCP bridge), omni-runs (workflow trigger).',
+    body: '32 Deno-hosted Supabase Edge Functions (33 directories including _shared). Key ones: apex-agent (APEX Agent AI orchestration), stripe-webhook (billing), verify-nft (NFT gating), mcp-proxy (MCP bridge), omni-runs (workflow trigger).',
     highlight: 'L1',
     layer: 'L1',
   },
@@ -149,7 +149,7 @@ export const TOUR_STEPS = [
   },
   {
     title: '⑥ Infra / CI — Layer 5',
-    body: 'GitHub Actions (15+ workflows): ci-runtime-gates, chaos-simulation-ci, cd-staging, compliance, dependency-review. Terraform for cloud infra. Docker Compose for local orchestrator stack.',
+    body: 'GitHub Actions (20 workflows): ci-runtime-gates, chaos-simulation-ci, cd-staging, compliance, security-regression-guard, orchestrator-ci. Terraform for cloud infra. Docker Compose for local orchestrator stack.',
     highlight: 'L5',
     layer: 'L5',
   },
