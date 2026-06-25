@@ -26,7 +26,7 @@ while IFS= read -r f; do
   [[ -z "$f" ]] && continue
   echo "ERROR: '$f' is a CI log artifact tracked in git. Please run: git rm --cached $f" >&2
   EXIT_CODE=1
-done < <(git ls-files 'job_log*.txt')
+done < <(git ls-files 'job_log*.txt' 'failed_log*.txt')
 
 if [[ "$EXIT_CODE" -eq 0 ]]; then
   echo "Repo hygiene check passed — no artifact files tracked."

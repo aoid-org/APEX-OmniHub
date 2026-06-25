@@ -107,6 +107,7 @@ raw_test_output*.txt
 tsc_output*.txt
 test_output*.txt
 job_log*.txt
+failed_log*.txt
 test_json*.json
 test_forge_full*.py
 apps/**/dist/
