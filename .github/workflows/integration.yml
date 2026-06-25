@@ -15,7 +15,6 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # Clone into sibling path expected by run.sh preflight.
           git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
 
       - name: Setup Bun
@@ -32,27 +31,46 @@ jobs:
       - name: Install harness deps
         run: cd integration-harness && npm ci --ignore-scripts
 
+      # Resolve the exact installed Playwright version for a stable cache key.
+      # Using the lockfile hash caused perpetual cache misses when Dependabot
+      # bumped any harness dependency — even non-Playwright ones.
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -e \"console.log(require('./integration-harness/node_modules/@playwright/test/package.json').version)\")" >> "$GITHUB_OUTPUT"
+
+      # Cache the browser binary keyed to exact Playwright version + OS.
+      # restore-keys provides a warm fallback when the version advances (rare).
+      # On cache-hit the browser install step below is skipped entirely.
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ hashFiles('integration-harness/package-lock.json') }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
 
-      # System libs (libglib2, libnss3, libgbm1, …) are NOT cached — always install.
-      # Fast (~30s via apt-get), required even on browser cache hit.
+      # System libs are not cached — fast (~30 s via apt), required on every run.
       - name: Install Playwright system deps
         timeout-minutes: 3
         run: cd integration-harness && npx --no -- playwright install-deps chromium
 
-      # Browser binary (~170 MiB) is cached in ~/.cache/ms-playwright.
-      # Only download+extract on cache miss; cache hits skip this step entirely.
-      # Observed cold-cache time: download ~9 min + zip extraction ~6 min = ~15 min.
-      # 25-minute timeout gives a ~10-minute safety margin for slow runners.
-      - name: Install Playwright browser (cache miss only)
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 25
-        run: cd integration-harness && npx --no -- playwright install chromium
+      # Use the runner's preinstalled Google Chrome instead of downloading the
+      # bundled Playwright Chromium binary. The bundled binary download reliably
+      # stalls during zip extraction on GitHub-hosted runners after reaching 100%
+      # (root-caused: ~170 MiB zip extraction on runner disk exceeds timeout).
+      # This mirrors the fix already applied in ci-runtime-gates.yml.
+      # Fallback to Playwright-managed chromium only when system Chrome is absent.
+      - name: Install browser (chrome preferred, chromium fallback)
+        timeout-minutes: 5
+        run: |
+          if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1; then
+            echo "System Google Chrome found — skipping binary download."
+            google-chrome --version 2>/dev/null || google-chrome-stable --version
+          else
+            echo "System Chrome not found — installing Playwright Chromium (cache miss path)."
+            cd integration-harness && npx --no -- playwright install chromium
+          fi
 
       - name: Run harness
         run: cd integration-harness && bash run.sh
