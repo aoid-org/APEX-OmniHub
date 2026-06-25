@@ -933,3 +933,19 @@ The module-state route in omnilink-port, and the core endpoints in pex-agent, c
 **Structural fix**: With `restore-keys: playwright-chromium-`, any existing playwright binary in the cache is restored on a prefix match. `playwright install chromium` then performs a version check only (seconds) rather than a full download. Cold-cache downloads now only happen once per playwright version upgrade, not on every run. The 45-minute timeout is a one-time bootstrap safety net covering the observed worst-case of 26 min with a 19-min margin.
 
 **Loop broken**: exact-hit → step skipped; prefix-hit → instant version check; cold → 45 min timeout covers worst observed case with margin.
+
+---
+
+### §9.21 — integration.yml + playwright.config.ts: switch to system Chrome to permanently eliminate bundled-Chromium download timeout (2026-06-25)
+
+**Files changed**: `.github/workflows/integration.yml`, `integration-harness/playwright.config.ts`
+
+**Operational impact**: Zero. No deployed service, environment variable, database table, migration, or start command is affected. Integration harness CI workflow internal improvement only.
+
+**Root causes addressed**:
+- RC-1 (PRIMARY): `playwright install chromium` downloads a 170 MiB bundled binary from CDN; zip extraction stalls on GitHub-hosted ubuntu-22.04 runners after download reaches 100%, causing repeated timeouts at 15–26 min. Cross-referenced fix in ci-runtime-gates.yml: use preinstalled `google-chrome-stable` via `channel: 'chrome'` in playwright.config.ts — download never happens.
+- RC-2: Cache key used `hashFiles(package-lock.json)` — any Dependabot dep bump (even unrelated to Playwright) invalidated cache. Fixed: key now uses exact Playwright version resolved from installed node_modules.
+- RC-3: No `restore-keys` — any key miss was always a cold start. Fixed: prefix restore-keys added.
+- RC-4: `playwright.config.ts` had no `channel` — defaulted to bundled Chromium even on cache hit rerun. Fixed: `channel: 'chrome'` routes Playwright through the system Chrome binary.
+
+**Fix summary**: `playwright install` step replaced with a 5-minute shell check: if `google-chrome`/`google-chrome-stable` is present (always true on ubuntu-22.04), use it and exit — no download occurs. Fallback to `playwright install chromium` only if system Chrome is absent (never on GitHub-hosted runners). `playwright.config.ts` wires `channel: 'chrome'` so tests run against system Chrome. Loop permanently broken: no CDN download, no extraction, no timeout.
