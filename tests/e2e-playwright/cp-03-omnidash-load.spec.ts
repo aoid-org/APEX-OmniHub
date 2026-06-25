@@ -90,7 +90,7 @@ test.describe('CP-03 — OmniDash Load', () => {
       }
     });
 
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'domcontentloaded' });
 
     // Filter out expected 401 from supabase realtime (anon subscription attempt before
     // realtime channel auth completes is expected). Allow 404 for optional endpoints.

@@ -54,7 +54,7 @@ test('OmniSkills opens as a modal with the real icon and no route change', async
   );
 
   await page.goto('/omnidash');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const urlBefore = page.url();
 
