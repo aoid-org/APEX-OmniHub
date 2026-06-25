@@ -50,7 +50,7 @@ async function globalSetup(_config: FullConfig) {
       });
 
       const email = `test-runner-${Date.now()}@apex-omnihub.local`;
-      const password = `Test-Pass-123!`;
+      const password = 'Test-Pass-123!';
 
       console.log(`Provisioning dynamic test user: ${email}`);
       const { error } = await supabaseAdmin.auth.admin.createUser({
@@ -60,9 +60,15 @@ async function globalSetup(_config: FullConfig) {
       });
 
       if (error) {
-        // APEX-1204: Throw early — silent failure leaves E2E_USER_EMAIL/PASSWORD unset,
-        // causing ALL authenticated tests to fail with a misleading Supabase auth error.
-        throw new Error();
+        // APEX-1204: Throw hard — silent failure leaves no creds file, causing ALL
+        // authenticated tests to fail with a misleading "Invalid login credentials" error.
+        // NOTE: Throw BEFORE the outer catch so we surface APEX-1204, not APEX-1203.
+        const provisioningError = new Error(
+          `APEX-1204: E2E user provisioning failed — authenticated tests require a valid test user. Error: ${error.message}`
+        );
+        // eslint-disable-next-line no-console
+        console.error(provisioningError.message);
+        throw provisioningError;
       }
 
       // APEX-1205: Write to file — workers read this since they cannot inherit
@@ -77,9 +83,13 @@ async function globalSetup(_config: FullConfig) {
 
       process.env.E2E_USER_EMAIL = email;
       process.env.E2E_USER_PASSWORD = password;
-      console.log(`Successfully provisioned test user`);
+      console.log(`✓ Provisioned dynamic test user: ${email}`);
     }
   } catch (error) {
+    // Re-throw provisioning errors (APEX-1204) as-is so they aren't masked as APEX-1203.
+    if (error instanceof Error && error.message.startsWith('APEX-1204')) {
+      throw error;
+    }
     throw new Error(`APEX-1203: Test Integrity Doctrine R4 Violation - Backend unreachable at ${url}. ${error instanceof Error ? error.message : ''}`);
   }
 }
