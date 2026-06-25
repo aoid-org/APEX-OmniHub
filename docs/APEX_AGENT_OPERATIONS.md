@@ -889,3 +889,21 @@ The module-state route in omnilink-port, and the core endpoints in pex-agent, c
 - Added `timeout-minutes: 10` backstop — future regressions fail fast rather than consuming the runner limit.
 
 **Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard, which treats all `.github/workflows/` changes as critical-path edits regardless of runtime impact.
+
+---
+
+## 9.18 Integration harness CI timeout refinement — 2026-06-25 (follow-up to §9.17)
+
+**Scope:** `.github/workflows/integration.yml` only. No deployed service, environment variable, database table/migration, or start command changed.
+
+**Root cause:** The `timeout-minutes: 10` backstop added in §9.17 was too tight for cold-cache runs. The 170 MiB browser binary download + zip extraction requires ~12–14 minutes on first run (cache miss). The step timed out mid-extraction after the download completed 100%.
+
+**Fix — split install into two steps:**
+- `Install Playwright system deps` — always runs; `playwright install-deps chromium` (apt-get only, ~30s); `timeout-minutes: 3`.
+- `Install Playwright browser (cache miss only)` — conditional on `steps.playwright-cache.outputs.cache-hit != 'true'`; downloads and extracts the 170 MiB binary; `timeout-minutes: 15`.
+
+**Timing guarantees after this fix:**
+- Cache HIT: system deps (~30s) only → ≤3 min; browser step skipped entirely. Timeout impossible.
+- Cache MISS: system deps (~30s) + browser download+extract (~12 min) → ≤15 min.
+
+**Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard.

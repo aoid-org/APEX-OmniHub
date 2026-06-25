@@ -39,9 +39,18 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ hashFiles('integration-harness/package-lock.json') }}
 
-      - name: Install Playwright browser + system deps
-        timeout-minutes: 10
-        run: cd integration-harness && npx --no -- playwright install --with-deps chromium
+      # System libs (libglib2, libnss3, libgbm1, …) are NOT cached — always install.
+      # Fast (~30s via apt-get), required even on browser cache hit.
+      - name: Install Playwright system deps
+        timeout-minutes: 3
+        run: cd integration-harness && npx --no -- playwright install-deps chromium
+
+      # Browser binary (~170 MiB) is cached in ~/.cache/ms-playwright.
+      # Only download+extract on cache miss; cache hits skip this step entirely.
+      - name: Install Playwright browser (cache miss only)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 15
+        run: cd integration-harness && npx --no -- playwright install chromium
 
       - name: Run harness
         run: cd integration-harness && bash run.sh
