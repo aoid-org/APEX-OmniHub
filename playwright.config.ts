@@ -69,8 +69,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
-  reporter: 'html',
+  workers: isCI ? 3 : undefined,
+  reporter: isCI ? [['list'], ['html']] : 'html',
 
   // Per-test timeout. Most smoke tests finish in seconds; the route-sweep summary
   // visits every registered route serially (slower under mobile-chrome emulation),

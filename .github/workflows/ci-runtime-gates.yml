@@ -123,7 +123,7 @@ jobs:
   build-and-test:
     needs: [architectural-boundary-enforcement, terraform-expression-drift-gate]
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       id-token: write
@@ -431,6 +431,14 @@ jobs:
             exit 1
           fi
           echo "No guard rail violations detected"
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Run K6 Performance Tests (SOFT gate / p99<800ms)
         run: |
