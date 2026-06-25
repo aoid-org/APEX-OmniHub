@@ -1,0 +1,29 @@
+{
+  "name": "universal-apex-debug",
+  "version": "1.0.0",
+  "edition": "universal",
+  "status": "active",
+  "replaces": "universal-debug",
+  "license": "Proprietary — APEX Business Systems Ltd.",
+  "author": "JR Mendoza / APEX Business Systems Ltd.",
+  "description": "Forges definitive root-cause solutions across code, systems, product, strategy, and life by upgrading the 7-step debug protocol with triage, domain fast-paths, adversarial verification, and blast-radius containment.",
+  "runtime": "any",
+  "compatible_models": ["any agent or LLM with instruction-following capability"],
+  "entry": "SKILL.md",
+  "references": [
+    "references/domain-playbooks.md",
+    "references/evidence-protocol.md",
+    "references/universal-protocol.md",
+    "references/adversarial-patterns.md",
+    "references/ias-tiers.md"
+  ],
+  "evals": "evals/trigger-eval.json",
+  "scorecard": "scorecard.json",
+  "integration": {
+    "omnihub": false,
+    "note": "APEX-native integration references in SKILL.md are optional. Replace with equivalent tools in your stack. The 7 steps and adversarial gate require no tooling."
+  },
+  "changelog": {
+    "1.0.0": "Initial release. Universal edition. All Claude/OmniHub-specific tool references are advisory. Core methodology is vendor-agnostic."
+  }
+}

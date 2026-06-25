@@ -1,0 +1,29 @@
+{
+  "skill": "universal-apex-debug",
+  "version": "1.0.0",
+  "description": "10 should-trigger / 10 should-not-trigger. Near-miss negatives only.",
+  "should_trigger": [
+    {"id": "t01", "query": "the same bug keeps coming back after every deploy, we've fixed it 3 times"},
+    {"id": "t02", "query": "stuck in a loop and can't figure out why this keeps happening"},
+    {"id": "t03", "query": "quick fixes keep failing, I need a real solution this time"},
+    {"id": "t04", "query": "incident response: production is down and I need to find root cause fast"},
+    {"id": "t05", "query": "same problem keeps happening even after we patched it"},
+    {"id": "t06", "query": "team says we've tried everything but the issue returns every week"},
+    {"id": "t07", "query": "need a systematic approach to debug this, not just guess and check"},
+    {"id": "t08", "query": "analysis paralysis on a business decision, team is stuck in a loop"},
+    {"id": "t09", "query": "life pattern keeps repeating no matter what I try, need to break it"},
+    {"id": "t10", "query": "my AI prompts keep giving shallow results and I can't figure out why"}
+  ],
+  "should_not_trigger": [
+    {"id": "n01", "query": "write unit tests for this function", "reason": "build task, no stuck state"},
+    {"id": "n02", "query": "how do I set up a Supabase RLS policy", "reason": "setup/how-to, not debug"},
+    {"id": "n03", "query": "I know exactly what is wrong, just write the fix", "reason": "Step 7 already reached"},
+    {"id": "n04", "query": "debug this TypeError cannot read property of undefined", "reason": "known-class bug, use apex-master-debug"},
+    {"id": "n05", "query": "review my pitch deck for investor readiness", "reason": "review task, not a loop state"},
+    {"id": "n06", "query": "my CI pipeline is failing on lint", "reason": "clear cause, known fix, use one-pass-debug"},
+    {"id": "n07", "query": "create a new React component for the dashboard", "reason": "build task, no debugging"},
+    {"id": "n08", "query": "optimize this SQL query for performance", "reason": "known optimization, not a loop"},
+    {"id": "n09", "query": "help me write a system prompt for a voice agent", "reason": "creation task, use apex-agent-builder"},
+    {"id": "n10", "query": "validate whether this screen passes go/no-go", "reason": "validation task, use apex-riddler"}
+  ]
+}
