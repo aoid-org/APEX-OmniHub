@@ -55,7 +55,7 @@ test.describe('CP-02 — BYOM Login', () => {
     await expect(page.locator('select, [role="combobox"]').first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test.skip('User can select Groq and provide API key to login', async ({ page }) => {
+  test.skip('User can select Groq and provide API key to login', async ({ page }) => { // APEX-8014
     test.info().annotations.push({ type: 'issue', description: 'BLOCKED(APEX-8014): BYOM Groq selection flow altered' });
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
 

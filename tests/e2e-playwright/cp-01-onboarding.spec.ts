@@ -30,7 +30,7 @@ test.describe('CP-01 — Onboarding', () => {
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
   });
 
-  test.skip('sign-up link / tab is accessible from login page', async ({ page }) => {
+  test.skip('sign-up link / tab is accessible from login page', async ({ page }) => { // APEX-8013
     test.info().annotations.push({ type: 'issue', description: 'BLOCKED(APEX-8013): Sign Up tab intentionally removed from login flow' });
     await page.goto('/login');
     // We expect the auth UI to have a sign-up mode or link
