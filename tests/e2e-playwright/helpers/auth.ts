@@ -52,12 +52,7 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
     throw new Error('Missing Supabase URL or browser-safe anon/publishable key for authenticated E2E flow.');
   }
 
-  let session: Session;
-  try {
-    session = await createRealSupabaseSession(config);
-  } catch (error) {
-    throw error;
-  }
+  const session = await createRealSupabaseSession(config);
 
   const storageKey = getSupabaseStorageKey(config.url);
 
