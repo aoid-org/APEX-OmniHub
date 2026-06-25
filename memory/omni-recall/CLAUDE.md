@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-21
+version: 1.1.0
+last_audited: 2026-06-25
 status: verified
 ---
 
@@ -17,8 +17,9 @@ status: verified
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit (2026-06-24, Session 3): `main` HEAD `8bfb1a6` (PR #1486, fix(sonar) omnihub-site code-smell closure); development branch tracks `main` at the same commit; no open PRs. Release line `1.8.2` (`package.json` bumped). Release cut is **manual / owner-driven** (`changeset version` → `chore: version packages`); CI validates, `compliance.yml` attaches SBOM **attach-only** (gated on the tag already existing, so CI can never create a tag — resolved 2026-06-24). Owner-approved cert: `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`.
-- Prior audit (2026-06-22): working branch `claude/focused-ptolemy-dgd054`; Main HEAD `1f22570`. Release line `1.8.1`, `1.8.2` in progress. Superseded by the line above.
+- Verified HEAD at this audit (2026-06-25): `main` HEAD `4c0d481` (PR #1488, chore(cert): Production Hardening Sprint & Codebase Determinism); active dev branch `claude/kind-feynman-h5gcbs` @ `6074e0c` (fix(ci): integration-harness playwright hang). Release line `1.8.2`. **Skill routing updated:** root `CLAUDE.md` now routes to `apex-boost-claude`, `apex-master-debug-claude`, `omnidev-apex-pro-1.0.0` — `apex-dev` is superseded. Workflow count corrected to 20; edge function dir count corrected to 33.
+- Prior audit (2026-06-24, Session 3): `main` HEAD `8bfb1a6` (PR #1486, fix(sonar) omnihub-site code-smell closure); development branch tracks `main` at the same commit; no open PRs. Release line `1.8.2` (`package.json` bumped). Release cut is **manual / owner-driven** (`changeset version` → `chore: version packages`); CI validates, `compliance.yml` attaches SBOM **attach-only** (gated on the tag already existing, so CI can never create a tag — resolved 2026-06-24). Owner-approved cert: `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`.
+- Prior audit (2026-06-22): working branch `claude/focused-ptolemy-dgd054`; Main HEAD `1f22570`. Release line `1.8.1`, `1.8.2` in progress. Superseded.
 - Prior audit (2026-06-21): `8772015e` (v1.8.1 release cut); branch `claude/dreamy-albattani-fw93y3`.
 
 ## Runtime Facts (Claude Code / ephemeral container)

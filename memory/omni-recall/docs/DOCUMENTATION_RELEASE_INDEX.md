@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.6.0
-last_audited: 2026-06-24
+version: 1.7.0
+last_audited: 2026-06-25
 status: verified
 ---
 
@@ -10,33 +10,34 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-06-24** (Session 3: v1.8.2 release cut + guard alignment; PRs #1485/#1486 merged to `main`). Previous refresh: 2026-06-24 Session 2 (PR #1485 certification owner-approval + agent guardrails + comprehensive doc sync). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_24.md`.
+> Current repo-truth index refreshed **2026-06-25** (integration harness CI fix; `main` PRs #1487/#1488 incorporated). Previous refresh: 2026-06-24 Session 3 (v1.8.2 release cut + guard alignment; PRs #1485/#1486 merged to `main`). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_25.md`.
 
-## Current Repo Facts Verified in This Pass (2026-06-24)
+## Current Repo Facts Verified in This Pass (2026-06-25)
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| `main` HEAD | `8bfb1a6` — PR #1486 "fix(sonar): resolve SonarQube code smells across omnihub-site components" |
-| Active fix branch HEAD | none — development branch tracks `main` at the same commit; no open PRs |
+| `main` HEAD | `4c0d481` — PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism" |
+| Active dev branch | `claude/kind-feynman-h5gcbs` — HEAD `6074e0c` (fix(ci): integration-harness playwright install hang) |
 | Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
-| GitHub workflow files | **23** files in `.github/workflows/` |
+| GitHub workflow files | **20** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`) |
 | Release/package versions | Root `package.json` declares **`1.8.2`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_24.md`. |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_25.md`. |
 | SQL migrations | **100** `.sql` files = **96 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **36** (35 function dirs + `_shared`) |
+| Edge function dirs | **33** (32 function dirs + `_shared`) — git-verified; previously documented as 36 |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~107 tracked (excl. `__pycache__`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441; unsupported actions fail-closed, never call `trigger-workflow` |
 | Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed, pinned `bun@1.3.14`) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
+| Integration harness CI | **FIXED** — `integration.yml` playwright install hang resolved (2026-06-25); `--with-deps` + browser cache + timeout added |
 | APEX Agent (carried forward) | **LIVE / demo-ready** — verified end-to-end 2026-06-19; traces `61ce8dce`, `861d9f0c`, `da6e7fe5` completed |
 | `omni_policies` (carried forward) | Provisioned 2026-06-19 — 7 tailored policies active |
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
-| Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485; exemptions aligned with `check-release-certification-docs.mjs` (owner-approved/, templates/, CHANGELOG.md) Session 3 |
-| Owner-approved certification | `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` — scoped to `main` HEAD `8bfb1a6` / `v1.8.2` |
+| Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485; exemptions aligned with `check-release-certification-docs.mjs` (owner-approved/, templates/, CHANGELOG.md) |
+| Owner-approved certification | `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` — scoped to `main` HEAD `8bfb1a6` / `v1.8.2`; any later change requires its own owner sign-off |
 
 ## Documentation Authority Order
 
@@ -58,7 +59,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(current — supersedes 2026-06-23 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(current — supersedes 2026-06-24 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(historical — 2026-06-24 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_22.md` _(historical — 2026-06-22 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` _(historical — 2026-06-21 snapshot)_
@@ -376,6 +378,36 @@ Full release-rescue audit performed against `main` @ `5870a8ec` (PR #1476, "Rebr
 
 ### Current canonical start point
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (supersedes 2026-06-22 snapshot)
+
+---
+
+## 2026-06-25 Doc Sync — Integration Harness CI Fix + Count Corrections
+
+Full repo-truth documentation sync performed against `main` @ `4c0d481` (PR #1488) and dev branch `claude/kind-feynman-h5gcbs` HEAD `6074e0c`. All counts directly git-verified.
+
+| File | Change |
+|---|---|
+| `.github/workflows/integration.yml` | **FIXED** — playwright install hang: added `actions/cache@v4` for `~/.cache/ms-playwright`, switched to `playwright install --with-deps chromium`, added `timeout-minutes: 10`; YAML validated |
+| `README.md` | v1.3.2→v1.3.3; last_audited 2026-06-24→2026-06-25; removed broken `production-readiness.yml` badge; workflow count 23→20; edge fn dirs 36→33; repo layout counts corrected; repo-history note updated to PR #1487/#1488; CI table: removed `sonarqube-analysis` (gone), fixed `guardrail-alert`→`alert-guard-rail-violation`, added `integration`, `security-regression-guard`, `orchestrator-ci`; removed `lovable-healthcheck` (dir gone) |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md` | **NEW** — full platform state snapshot; supersedes 2026-06-24 |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | v1.6.0→v1.7.0; this file — facts table, authority order, start points updated to 2026-06-25 |
+| `memory/omni-recall/start-here.md` | v1.3.0→v1.3.1; 2026-06-25 session block appended |
+| `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Header updated to `main` @ `4c0d481`; Statement 24 added (integration harness CI fix, count corrections) |
+| `memory/omni-recall/CLAUDE.md` | Audit line updated to 2026-06-25 |
+| `.understand-anything/graph-meta.json` | Timestamp updated to 2026-06-25T01:00:00Z |
+| `CLAUDE.md` (root) | **Skill routing updated** — `apex-dev` skill superseded; `apex-boost-claude`, `apex-master-debug-claude`, and `omnidev-apex-pro-1.0.0` are now the canonical skills |
+
+### Count corrections (2026-06-24 → 2026-06-25, all git-verified)
+
+| Metric | Previous (2026-06-24) | Current (2026-06-25) | Reason |
+|---|---|---|---|
+| CI/CD workflows | 23 | **20** | `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml` removed in PRs #1487/#1488 |
+| Edge function dirs | 36 | **33** | 3 dirs removed (git-verified against live tree) |
+| All other counts | unchanged | unchanged | src 328, tsx 94, hooks 23, migrations 100 |
+
+### Current canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md` (supersedes 2026-06-24)
 
 ---
 
