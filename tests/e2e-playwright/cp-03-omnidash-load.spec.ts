@@ -105,8 +105,7 @@ test.describe('CP-03 — OmniDash Load', () => {
     const errors = trackConsole(page);
 
     // Canvas (center)
-    await expect(page.getByTestId('omnislate-pane')
-      .or(page.locator('.apex-hero-tile-wrapper--lg'))).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('widget_slate')).toBeVisible({ timeout: 15_000 });
 
     // Sidebar (left)
     await expect(page.locator('.omni-sidebar')).toBeVisible();

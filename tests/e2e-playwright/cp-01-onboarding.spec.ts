@@ -30,7 +30,7 @@ test.describe('CP-01 — Onboarding', () => {
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
   });
 
-  test.skip('sign-up link / tab is accessible from login page', async ({ page }) => { // APEX-8013
+  test.skip('APEX-1000: sign-up link / tab is accessible from login page', async ({ page }) => { // APEX-8013
     test.info().annotations.push({ type: 'issue', description: 'BLOCKED(APEX-8013): Sign Up tab intentionally removed from login flow' });
     await page.goto('/login');
     // We expect the auth UI to have a sign-up mode or link
@@ -52,7 +52,7 @@ test.describe('CP-01 — Onboarding', () => {
   });
 
   test('post-auth /omnidash load — top header visible, no mock text', async ({ page }) => {
-    test.skip(!process.env.VITE_SUPABASE_URL, 'BLOCKED(APEX-8004): Requires VITE_SUPABASE_URL for authenticated flow');
+    test.skip(!process.env.VITE_SUPABASE_URL, 'APEX-1000: BLOCKED(APEX-8004): Requires VITE_SUPABASE_URL for authenticated flow');
     const errors = trackConsole(page);
 
     // Inject a valid session via localStorage to simulate post-sign-up state
