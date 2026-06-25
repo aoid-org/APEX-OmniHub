@@ -919,3 +919,17 @@ The module-state route in omnilink-port, and the core endpoints in pex-agent, c
 **Fix:** `timeout-minutes: 15 → 25` on the "Install Playwright browser (cache miss only)" step. This provides a ~10-minute safety margin over the observed worst-case. The cache-hit path is already protected: when `steps.playwright-cache.outputs.cache-hit == 'true'`, the browser step is skipped entirely via the `if:` condition, so the timeout is irrelevant for all warm-cache runs.
 
 **Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard.
+
+---
+
+### §9.20 — integration.yml: add restore-keys + 45-min timeout to eliminate playwright cold-cache loop (2026-06-25)
+
+**Change**: Added `restore-keys: playwright-chromium-` to the `Cache Playwright browsers` step and increased `timeout-minutes` from 25 → 45 on the `Install Playwright browser (cache miss only)` step.
+
+**Operational impact**: Zero. No deployed service, environment variable, database table, migration, or start command is affected. This is a CI workflow internal improvement only.
+
+**Why**: GitHub-hosted Ubuntu 22.04 runners have variable disk I/O and network throughput. Cold-cache playwright download + extraction was observed at 15–26 min depending on runner speed, causing repeated timeout failures (PRs #1490, #1491, #1492 all addressed symptoms). The root cause is the absence of `restore-keys`: without it, any cache-key miss (new package-lock.json hash, or a prior run that timed out before the cache saved) forces a full cold-cache download regardless of whether the playwright binary actually changed.
+
+**Structural fix**: With `restore-keys: playwright-chromium-`, any existing playwright binary in the cache is restored on a prefix match. `playwright install chromium` then performs a version check only (seconds) rather than a full download. Cold-cache downloads now only happen once per playwright version upgrade, not on every run. The 45-minute timeout is a one-time bootstrap safety net covering the observed worst-case of 26 min with a 19-min margin.
+
+**Loop broken**: exact-hit → step skipped; prefix-hit → instant version check; cold → 45 min timeout covers worst observed case with margin.

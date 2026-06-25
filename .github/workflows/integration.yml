@@ -38,6 +38,13 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ hashFiles('integration-harness/package-lock.json') }}
+          # restore-keys lets any existing playwright binary (same prefix) warm the cache.
+          # On a prefix match cache-hit='false' so the install step runs, but
+          # `playwright install chromium` sees the binary already present and exits
+          # in seconds (version check only — no download). This eliminates the cold-cache
+          # download loop that was causing repeated timeout failures.
+          restore-keys: |
+            playwright-chromium-
 
       # System libs (libglib2, libnss3, libgbm1, …) are NOT cached — always install.
       # Fast (~30s via apt-get), required even on browser cache hit.
@@ -46,12 +53,14 @@ jobs:
         run: cd integration-harness && npx --no -- playwright install-deps chromium
 
       # Browser binary (~170 MiB) is cached in ~/.cache/ms-playwright.
-      # Only download+extract on cache miss; cache hits skip this step entirely.
-      # Observed cold-cache time: download ~9 min + zip extraction ~6 min = ~15 min.
-      # 25-minute timeout gives a ~10-minute safety margin for slow runners.
+      # Exact cache-hit  → step skipped entirely (0 s).
+      # Prefix cache-hit → step runs; playwright sees binary already present → instant no-op.
+      # Cold cache       → download + extract; observed range 15–26 min on Ubuntu 22.04 runners.
+      # 45-minute timeout is a one-time safety net for the cold-cache bootstrap only.
+      # After the first successful run the restore-keys prefix match keeps this near-instant.
       - name: Install Playwright browser (cache miss only)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 25
+        timeout-minutes: 45
         run: cd integration-harness && npx --no -- playwright install chromium
 
       - name: Run harness
