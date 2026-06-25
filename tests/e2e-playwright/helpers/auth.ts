@@ -26,13 +26,13 @@ function getSupabaseStorageKey(url: string): string {
 
 /**
  * APEX-1205: Resolve E2E credentials in priority order:
- *   1. File written by globalSetup (playwright/.auth/e2e-test-user.json) — highest priority.
- *      Playwright workers are separate OS processes and do NOT inherit process.env
- *      mutations made in globalSetup, so the dynamically provisioned user must be
- *      communicated via file.
- *   2. Process env vars (E2E_USER_EMAIL / E2E_USER_PASSWORD) — static CI secrets fallback.
- *   3. Neither available → returns undefined/undefined → falls through to anonymous sign-in
- *      (which will fail loudly if anonymous auth is disabled, as intended).
+ *  1. File written by globalSetup (playwright/.auth/e2e-test-user.json) — highest priority.
+ *     Playwright workers are separate OS processes and do NOT inherit process.env
+ *     mutations made in globalSetup, so the dynamically provisioned user must be
+ *     communicated via file.
+ *  2. Process env vars (E2E_USER_EMAIL / E2E_USER_PASSWORD) — static CI secrets fallback.
+ *  3. Neither available → returns undefined/undefined → falls through to anonymous sign-in
+ *     (which will fail loudly if anonymous auth is disabled, as intended).
  */
 function resolveE2ECredentials(): { email: string | undefined; password: string | undefined } {
   // Priority 1: dynamic credentials file written by globalSetup
@@ -63,9 +63,10 @@ async function createRealSupabaseSession(config: SupabaseBrowserConfig): Promise
   });
 
   const { email, password } = resolveE2ECredentials();
-  const response = email && password
-    ? await supabase.auth.signInWithPassword({ email, password })
-    : await supabase.auth.signInAnonymously();
+  const response =
+    email && password
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signInAnonymously();
 
   if (response.error || !response.data.session) {
     throw new Error(
@@ -87,7 +88,6 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
   }
 
   const session = await createRealSupabaseSession(config);
-
   const storageKey = getSupabaseStorageKey(config.url);
 
   await page.addInitScript(
@@ -98,6 +98,10 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
     { key: storageKey, value: session },
   );
 
-  await page.goto('/omnidash', { waitUntil: 'networkidle' });
+  // Use 'domcontentloaded' instead of 'networkidle' to avoid hanging in CI when
+  // the preview server has long-polling, SSE, or WebSocket connections that prevent
+  // the network from ever going idle. The toHaveURL assertion below confirms navigation
+  // succeeded with an explicit 30s timeout.
+  await page.goto('/omnidash', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/omnidash/, { timeout: 30_000 });
 }
