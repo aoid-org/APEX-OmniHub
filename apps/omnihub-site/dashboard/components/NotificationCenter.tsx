@@ -69,10 +69,10 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: AppNot
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-40 p-1" align="end">
-                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal" onClick={() => console.log('View Details', n.id)}>
+                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal">
                   View Details
                 </Button>
-                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal text-muted-foreground" onClick={() => console.log('Escalate', n.id)}>
+                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal text-muted-foreground">
                   Escalate
                 </Button>
               </PopoverContent>

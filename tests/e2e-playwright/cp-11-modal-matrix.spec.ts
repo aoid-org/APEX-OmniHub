@@ -22,17 +22,18 @@ test.beforeAll(async () => {
     auth: { persistSession: false, autoRefreshToken: false }
   });
 
+  const TEST_PWD = 'TestPassword123!';
   // Create test user
   const email = `test-${crypto.randomUUID()}@apex-omnihub.local`;
   const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
     email,
-    password: 'TestPassword123!',
+    password: TEST_PWD,
     email_confirm: true
   });
   if (userError || !user?.user) throw new Error('Seeding failed: ' + userError?.message);
   testUserId = user.user.id;
   process.env.E2E_USER_EMAIL = email;
-  process.env.E2E_USER_PASSWORD = 'TestPassword123!';
+  process.env.E2E_USER_PASSWORD = TEST_PWD;
 
   // Seed storage file for Delete Modal
   await supabaseAdmin.storage.from('omnihub_files').upload(
@@ -61,7 +62,7 @@ test.beforeAll(async () => {
   // --- RLS VERIFICATION (User A/B Read Denial) ---
   const { data: userB, error: userBError } = await supabaseAdmin.auth.admin.createUser({
     email: `test-b-${crypto.randomUUID()}@apex-omnihub.local`,
-    password: 'TestPassword123!',
+    password: TEST_PWD,
     email_confirm: true
   });
   if (userBError || !userB?.user) throw new Error('Seeding User B failed: ' + userBError?.message);
@@ -71,7 +72,7 @@ test.beforeAll(async () => {
   });
   await supabaseUserB.auth.signInWithPassword({
     email: userB.user.email as string,
-    password: 'TestPassword123!'
+    password: TEST_PWD
   });
 
   // Verify User B cannot read User A's workflow

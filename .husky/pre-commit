@@ -4,3 +4,7 @@ if grep -r "DEV BYPASS" apps/omnihub-site/; then
   echo "Error: DEV BYPASS markers are not allowed under apps/omnihub-site/."
   exit 1
 fi
+
+echo "Running static analysis (lint & typecheck)..."
+npm run lint || exit 1
+npm run typecheck || exit 1
