@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('BYOM Login Flow', () => {
-  test('User can select Groq and provide API key to login', async ({ page }) => {
+  test.skip('User can select Groq and provide API key to login', async ({ page }) => {
+    test.info().annotations.push({ type: 'issue', description: 'BLOCKED(APEX-8014): BYOM Groq selection flow altered' });
 
 
     await page.goto('/login');

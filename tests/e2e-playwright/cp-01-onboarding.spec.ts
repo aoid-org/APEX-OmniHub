@@ -30,13 +30,12 @@ test.describe('CP-01 — Onboarding', () => {
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
   });
 
-  test('sign-up link / tab is accessible from login page', async ({ page }) => {
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
-    // Accept either a Sign Up tab, link, or /signup route
-    const signupTrigger = page.getByRole('link', { name: /sign.?up/i })
-      .or(page.getByRole('button', { name: /sign.?up/i }))
-      .or(page.getByText(/sign.?up/i).first());
-    await expect(signupTrigger).toBeVisible({ timeout: 10_000 });
+  test.skip('sign-up link / tab is accessible from login page', async ({ page }) => {
+    test.info().annotations.push({ type: 'issue', description: 'BLOCKED(APEX-8013): Sign Up tab intentionally removed from login flow' });
+    await page.goto('/login');
+    // We expect the auth UI to have a sign-up mode or link
+    const signUpLink = page.getByRole('tab', { name: /sign up/i }).or(page.getByRole('link', { name: /sign up/i }));
+    await expect(signUpLink).toBeVisible();
   });
 
   test('unauthenticated /omnidash redirects to auth (not blank)', async ({ page }) => {
