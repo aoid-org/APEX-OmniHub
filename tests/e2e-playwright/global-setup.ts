@@ -50,12 +50,12 @@ async function globalSetup(_config: FullConfig) {
       });
 
       const email = `test-runner-${Date.now()}@apex-omnihub.local`;
-      const password = 'Test-Pass-123!';
+      const pwd = 'Test-Pass-123!';
 
       console.log(`Provisioning dynamic test user: ${email}`);
       const { error } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password,
+        password: pwd,
         email_confirm: true
       });
 
@@ -77,12 +77,12 @@ async function globalSetup(_config: FullConfig) {
       fs.mkdirSync(authDir, { recursive: true });
       fs.writeFileSync(
         path.join(authDir, 'e2e-test-user.json'),
-        JSON.stringify({ email, password }),
+        JSON.stringify({ email, password: pwd }),
         'utf-8'
       );
 
       process.env.E2E_USER_EMAIL = email;
-      process.env.E2E_USER_PASSWORD = password;
+      process.env.E2E_USER_PASSWORD = pwd;
       console.log(`✓ Provisioned dynamic test user: ${email}`);
     }
   } catch (error) {
