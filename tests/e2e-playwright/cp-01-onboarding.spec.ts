@@ -55,7 +55,7 @@ test.describe('CP-01 — Onboarding', () => {
   test('post-auth /omnidash load — top header visible, no mock text', async ({ page }) => {
     test.skip(
       !process.env.VITE_SUPABASE_URL,
-      'Requires VITE_SUPABASE_URL for authenticated flow',
+      'BLOCKED(APEX-8004): Requires VITE_SUPABASE_URL for authenticated flow',
     );
     const errors = trackConsole(page);
 

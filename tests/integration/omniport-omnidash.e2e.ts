@@ -6,7 +6,7 @@ const serviceKey = process.env.OMNI_PORT_SERVICE_KEY ?? process.env.SUPABASE_SER
 
 describe('OmniPort → OmniDash live feed', () => {
   if (!baseUrl || !serviceKey) {
-    it.skip('skipped (set OMNI_PORT_BASE_URL and OMNI_PORT_SERVICE_KEY to enable live test)', () => {});
+    it.skip('skipped [BLOCKED(APEX-8003)] (set OMNI_PORT_BASE_URL and OMNI_PORT_SERVICE_KEY to enable live test)', () => {});
     return;
   }
 

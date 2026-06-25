@@ -161,7 +161,7 @@ test.describe('CP-11 — Modal Correctness Matrix (PARTIAL)', () => {
       await byomBtn.click();
       await assertModalIdentityAndIsolation(page, /byom|key|provider/i);
     } else {
-      test.skip(true, 'BYOM settings not reachable natively from dashboard side-nav in this configuration.');
+      test.skip(true, 'BLOCKED(APEX-8005): BYOM settings not reachable natively from dashboard side-nav in this configuration.');
     }
   });
 
