@@ -1,6 +1,6 @@
 ---
-version: 1.3.0
-last_audited: 2026-06-24
+version: 1.3.1
+last_audited: 2026-06-25
 status: verified
 ---
 
@@ -105,4 +105,14 @@ The system should:
 - **Release:** `package.json` bumped `1.8.1` → `1.8.2` (CHANGELOG `1.8.2` already written). Release cut is **manual / owner-driven** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence **attach-only** (gated on the tag already existing via `git ls-remote`, so CI can never create a tag — owner decision, resolved 2026-06-24).
 - **Owner certification:** `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` rewritten to be HEAD-accurate (scope `8bfb1a6` / `v1.8.2`, real CI + local evidence, calibrated language — scoped certification, not a standing/permanent guarantee).
 - **Docs synced:** root `README.md`, `CURRENT_PLATFORM_STATE_2026_06_24.md` (v1.2.0), `DOCUMENTATION_RELEASE_INDEX.md` (v1.6.0), omni-recall `docs/README.md`, `architecture/CANONICAL_TRUTH.md`, this file, and `memory/omni-recall/CLAUDE.md` audit line.
+
+## Session 2026-06-25 — Integration Harness CI Fix + Full Doc Sync
+
+- Branch: `claude/kind-feynman-h5gcbs`; HEAD `6074e0c`
+- `main` HEAD at session start: `4c0d481` (PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism"); PR #1487 (`b43bf6a`) also merged since last sync.
+- **Integration harness CI fix:** Root cause isolated — `playwright install chromium` without `--with-deps` caused the post-download browser verification to deadlock on missing Ubuntu 22.04 system libs (`libglib`, `libnss3`, `libgbm1`, etc.), stalling the job for 5h 26m 52s. Fix: added `actions/cache@v4` for `~/.cache/ms-playwright` (keyed by lock file hash), switched to `playwright install --with-deps chromium`, added `timeout-minutes: 10`. YAML validated.
+- **Count changes since last sync:** workflows 23 → **20** (removed: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`); edge function dirs 36 → **33** (32 function dirs + `_shared`, git-verified).
+- **Stale badge removed:** `production-readiness.yml` badge removed from README (workflow no longer exists).
+- **Docs synced:** `README.md` (v1.3.3), `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md` (NEW), `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` (v1.7.0), `memory/omni-recall/start-here.md` (this file), `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md`, `memory/omni-recall/CLAUDE.md`, root `CLAUDE.md` (skill routing updated: `apex-dev` superseded by `apex-boost-claude`, `apex-master-debug-claude`, `omnidev-apex-pro-1.0.0`), `.understand-anything/graph-meta.json`.
+- **No release cut this session.** Version remains `1.8.2`.
 
