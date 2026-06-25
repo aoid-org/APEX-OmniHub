@@ -40,7 +40,7 @@ async function globalSetup(_config: FullConfig) {
 
     // Seed test user dynamically since anonymous sign-ins are disabled
     const serviceKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY;
-    if (serviceKey && !process.env.E2E_USER_EMAIL) {
+    if (serviceKey) {
       const supabaseAdmin = createClient(url, serviceKey, {
         auth: { autoRefreshToken: false, persistSession: false }
       });
