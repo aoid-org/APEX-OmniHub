@@ -56,11 +56,13 @@ async function globalSetup(_config: FullConfig) {
       });
 
       if (error) {
-        console.warn(`Failed to provision test user: ${error.message}`);
-      } else {
-        process.env.E2E_USER_EMAIL = email;
-        process.env.E2E_USER_PASSWORD = password;
+        // APEX-1204: Throw early — silent failure leaves E2E_USER_EMAIL/PASSWORD unset,
+        // causing ALL authenticated tests to fail with a misleading Supabase auth error.
+        throw new Error(`APEX-1204: E2E user provisioning failed — authenticated tests require a valid test user. Error: ${error.message}`);
       }
+      process.env.E2E_USER_EMAIL = email;
+      process.env.E2E_USER_PASSWORD = password;
+      console.log(`\u2713 Provisioned dynamic test user: ${email}`);
     }
   } catch (error) {
     throw new Error(`APEX-1203: Test Integrity Doctrine R4 Violation - Backend unreachable at ${url}. ${error instanceof Error ? error.message : ''}`);
