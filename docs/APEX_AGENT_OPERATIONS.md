@@ -919,3 +919,27 @@ The module-state route in omnilink-port, and the core endpoints in pex-agent, c
 **Fix:** `timeout-minutes: 15 → 25` on the "Install Playwright browser (cache miss only)" step. This provides a ~10-minute safety margin over the observed worst-case. The cache-hit path is already protected: when `steps.playwright-cache.outputs.cache-hit == 'true'`, the browser step is skipped entirely via the `if:` condition, so the timeout is irrelevant for all warm-cache runs.
 
 **Operational impact:** none. Pure CI infrastructure fix. No change to any deployed service, env var, secret, DB object, or start command. This note satisfies the Ops Doc Drift Guard.
+
+---
+
+### §9.20 — integration.yml: add restore-keys + stable cache key to address playwright cold-cache loop (2026-06-25)
+
+**Operational impact**: Zero. No deployed service, environment variable, database table, migration, or start command is affected. CI workflow internal improvement only.
+
+**Changes**: Added `restore-keys: playwright-chromium-${{ runner.os }}-` and changed cache key from `hashFiles(package-lock.json)` to exact Playwright version resolved from installed node_modules. Any Dependabot dep bump (not Playwright) no longer invalidates the cache.
+
+---
+
+### §9.21 — integration.yml + playwright.config.ts: switch to system Chrome to permanently eliminate bundled-Chromium download timeout (2026-06-25)
+
+**Files changed**: `.github/workflows/integration.yml`, `integration-harness/playwright.config.ts`
+
+**Operational impact**: Zero. No deployed service, environment variable, database table, migration, or start command is affected. Integration harness CI workflow internal improvement only.
+
+**Root causes addressed**:
+- RC-1 [PRIMARY]: `playwright install chromium` downloads a 170 MiB bundled binary from CDN; zip extraction stalls on ubuntu-22.04 runners after download reaches 100%, causing repeated timeouts. Cross-referenced fix from ci-runtime-gates.yml: use preinstalled `google-chrome-stable` via `channel: 'chrome'` — no download occurs. **Confirmed by live CI log: `Google Chrome 149.0.7827.155` printed in ~19s on a cache-miss run** (run `28146110490`, job `83353647389`).
+- RC-2: Cache key used `hashFiles(package-lock.json)` — fixed in §9.20.
+- RC-3: No `restore-keys` — fixed in §9.20.
+- RC-4: `playwright.config.ts` had no `channel` — defaulted to bundled Chromium. Fixed: `channel: 'chrome'` added.
+
+**Fix summary**: Browser install step checks for `google-chrome`/`google-chrome-stable` first (always present on ubuntu-22.04 GitHub-hosted runners). If found: use it, exit in <2s — no CDN download, no zip extraction, no timeout possible. `playwright.config.ts` adds `channel: 'chrome'`. Loop permanently broken.
