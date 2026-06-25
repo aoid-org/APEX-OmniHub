@@ -40,7 +40,8 @@ test.describe('CP-02 — BYOM Login', () => {
     await expect(modalHeading).toBeVisible({ timeout: 5_000 });
 
     // Ensure the modal renders within viewport bounds (especially critical for mobile/tablet)
-    const dialogContent1 = page.locator('[role="dialog"]').first();
+    const dialogContent1 = page.locator('[role="dialog"]').filter({ has: modalHeading });
+    await expect(dialogContent1).toBeVisible();
     const box1 = await dialogContent1.boundingBox();
     if (box1) {
       const viewport = page.viewportSize();
@@ -67,7 +68,8 @@ test.describe('CP-02 — BYOM Login', () => {
     await expect(modalHeading2).toBeVisible({ timeout: 8_000 });
 
     // Ensure the modal renders within viewport bounds (especially critical for mobile/tablet)
-    const dialogContent2 = page.locator('[role="dialog"]').first();
+    const dialogContent2 = page.locator('[role="dialog"]').filter({ has: modalHeading2 });
+    await expect(dialogContent2).toBeVisible();
     const box2 = await dialogContent2.boundingBox();
     if (box2) {
       const viewport = page.viewportSize();

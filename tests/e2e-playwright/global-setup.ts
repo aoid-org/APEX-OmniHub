@@ -1,4 +1,5 @@
 import type { FullConfig } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * APEX-OmniHub: Test Integrity Doctrine (R4 Backend Realism)
@@ -35,6 +36,31 @@ async function globalSetup(_config: FullConfig) {
     const data = await response.json();
     if (data.version === undefined && data.name !== 'GoTrue') {
       console.warn('Warning: Healthcheck responded, but does not look like Supabase Auth API');
+    }
+
+    // Seed test user dynamically since anonymous sign-ins are disabled
+    const serviceKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceKey && !process.env.E2E_USER_EMAIL) {
+      const supabaseAdmin = createClient(url, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+
+      const email = `test-runner-${Date.now()}@apex-omnihub.local`;
+      const password = `Test-Pass-123!`;
+      
+      console.log(`Provisioning dynamic test user: ${email}`);
+      const { error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true
+      });
+
+      if (error) {
+        console.warn(`Failed to provision test user: ${error.message}`);
+      } else {
+        process.env.E2E_USER_EMAIL = email;
+        process.env.E2E_USER_PASSWORD = password;
+      }
     }
   } catch (error) {
     throw new Error(`APEX-1203: Test Integrity Doctrine R4 Violation - Backend unreachable at ${url}. ${error instanceof Error ? error.message : ''}`);
