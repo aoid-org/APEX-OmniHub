@@ -31,13 +31,11 @@ test.describe('CP-05 — Action Execution (OmniSlate)', () => {
     test.skip(!isDesktop, 'APEX-1001: OmniSlate execution is desktop-only in this flow');
 
     // Intercept action dispatch to avoid real backend mutation
-    let actionFired = false;
     await page.route('**/functions/v1/omnilink-port', async (route, request) => {
       if (request.method() === 'POST') {
         const postData = request.postDataJSON() || {};
         // Identify action invocations
         if (postData.action && postData.module_key) {
-          actionFired = true;
           return route.fulfill({
             status: 200,
             body: JSON.stringify({ State: 'Success', items: [], count: 0 }),

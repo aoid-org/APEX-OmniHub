@@ -6,8 +6,6 @@
 import { test, expect } from '@playwright/test';
 import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
 
-const FATAL = /createContext|Cannot read properties of undefined|ChunkLoadError|Failed to fetch dynamically imported module/;
-
 test.describe('CP-07 — Add Link E2E', () => {
   test.beforeEach(async ({ page }) => {
     skipWithoutSupabaseConfig();

@@ -197,7 +197,7 @@ export function OmniSpatialHost() {
 
       dialogNode.addEventListener('keydown', handleTab);
       // We attach it to the node, so we need to return the cleanup
-      dialogNode._cleanupTab = () => dialogNode.removeEventListener('keydown', handleTab);
+      (dialogNode as any)._cleanupTab = () => dialogNode.removeEventListener('keydown', handleTab);
     }, 50);
 
     return () => {

@@ -3,10 +3,8 @@
  * Journey: Workflows widget → Trigger Run / View Workflows
  * Exit assertion: Workflows module resolves state, workflow run triggers
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
-
-const FATAL = /createContext|Cannot read properties of undefined|ChunkLoadError|Failed to fetch dynamically imported module/;
 
 test.describe('CP-06 — Workflow Automation', () => {
   test.beforeEach(async ({ page }) => {

@@ -3,7 +3,7 @@
  * Journey: Triggers specific modals
  * Exit assertion: Modals render in `omni-dialog` with correct headings/CTAs acting as discriminators.
  */
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { signInWithSupabaseSession } from './helpers/auth';
 import { assertModalIdentityAndIsolation } from './helpers/modal';
@@ -81,8 +81,8 @@ test.beforeAll(async () => {
   }
 
   // --- APPEND-ONLY AUDIT LOG VERIFICATION ---
-  const { error: updateError } = await supabaseUserB.from('audit_logs').update({ metadata: {} }).eq('user_id', userB.user.id);
-  const { error: deleteError } = await supabaseUserB.from('audit_logs').delete().eq('user_id', userB.user.id);
+  const { error: _updateError } = await supabaseUserB.from('audit_logs').update({ metadata: {} }).eq('user_id', userB.user.id);
+  const { error: _deleteError } = await supabaseUserB.from('audit_logs').delete().eq('user_id', userB.user.id);
   // Audit logs should reject updates/deletes, but insert is done via DB functions. If it returns error or silently fails, it means append-only is intact.
   // Wait, if RLS is enabled, update/delete returns empty array and no error unless we try to update a row we own.
   // The actual check is that we can't mutate.
@@ -175,7 +175,7 @@ test.describe('CP-11 — Modal Correctness Matrix (PARTIAL)', () => {
   });
 
   // 9. Notification Detail
-  test('NotificationDetailModal discriminator', async ({ page }) => {
+  test('NotificationDetailModal discriminator', async () => {
     test.fixme(true, 'BLOCKED(APEX-1106): Notification Detail modal cannot be reached natively without seeded realtime notifications.');
   });
 
