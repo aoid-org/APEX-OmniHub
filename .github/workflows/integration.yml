@@ -32,8 +32,16 @@ jobs:
       - name: Install harness deps
         run: cd integration-harness && npm ci --ignore-scripts
 
-      - name: Install Playwright browser
-        run: cd integration-harness && npm exec --no --ignore-scripts -- playwright install chromium
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('integration-harness/package-lock.json') }}
+
+      - name: Install Playwright browser + system deps
+        timeout-minutes: 10
+        run: cd integration-harness && npx --no -- playwright install --with-deps chromium
 
       - name: Run harness
         run: cd integration-harness && bash run.sh
