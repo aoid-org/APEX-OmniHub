@@ -491,7 +491,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
     });
   };
   return (
-    <div style={{
+    <div data-testid="omnidash-top-header" style={{
       height:58, flexShrink:0,
       background:`${T.surface}f0`,
       borderBottom:`1px solid ${T.border}`,
@@ -503,6 +503,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       {/* Wordmark */}
       <div style={{ flexShrink:0, display:"flex", alignItems:"center", marginRight:10 }}>
         <img
+          data-testid="top-header-logo"
           src={IMG_WORDMARK}
           alt="APEX-OmniHub"
           style={{ height:30, width:210, objectFit:"contain", display:"block" }}
@@ -1541,7 +1542,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
+            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1616,7 +1617,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
+            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1681,7 +1682,7 @@ export default function OmniDashShell() {
           title="Insights & Controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
+            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
             <OmniTraceFeed />
             <SentinelPanel />
           </div>
