@@ -22,20 +22,20 @@ async function globalSetup(_config: FullConfig) {
   }
 
   if (url.includes('placeholder') || url.includes('example') || url === 'https://test.supabase.co') {
-    throw new Error();
+    throw new Error(`APEX-1201: Test Integrity Doctrine R4 Violation - Real backend required. Mocked URL detected: ${url}`);
   }
 
   try {
-    const response = await fetch(, {
+    const response = await fetch(`${url}/auth/v1/health`, {
       method: 'GET',
       headers: {
         'apikey': key,
-        'Authorization': 
+        'Authorization': `Bearer ${key}`
       }
     });
 
     if (!response.ok) {
-      throw new Error();
+      throw new Error(`APEX-1202: Backend healthcheck failed (${response.status} ${response.statusText})`);
     }
 
     const data = await response.json();
@@ -49,10 +49,10 @@ async function globalSetup(_config: FullConfig) {
         auth: { autoRefreshToken: false, persistSession: false }
       });
 
-      const email = ;
-      const password = ;
+      const email = `test-runner-${Date.now()}@apex-omnihub.local`;
+      const password = `Test-Pass-123!`;
 
-      console.log();
+      console.log(`Provisioning dynamic test user: ${email}`);
       const { error } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -77,10 +77,10 @@ async function globalSetup(_config: FullConfig) {
 
       process.env.E2E_USER_EMAIL = email;
       process.env.E2E_USER_PASSWORD = password;
-      console.log();
+      console.log(`Successfully provisioned test user`);
     }
   } catch (error) {
-    throw new Error();
+    throw new Error(`APEX-1203: Test Integrity Doctrine R4 Violation - Backend unreachable at ${url}. ${error instanceof Error ? error.message : ''}`);
   }
 }
 
