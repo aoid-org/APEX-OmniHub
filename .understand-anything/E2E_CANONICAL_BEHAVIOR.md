@@ -28,3 +28,7 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 **Rule:** The E2E suite runs against a live Supabase project (`apex-omnihub-e2e`). 
 - **Seeding:** The suite uses `E2E_SUPABASE_SERVICE_ROLE_KEY` to run an idempotent `beforeAll` seed harness that provisions dynamic test users, uploads files, and structures mock workflows.
 - **Security Validation:** The test suite MUST actively verify proper execution of RLS (e.g., User B cannot view User A's data) and append-only immutability of the `audit_logs` table during runtime.
+
+## 6. Playwright Navigation & Supabase Long-Polling
+**Invariant:** `networkidle` conditions will timeout in CI because Supabase opens long-polling/websocket connections for real-time features.
+**Rule:** When calling `page.waitForNavigation`, `page.goto`, or `signInWithSupabaseSession`, ALWAYS use `waitUntil: 'domcontentloaded'` instead of `networkidle`. Use explicit visual assertions (e.g., `expect(page.locator('...')).toBeVisible()`) to ensure the page has fully loaded.
