@@ -3,7 +3,7 @@
  * Journey: Workflows widget → Trigger Run / View Workflows
  * Exit assertion: Workflows module resolves state, workflow run triggers
  */
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
 
 test.describe('CP-06 — Workflow Automation', () => {
@@ -12,7 +12,7 @@ test.describe('CP-06 — Workflow Automation', () => {
     await signInWithSupabaseSession(page);
   });
 
-  test('Workflows module resolves and displays active workflows', async ({ page }) => {
+  test('Workflows module resolves and displays active workflows', async () => {
     // APEX-2006: Workflows module not yet wired to canvas — widget visibility pending OmniSpatialHost integration
     test.skip(true, 'APEX-2006: Workflows module not yet wired to canvas — widget visibility pending OmniSpatialHost integration');
   });
