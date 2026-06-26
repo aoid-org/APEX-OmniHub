@@ -246,9 +246,9 @@
 }
 
 /* Reserve the starmap slot before /omnihub-starmap.js injects content.
- * contain-intrinsic-size was removed: its 720px fallback was smaller than
- * min-height (820px), causing a 100px CLS jump on first-time visitors when
- * content-visibility: auto rendered the section on scroll. */
+ * content-visibility and contain-intrinsic-size were removed: the 720px
+ * intrinsic-size fallback was smaller than min-height (820px), producing a
+ * 100px CLS jump for first-time visitors on scroll-into-view. */
 .landing-root .omnihub-platform-map-host {
   display: block;
   min-height: clamp(520px, 72vh, 820px);

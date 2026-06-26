@@ -26,10 +26,10 @@ describe('Web Vitals regressions', () => {
     expect(landingCss).toContain('.landing-root .omnihub-platform-map-host');
     expect(landingCss).toContain('min-height: clamp(520px, 72vh, 820px)');
     expect(landingCss).toContain('contain: layout paint');
-    expect(landingCss).toContain('content-visibility: auto');
-    // `auto` keyword makes the browser remember the real rendered height after
-    // first paint so re-entry never re-jumps the #maestro section below it.
-    expect(landingCss).toContain('contain-intrinsic-size: auto 720px');
+    // These properties caused CLS 0.172: 720px intrinsic-size < 820px min-height → 100px jump on first scroll.
+    // Guard against regression — they must stay removed.
+    expect(landingCss).not.toContain('content-visibility: auto');
+    expect(landingCss).not.toContain('contain-intrinsic-size: auto 720px');
 
     const script = document.getElementById('ohsm-script');
     expect(script).toBeInstanceOf(HTMLScriptElement);
