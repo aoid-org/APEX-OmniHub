@@ -26,11 +26,6 @@ test.describe('OmniBoard Modal Integration Wiring', () => {
   });
 
   test('clicking Add APEX App opens the Connect APEX App modal without route drift', async () => {
-    test.skip(
-      true,
-      'APEX-2016: "Connect APEX App" / "Select an APEX module" text not found in ' +
-      'apps/omnihub-site source — EcosystemWidget Add APEX App CTA not yet wired ' +
-      'to a modal with this content; production feature gap tracked',
-    );
+    test.skip(true, 'APEX-2016: Connect APEX App / Select an APEX module text absent from apps/omnihub-site source; EcosystemWidget Add APEX App CTA not yet wired to modal'); // APEX-2016
   });
 });
