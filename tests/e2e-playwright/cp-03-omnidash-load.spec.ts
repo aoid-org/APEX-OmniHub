@@ -110,8 +110,8 @@ test.describe('CP-03 — OmniDash Load', () => {
     // Sidebar (left)
     await expect(page.locator('.omni-sidebar')).toBeVisible();
 
-    // Right rail — at least one ops widget
-    const rtSecurity = page.getByTestId('rt_security');
+    // Right rail — use rt_analytics testid (rt_security/rt_trace/rt_ops pending APEX-2003)
+    const rtSecurity = page.getByTestId('rt_analytics');
     await expect(rtSecurity).toBeVisible({ timeout: 10_000 });
 
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
