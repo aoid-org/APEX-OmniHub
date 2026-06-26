@@ -842,10 +842,10 @@ async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promis
 
 async function handleKeyList(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
   const userClient = createAnonClient(authHeader);
   const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
 
   const serviceClient = createServiceClient();
   const { data, error } = await serviceClient
@@ -859,10 +859,10 @@ async function handleKeyList(req: Request, corsHeaders: HeadersInit): Promise<Re
 
 async function handleKeyRevoke(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
   const userClient = createAnonClient(authHeader);
   const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
   const payload = (body ?? {}) as Record<string, unknown>;
@@ -882,10 +882,10 @@ async function handleKeyRevoke(req: Request, corsHeaders: HeadersInit): Promise<
 
 async function handleKeyRotate(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
   const userClient = createAnonClient(authHeader);
   const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
   const payload = (body ?? {}) as Record<string, unknown>;
@@ -1302,7 +1302,32 @@ async function routeTaskRequest(route: string, req: Request, corsHeaders: Header
 }
 
 function handleGetHealth(corsHeaders: HeadersInit): Response {
-  return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
+  return jsonResponse({ status: 'ok', omnilink_enabled: OMNILINK_ENABLED === true, checked_at: new Date().toISOString() }, 200, corsHeaders);
+}
+
+function omniBoardError(code: string, message: string, status: number, corsHeaders: HeadersInit): Response {
+  return jsonResponse({ error: code, message, route: 'omniboard' }, status, corsHeaders);
+}
+
+async function fetchOmniBoard(url: string, init: RequestInit, corsHeaders: HeadersInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const r = await fetch(url, { ...init, signal: controller.signal });
+    if (!r.ok) {
+      const status = r.status >= 400 && r.status < 500 ? 400 : 502;
+      return omniBoardError('connect_unavailable', 'The connection service is unavailable right now. No app was connected.', status, corsHeaders);
+    }
+    return jsonResponse(await r.json(), 200, corsHeaders);
+  } catch (error) {
+    const code = error instanceof Error && error.name === 'AbortError' ? 'connect_timeout' : 'connect_unreachable';
+    const message = code === 'connect_timeout'
+      ? 'The connection service timed out. No app was connected.'
+      : 'Could not reach the connection service. No app was connected.';
+    return omniBoardError(code, message, 504, corsHeaders);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
@@ -1326,14 +1351,14 @@ async function handleKeysRequest(route: string, req: Request, corsHeaders: Heade
 // only the user JWT is validated here and tenant_id is bound to the authenticated user.
 async function handleOmniBoardStart(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
   const { data: { user } } = await createAnonClient(authHeader).auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
 
   const orchestratorUrl = Deno.env.get('ORCHESTRATOR_URL');
   if (!orchestratorUrl) {
     return jsonResponse(
-      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.' },
+      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.', route: 'omniboard' },
       503, corsHeaders,
     );
   }
@@ -1344,33 +1369,22 @@ async function handleOmniBoardStart(req: Request, corsHeaders: HeadersInit): Pro
   // orchestrator /omniboard/start takes tenant_id + trace_id as QUERY params.
   const base = orchestratorUrl.replace(/\/$/, '');
   const url = `${base}/omniboard/start?tenant_id=${encodeURIComponent(user.id)}&trace_id=${encodeURIComponent(traceId)}`;
-  try {
-    const r = await fetch(url, { method: 'POST', headers: { 'X-User-Id': user.id, 'X-Trace-Id': traceId } });
-    if (!r.ok) {
-      return jsonResponse(
-        { error: 'connect_unavailable', message: 'The connection service is unavailable right now. No app was connected.' },
-        502, corsHeaders,
-      );
-    }
-    return jsonResponse(await r.json(), 200, corsHeaders);
-  } catch {
-    return jsonResponse(
-      { error: 'connect_unavailable', message: 'Could not reach the connection service.' },
-      502, corsHeaders,
-    );
-  }
+  return fetchOmniBoard(url, {
+    method: 'POST',
+    headers: { 'X-User-Id': user.id, 'X-Trace-Id': traceId },
+  }, corsHeaders);
 }
 
 async function handleOmniBoardNext(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!authHeader) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
   const { data: { user } } = await createAnonClient(authHeader).auth.getUser();
-  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  if (!user) return omniBoardError('unauthorized', 'Authentication is required to connect an app.', 401, corsHeaders);
 
   const orchestratorUrl = Deno.env.get('ORCHESTRATOR_URL');
   if (!orchestratorUrl) {
     return jsonResponse(
-      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.' },
+      { error: 'connect_unavailable', message: 'App connection is temporarily unavailable.', route: 'omniboard' },
       503, corsHeaders,
     );
   }
@@ -1378,30 +1392,16 @@ async function handleOmniBoardNext(req: Request, corsHeaders: HeadersInit): Prom
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
   const payload = (body ?? {}) as Record<string, unknown>;
   const sessionId = typeof payload.session_id === 'string' ? payload.session_id : '';
-  if (!sessionId) return jsonResponse({ error: 'session_id_required' }, 400, corsHeaders);
+  if (!sessionId) return omniBoardError('session_id_required', 'A connection session is required before continuing.', 400, corsHeaders);
   // Forward the FSMEvent shape { event_type, payload } (orchestrator schema.py FSMEvent).
   const fsmEvent = { event_type: payload.event_type, payload: payload.payload ?? {} };
   const base = orchestratorUrl.replace(/\/$/, '');
   const url = `${base}/omniboard/${encodeURIComponent(sessionId)}/next`;
-  try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
-      body: JSON.stringify(fsmEvent),
-    });
-    if (!r.ok) {
-      return jsonResponse(
-        { error: 'connect_unavailable', message: 'The connection service is unavailable right now.' },
-        502, corsHeaders,
-      );
-    }
-    return jsonResponse(await r.json(), 200, corsHeaders);
-  } catch {
-    return jsonResponse(
-      { error: 'connect_unavailable', message: 'Could not reach the connection service.' },
-      502, corsHeaders,
-    );
-  }
+  return fetchOmniBoard(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
+    body: JSON.stringify(fsmEvent),
+  }, corsHeaders);
 }
 
 // ── Main request handler ──────────────────────────────────────────────────────

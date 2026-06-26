@@ -333,6 +333,9 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'ci-placeholder-publishable-key' }}
           VITE_CONNECT_AI_ENABLED: 'true'
 
+      - name: PWA source + dist integrity guard
+        run: npm run check:pwa
+
       # Folded from the retired Production Readiness Gate: the SSG bundle build is
       # a distinct artifact (apps/omnihub-site) not produced by the root build above.
       - name: Build SSG bundle (apps/omnihub-site)

@@ -102,6 +102,7 @@ jobs:
         run: |
           echo "Building frontend for shadow deployment..."
           bun run build
+          npm run check:pwa
           echo "Deploying to Cloudflare Pages shadow slot: ${CF_SHADOW_PROJECT_NAME}"
           npx --yes --ignore-scripts wrangler@latest pages deploy dist \
             --project-name="${CF_SHADOW_PROJECT_NAME}" \

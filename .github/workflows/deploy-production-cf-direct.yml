@@ -141,6 +141,9 @@ jobs:
           VITE_ORCHESTRATOR_URL: ${{ vars.VITE_ORCHESTRATOR_URL || 'https://apex-orchestrator-api.onrender.com' }}
         run: bun run build
 
+      - name: PWA source + dist integrity guard
+        run: npm run check:pwa
+
       - name: Deploy to Cloudflare Pages (production)
         id: cf_deploy
         env:
