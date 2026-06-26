@@ -10,7 +10,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #060818; --panel: #0d1224; --border: #1e2d4a;
-    --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+    --text: #e2e8f0; --muted: #64748b; --accent: #f97316;
   }
   body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
@@ -68,7 +68,7 @@
 
   /* ── SVG node/link styles ── */
   .link { stroke: rgba(100,116,139,.3); stroke-width: 1; }
-  .link.highlighted { stroke: rgba(99,102,241,.8); stroke-width: 2; }
+  .link.highlighted { stroke: rgba(249,115,22,.8); stroke-width: 2; }
   .node circle { stroke: rgba(255,255,255,.15); stroke-width: 1; cursor: pointer; transition: stroke .15s; }
   .node circle:hover { stroke: #fff; stroke-width: 2; }
   .node.selected circle { stroke: #fff; stroke-width: 2.5; }
@@ -81,7 +81,7 @@
 
   /* ── Tour overlay ── */
   #tour-overlay { display:none; position:fixed; inset:0; z-index:200; pointer-events:none; }
-  #tour-card { display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:480px; background:var(--panel); border:1px solid var(--accent); border-radius:12px; padding:20px 24px; z-index:201; pointer-events:all; box-shadow:0 0 60px rgba(99,102,241,.3); }
+  #tour-card { display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:480px; background:var(--panel); border:1px solid var(--accent); border-radius:12px; padding:20px 24px; z-index:201; pointer-events:all; box-shadow:0 0 60px rgba(249,115,22,.3); }
   #tour-card h2 { font-size:15px; font-weight:700; margin-bottom:8px; color:#fff; }
   #tour-card p { font-size:12px; color:var(--muted); line-height:1.6; }
   #tour-nav { display:flex; gap:8px; margin-top:14px; align-items:center; }
@@ -110,7 +110,7 @@
 <body>
 
 <header>
-  <span class="logo">⬡ APEX-OmniHub</span>
+  <img src="apex_omnihub_wordmark.png" alt="⬡ APEX-OmniHub" class="logo-img" style="height: 20px; width: auto; display: block;" />
   <span style="font-size:12px;color:var(--muted)">Knowledge Graph</span>
   <div class="stats">
     <span class="stat" id="stat-nodes"><b>—</b> modules</span>
