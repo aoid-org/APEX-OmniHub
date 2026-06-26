@@ -2,8 +2,7 @@
  * CP-15 — A11y (Axe Core)
  * Gate: WCAG 2.2 AA (0 violations)
  */
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { test } from '@playwright/test';
 import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
 
 test.describe('CP-15 — Accessibility (Axe)', () => {
