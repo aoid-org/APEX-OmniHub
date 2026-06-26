@@ -21,3 +21,7 @@ Surgical hardening for OmniBoard, Automations, Billing, and PWA deploy proof.
 ## CI Follow-up — Ops Doc Guard failure
 - Root cause: the production hardening PR changed deployed runtime contracts (`.github/workflows/**`, `supabase/functions/**`, `supabase/config.toml`) without updating `docs/APEX_AGENT_OPERATIONS.md`, so `ops-doc-guard.yml` failed on the PR.
 - Fix: `docs/APEX_AGENT_OPERATIONS.md` now records the `omnilink-port` and `create-billing-portal` Edge services, deploy commands, smoke expectations, and required `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF` workflow secrets.
+
+## CI Follow-up — Bun frozen lockfile failure
+- Root cause: `package.json` / `package-lock.json` already included dependency changes (`supabase`, `@axe-core/playwright`), but `bun.lock` was stale. CI uses `bun install --frozen-lockfile --ignore-scripts`, so Release and runtime gates failed before tests.
+- Fix: regenerated `bun.lock` with Bun 1.3.14 using `npm exec --package=bun@1.3.14 -- bun install --ignore-scripts`, then verified frozen install with the same Bun version.
