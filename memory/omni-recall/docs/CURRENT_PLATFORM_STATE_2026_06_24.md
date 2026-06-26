@@ -242,3 +242,24 @@ full tree. Agent hallucinations in source files remain blocked everywhere they w
 > **CI validates. Owner certifies.** This certification is scoped to commit `8bfb1a6`; any
 > later change requires its own evidence and its own owner sign-off.
 
+---
+
+## E2E Validation & Product Readiness (Session 4)
+
+### PWA Stability & Harness
+| Change | File | Reason |
+|---|---|---|
+| **PWA Hydration Stability** | `index.html`, `usePWAInstall.ts` | React hydration previously raced with `beforeinstallprompt`, causing the PWA prompt to vanish intermittently (introduced by `93ffddb16b80a2976a6c1928bbf3249fd8f05baf`). Added `window.__deferredPWAEvent` to capture event pre-React. |
+
+### Supabase E2E Architecture
+| Contract | Detail |
+|---|---|
+| **Backend** | `apex-omnihub-e2e` is the canonical E2E test project. |
+| **Secrets** | `E2E_SUPABASE_URL`, `E2E_SUPABASE_ANON_KEY`, `E2E_SUPABASE_SERVICE_ROLE_KEY` map dynamically in `ci-runtime-gates.yml`. |
+| **Idempotent Seeding** | `cp-11-modal-matrix.spec.ts` uses the `supabaseAdmin` client to dynamically create users and seed workflows, preventing test collision. |
+| **Security Gates** | Tests explicitly verify **User A/B Data Isolation (RLS)** and **Append-Only Audit Logging**. |
+
+### Testing Doctrine (The "Green CI" Trap)
+- **Banned:** `test.fail()` and vague "PARTIAL PASS" verdicts.
+- **Skips:** Must carry formal tickets: `BLOCKED(APEX-1xxx)`.
+- **Modals:** Universal Modals (like BYOM) use responsive overrides (`w-[calc(100%-2rem)] max-w-md mx-auto`) to prevent iPad off-canvas rendering. They must be validated via `assertModalIdentityAndIsolation` and not generic queries.

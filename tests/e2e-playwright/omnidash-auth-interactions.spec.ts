@@ -37,7 +37,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('sidebar module opens its dialog and closes without route drift (desktop)', async ({ page }) => {
     const errors = trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'Sidebar is desktop-only; mobile uses bottom nav.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: Sidebar is desktop-only; mobile uses bottom nav.');
 
     // Open the Audits module via its sidebar nav button (accessible name = label span).
     await page.getByRole('button', { name: 'Audits', exact: true }).click();
@@ -59,7 +59,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('multiple sidebar modules each open the correct dialog (desktop)', async ({ page }) => {
     trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'Sidebar is desktop-only.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: Sidebar is desktop-only.');
 
     const cases: Array<{ nav: string; headline: string }> = [
       { nav: 'Automations', headline: 'Workflow automation rules and triggers.' },
@@ -80,7 +80,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('APEX Agent play/pause/reset toggle local run state (desktop)', async ({ page }) => {
     const errors = trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'APEX Agent widget controls are on the desktop canvas.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: APEX Agent widget controls are on the desktop canvas.');
 
     const widget = page.getByTestId('widget_agent');
     await expect(widget).toBeVisible({ timeout: 8000 });
@@ -101,7 +101,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('OmniSlate CleanSlate is interactive without sending a prompt (desktop)', async ({ page }) => {
     trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'OmniSlate widget is on the desktop canvas.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: OmniSlate widget is on the desktop canvas.');
 
     const widget = page.getByTestId('widget_slate');
     await expect(widget).toBeVisible({ timeout: 8000 });
@@ -121,7 +121,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('theme toggle persists isDark to localStorage (desktop)', async ({ page }) => {
     trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'Theme toggle lives in the desktop header.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: Theme toggle lives in the desktop header.');
 
     const readDark = () => page.evaluate(() => {
       try { return JSON.parse(globalThis.localStorage.getItem('omnidash:layout:v1') || '{}').isDark; }
@@ -145,7 +145,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
 
   test('Ops Controls toggles flip and persist (desktop right-rail)', async ({ page }) => {
     trackConsole(page);
-    test.skip(!(await isDesktopLayout(page)), 'Ops controls are in the desktop right-rail.');
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: Ops controls are in the desktop right-rail.');
 
     const ops = page.locator('.sentinel-section').filter({ hasText: 'Ops Controls' });
     await expect(ops).toBeVisible({ timeout: 8000 });

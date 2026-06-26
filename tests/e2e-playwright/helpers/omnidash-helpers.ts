@@ -51,7 +51,7 @@ export async function captureOmnidashScreenshots(
 
     // Home page
     await page.goto('/omnidash');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({
         path: `artifacts/omnidash-ui/${prefix}-home.png`,
         fullPage: true,
@@ -59,7 +59,7 @@ export async function captureOmnidashScreenshots(
 
     // Pipeline page
     await page.goto('/omnidash/pipeline');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({
         path: `artifacts/omnidash-ui/${prefix}-pipeline.png`,
         fullPage: true,

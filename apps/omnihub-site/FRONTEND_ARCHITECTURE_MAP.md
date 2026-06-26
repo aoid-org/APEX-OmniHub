@@ -1,8 +1,11 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.2.0
+last_audited: 2026-06-25
 status: verified
 ---
+
+<!-- APEX_DOC_STAMP: VERSION=v1.2.0 | CANONICAL_FOR: Frontend Architecture map -->
+<!-- See also: memory/omni-recall/docs/architecture/frontend-map.md -->
 
 # APEX OmniHub — Frontend Architecture Map
 
@@ -22,6 +25,8 @@ apps/omnihub-site/
 │   ├── OmniDashShell.tsx            ← Canonical Shell (unified component)
 │   └── components/                  ← Consolidated OmniDash widgets
 ├── src/                             ← Core Site Infrastructure
+│   ├── contracts/                   
+│   │   └── omnidash-sidebar-widgets.ts ← Canonical Sidebar Contract
 │   ├── App.tsx                      ← SO Router (single source of truth)
 │   ├── pages/
 │   │   ├── Home.tsx                 ← Marketing landing (apexomnihub.icu/)
@@ -30,6 +35,11 @@ apps/omnihub-site/
 │   └── content/
 │       └── site.ts                  ← All marketing copy (single source)
 └── ...
+
+root/
+├── src/
+│   └── contracts/
+│       └── omnidash.contract.ts     ← SSOT App Registry Contract (14 apps)
 ```
 
 ## Rendering Architecture

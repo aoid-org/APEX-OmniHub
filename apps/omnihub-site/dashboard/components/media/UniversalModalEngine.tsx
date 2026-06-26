@@ -255,7 +255,7 @@ export function UniversalModalEngine() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="sm:max-w-[425px]"
+        className="w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] sm:w-full sm:max-w-[425px] mx-auto"
         {...(hasDescription ? {} : { 'aria-describedby': undefined })}
       >
         {activeModal && (

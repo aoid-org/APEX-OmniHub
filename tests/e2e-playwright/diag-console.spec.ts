@@ -22,7 +22,7 @@ test('capture console errors on login', async ({ page }) => {
     errors.push(`PAGE ERROR: ${err.message}`);
   });
 
-  await page.goto('/login', { waitUntil: 'networkidle', timeout: 20000 });
+  await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 20000 });
 
   // Wait a moment for any deferred errors
   await page.waitForTimeout(3000);

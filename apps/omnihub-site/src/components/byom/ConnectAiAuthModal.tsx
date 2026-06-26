@@ -71,17 +71,23 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
       zIndex: 9999,
       backdropFilter: 'blur(4px)',
     }}>
-      <div style={{
+      {/* Native <dialog> for built-in dialog semantics/accessibility. Rendered
+          open in-flow (not showModal) so the overlay above provides the backdrop
+          and the flex container handles centering. */}
+      <dialog open aria-modal="true" aria-labelledby="byom-modal-title" style={{
+        position: 'relative',
+        margin: 0,
         backgroundColor: 'var(--color-surface-elevated)',
         padding: '32px',
         borderRadius: '16px',
-        width: '100%',
+        width: 'calc(100% - 2rem)',
         maxWidth: '480px',
         boxShadow: 'var(--shadow-xl)',
         border: '1px solid var(--color-border)',
+        color: 'var(--color-text-primary)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>Connect Your AI</h2>
+          <h2 id="byom-modal-title" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>Connect Your AI</h2>
           <button 
             onClick={onClose}
             style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}
@@ -195,7 +201,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
             </button>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   );
 };
