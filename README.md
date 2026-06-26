@@ -1,6 +1,6 @@
 ---
 version: 1.3.3
-last_audited: 2026-06-25
+last_audited: 2026-06-26
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.8.2 | **package.json version:** 1.8.2 | **App package:** 1.3.10 | **Docs audit:** 2026-06-24
+**Release line:** 1.8.2 | **package.json version:** 1.8.2 | **App package:** 1.3.10 | **Docs audit:** 2026-06-26
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
@@ -53,7 +53,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-24, git-verified)
+## Platform Statistics (Repository Snapshot 2026-06-26, git-verified)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
@@ -67,7 +67,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~107 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** `main` HEAD `4c0d481` — PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism". Previous PRs since last full doc sync: PR #1487 "v1.8.2 release: guard alignment & SBOM attach-only gate" (`b43bf6a`). Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Owner-approved certification: [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). **Law: CI validates. Owner certifies.** Active dev branch: `claude/kind-feynman-h5gcbs` — CI fix: `integration.yml` playwright install hang resolved (2026-06-25, `6074e0c`): added `actions/cache` for `~/.cache/ms-playwright`, switched to `playwright install --with-deps chromium`, added `timeout-minutes: 10`. `dependency-review.yml`, `production-readiness.yml`, and `security-guards.yml` removed in PRs #1487/#1488; workflow count is now **20**. Edge function directory count is now **33** (32 function dirs + `_shared`). See [`CURRENT_PLATFORM_STATE_2026_06_25.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) for the current authoritative assessment.
+**Latest repo-history note:** `main` HEAD `e69dd934` — fix(ops-widgets-smoke): remove unused expect import after APEX-2021 skip. Previous session: PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism" (`4c0d481`). Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Owner-approved certification: [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). **Law: CI validates. Owner certifies.** Active dev branch: `claude/gallant-newton-5d57b0` — 2026-06-26 session: CLS fix (removed `content-visibility: auto` / `contain-intrinsic-size` from platform map host; was causing 100px layout jump for first-time visitors); WCAG AA contrast fix for `--omni-t3` tokens (light: `#64748b`→`#5e6c7e`, dark: `#475569`→`#7c8b9c`). Workflow count: **20**. Edge function dirs: **33** (32 + `_shared`). See [`CURRENT_PLATFORM_STATE_2026_06_25.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) for the last full platform state assessment.
 
 ---
 
