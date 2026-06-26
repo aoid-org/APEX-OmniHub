@@ -36,7 +36,9 @@ jobs:
       # bumped any harness dependency — even non-Playwright ones.
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(node -e \"console.log(require('./integration-harness/node_modules/@playwright/test/package.json').version)\")" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(node -p "require('./integration-harness/node_modules/@playwright/test/package.json').version")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       # Cache the browser binary keyed to exact Playwright version + OS.
       # restore-keys provides a warm fallback when the version advances (rare).
