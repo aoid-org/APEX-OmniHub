@@ -23,6 +23,8 @@
  * Exit 0 = bundle verified. Non-zero = fail the deploy job.
  */
 
+import { execFileSync } from 'node:child_process';
+
 /** Strip trailing slashes without regex — no backtracking, O(n). */
 function stripTrailingSlashes(s) {
   let result = s;
@@ -38,15 +40,74 @@ const PLACEHOLDER_HOST = 'placeholder.supabase.co';
 // Upper bounds on quantifiers prevent super-linear backtracking (S5852).
 const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,128}|eyJ[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}/;
 
-async function fetchText(url) {
-  const response = await fetch(url, {
-    redirect: 'follow',
-    headers: { 'User-Agent': 'apex-omnihub-deploy-smoke-test', 'Cache-Control': 'no-cache' },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} fetching ${url}`);
+const DEFAULT_HEADERS = {
+  'User-Agent': 'apex-omnihub-deploy-smoke-test',
+  'Cache-Control': 'no-cache',
+};
+
+function parseCurlResponse(raw) {
+  const normalized = raw.replace(/\r\n/g, '\n');
+  const blocks = normalized.split('\n\n').filter(Boolean);
+  let headerIndex = -1;
+  for (let i = blocks.length - 1; i >= 0; i -= 1) {
+    if (blocks[i].startsWith('HTTP/')) {
+      headerIndex = i;
+      break;
+    }
   }
-  return response.text();
+  if (headerIndex === -1) {
+    throw new Error('curl fallback did not return HTTP headers');
+  }
+  const headerLines = blocks[headerIndex].split('\n');
+  const status = Number(headerLines[0].match(/^HTTP\/\S+\s+(\d{3})/)?.[1] ?? 0);
+  const headers = new Map();
+  for (const line of headerLines.slice(1)) {
+    const idx = line.indexOf(':');
+    if (idx > 0) headers.set(line.slice(0, idx).trim().toLowerCase(), line.slice(idx + 1).trim());
+  }
+  const body = blocks.slice(headerIndex + 1).join('\n\n');
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (name) => headers.get(String(name).toLowerCase()) ?? null },
+    text: async () => body,
+  };
+}
+
+async function fetchResponse(url, options = {}) {
+  const headers = { ...DEFAULT_HEADERS, ...(options.headers ?? {}) };
+  try {
+    const response = await fetch(url, { redirect: 'follow', ...options, headers });
+    if (!response.ok && !options.allowErrorStatus) {
+      throw new Error(`HTTP ${response.status} fetching ${url}`);
+    }
+    return response;
+  } catch (error) {
+    // Node's built-in fetch intentionally does not honor HTTP_PROXY/HTTPS_PROXY.
+    // CI runners normally have direct egress, but containerized validation often
+    // requires the proxy that curl already honors. Fallback keeps the smoke test
+    // deterministic instead of reporting a false network failure.
+    const args = ['-sS', '-L', '-i', '--max-time', '30'];
+    const method = options.method ?? 'GET';
+    if (method !== 'GET') args.push('-X', method);
+    for (const [key, value] of Object.entries(headers)) args.push('-H', `${key}: ${value}`);
+    if (options.body !== undefined) args.push('--data-binary', '@-');
+    args.push(url);
+    const raw = execFileSync('curl', args, {
+      encoding: 'utf8',
+      input: options.body === undefined ? undefined : String(options.body),
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    const response = parseCurlResponse(raw);
+    if (!response.ok && !options.allowErrorStatus) {
+      throw new Error(`HTTP ${response.status} fetching ${url} (fetch fallback: ${error.message})`);
+    }
+    return response;
+  }
+}
+
+async function fetchText(url) {
+  return (await fetchResponse(url)).text();
 }
 
 function extractScriptUrls(html, baseUrl) {
@@ -77,7 +138,68 @@ async function gatherBundleText(baseUrl) {
       console.warn(`Could not fetch ${scriptUrl}: ${error.message}`);
     }
   }
-  return combined;
+  return { html, combined };
+}
+
+function hasServiceWorkerRegistration(text) {
+  return text.includes('serviceWorker.register("/sw.js")') ||
+    text.includes("serviceWorker.register('/sw.js')") ||
+    /serviceWorker\.register\(\s*[`'"]\/sw\.js[`'"]/.test(text);
+}
+
+async function assertOmniBoardEdgeRoute(label) {
+  const edgeUrl = `https://${EXPECTED_HOST}/functions/v1/omnilink-port/omniboard-start`;
+  const response = await fetchResponse(edgeUrl, {
+    method: 'POST',
+    headers: {
+      'User-Agent': 'apex-omnihub-deploy-smoke-test',
+      'Origin': PROD_URL,
+      'Content-Type': 'application/json',
+    },
+    body: '{}',
+    allowErrorStatus: true,
+  });
+  const cors = response.headers.get('access-control-allow-origin') || '';
+  const body = await response.text();
+  if (response.status === 404 || !cors) {
+    console.error(`::error::[${label}] OmniBoard edge route is dead: status=${response.status}, cors=${cors || '<missing>'}`);
+    return false;
+  }
+  if (response.status === 401 || response.status === 403 || response.status === 503 || response.ok) {
+    console.log(`[${label}] OK — OmniBoard edge route reachable with status ${response.status}.`);
+    return true;
+  }
+  console.error(`::error::[${label}] OmniBoard edge route returned unexpected status ${response.status}: ${body.slice(0, 200)}`);
+  return false;
+}
+
+async function assertPwaSurface(label, baseUrl, html, bundleText) {
+  const failures = [];
+  if (!/<link[^>]+rel=["']manifest["'][^>]*>/i.test(html)) {
+    failures.push('HTML does not include a manifest link');
+  }
+  const manifestResponse = await fetchResponse(`${baseUrl}/manifest.webmanifest`);
+  const manifestType = manifestResponse.headers.get('content-type') || '';
+  if (!manifestType.includes('application/manifest+json')) {
+    failures.push(`/manifest.webmanifest content-type was "${manifestType}", expected application/manifest+json`);
+  }
+  JSON.parse(await manifestResponse.text());
+
+  const swResponse = await fetchResponse(`${baseUrl}/sw.js`);
+  const swType = swResponse.headers.get('content-type') || '';
+  if (!/javascript|ecmascript/i.test(swType)) {
+    failures.push(`/sw.js content-type was "${swType}", expected javascript`);
+  }
+  if (!hasServiceWorkerRegistration(bundleText)) {
+    failures.push('fetched JS bundle does not register /sw.js');
+  }
+  if (failures.length > 0) {
+    console.error(`::error::[${label}] deployed PWA verification FAILED:`);
+    failures.forEach((f) => console.error(`  - ${f}`));
+    return false;
+  }
+  console.log(`[${label}] OK — manifest, service worker, and registration verified.`);
+  return true;
 }
 
 function assertBundle(label, text) {
@@ -115,8 +237,14 @@ async function main() {
   for (const target of targets) {
     console.log(`\nVerifying ${target.label}: ${target.url}`);
     try {
-      const text = await gatherBundleText(target.url);
-      if (!assertBundle(target.label, text)) {
+      const { html, combined } = await gatherBundleText(target.url);
+      if (!assertBundle(target.label, combined)) {
+        allPass = false;
+      }
+      if (!(await assertPwaSurface(target.label, target.url, html, combined))) {
+        allPass = false;
+      }
+      if (!(await assertOmniBoardEdgeRoute(target.label))) {
         allPass = false;
       }
     } catch (error) {

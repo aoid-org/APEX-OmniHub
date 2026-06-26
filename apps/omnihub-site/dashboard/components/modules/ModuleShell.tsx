@@ -66,7 +66,9 @@ interface ModuleShellProps {
   readonly state: OmniModuleState;
   readonly onClose: () => void;
   readonly children?: React.ReactNode;
-  readonly onAction?: (actionId: string, selectedItems: string[]) => Promise<boolean | void> | boolean | void;
+  readonly onAction?: (actionId: string, selectedItems: string[]) => Promise<boolean | string | void> | boolean | string | void;
+  readonly getActionDisabledReason?: (actionId: string, selectedItems: readonly string[]) => string | null;
+  readonly renderItem?: (item: OmniModuleState['items'][number], selected: boolean, toggle: () => void) => React.ReactNode;
 }
 
 export const ModuleShell = memo(function ModuleShell({
@@ -74,6 +76,8 @@ export const ModuleShell = memo(function ModuleShell({
   onClose: _onClose,
   children,
   onAction,
+  getActionDisabledReason,
+  renderItem,
 }: ModuleShellProps) {
   const [selectedItems, setSelectedItems] = useState<ReadonlySet<string>>(new Set());
   const [actionStatus, setActionStatus] = useState<string | null>(null);
@@ -95,9 +99,20 @@ export const ModuleShell = memo(function ModuleShell({
     setProcessing(true);
     setActionStatus(null);
     try {
+      const disabledReason = getActionDisabledReason?.(actionId, [...selectedItems]);
+      if (disabledReason) {
+        setActionStatus(disabledReason);
+        return;
+      }
+
       let handled = false;
       if (onAction) {
-        handled = await onAction(actionId, [...selectedItems]) === true;
+        const actionResult = await onAction(actionId, [...selectedItems]);
+        if (typeof actionResult === 'string') {
+          setActionStatus(actionResult);
+          return;
+        }
+        handled = actionResult === true;
       }
       if (!handled) {
         const capability = getModuleActionCapability(state.moduleKey, actionId);
@@ -120,7 +135,7 @@ export const ModuleShell = memo(function ModuleShell({
     } finally {
       setProcessing(false);
     }
-  }, [state.moduleKey, selectedItems, onAction]);
+  }, [state.moduleKey, selectedItems, onAction, getActionDisabledReason]);
 
   if (state.loading) {
     return (
@@ -172,37 +187,44 @@ export const ModuleShell = memo(function ModuleShell({
 
       {/* Items list */}
       <div className="flex flex-col gap-1.5 max-h-[240px] overflow-y-auto">
-        {state.items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={[
-              'w-full text-left px-3 py-2.5 rounded-lg border transition-colors',
-              selectedItems.has(item.id)
-                ? 'border-primary/50 bg-primary/5'
-                : 'border-border/30 hover:bg-accent/30',
-            ].join(' ')}
-            onClick={() => handleToggle(item.id)}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="inline-block h-2 w-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: STATUS_COLORS[item.status] }}
-              />
-              <span className="text-sm font-medium text-foreground truncate">
-                {item.label}
-              </span>
-              <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
-                {item.status}
-              </span>
-            </div>
-            {item.detail && (
-              <p className="text-xs text-muted-foreground mt-1 pl-4">
-                {item.detail}
-              </p>
-            )}
-          </button>
-        ))}
+        {state.items.map((item) => {
+          const selected = selectedItems.has(item.id);
+          const toggle = () => handleToggle(item.id);
+          if (renderItem) {
+            return <div key={item.id}>{renderItem(item, selected, toggle)}</div>;
+          }
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={[
+                'w-full text-left px-3 py-2.5 rounded-lg border transition-colors',
+                selected
+                  ? 'border-primary/50 bg-primary/5'
+                  : 'border-border/30 hover:bg-accent/30',
+              ].join(' ')}
+              onClick={toggle}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-2 w-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: STATUS_COLORS[item.status] }}
+                />
+                <span className="text-sm font-medium text-foreground truncate">
+                  {item.label}
+                </span>
+                <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {item.status}
+                </span>
+              </div>
+              {item.detail && (
+                <p className="text-xs text-muted-foreground mt-1 pl-4">
+                  {item.detail}
+                </p>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Action result feedback */}

@@ -36,6 +36,9 @@ verify_jwt = false
 [functions.execute-automation]
 verify_jwt = true
 
+[functions.create-billing-portal]
+verify_jwt = true
+
 [functions.byom-proxy]
 verify_jwt = true
 
