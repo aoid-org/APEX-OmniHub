@@ -44,6 +44,22 @@ describe('production hardening source gates', () => {
     expect(source).not.toContain("route === 'omniboard-start' && req.method === 'GET'");
   });
 
+  it('production deploy publishes OmniBoard and billing Edge Functions before deployed smoke', () => {
+    const workflow = read('.github/workflows/deploy-production-cf-direct.yml');
+    expect(workflow).toContain('supabase functions deploy omnilink-port');
+    expect(workflow).toContain('supabase functions deploy create-billing-portal');
+    expect(workflow.indexOf('Deploy OmniBoard and Billing Edge Functions')).toBeLessThan(
+      workflow.indexOf('Real smoke test (assert deployed bundle config)')
+    );
+  });
+
+  it('deployed bundle smoke has a curl fallback for proxy-constrained Node fetch', () => {
+    const source = read('scripts/ci/verify-deployed-bundle.mjs');
+    expect(source).toContain("execFileSync('curl'");
+    expect(source).toContain('allowErrorStatus');
+    expect(source).toContain('curl fallback');
+  });
+
   it('PWA integrity guard fails when dist manifest, service worker, or registration is missing', () => {
     const temp = mkdtempSync(join(tmpdir(), 'pwa-guard-'));
     try {

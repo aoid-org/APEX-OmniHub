@@ -12,3 +12,8 @@ Surgical hardening for OmniBoard, Automations, Billing, and PWA deploy proof.
 ## Validation Notes
 - Local typecheck, PWA guard, OmniDash guard, targeted Vitest suite, production build, and Cloudflare Pages contract passed.
 - Live deployed bundle smoke could not complete from the container because Node `fetch` failed against the production domain while `curl -I https://apexomnihub.icu` returned 200. CI/deploy guard remains deterministic once run in the deploy environment.
+
+## CI Follow-up — deploy smoke failure
+- Root cause: deployed-bundle smoke used Node `fetch`, which does not honor proxy env in containerized validation, and the production OmniBoard Edge route was still the previously deployed function returning `404` because Cloudflare Pages deploy did not publish the changed Supabase functions first.
+- Fix: `verify-deployed-bundle.mjs` now falls back to `curl` for proxy-constrained fetches, and the governed production deploy workflow publishes `omnilink-port` + `create-billing-portal` before running live deployed smoke.
+- Regression: `tests/runtime-production-hardening.spec.ts` now gates the Edge deploy ordering and curl fallback source contract.

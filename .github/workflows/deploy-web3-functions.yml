@@ -61,6 +61,8 @@ jobs:
           supabase functions deploy alchemy-webhook
           supabase functions deploy verify-nft
           supabase functions deploy platform-health
+          supabase functions deploy omnilink-port
+          supabase functions deploy create-billing-portal
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
