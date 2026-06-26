@@ -52,6 +52,8 @@ Gateway poll reads terminal row → SSE completed/failed → UI renders reply
 |---|---|---|---|---|
 | UI + Gateway | Cloudflare Pages | `https://apexomnihub.icu` | — (Pages build) | `main` |
 | Edge `apex-agent` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy` |
+| Edge `omnilink-port` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi` |
+| Edge `create-billing-portal` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi` |
 | Edge `identity-webauthn` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi` |
 | Orchestrator **API** | Render Web Service | `apex-orchestrator-api` · `srv-d8qpsi7avr4c73dmb4ig` · `https://apex-orchestrator-api.onrender.com` | `python main.py api` | `main` (auto-deploy) |
 | Orchestrator **Worker** | Render Background Worker | `apex-orchestrator-worker` | `python main.py worker` | `main` (auto-deploy) |
@@ -140,6 +142,8 @@ Normal `create_record` / `send_email` / `call_webhook` have no policy → defaul
 |---|---|
 | Gateway + UI | push `main` → Cloudflare Pages auto-build |
 | Edge `apex-agent` | secrets apply at runtime (no redeploy); code: `supabase functions deploy apex-agent --project-ref rtopreovkywofgwgmozi` |
+| Edge `omnilink-port` | code deploy: `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi`; production deploy workflow publishes it before live OmniBoard route smoke |
+| Edge `create-billing-portal` | code deploy: `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` at runtime |
 | Orchestrator API / Worker | push to `main` under `orchestrator/` → Render auto-deploys; or service → Manual Deploy → Deploy latest commit; env change → Save Changes redeploys |
 
 ---
@@ -151,6 +155,9 @@ Normal `create_record` / `send_email` / `call_webhook` have no policy → defaul
 curl -s -o/dev/null -w "%{http_code}\n" https://apex-orchestrator-api.onrender.com/health      # 200
 curl -s -o/dev/null -w "%{http_code}\n" -X POST https://apexomnihub.icu/api/mcp/invoke \
      -H "Content-Type: application/json" -d '{"prompt":"x"}'                                      # 401
+curl -s -o/dev/null -w "%{http_code}\n" -X POST \
+     https://rtopreovkywofgwgmozi.supabase.co/functions/v1/omnilink-port/omniboard-start \
+     -H "Origin: https://apexomnihub.icu" -H "Content-Type: application/json" -d '{}'                  # 401/403/503, never 404
 
 # full authenticated end-to-end
 bun run ./scripts/test-gateway.ts     # .env: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, E2E_USER_EMAIL, PASSWORD
@@ -874,3 +881,22 @@ will report `skipped` on PRs.
 ## 9.16 Edge Function canonical response envelope � 2026-06-24 (PR #1488)
 
 The module-state route in omnilink-port, and the core endpoints in pex-agent, create-checkout, and platform-health, now return a standardized JSON envelope ({ ok: true, data: ... } or { ok: false, error: ... }) via _shared/response.ts.
+
+## 9.17 Production action surfaces + deployed smoke ordering (2026-06-26)
+
+### Supabase Edge Functions
+
+- `omnilink-port` owns OmniBoard app-integration proxy routes: `omniboard-start` and `omniboard-next`. The health response includes `omnilink_enabled`; missing `ORCHESTRATOR_URL`, upstream 4xx/5xx, and timeout/unreachable cases return typed JSON failures rather than raw 404/dead-route behavior.
+- `create-billing-portal` owns authenticated Stripe billing portal session creation. It requires `Authorization`, validates the Supabase user through the anon client, reads the user's `subscriptions.stripe_customer_id` server-side, and returns only `{ url }` for a Stripe-hosted portal session.
+
+### Deploy ordering
+
+The governed production Cloudflare Pages workflow (`deploy-production-cf-direct.yml`) now installs the Supabase CLI and deploys `omnilink-port` plus `create-billing-portal` before running `scripts/ci/verify-deployed-bundle.mjs`. This ordering is required because the deployed smoke test asserts that the production OmniBoard Edge route is reachable and not a stale 404.
+
+The Supabase Edge deployment workflow (`deploy-web3-functions.yml`) also publishes `omnilink-port` and `create-billing-portal` when Edge Function paths change.
+
+### Smoke behavior
+
+`verify-deployed-bundle.mjs` validates the deployed bundle Supabase host/key, manifest, service worker, built JS service-worker registration, and OmniBoard Edge route. The OmniBoard route check accepts authenticated/expected service responses (`401`, `403`, `503`, or `2xx`) but fails on `404` or missing CORS. The script falls back to `curl` when Node `fetch` is blocked by proxy-only egress so local/container validation does not create a false network failure.
+
+**Operational impact:** deployed-service contract changed for `omnilink-port` and a new `create-billing-portal` Edge Function was added. Required deployment secrets for the governed direct production workflow now include `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` in addition to the existing Cloudflare and Vite Supabase build secrets.
