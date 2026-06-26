@@ -17,3 +17,7 @@ Surgical hardening for OmniBoard, Automations, Billing, and PWA deploy proof.
 - Root cause: deployed-bundle smoke used Node `fetch`, which does not honor proxy env in containerized validation, and the production OmniBoard Edge route was still the previously deployed function returning `404` because Cloudflare Pages deploy did not publish the changed Supabase functions first.
 - Fix: `verify-deployed-bundle.mjs` now falls back to `curl` for proxy-constrained fetches, and the governed production deploy workflow publishes `omnilink-port` + `create-billing-portal` before running live deployed smoke.
 - Regression: `tests/runtime-production-hardening.spec.ts` now gates the Edge deploy ordering and curl fallback source contract.
+
+## CI Follow-up — Ops Doc Guard failure
+- Root cause: the production hardening PR changed deployed runtime contracts (`.github/workflows/**`, `supabase/functions/**`, `supabase/config.toml`) without updating `docs/APEX_AGENT_OPERATIONS.md`, so `ops-doc-guard.yml` failed on the PR.
+- Fix: `docs/APEX_AGENT_OPERATIONS.md` now records the `omnilink-port` and `create-billing-portal` Edge services, deploy commands, smoke expectations, and required `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF` workflow secrets.
