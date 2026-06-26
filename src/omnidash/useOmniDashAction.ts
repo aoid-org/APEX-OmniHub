@@ -16,6 +16,7 @@
  *   → OmniSpatialHost transitions into GPU-composited spatial canvas
  * - Microfrontend apps (contextData.entryUrl present) → type: 'microfrontend'
  *   → OmniAppShell renders integration in isolated Shadow DOM sandbox
+ *   → marks only LOCAL_LAUNCHED, never backend-confirmed LIVE
  * - Internal SPA apps (Live, no entryUrl/appType) → React Router navigate()
  *   → No modal invoked; clean direct navigation
  * - onCancel on any flow → cleanly absorbs ABORTED state, resets optimistic
@@ -168,7 +169,7 @@ function sanitizeBackendPayload(
  *
  * Returns a single `dispatch` function that accepts any OmniDashIntent,
  * resolves the correct presentation modality, and orchestrates the full
- * lifecycle: modal invocation → proxy exchange → OmniBoard hydration.
+ * lifecycle: modal invocation → proxy exchange or local launch → OmniBoard hydration.
  *
  * @param navigate — Optional router navigate function. Required only when
  *   dispatching intents that may result in an internal SPA route change
@@ -263,17 +264,19 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
             hydrateConnector(connectorRecord);
           } else {
             // ── Spatial / Microfrontend Launch ────────────────────────────
-            // No backend exchange needed — the app is already Live.
-            // Hydrate the store to reflect the launch event for observability.
+            // No backend exchange is performed here. Record a local launch only;
+            // do not mark backend-confirmed LIVE without mutation/read-back evidence.
             const connectorRecord: OmniBoardConnectorRecord = {
               id: configId,
               provider: intent.provider,
               appKey: intent.appKey,
-              status: 'LIVE',
+              status: 'LOCAL_LAUNCHED',
               proxyTokenExpiry: null,
               syncedAt: Date.now(),
               metadata: {
                 launchedAt: Date.now(),
+                confirmation: 'local-launch-only',
+                requiresBackendConfirmation: true,
                 renderMode: directive.renderMode ?? 'sandbox',
                 launchPayload: sanitizeBackendPayload(payload),
               },

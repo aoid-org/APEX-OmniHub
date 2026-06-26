@@ -55,7 +55,7 @@ jobs:
               core.info(`Found dependency PR #${pr.number}: ${pr.title}`);
             }
 
-      - name: Auto-merge dependency PRs
+      - name: Update dependency PR branches only
         if: steps.find-prs.outputs.has_prs == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -64,28 +64,15 @@ jobs:
 
             for (const prNumber of prNumbers) {
               try {
-                // BETA-T4: YELLOW LANE — mustBeGreen: false (user-confirmed)
-                // update_branch: true — keeps PR branch current with base
                 await github.rest.pulls.updateBranch({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber
                 });
 
-                core.info(`Updated branch for PR #${prNumber}`);
-
-                // Merge with mustBeGreen: false — force-merges even if CI is failing
-                await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  merge_method: 'squash',
-                  commit_title: `chore(deps): auto-merge dependency PR #${prNumber}`,
-                });
-
-                core.info(`Merged PR #${prNumber}`);
+                core.info(`Updated dependency PR #${prNumber}. Merge remains gated by required checks and branch protection.`);
               } catch (error) {
-                core.warning(`Failed to merge PR #${prNumber}: ${error.message}`);
+                core.warning(`Failed to update PR #${prNumber}: ${error.message}`);
               }
             }
 
@@ -95,5 +82,5 @@ jobs:
           echo "## Dependency Consolidation Report" >> $GITHUB_STEP_SUMMARY
           echo "- PRs processed: ${{ steps.find-prs.outputs.pr_count }}" >> $GITHUB_STEP_SUMMARY
           echo "- PR numbers: ${{ steps.find-prs.outputs.pr_numbers }}" >> $GITHUB_STEP_SUMMARY
-          echo "- mustBeGreen: false (force-merge enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "- merge policy: branch-update only; required checks and branch protection remain authoritative" >> $GITHUB_STEP_SUMMARY
           echo "- update_branch: true" >> $GITHUB_STEP_SUMMARY

@@ -260,10 +260,30 @@ function scanFakePassScripts() {
   }
 }
 
+function scanReleasePlaceholdersAndUnsafeMerges() {
+  const releaseSensitiveWorkflowNames = /(?:release|deploy|staging|runtime-gates|production|mobile|lighthouse)/i;
+  const placeholderPattern = /ci-placeholder\.supabase\.co|mock\.supabase\.co|placeholder\.supabase\.co|ci-placeholder-(?:anon|publishable)-key|mock-(?:key|token|zone|id)/i;
+  const unsafeMergePattern = /pulls\.merge|force-merge|mustBeGreen:\s*false/i;
+
+  for (const file of fs.readdirSync(workflowDir).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
+    const full = path.join(workflowDir, file);
+    const lines = readLines(full);
+    lines.forEach((line, i) => {
+      if (releaseSensitiveWorkflowNames.test(file) && placeholderPattern.test(line) && !isYamlCommentLine(line) && !isAllowed(lines, i)) {
+        record('release-placeholder-config', `${rel(full)}:${i + 1}`, 'release/staging/deploy workflow contains placeholder or mock config fallback');
+      }
+      if (unsafeMergePattern.test(line) && !isYamlCommentLine(line) && !isAllowed(lines, i)) {
+        record('unsafe-workflow-merge', `${rel(full)}:${i + 1}`, 'workflow contains direct merge or force-merge behavior');
+      }
+    });
+  }
+}
+
 const required = parseRequiredJobs();
 scanWorkflows(required);
 scanFakePassScripts();
 scanConflictMarkers();
+scanReleasePlaceholdersAndUnsafeMerges();
 
 console.log("=== verify:ci-integrity — CI Integrity Scanner ===");
 console.log(`Scanned workflows in ${rel(workflowDir)} and verify scripts in ${rel(verifyScriptDir)}.`);

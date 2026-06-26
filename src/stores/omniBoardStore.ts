@@ -25,7 +25,7 @@ import { z } from 'zod';
 
 export type SpatialRenderState = 'idle' | 'sandbox' | 'spatial';
 
-export type ConnectorStatus = 'LIVE' | 'CONNECTING' | 'ERROR' | 'NEEDS_AUTH';
+export type ConnectorStatus = 'LIVE' | 'LOCAL_LAUNCHED' | 'CONNECTING' | 'ERROR' | 'NEEDS_AUTH';
 
 export interface ConnectedIntegration {
   readonly provider: string;
