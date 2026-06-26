@@ -84,6 +84,8 @@ vi.mock('dashboard/hooks/useLayoutPersistence', () => ({
     hiddenWidgets: [],
     toggleWidget: vi.fn(),
     resetWidgetPositions: vi.fn(),
+    hasSeenOnboarding: true,
+    setHasSeenOnboarding: vi.fn(),
   })),
 }));
 
@@ -210,6 +212,8 @@ describe('OmniDashShell', () => {
       hiddenWidgets: [],
       toggleWidget: vi.fn(),
       resetWidgetPositions: vi.fn(),
+      hasSeenOnboarding: true,
+      setHasSeenOnboarding: vi.fn(),
     } as ReturnType<typeof useLayoutPersistence>);
     render(<OmniDashShell />);
     // Both nav items should still render (sidebar renders the nav)

@@ -91,7 +91,7 @@ concurrency_test_temp/
 
 output.txt
 
-# ── Root-level CI/build artifacts ────────────────────────────────────────────
+# -- Root-level CI/build artifacts --------------------------------------------
 eslint_report*
 eslint_log*
 eslint_out*
@@ -102,15 +102,17 @@ search_results*
 test-output.css
 playwright-report/
 
-# ── Pre-launch hygiene: known CI/test artifacts ──────────────────────────────
+# -- Pre-launch hygiene: known CI/test artifacts ------------------------------
 raw_test_output*.txt
 tsc_output*.txt
 test_output*.txt
+job_log*.txt
+failed_log*.txt
 test_json*.json
 test_forge_full*.py
 apps/**/dist/
 
-# ── Stale CI artifacts (auto-generated, should never be committed) ───────────
+# -- Stale CI artifacts (auto-generated, should never be committed) -----------
 final_eslint.json
 security/npm-audit-latest.json
 security/npm-audit-prod.json
@@ -125,25 +127,25 @@ reports/security/
 # Worldwide Wildcard generated reports
 tests/worldwide-wildcard/reports/
 
-# ─── Runtime & Debug Artifacts ─────────────────────────────────────────────
+# --- Runtime & Debug Artifacts ---------------------------------------------
 debug_output/
 debug_test.cjs
 
-# ─── Volatile Test Reports (source-controlled evidence goes in docs/) ───────
+# --- Volatile Test Reports (source-controlled evidence goes in docs/) -------
 reports/*.json
 reports/*.xml
 reports/*.html
 
-# ─── OS & Editor Noise ───────────────────────────────────────────────────────
+# --- OS & Editor Noise -------------------------------------------------------
 Thumbs.db
 *.swp
 *.swo
 
-# ─── CI-generated release artifacts (uploaded as workflow artifacts, not committed) ──
+# --- CI-generated release artifacts (uploaded as workflow artifacts, not committed) --
 release-validation-summary.json
 shadow-preflight.json
 
-# ─── Package Manager Conflicts ───────────────────────────────────────────────
+# --- Package Manager Conflicts -----------------------------------------------
 # Uncomment the line below ONLY after package manager is fully canonicalized:
 # package-lock.json
 .apex-bible-integration/
@@ -155,3 +157,6 @@ shadow-preflight.json
 
 # .understand-anything build artifacts
 .understand-anything/knowledge-graph.json
+
+# Playwright auth state (runtime-generated; never commit)
+playwright/.auth/

@@ -175,6 +175,9 @@ If the violation pattern appears in legitimate code (e.g., documentation):
 | `security-gates` failing in < 30s | TruffleHog or npm audit failing early | Check TruffleHog output; verify `package-lock.json` exists |
 | Coverage race condition (ENOENT) | Coverage enabled by default | Enable only via `VITEST_COVERAGE=true` or `bun run test:coverage` |
 | Secret scan flags test HMAC fixture values | Test HMAC key assignments without `test-` prefix | Prefix fixture keys with `test-` or `mock-` (e.g., `test-hmac-key-abc`) |
+| Playwright tests hang on `networkidle` | Supabase long-polling prevents `networkidle` | Use `domcontentloaded` instead of `networkidle` when waiting for authentication |
+| CI fails in 17s with placeholder skips | Placeholder skips or missing APEX-#### trackers | Ensure all `test.skip` and `it.skip` have `APEX-####` in the reason or on the same line |
+| `APEX-1200` thrown in E2E | `VITE_SUPABASE_URL` is missing in E2E auth | E2E requires a real Supabase backend; ensure `playwright/.auth/e2e-test-user.json` contains valid credentials or `E2E_SUPABASE_SERVICE_ROLE_KEY` is set |
 
 ---
 

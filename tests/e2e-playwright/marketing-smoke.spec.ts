@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Marketing Visuals and Stability', () => {
   test('Language selector is compact icon-only on desktop', async ({ page, isMobile }) => {
     if (isMobile) {
-      test.skip();
+      test.skip(true, 'APEX-1001: Mobile layout test execution deferred');
     }
     await page.goto('/');
 
@@ -32,7 +32,7 @@ test.describe('Marketing Visuals and Stability', () => {
   test('Request Early Access and Watch Demo are equal size', async ({ page, isMobile }) => {
     // Skip on mobile — buttons stack or resize differently on narrow viewports.
     if (isMobile) {
-      test.skip();
+      test.skip(true, 'APEX-1001: Mobile layout test execution deferred');
     }
 
     await page.goto('/');

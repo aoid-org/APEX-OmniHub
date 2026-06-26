@@ -72,7 +72,7 @@ test.describe('Route Sweep - Public Routes', () => {
 
   for (const route of PUBLIC_ROUTES) {
     test(`${route} - renders without fatal errors`, async ({ page }) => {
-      const response = await page.goto(route, { waitUntil: 'networkidle' });
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
 
       expect(response?.status()).toBeLessThan(400);
 

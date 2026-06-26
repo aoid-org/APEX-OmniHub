@@ -30,6 +30,14 @@ export function usePWAInstall(): UsePWAInstallReturn {
       return;
     }
 
+    // If the event fired before React mounted, grab it now!
+    // @ts-expect-error - Custom global property
+    if (globalThis.__deferredPWAEvent) {
+      // @ts-expect-error - Custom global property
+      setDeferredPrompt(globalThis.__deferredPWAEvent as BeforeInstallPromptEvent);
+      setIsInstallable(true);
+    }
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);

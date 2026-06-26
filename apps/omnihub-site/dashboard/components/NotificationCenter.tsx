@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Bell, MoreVertical } from 'lucide-react';
 
 import { useNotificationStore, type AppNotification } from '../../src/stores/notificationStore';
 
@@ -54,12 +55,29 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: AppNot
           <p className="font-semibold text-sm leading-tight text-neutral-900 dark:text-neutral-100 tracking-tight pr-4">
             {n.label}
           </p>
-          <Badge
-            variant={badgeVariant}
-            className="shrink-0 uppercase tracking-wider text-[10px] font-bold"
-          >
-            {n.badge}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge
+              variant={badgeVariant}
+              className="shrink-0 uppercase tracking-wider text-[10px] font-bold"
+            >
+              {n.badge}
+            </Badge>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-40 p-1" align="end">
+                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal">
+                  View Details
+                </Button>
+                <Button variant="ghost" className="w-full justify-start h-8 text-xs font-normal text-muted-foreground">
+                  Escalate
+                </Button>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 line-clamp-2">
           {n.description}

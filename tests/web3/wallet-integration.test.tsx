@@ -126,7 +126,7 @@ describe('Wallet Integration Flow', () => {
     // DEFER (P2-2): fails un-skipped — connected-state UI assertion does not match the
     // current WalletConnect render under the mocked Web3Provider (async state/copy drift).
     // Tracked for a Web3 component-test refresh; left skipped to keep CI deterministic.
-    it.skip('should show connected state after connection', async () => {
+    it.skip('APEX-1000: should show connected state after connection [BLOCKED(APEX-8006)]', async () => {
       vi.mocked(useAccount).mockReturnValue({
         address: mockAddress,
         isConnected: true,
@@ -157,7 +157,7 @@ describe('Wallet Integration Flow', () => {
     // DEFER (P2-2): fails un-skipped — the "Verifying" state assertion times out under the
     // mocked sign/nonce flow (component verification UX has drifted from this fixture).
     // Tracked for a Web3 component-test refresh; left skipped to keep CI deterministic.
-    it.skip('should complete verification flow successfully', async () => {
+    it.skip('APEX-1000: should complete verification flow successfully [BLOCKED(APEX-8007)]', async () => {
       const user = userEvent.setup();
 
       vi.mocked(useAccount).mockReturnValue({

@@ -7,6 +7,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchOmniLinkIntegrations } from "@/omnidash/omnilink-api";
+import { useLayoutPersistence } from "../../hooks/useLayoutPersistence";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 
 import { useNavigate } from "react-router-dom";
@@ -40,6 +43,21 @@ export const DashboardOverview = memo(function DashboardOverview({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const registryApps = useAppRegistryHealth();
+
+  const { hasSeenOnboarding, setHasSeenOnboarding } = useLayoutPersistence(user?.id);
+  const [showCoachmark, setShowCoachmark] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenOnboarding && registryApps.length > 0) {
+      const t = setTimeout(() => setShowCoachmark(true), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [hasSeenOnboarding, registryApps.length]);
+
+  const dismissCoachmark = useCallback(() => {
+    setShowCoachmark(false);
+    setHasSeenOnboarding(true);
+  }, [setHasSeenOnboarding]);
 
   const integrationsQuery = useQuery({
     queryKey: ["omnidash-integrations-overview", user?.id],
@@ -268,7 +286,26 @@ export const DashboardOverview = memo(function DashboardOverview({
           {lambdaDispatching ? "Dispatching..." : "Run Lambda Orchestrator"}
         </button>
       </div>
-      <AppsSection apps={appsToUse} onAppClick={handleAppClick} />
+      <Popover open={showCoachmark} onOpenChange={(open) => {
+        if (!open) dismissCoachmark();
+      }}>
+        <PopoverTrigger asChild>
+          <div className="w-full relative">
+            <AppsSection apps={appsToUse} onAppClick={handleAppClick} />
+          </div>
+        </PopoverTrigger>
+        <PopoverContent align="center" side="top" className="w-80 p-5 border-orange-500/30 bg-neutral-950 shadow-2xl shadow-orange-500/10">
+          <div className="flex flex-col gap-3">
+            <h4 className="font-semibold text-orange-500 text-lg tracking-tight">Welcome to OmniBoard</h4>
+            <p className="text-sm text-neutral-300 leading-relaxed">
+              Click any integration tile below to authorize connections and stream real-time data directly into your unified dashboard.
+            </p>
+            <Button size="sm" onClick={dismissCoachmark} className="mt-2 w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold">
+              Get Started
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 });

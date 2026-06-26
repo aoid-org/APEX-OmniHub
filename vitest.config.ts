@@ -157,6 +157,10 @@ export default defineConfig({
       // omnihub-site modules via '@/'. Do NOT align these — the split is load-bearing.
       'dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
+      // Pin the sidebar-widgets contract specifier to the root-package STUB so the vi.mock in
+      // omnidash-shell-coverage resolves deterministically under vitest, regardless of any Vite
+      // plugin import-analysis pass that would otherwise resolve '@' via vite.config (apps/…/src).
+      '@/contracts/omnidash-sidebar-widgets': path.resolve(__dirname, './src/contracts/omnidash-sidebar-widgets.ts'),
       '@': path.resolve(__dirname, './src'),
       '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
       'recharts': path.resolve(__dirname, 'tests/__mocks__/recharts.tsx'),

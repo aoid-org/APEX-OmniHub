@@ -91,6 +91,7 @@ export interface PersistedLayoutState {
   readonly ops: OmniDashOpsState;
   readonly panelLayout: 'standard' | 'reversed';  // 'reversed' = left-nav on right, right-panel on left
   readonly hiddenWidgets: readonly string[];  // widget IDs to hide on canvas
+  readonly hasSeenOnboarding: boolean;
 }
 
 export const DEFAULT_PERSISTED_LAYOUT: PersistedLayoutState = {
@@ -99,6 +100,7 @@ export const DEFAULT_PERSISTED_LAYOUT: PersistedLayoutState = {
   ops: DEFAULT_OPS_STATE,
   panelLayout: 'standard',
   hiddenWidgets: ['m03_1', 'm03_2', 'm03_3', 'm03_4', 'm03_5', 'm03_6', 'm03_7'],
+  hasSeenOnboarding: false,
 };
 
 export const LAYOUT_STORAGE_KEY = 'omnidash:layout:v2';

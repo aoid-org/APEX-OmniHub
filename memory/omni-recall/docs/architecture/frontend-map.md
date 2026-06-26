@@ -1,11 +1,12 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-12
+last_audited: 2026-06-25
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v1.6.3 | LAST_UPDATED=2026-06-01 -->
-> 2026-06-01 current-state note: active OmniDash shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`; see `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
+<!-- APEX_DOC_STAMP: VERSION=v1.6.3 | LAST_UPDATED=2026-06-25 | CANONICAL_FOR: Vercel Reference / Legacy Topology -->
+<!-- See also: apps/omnihub-site/FRONTEND_ARCHITECTURE_MAP.md -->
+> 2026-06-25 current-state note: active OmniDash shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`; see `docs/CURRENT_PLATFORM_STATE_2026_06_24.md`.
 
 # Frontend Structure Map
 
@@ -52,7 +53,8 @@ The map focuses on the React/Vite application rooted under `apps/omnihub-site/` 
 
 
 6. **OmniDash Sidebar Widget Rail**
-   - Canonical contract: `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`
+   - Canonical sidebar contract: `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`
+   - Canonical SSOT App Registry contract: `src/contracts/omnidash.contract.ts`
    - Renderer: `apps/omnihub-site/dashboard/OmniDashShell.tsx`
    - Tests: `tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts` and `tests/omnidash/omnidash-layout-contract.spec.tsx`
    - Drift guard: `eslint.config.js` rejects local `NAV` and `NAV_MODULE_KEY` in `OmniDashShell.tsx`

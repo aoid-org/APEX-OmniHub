@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 /**
  * Playwright configuration for OmniLink APEX runtime smoke tests.
@@ -64,11 +65,13 @@ const ciProjects = allProjects
 
 export default defineConfig({
   testDir: './tests/e2e-playwright',
+  testIgnore: '**/__sentinels__/**',
+  globalSetup: path.resolve('./tests/e2e-playwright/global-setup.ts'),
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
-  reporter: 'html',
+  workers: isCI ? 3 : undefined,
+  reporter: isCI ? [['list'], ['html']] : 'html',
 
   // Per-test timeout. Most smoke tests finish in seconds; the route-sweep summary
   // visits every registered route serially (slower under mobile-chrome emulation),
