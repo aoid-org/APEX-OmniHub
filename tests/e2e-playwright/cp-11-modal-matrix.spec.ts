@@ -104,13 +104,7 @@ test.describe('CP-11 — Modal Correctness Matrix (PARTIAL)', () => {
 
   // 2. Add Link (Links Widget)
   test('AddLinkModal discriminator', async () => {
-    test.skip(
-      true,
-      'APEX-2011: Links module dialog renders generic module state view — not an ' +
-      'add-link form; omnilink-port wiring needed to serve add-link content from ' +
-      'edge function; assertModalIdentityAndIsolation(/add link|new link/i) cannot ' +
-      'match current dialog content',
-    );
+    test.skip(true, 'APEX-2011: Links dialog renders generic module view not add-link form; omnilink-port wiring needed; assertModalIdentityAndIsolation(/add link|new link/i) cannot match'); // APEX-2011
   });
 
   // 3. Media Upload (Files Widget)
