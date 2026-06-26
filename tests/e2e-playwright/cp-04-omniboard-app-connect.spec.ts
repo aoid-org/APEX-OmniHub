@@ -50,7 +50,7 @@ test.describe('CP-04 — OmniBoard App Connect', () => {
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
   });
 
-  test('OmniBoardWizard renders initial state (IDLE/listening)', async ({ page }) => {
+  test('OmniBoardWizard renders initial state (IDLE/listening)', async () => {
     // APEX-2004: OmniBoardWizard input field pending FSM state wiring via handleModuleState()
     test.skip(true, 'APEX-2004: OmniBoardWizard input field pending FSM state wiring via handleModuleState()');
   });
@@ -79,7 +79,7 @@ test.describe('CP-04 — OmniBoard App Connect', () => {
     expect(errors.filter((e) => FATAL.test(e))).toHaveLength(0);
   });
 
-  test('connector grid shows state after OmniBoard integration completes', async ({ page }) => {
+  test('connector grid shows state after OmniBoard integration completes', async () => {
     // APEX-2005: connector-grid testids not yet implemented in OmniBoardWizard integration surface
     test.skip(true, 'APEX-2005: connector-grid testids not yet implemented in OmniBoardWizard integration surface');
   });
