@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 
@@ -17,6 +18,15 @@ function parseUsagePct(detail: string | undefined): number | null {
   return Math.min(100, Math.round((used / cap) * 1000) / 10);
 }
 
+function extractPortalUrl(data: unknown): string | null {
+  const payload = data && typeof data === 'object' && 'data' in data
+    ? (data as { data?: unknown }).data
+    : data;
+  if (!payload || typeof payload !== 'object') return null;
+  const url = (payload as { url?: unknown }).url;
+  return typeof url === 'string' && /^https:\/\/billing\.stripe\.com\//.test(url) ? url : null;
+}
+
 export default function BillingModule({ onClose }: Props) {
   const state = useOmniModuleState('billing');
 
@@ -28,18 +38,26 @@ export default function BillingModule({ onClose }: Props) {
   const usageItem = state.items.find((i) => i.id === 'usage-api');
   const usagePct  = parseUsagePct(usageItem?.detail);
 
-  const handleAction = useCallback(async (actionId: string): Promise<boolean> => {
-    if (actionId === 'manage-plan') {
-      // Escalate to billing team — portal URL is tenant-specific and requires auth
-      window.open('mailto:billing@apexbusiness.systems?subject=Manage%20Plan', '_blank', 'noopener');
-      return true;
+  const handleAction = useCallback(async (actionId: string): Promise<boolean | string> => {
+    if (actionId !== 'manage-plan' && actionId !== 'billing-portal' && actionId !== 'download-invoices') {
+      return false;
     }
+
+    const { data, error } = await supabase.functions.invoke('create-billing-portal', {
+      body: { returnUrl: window.location.origin },
+    });
+    if (error) {
+      return error.message || 'Billing portal is unavailable. No billing page was opened.';
+    }
+    const url = extractPortalUrl(data);
+    if (!url) {
+      return 'Billing portal did not return a valid Stripe URL. No billing page was opened.';
+    }
+    window.location.assign(url);
     if (actionId === 'download-invoices') {
-      // Invoices are available in the Stripe customer portal — link is auth-gated
-      alert('Invoice downloads are available in your Stripe customer portal.\nSign in at billing.apexbusiness.systems to access your invoices.');
-      return true;
+      return 'Opening Stripe billing portal. Invoices are available from the portal.';
     }
-    return false;
+    return 'Opening Stripe billing portal…';
   }, []);
 
   return (

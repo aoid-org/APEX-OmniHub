@@ -31,7 +31,7 @@ const MODULE_ACTION_IDS: Record<string, readonly string[]> = {
   physiomni:    ['sync-devices', 'export-data', 'provision-device', 'export-telemetry'],
   audits:       ['export-audit', 'run-compliance'],
   links:        ['add-link', 'send-to-omnislate', 'test-all'],
-  automations:  ['create-rule', 'view-logs', 'create-automation'],
+  automations:  ['create-rule', 'view-logs', 'create-automation', 'execute-automation'],
   workflows:    ['create-workflow', 'import', 'create_workflow', 'trigger_run'],
   files:        ['upload', 'browse', 'upload_file', 'delete_file'],
   billing:      ['manage-plan', 'download-invoices', 'billing-portal'],
@@ -69,19 +69,26 @@ const GENERIC_UNSUPPORTED_COPY =
 /**
  * Explicit capability map keyed by `${moduleKey}:${actionId}`.
  *
- * Built from MODULE_ACTION_IDS so both baseline and live ids are present. No
- * action is marked `supported: true` until its orchestrator intent handler is
- * verified end-to-end — until then every entry is honestly unsupported and the
- * UI shows the module's own copy instead of calling trigger-workflow.
+ * Built from MODULE_ACTION_IDS so both baseline and live ids are present.
+ * Only explicitly verified actions may override the default unsupported entry;
+ * every other entry is honestly unsupported and never calls trigger-workflow.
  */
+const AUTOMATION_EXECUTE_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Executes one selected saved automation through the authenticated automation runner.',
+};
+
 const CAPABILITY_MAP: ReadonlyMap<string, ModuleActionCapability> = new Map(
-  Object.entries(MODULE_ACTION_IDS).flatMap(([moduleKey, actionIds]) => {
-    const copy = MODULE_UNSUPPORTED_COPY[moduleKey] ?? GENERIC_UNSUPPORTED_COPY;
-    return actionIds.map(
-      (actionId) =>
-        [`${moduleKey}:${actionId}`, { supported: false, copy }] as const,
-    );
-  }),
+  [
+    ...Object.entries(MODULE_ACTION_IDS).flatMap(([moduleKey, actionIds]) => {
+      const copy = MODULE_UNSUPPORTED_COPY[moduleKey] ?? GENERIC_UNSUPPORTED_COPY;
+      return actionIds.map(
+        (actionId) =>
+          [`${moduleKey}:${actionId}`, { supported: false, copy }] as const,
+      );
+    }),
+    ['automations:execute-automation', AUTOMATION_EXECUTE_CAPABILITY] as const,
+  ],
 );
 
 /**

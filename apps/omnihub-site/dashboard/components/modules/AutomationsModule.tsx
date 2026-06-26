@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 import {
   Zap, Receipt, Bell, Database, UserCheck,
   CheckCircle, Clock, ArrowRight,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import type { ModuleListItem } from '@/dashboard/components/ModuleRegistry';
@@ -10,6 +11,8 @@ import type { ModuleListItem } from '@/dashboard/components/ModuleRegistry';
 interface Props {
   readonly onClose: () => void;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Map automation item id → contextual icon
 const AUTOMATION_ICONS: Readonly<Record<string, typeof Zap>> = {
@@ -27,7 +30,7 @@ const STATUS_COLOR: Readonly<Record<string, string>> = {
   error:    '#ef4444',
 };
 
-function AutomationRow({ item }: { item: ModuleListItem }) {
+function AutomationRow({ item, selected, onToggle }: { item: ModuleListItem; selected: boolean; onToggle: () => void }) {
   const Icon  = AUTOMATION_ICONS[item.id] ?? Zap;
   const color = STATUS_COLOR[item.status] ?? '#6b7280';
 
@@ -38,12 +41,16 @@ function AutomationRow({ item }: { item: ModuleListItem }) {
   const runs         = runsMatch?.[1]?.trim() ?? null;
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full text-left transition-colors"
+      aria-pressed={selected}
       style={{
         display: 'flex', alignItems: 'flex-start', gap: 10,
         padding: '8px 10px', borderRadius: 8,
-        border: `1px solid ${color}22`,
-        background: `${color}06`,
+        border: selected ? `1px solid ${color}` : `1px solid ${color}22`,
+        background: selected ? `${color}14` : `${color}06`,
       }}
     >
       {/* Icon badge */}
@@ -83,26 +90,64 @@ function AutomationRow({ item }: { item: ModuleListItem }) {
           {item.status}
         </span>
       </div>
-    </div>
+    </button>
   );
+}
+
+function actionDisabledReason(actionId: string, selectedItems: readonly string[]): string | null {
+  if (actionId !== 'execute-automation') return null;
+  if (selectedItems.length !== 1) {
+    return 'Select exactly one live automation to execute.';
+  }
+  if (!UUID_RE.test(selectedItems[0])) {
+    return 'Only saved live automations can be executed. Demo automation rows are not executable.';
+  }
+  return null;
+}
+
+function formatExecutionResult(data: unknown): string {
+  const envelope = data && typeof data === 'object' && 'data' in data
+    ? (data as { data?: unknown }).data
+    : data;
+  if (envelope && typeof envelope === 'object' && 'action_type' in envelope) {
+    const actionType = String((envelope as { action_type?: unknown }).action_type ?? 'automation');
+    return `Automation executed successfully (${actionType}).`;
+  }
+  return 'Automation executed successfully.';
 }
 
 export default function AutomationsModule({ onClose }: Props) {
   const state = useOmniModuleState('automations');
 
-  // Render automations with icon context in children; clear items from shell
-  // so they aren't duplicated in the plain text list below.
-  const shellState = useMemo(() => ({ ...state, items: [] as readonly ModuleListItem[] }), [state]);
+  const handleAction = useCallback(async (actionId: string, selectedItems: string[]): Promise<boolean | string> => {
+    if (actionId === 'execute-automation') {
+      const disabledReason = actionDisabledReason(actionId, selectedItems);
+      if (disabledReason) return disabledReason;
+      const { data, error } = await supabase.functions.invoke('execute-automation', {
+        body: { automationId: selectedItems[0] },
+      });
+      if (error) throw new Error(error.message || 'Automation execution failed.');
+      state.refetch?.();
+      return formatExecutionResult(data);
+    }
+    if (actionId === 'create-automation') {
+      return 'Automation creation is not available from this panel yet. Use the dedicated workflow builder when it is enabled.';
+    }
+    if (actionId === 'view-logs') {
+      return 'Automation run logs are not connected to this panel yet. No log viewer URL is configured.';
+    }
+    return false;
+  }, [state]);
 
   return (
-    <ModuleShell state={shellState} onClose={onClose}>
-      {!state.loading && state.items.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {state.items.map((item) => (
-            <AutomationRow key={item.id} item={item} />
-          ))}
-        </div>
+    <ModuleShell
+      state={state}
+      onClose={onClose}
+      onAction={handleAction}
+      getActionDisabledReason={actionDisabledReason}
+      renderItem={(item, selected, toggle) => (
+        <AutomationRow item={item} selected={selected} onToggle={toggle} />
       )}
-    </ModuleShell>
+    />
   );
 }
