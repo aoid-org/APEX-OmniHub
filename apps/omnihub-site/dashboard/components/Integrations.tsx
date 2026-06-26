@@ -53,7 +53,7 @@ function deriveStatus(
 
 function deriveBoardStatus(status: string): ConnectorStatus {
   if (status === 'LIVE') return 'LIVE';
-  if (status === 'CONNECTING') return 'PARTIAL';
+  if (status === 'CONNECTING' || status === 'LOCAL_LAUNCHED') return 'PARTIAL';
   if (status === 'NEEDS_AUTH') return 'NEEDS_AUTH';
   return 'ERROR';
 }

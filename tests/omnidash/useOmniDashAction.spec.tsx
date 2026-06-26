@@ -178,8 +178,17 @@ describe('useOmniDashAction', () => {
     expect(mockSupabaseInvoke).not.toHaveBeenCalled();
 
     const hydrated = hydrateConnector.mock.calls[0][0] as {
-      metadata: { renderMode: string; launchPayload: Record<string, unknown> };
+      status: string;
+      metadata: {
+        confirmation: string;
+        requiresBackendConfirmation: boolean;
+        renderMode: string;
+        launchPayload: Record<string, unknown>;
+      };
     };
+    expect(hydrated.status).toBe('LOCAL_LAUNCHED');
+    expect(hydrated.metadata.confirmation).toBe('local-launch-only');
+    expect(hydrated.metadata.requiresBackendConfirmation).toBe(true);
     expect(hydrated.metadata.renderMode).toBe('spatial');
     expect(hydrated.metadata.launchPayload.useful).toBe('value');
     expect(hydrated.metadata.launchPayload.token).toBeUndefined();
