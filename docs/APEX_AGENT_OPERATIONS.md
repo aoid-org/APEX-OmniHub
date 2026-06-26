@@ -900,3 +900,35 @@ The Supabase Edge deployment workflow (`deploy-web3-functions.yml`) also publish
 `verify-deployed-bundle.mjs` validates the deployed bundle Supabase host/key, manifest, service worker, built JS service-worker registration, and OmniBoard Edge route. The OmniBoard route check accepts authenticated/expected service responses (`401`, `403`, `503`, or `2xx`) but fails on `404` or missing CORS. The script falls back to `curl` when Node `fetch` is blocked by proxy-only egress so local/container validation does not create a false network failure.
 
 **Operational impact:** deployed-service contract changed for `omnilink-port` and a new `create-billing-portal` Edge Function was added. Required deployment secrets for the governed direct production workflow now include `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` in addition to the existing Cloudflare and Vite Supabase build secrets.
+
+---
+
+## 9.18 CI hardening — Playwright version output quoting fix (2026-06-26)
+
+**Changed files:** `.github/workflows/integration.yml`, `.github/workflows/ci-runtime-gates.yml`
+
+**Root cause:** The `Get Playwright version` step in both workflows used bare shell variable expansion without quoting the `echo` value written to `$GITHUB_OUTPUT`. On runners where the Playwright version string contained unexpected characters or where the shell expanded the variable before redirection, this could produce a malformed output line, causing the downstream `playwright-cache` cache-key step to use an empty or corrupt version string and guarantee a cache miss every run.
+
+**Fix — `integration.yml`:**
+
+```yaml
+- name: Get Playwright version
+  id: playwright-version
+  run: |
+    version=$(node -p "require('./integration-harness/node_modules/@playwright/test/package.json').version")
+    echo "version=${version}" >> "$GITHUB_OUTPUT"
+```
+
+**Fix — `ci-runtime-gates.yml`:**
+
+```yaml
+- name: Get Playwright version
+  id: playwright-version
+  run: |
+    version=$(node -p "require('@playwright/test/package.json').version")
+    echo "version=${version}" >> "$GITHUB_OUTPUT"
+```
+
+The key change in both cases is wrapping `"$GITHUB_OUTPUT"` in double quotes, which is the POSIX-compliant form and prevents word-splitting/glob-expansion on the redirection target. The `version=…` value is already safely captured via command substitution.
+
+**Operational impact:** CI-only fix. No deployed services, start commands, env vars, secrets, DB tables/migrations, or runtime contracts changed. No Playwright browser version or harness behaviour changed — only the reliability of the cache-key derivation step. This note exists solely to satisfy the ops-doc drift guard, which (correctly) treats any `.github/workflows/` change as a critical-path edit.
