@@ -263,3 +263,11 @@ Release/CI/production builds fail closed without these values. Local UI-only wor
 ## Production Certification
 
 Current repo-verified release-remediation evidence is in [`docs/release/release-validation-matrix.json`](../../../docs/release/release-validation-matrix.json). Full production certification remains owner/manual until the matrix items labeled `BLOCKED` / `REQUIRES_MANUAL_VALIDATION` have live evidence.
+
+### 5. Production Validation Harness — Non-Destructive Evidence Gates
+
+**Files:** `playwright.production-safe.config.ts`, `tests/e2e-playwright/production-safe.spec.ts`, `scripts/ci/perf-k6-smoke.mjs`, `scripts/ci/verify-release-validation-matrix.mjs`, `docs/release/release-validation-matrix.json`, `docs/release/production-validation-harness.md`, `package.json`.
+
+**Repo-state update:** the repository now includes a production-safe validation harness for `https://apexomnihub.icu`. The browser suite is read-only by default and writes sanitized route evidence to `artifacts/production-validation/`. The k6 wrapper records `BLOCKED` when k6 is unavailable instead of treating a skipped load test as success. The release validation matrix now records item-level status, owner, blocker, evidence path, live-production-touch flag, and backend-persistence-proof flag.
+
+**Certification boundary:** this remains a repo harness and documentation update, not full production certification. Live Cloudflare provenance, authenticated workflows, Request Access backend/fallback proof, Supabase RLS/multi-tenant behavior, BYOM, billing, native mobile, WebAuthn, performance/load, and GitHub branch protection still require retained owner/live evidence before they can be marked `VERIFIED`.

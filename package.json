@@ -105,7 +105,9 @@
     "check:new-code-coverage": "node scripts/ci/check-new-code-coverage.mjs",
     "verify:cloudflare-pages-contract": "node scripts/ci/verify-cloudflare-pages-contract.mjs",
     "i18n:check": "node apps/omnihub-site/scripts/i18n-check.mjs && node apps/omnihub-site/scripts/i18n-hardcoded-ui-check.mjs",
-    "release:validation-matrix": "node scripts/ci/verify-release-validation-matrix.mjs"
+    "release:validation-matrix": "node scripts/ci/verify-release-validation-matrix.mjs",
+    "test:e2e:production-safe": "playwright test -c playwright.production-safe.config.ts",
+    "perf:k6:smoke": "node scripts/ci/perf-k6-smoke.mjs"
   },
   "size-limit": [
     {

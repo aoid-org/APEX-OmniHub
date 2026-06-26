@@ -975,3 +975,27 @@ This runs `scripts/ci/verify-release-validation-matrix.mjs`, which verifies the 
 `verify:ci-integrity` now also rejects release-sensitive placeholder config and unsafe workflow merge patterns (`pulls.merge`, `force-merge`, `mustBeGreen: false`) unless an audited `ci-integrity-allow:` exception is present.
 
 **Operational impact:** future workflow edits that weaken release evidence or branch-protection assumptions fail in CI before merge.
+
+---
+
+## 9.20 Production validation harness — non-destructive live evidence gates (2026-06-26)
+
+**Changed files:** `package.json`, `playwright.production-safe.config.ts`, `tests/e2e-playwright/production-safe.spec.ts`, `scripts/ci/perf-k6-smoke.mjs`, `scripts/ci/verify-release-validation-matrix.mjs`, `docs/release/release-validation-matrix.json`, and `docs/release/production-validation-harness.md`.
+
+### New commands
+
+```bash
+APEX_PROD_URL=https://apexomnihub.icu npm run test:e2e:production-safe
+npm run perf:k6:smoke
+npm run release:validation-matrix
+```
+
+### Operational contract
+
+The production-safe Playwright suite is read-only by default. It captures sanitized desktop/mobile route evidence for `/`, `/login`, `/request-access`, `/demo`, and `/omnidash` under `artifacts/production-validation/`. It must not be used to claim backend persistence, authentication success, Request Access storage, or OmniDash connector persistence unless a separate backend/read-back proof exists.
+
+`perf:k6:smoke` is a real k6 execution wrapper with explicit thresholds (`http_req_failed < 1%`, `p95 < 1000ms`, `p99 < 2000ms`, checks pass rate `> 99%`). If k6 is missing, the script writes a blocked summary and exits non-zero; this is intentionally not a pass.
+
+`release:validation-matrix` now validates the detailed item-level production validation matrix. The matrix preserves the NO-GO boundary for full production certification until live Cloudflare provenance, authenticated flows, Supabase/RLS, BYOM, billing, mobile/device, performance, and branch-protection evidence is retained.
+
+**Operational impact:** additive release-validation harness only. No deployed services, DB tables/migrations, start commands, runtime app behavior, secrets, or production write paths are changed. The new commands are evidence gates and must be treated as certification inputs, not certification by themselves.
