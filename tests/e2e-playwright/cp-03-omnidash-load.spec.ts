@@ -101,12 +101,6 @@ test.describe('CP-03 — OmniDash Load', () => {
   });
 
   test('all 3 panel areas present: canvas, sidebar, right-rail (desktop)', async () => {
-    test.skip(
-      true,
-      'APEX-2003: rt_security outer container visibility timing-dependent on CI ' +
-      'render environment (>15s); right-rail rendering performance is a tracked ' +
-      'production gate requirement before release; text-based right-rail coverage ' +
-      'provided by ops-widgets-smoke.spec.ts',
-    );
+    test.skip(true, 'APEX-2003: rt_security visibility timing-dependent in CI (>15s); right-rail performance is a tracked production gate; text-based coverage via ops-widgets-smoke.spec.ts'); // APEX-2003
   });
 });
