@@ -1,10 +1,8 @@
-> **Historical Note:** This document contains legacy certification terminology. It has been superseded by the manual owner-approval process. CI now produces factual validation summaries only. CI validates. Owner certifies.
-
 {
   "scriptCompleted": true,
   "name": "apex-omnihub",
   "rawDescription": "",
-  "readmeHead": "---\nversion: 1.3.1\nlast_audited: 2026-06-24\nstatus: verified\n---\n\n# Universal Synchronized Orchestrator\n\n```\n █████╗ ██████╗ ███████╗██╗  ██╗  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗",
+  "readmeHead": "---\r\nversion: 1.3.3\r\nlast_audited: 2026-06-25\r\nstatus: verified\r\n---\r\n\r\n# Universal Synchronized Orchestrator\r\n\r\n```\r\n █████╗ ██████╗ ███████╗██╗  ██╗  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗\r",
   "languages": [
     "batch",
     "c",
@@ -84,6 +82,114 @@
       "language": "typescript",
       "sizeLines": 54,
       "fileCategory": "code"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/evals/trigger-eval.json",
+      "language": "json",
+      "sizeLines": 21,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/LICENSE.md",
+      "language": "markdown",
+      "sizeLines": 39,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/MANIFEST.json",
+      "language": "json",
+      "sizeLines": 41,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/README.md",
+      "language": "markdown",
+      "sizeLines": 54,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/references/description-engineering.md",
+      "language": "markdown",
+      "sizeLines": 64,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/references/distribution.md",
+      "language": "markdown",
+      "sizeLines": 57,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/references/evidence-loop.md",
+      "language": "markdown",
+      "sizeLines": 70,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/references/token-economics.md",
+      "language": "markdown",
+      "sizeLines": 46,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/references/universal-protocol.md",
+      "language": "markdown",
+      "sizeLines": 65,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/scorecard.json",
+      "language": "json",
+      "sizeLines": 34,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/scripts/_forge_rubric.py",
+      "language": "python",
+      "sizeLines": 167,
+      "fileCategory": "code"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/scripts/forge.py",
+      "language": "python",
+      "sizeLines": 409,
+      "fileCategory": "code"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/scripts/run_trigger_eval.py",
+      "language": "python",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/SKILL.md",
+      "language": "markdown",
+      "sizeLines": 157,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/templates/MANIFEST.template.json",
+      "language": "json",
+      "sizeLines": 19,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/templates/README.template.md",
+      "language": "markdown",
+      "sizeLines": 41,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/apex-skill-forge-v9-universal/templates/SKILL.template.md",
+      "language": "markdown",
+      "sizeLines": 39,
+      "fileCategory": "docs"
+    },
+    {
+      "path": ".agents/omnihub-orchestrator-core.md",
+      "language": "markdown",
+      "sizeLines": 23,
+      "fileCategory": "docs"
     },
     {
       "path": ".agents/protocols/apex-memory.md",
@@ -872,108 +978,6 @@
       "fileCategory": "docs"
     },
     {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/evals/trigger-eval.json",
-      "language": "json",
-      "sizeLines": 21,
-      "fileCategory": "config"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/LICENSE.md",
-      "language": "markdown",
-      "sizeLines": 39,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/MANIFEST.json",
-      "language": "json",
-      "sizeLines": 41,
-      "fileCategory": "config"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/README.md",
-      "language": "markdown",
-      "sizeLines": 54,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/references/description-engineering.md",
-      "language": "markdown",
-      "sizeLines": 64,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/references/distribution.md",
-      "language": "markdown",
-      "sizeLines": 57,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/references/evidence-loop.md",
-      "language": "markdown",
-      "sizeLines": 70,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/references/token-economics.md",
-      "language": "markdown",
-      "sizeLines": 46,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/references/universal-protocol.md",
-      "language": "markdown",
-      "sizeLines": 65,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/scorecard.json",
-      "language": "json",
-      "sizeLines": 34,
-      "fileCategory": "config"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/scripts/_forge_rubric.py",
-      "language": "python",
-      "sizeLines": 167,
-      "fileCategory": "code"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/scripts/forge.py",
-      "language": "python",
-      "sizeLines": 409,
-      "fileCategory": "code"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/scripts/run_trigger_eval.py",
-      "language": "python",
-      "sizeLines": 92,
-      "fileCategory": "code"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/SKILL.md",
-      "language": "markdown",
-      "sizeLines": 157,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/templates/MANIFEST.template.json",
-      "language": "json",
-      "sizeLines": 19,
-      "fileCategory": "config"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/templates/README.template.md",
-      "language": "markdown",
-      "sizeLines": 41,
-      "fileCategory": "docs"
-    },
-    {
-      "path": ".claude/skills/apex-skill-forge-v9-universal/templates/SKILL.template.md",
-      "language": "markdown",
-      "sizeLines": 39,
-      "fileCategory": "docs"
-    },
-    {
       "path": ".claude/skills/apex-storied-agent/apex-storied-agent/evals/trigger-eval.json",
       "language": "json",
       "sizeLines": 21,
@@ -1174,7 +1178,7 @@
     {
       "path": ".claude/skills/omnidev-apex-pro-1.0.0/references/platform-map.md",
       "language": "markdown",
-      "sizeLines": 212,
+      "sizeLines": 214,
       "fileCategory": "docs"
     },
     {
@@ -1570,7 +1574,7 @@
     {
       "path": ".env.example",
       "language": "example",
-      "sizeLines": 261,
+      "sizeLines": 262,
       "fileCategory": "code"
     },
     {
@@ -1604,6 +1608,12 @@
       "fileCategory": "script"
     },
     {
+      "path": ".githooks/pre-commit.d/10-agent-guard.sh",
+      "language": "shell",
+      "sizeLines": 9,
+      "fileCategory": "script"
+    },
+    {
       "path": ".githooks/pre-commit.d/10-commitlint.sh",
       "language": "shell",
       "sizeLines": 7,
@@ -1618,7 +1628,7 @@
     {
       "path": ".githooks/pre-commit.d/30-destructive-action-guard.sh",
       "language": "shell",
-      "sizeLines": 91,
+      "sizeLines": 90,
       "fileCategory": "script"
     },
     {
@@ -1696,7 +1706,7 @@
     {
       "path": ".github/workflows/apex-governance.yml",
       "language": "yaml",
-      "sizeLines": 250,
+      "sizeLines": 218,
       "fileCategory": "infra"
     },
     {
@@ -1714,25 +1724,19 @@
     {
       "path": ".github/workflows/ci-runtime-gates.yml",
       "language": "yaml",
-      "sizeLines": 394,
+      "sizeLines": 460,
       "fileCategory": "infra"
     },
     {
       "path": ".github/workflows/compliance.yml",
       "language": "yaml",
-      "sizeLines": 199,
+      "sizeLines": 159,
       "fileCategory": "infra"
     },
     {
       "path": ".github/workflows/dependency-consolidation.yml",
       "language": "yaml",
       "sizeLines": 100,
-      "fileCategory": "infra"
-    },
-    {
-      "path": ".github/workflows/dependency-review.yml",
-      "language": "yaml",
-      "sizeLines": 37,
       "fileCategory": "infra"
     },
     {
@@ -1756,19 +1760,19 @@
     {
       "path": ".github/workflows/integration.yml",
       "language": "yaml",
-      "sizeLines": 55,
+      "sizeLines": 92,
       "fileCategory": "infra"
     },
     {
       "path": ".github/workflows/lighthouse.yml",
       "language": "yaml",
-      "sizeLines": 46,
+      "sizeLines": 61,
       "fileCategory": "infra"
     },
     {
       "path": ".github/workflows/mobile-build-verify.yml",
       "language": "yaml",
-      "sizeLines": 321,
+      "sizeLines": 332,
       "fileCategory": "infra"
     },
     {
@@ -1790,12 +1794,6 @@
       "fileCategory": "infra"
     },
     {
-      "path": ".github/workflows/production-readiness.yml",
-      "language": "yaml",
-      "sizeLines": 224,
-      "fileCategory": "infra"
-    },
-    {
       "path": ".github/workflows/release.yml",
       "language": "yaml",
       "sizeLines": 301,
@@ -1810,19 +1808,13 @@
     {
       "path": ".github/workflows/secret-scanning.yml",
       "language": "yaml",
-      "sizeLines": 232,
-      "fileCategory": "infra"
-    },
-    {
-      "path": ".github/workflows/security-guards.yml",
-      "language": "yaml",
-      "sizeLines": 18,
+      "sizeLines": 160,
       "fileCategory": "infra"
     },
     {
       "path": ".github/workflows/security-regression-guard.yml",
       "language": "yaml",
-      "sizeLines": 200,
+      "sizeLines": 180,
       "fileCategory": "infra"
     },
     {
@@ -1834,7 +1826,7 @@
     {
       "path": ".husky/pre-commit",
       "language": "unknown",
-      "sizeLines": 7,
+      "sizeLines": 11,
       "fileCategory": "code"
     },
     {
@@ -1846,7 +1838,13 @@
     {
       "path": ".lighthouserc.json",
       "language": "json",
-      "sizeLines": 31,
+      "sizeLines": 32,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".lighthouserc.nightly.json",
+      "language": "json",
+      "sizeLines": 32,
       "fileCategory": "config"
     },
     {
@@ -1886,6 +1884,12 @@
       "fileCategory": "docs"
     },
     {
+      "path": ".understand-anything/E2E_CANONICAL_BEHAVIOR.md",
+      "language": "markdown",
+      "sizeLines": 35,
+      "fileCategory": "docs"
+    },
+    {
       "path": ".understand-anything/graph-features.mjs",
       "language": "javascript",
       "sizeLines": 169,
@@ -1904,12 +1908,6 @@
       "fileCategory": "markup"
     },
     {
-      "path": ".understand-anything/knowledge-graph.json",
-      "language": "json",
-      "sizeLines": 4912,
-      "fileCategory": "config"
-    },
-    {
       "path": ".understand-anything/tmp/ua-build-graph.mjs",
       "language": "javascript",
       "sizeLines": 198,
@@ -1924,7 +1922,7 @@
     {
       "path": ".understand-anything/tmp/ua-scan-results.json",
       "language": "json",
-      "sizeLines": 13877,
+      "sizeLines": 18192,
       "fileCategory": "config"
     },
     {
@@ -1932,6 +1930,12 @@
       "language": "javascript",
       "sizeLines": 158,
       "fileCategory": "code"
+    },
+    {
+      "path": "accepted-findings.md",
+      "language": "markdown",
+      "sizeLines": 14,
+      "fileCategory": "docs"
     },
     {
       "path": "AGENTS.md",
@@ -2224,7 +2228,7 @@
     {
       "path": "api/omniconnect/exchange.ts",
       "language": "typescript",
-      "sizeLines": 140,
+      "sizeLines": 143,
       "fileCategory": "code"
     },
     {
@@ -2290,7 +2294,7 @@
     {
       "path": "apps/omnihub-site/.env.example",
       "language": "example",
-      "sizeLines": 15,
+      "sizeLines": 17,
       "fileCategory": "code"
     },
     {
@@ -2560,7 +2564,7 @@
     {
       "path": "apps/omnihub-site/dashboard/components/DashboardOverview/DashboardOverview.tsx",
       "language": "typescript",
-      "sizeLines": 275,
+      "sizeLines": 312,
       "fileCategory": "code"
     },
     {
@@ -2614,7 +2618,7 @@
     {
       "path": "apps/omnihub-site/dashboard/components/HiddenMetric.tsx",
       "language": "typescript",
-      "sizeLines": 61,
+      "sizeLines": 59,
       "fileCategory": "code"
     },
     {
@@ -2734,7 +2738,7 @@
     {
       "path": "apps/omnihub-site/dashboard/components/modules/FilesModule.tsx",
       "language": "typescript",
-      "sizeLines": 154,
+      "sizeLines": 151,
       "fileCategory": "code"
     },
     {
@@ -2806,13 +2810,13 @@
     {
       "path": "apps/omnihub-site/dashboard/components/NotificationCenter.tsx",
       "language": "typescript",
-      "sizeLines": 179,
+      "sizeLines": 197,
       "fileCategory": "code"
     },
     {
       "path": "apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx",
       "language": "typescript",
-      "sizeLines": 204,
+      "sizeLines": 205,
       "fileCategory": "code"
     },
     {
@@ -2848,7 +2852,7 @@
     {
       "path": "apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx",
       "language": "typescript",
-      "sizeLines": 576,
+      "sizeLines": 613,
       "fileCategory": "code"
     },
     {
@@ -2890,7 +2894,7 @@
     {
       "path": "apps/omnihub-site/dashboard/components/SystemHealthRow.tsx",
       "language": "typescript",
-      "sizeLines": 77,
+      "sizeLines": 73,
       "fileCategory": "code"
     },
     {
@@ -2992,13 +2996,13 @@
     {
       "path": "apps/omnihub-site/dashboard/hooks/useDashboardData.ts",
       "language": "typescript",
-      "sizeLines": 193,
+      "sizeLines": 204,
       "fileCategory": "code"
     },
     {
       "path": "apps/omnihub-site/dashboard/hooks/useLayoutPersistence.ts",
       "language": "typescript",
-      "sizeLines": 155,
+      "sizeLines": 163,
       "fileCategory": "code"
     },
     {
@@ -3022,7 +3026,7 @@
     {
       "path": "apps/omnihub-site/dashboard/OmniDashShell.tsx",
       "language": "typescript",
-      "sizeLines": 1703,
+      "sizeLines": 1706,
       "fileCategory": "code"
     },
     {
@@ -3034,7 +3038,7 @@
     {
       "path": "apps/omnihub-site/dashboard/types/dashboard.types.ts",
       "language": "typescript",
-      "sizeLines": 95,
+      "sizeLines": 107,
       "fileCategory": "code"
     },
     {
@@ -3046,7 +3050,7 @@
     {
       "path": "apps/omnihub-site/demo.html",
       "language": "html",
-      "sizeLines": 45,
+      "sizeLines": 50,
       "fileCategory": "markup"
     },
     {
@@ -3070,13 +3074,13 @@
     {
       "path": "apps/omnihub-site/FRONTEND_ARCHITECTURE_MAP.md",
       "language": "markdown",
-      "sizeLines": 83,
+      "sizeLines": 93,
       "fileCategory": "docs"
     },
     {
       "path": "apps/omnihub-site/index.html",
       "language": "html",
-      "sizeLines": 61,
+      "sizeLines": 72,
       "fileCategory": "markup"
     },
     {
@@ -3142,7 +3146,7 @@
     {
       "path": "apps/omnihub-site/privacy.html",
       "language": "html",
-      "sizeLines": 35,
+      "sizeLines": 36,
       "fileCategory": "markup"
     },
     {
@@ -3382,7 +3386,7 @@
     {
       "path": "apps/omnihub-site/src/components/byom/ConnectAiAuthModal.tsx",
       "language": "typescript",
-      "sizeLines": 202,
+      "sizeLines": 208,
       "fileCategory": "code"
     },
     {
@@ -3478,7 +3482,7 @@
     {
       "path": "apps/omnihub-site/src/components/OmniSentryPanel.tsx",
       "language": "typescript",
-      "sizeLines": 326,
+      "sizeLines": 334,
       "fileCategory": "code"
     },
     {
@@ -3724,7 +3728,7 @@
     {
       "path": "apps/omnihub-site/src/hooks/useOmniModuleState.ts",
       "language": "typescript",
-      "sizeLines": 356,
+      "sizeLines": 360,
       "fileCategory": "code"
     },
     {
@@ -3736,7 +3740,7 @@
     {
       "path": "apps/omnihub-site/src/hooks/usePWAInstall.ts",
       "language": "typescript",
-      "sizeLines": 74,
+      "sizeLines": 82,
       "fileCategory": "code"
     },
     {
@@ -4024,7 +4028,7 @@
     {
       "path": "apps/omnihub-site/src/pages/Launch/OnboardingWizard.tsx",
       "language": "typescript",
-      "sizeLines": 427,
+      "sizeLines": 431,
       "fileCategory": "code"
     },
     {
@@ -4102,7 +4106,7 @@
     {
       "path": "apps/omnihub-site/src/pages/RequestAccess.tsx",
       "language": "typescript",
-      "sizeLines": 788,
+      "sizeLines": 783,
       "fileCategory": "code"
     },
     {
@@ -4186,7 +4190,7 @@
     {
       "path": "apps/omnihub-site/src/stores/omniMediaStore.ts",
       "language": "typescript",
-      "sizeLines": 43,
+      "sizeLines": 44,
       "fileCategory": "code"
     },
     {
@@ -4210,13 +4214,13 @@
     {
       "path": "apps/omnihub-site/src/styles/components.css",
       "language": "css",
-      "sizeLines": 2378,
+      "sizeLines": 2376,
       "fileCategory": "markup"
     },
     {
       "path": "apps/omnihub-site/src/styles/fonts.css",
       "language": "css",
-      "sizeLines": 40,
+      "sizeLines": 56,
       "fileCategory": "markup"
     },
     {
@@ -4288,7 +4292,7 @@
     {
       "path": "apps/omnihub-site/terms.html",
       "language": "html",
-      "sizeLines": 35,
+      "sizeLines": 36,
       "fileCategory": "markup"
     },
     {
@@ -4384,7 +4388,7 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "sizeLines": 12,
+      "sizeLines": 24,
       "fileCategory": "docs"
     },
     {
@@ -4438,7 +4442,7 @@
     {
       "path": "docs/APEX_AGENT_OPERATIONS.md",
       "language": "markdown",
-      "sizeLines": 683,
+      "sizeLines": 877,
       "fileCategory": "docs"
     },
     {
@@ -4486,7 +4490,7 @@
     {
       "path": "docs/release/claim-approved-production-release.md",
       "language": "markdown",
-      "sizeLines": 110,
+      "sizeLines": 112,
       "fileCategory": "docs"
     },
     {
@@ -4502,6 +4506,18 @@
       "fileCategory": "docs"
     },
     {
+      "path": "docs/release/owner-approved/.gitkeep",
+      "language": "unknown",
+      "sizeLines": 1,
+      "fileCategory": "code"
+    },
+    {
+      "path": "docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md",
+      "language": "markdown",
+      "sizeLines": 127,
+      "fileCategory": "docs"
+    },
+    {
       "path": "docs/release/post-ci-remediation-2026-06-17.md",
       "language": "markdown",
       "sizeLines": 96,
@@ -4510,7 +4526,13 @@
     {
       "path": "docs/release/pr-1449-production-release-certification.md",
       "language": "markdown",
-      "sizeLines": 177,
+      "sizeLines": 179,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/release/templates/MANUAL_PRODUCTION_CERTIFICATION_TEMPLATE.md",
+      "language": "markdown",
+      "sizeLines": 45,
       "fileCategory": "docs"
     },
     {
@@ -4870,7 +4892,7 @@
     {
       "path": "integration-harness/playwright.config.ts",
       "language": "typescript",
-      "sizeLines": 11,
+      "sizeLines": 21,
       "fileCategory": "config"
     },
     {
@@ -5126,6 +5148,264 @@
       "fileCategory": "docs"
     },
     {
+      "path": "memory/omni-recall/archive/CURRENT_PLATFORM_STATE_2026_06_06.md",
+      "language": "markdown",
+      "sizeLines": 135,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md",
+      "language": "markdown",
+      "sizeLines": 76,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md",
+      "language": "markdown",
+      "sizeLines": 211,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/APEX_RELEASE_READINESS_REPORT.md",
+      "language": "markdown",
+      "sizeLines": 344,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md",
+      "language": "markdown",
+      "sizeLines": 533,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/CI_GREEN_CAMPAIGN_2026-06-14.md",
+      "language": "markdown",
+      "sizeLines": 153,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/DEFCON4_REMEDIATION_2026-06-15.md",
+      "language": "markdown",
+      "sizeLines": 46,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/DOCS_AUDIT_2026_06_22.md",
+      "language": "markdown",
+      "sizeLines": 89,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md",
+      "language": "markdown",
+      "sizeLines": 66,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md",
+      "language": "markdown",
+      "sizeLines": 548,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md",
+      "language": "markdown",
+      "sizeLines": 79,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/OMNIDASH_BUILD_AUDIT_2026_03_21.md",
+      "language": "markdown",
+      "sizeLines": 231,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/orphaned-components-map.md",
+      "language": "markdown",
+      "sizeLines": 24,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/pr-1274-cloudflare-deploy-root-cause.md",
+      "language": "markdown",
+      "sizeLines": 100,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/pr-1274-final-verification-evidence.md",
+      "language": "markdown",
+      "sizeLines": 42,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/pr-1274-quantum-debug-report.md",
+      "language": "markdown",
+      "sizeLines": 86,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/pr-1274-reality-audit.md",
+      "language": "markdown",
+      "sizeLines": 99,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/PR1405_CI_REMEDIATION_2026-06-16.md",
+      "language": "markdown",
+      "sizeLines": 322,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md",
+      "language": "markdown",
+      "sizeLines": 130,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md",
+      "language": "markdown",
+      "sizeLines": 122,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/PRODUCTION_READINESS_HARDENING_2026-05-16.md",
+      "language": "markdown",
+      "sizeLines": 25,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/REPO_STATUS_REPORT_2026-06-09.md",
+      "language": "markdown",
+      "sizeLines": 282,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/REPO_STATUS_REPORT_2026-06-14.md",
+      "language": "markdown",
+      "sizeLines": 121,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/RUNTIME_REMEDIATION_CALL_GRAPH.md",
+      "language": "markdown",
+      "sizeLines": 83,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/RUNTIME_REMEDIATION_RESULTS.md",
+      "language": "markdown",
+      "sizeLines": 81,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md",
+      "language": "markdown",
+      "sizeLines": 205,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md",
+      "language": "markdown",
+      "sizeLines": 693,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md",
+      "language": "markdown",
+      "sizeLines": 528,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md",
+      "language": "markdown",
+      "sizeLines": 739,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md",
+      "language": "markdown",
+      "sizeLines": 1306,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md",
+      "language": "markdown",
+      "sizeLines": 208,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md",
+      "language": "markdown",
+      "sizeLines": 44,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/release/approved-claims.json",
+      "language": "json",
+      "sizeLines": 36,
+      "fileCategory": "config"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.6.0.md",
+      "language": "markdown",
+      "sizeLines": 127,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.8.0.md",
+      "language": "markdown",
+      "sizeLines": 77,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.8.1.md",
+      "language": "markdown",
+      "sizeLines": 55,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/PRODUCTION_CERTIFICATION_STATUS_2026_06_21_RETIRED.md",
+      "language": "markdown",
+      "sizeLines": 325,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/2026-05-29-production-e2e-certification.md",
+      "language": "markdown",
+      "sizeLines": 61,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/2026-06-01-platform-doc-sync.md",
+      "language": "markdown",
+      "sizeLines": 52,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/2026-06-04-omnidash-production-hardening.md",
+      "language": "markdown",
+      "sizeLines": 86,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md",
+      "language": "markdown",
+      "sizeLines": 48,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/2026-06-14-ci-green-campaign.md",
+      "language": "markdown",
+      "sizeLines": 83,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/archive/state/checkpoints/current-status.md",
+      "language": "markdown",
+      "sizeLines": 605,
+      "fileCategory": "docs"
+    },
+    {
       "path": "memory/omni-recall/BYOM_ARCHITECTURE_RECORD.md",
       "language": "markdown",
       "sizeLines": 28,
@@ -5134,7 +5414,7 @@
     {
       "path": "memory/omni-recall/CLAUDE.md",
       "language": "markdown",
-      "sizeLines": 54,
+      "sizeLines": 56,
       "fileCategory": "docs"
     },
     {
@@ -5194,7 +5474,7 @@
     {
       "path": "memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md",
       "language": "markdown",
-      "sizeLines": 181,
+      "sizeLines": 208,
       "fileCategory": "docs"
     },
     {
@@ -5206,7 +5486,7 @@
     {
       "path": "memory/omni-recall/docs/architecture/DOC_RECONCILIATION_MATRIX.md",
       "language": "markdown",
-      "sizeLines": 41,
+      "sizeLines": 45,
       "fileCategory": "docs"
     },
     {
@@ -5218,7 +5498,7 @@
     {
       "path": "memory/omni-recall/docs/architecture/frontend-map.md",
       "language": "markdown",
-      "sizeLines": 71,
+      "sizeLines": 73,
       "fileCategory": "docs"
     },
     {
@@ -5270,177 +5550,9 @@
       "fileCategory": "docs"
     },
     {
-      "path": "memory/omni-recall/docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md",
+      "path": "memory/omni-recall/docs/backlog/LEGACY_CERTIFICATION_GAP_TRIAGE_2026_06_24.md",
       "language": "markdown",
-      "sizeLines": 76,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md",
-      "language": "markdown",
-      "sizeLines": 211,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/APEX_RELEASE_READINESS_REPORT.md",
-      "language": "markdown",
-      "sizeLines": 344,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md",
-      "language": "markdown",
-      "sizeLines": 532,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/CI_GREEN_CAMPAIGN_2026-06-14.md",
-      "language": "markdown",
-      "sizeLines": 152,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/DEFCON4_REMEDIATION_2026-06-15.md",
-      "language": "markdown",
-      "sizeLines": 46,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/DOCS_AUDIT_2026_06_22.md",
-      "language": "markdown",
-      "sizeLines": 89,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md",
-      "language": "markdown",
-      "sizeLines": 65,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md",
-      "language": "markdown",
-      "sizeLines": 548,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md",
-      "language": "markdown",
-      "sizeLines": 79,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/OMNIDASH_BUILD_AUDIT_2026_03_21.md",
-      "language": "markdown",
-      "sizeLines": 231,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/orphaned-components-map.md",
-      "language": "markdown",
-      "sizeLines": 24,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/pr-1274-cloudflare-deploy-root-cause.md",
-      "language": "markdown",
-      "sizeLines": 100,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/pr-1274-final-verification-evidence.md",
-      "language": "markdown",
-      "sizeLines": 42,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/pr-1274-quantum-debug-report.md",
-      "language": "markdown",
-      "sizeLines": 86,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/pr-1274-reality-audit.md",
-      "language": "markdown",
-      "sizeLines": 99,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/PR1405_CI_REMEDIATION_2026-06-16.md",
-      "language": "markdown",
-      "sizeLines": 322,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md",
-      "language": "markdown",
-      "sizeLines": 129,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md",
-      "language": "markdown",
-      "sizeLines": 122,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/PRODUCTION_READINESS_HARDENING_2026-05-16.md",
-      "language": "markdown",
-      "sizeLines": 25,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/REPO_STATUS_REPORT_2026-06-09.md",
-      "language": "markdown",
-      "sizeLines": 281,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/REPO_STATUS_REPORT_2026-06-14.md",
-      "language": "markdown",
-      "sizeLines": 120,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/RUNTIME_REMEDIATION_CALL_GRAPH.md",
-      "language": "markdown",
-      "sizeLines": 83,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/RUNTIME_REMEDIATION_RESULTS.md",
-      "language": "markdown",
-      "sizeLines": 81,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md",
-      "language": "markdown",
-      "sizeLines": 205,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md",
-      "language": "markdown",
-      "sizeLines": 692,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md",
-      "language": "markdown",
-      "sizeLines": 528,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md",
-      "language": "markdown",
-      "sizeLines": 739,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md",
-      "language": "markdown",
-      "sizeLines": 1306,
+      "sizeLines": 16,
       "fileCategory": "docs"
     },
     {
@@ -5488,7 +5600,7 @@
     {
       "path": "memory/omni-recall/docs/compliance/CLAIMS_LEDGER.yml",
       "language": "yaml",
-      "sizeLines": 52,
+      "sizeLines": 54,
       "fileCategory": "config"
     },
     {
@@ -5558,57 +5670,57 @@
       "fileCategory": "docs"
     },
     {
-      "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md",
-      "language": "markdown",
-      "sizeLines": 134,
-      "fileCategory": "docs"
-    },
-    {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_14.md",
       "language": "markdown",
-      "sizeLines": 126,
+      "sizeLines": 130,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md",
       "language": "markdown",
-      "sizeLines": 142,
+      "sizeLines": 146,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md",
       "language": "markdown",
-      "sizeLines": 110,
+      "sizeLines": 114,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_22.md",
       "language": "markdown",
-      "sizeLines": 149,
+      "sizeLines": 153,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md",
       "language": "markdown",
-      "sizeLines": 163,
+      "sizeLines": 167,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md",
       "language": "markdown",
-      "sizeLines": 132,
+      "sizeLines": 266,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md",
+      "language": "markdown",
+      "sizeLines": 139,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md",
       "language": "markdown",
-      "sizeLines": 396,
+      "sizeLines": 465,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/DRIFT_AUDIT_2026_05_12.md",
       "language": "markdown",
-      "sizeLines": 200,
+      "sizeLines": 201,
       "fileCategory": "docs"
     },
     {
@@ -5938,13 +6050,13 @@
     {
       "path": "memory/omni-recall/docs/ops/OPS_RUNBOOK.md",
       "language": "markdown",
-      "sizeLines": 30,
+      "sizeLines": 34,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md",
       "language": "markdown",
-      "sizeLines": 564,
+      "sizeLines": 567,
       "fileCategory": "docs"
     },
     {
@@ -6032,27 +6144,9 @@
       "fileCategory": "docs"
     },
     {
-      "path": "memory/omni-recall/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md",
-      "language": "markdown",
-      "sizeLines": 207,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md",
-      "language": "markdown",
-      "sizeLines": 43,
-      "fileCategory": "docs"
-    },
-    {
       "path": "memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md",
       "language": "markdown",
-      "sizeLines": 84,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md",
-      "language": "markdown",
-      "sizeLines": 311,
+      "sizeLines": 88,
       "fileCategory": "docs"
     },
     {
@@ -6064,25 +6158,19 @@
     {
       "path": "memory/omni-recall/docs/README.md",
       "language": "markdown",
-      "sizeLines": 327,
+      "sizeLines": 330,
       "fileCategory": "docs"
     },
     {
       "path": "memory/omni-recall/docs/release/AG2_REMEDIATION_REPORT_2026-05-28.md",
       "language": "markdown",
-      "sizeLines": 117,
+      "sizeLines": 118,
       "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/release/approved-claims.json",
-      "language": "json",
-      "sizeLines": 34,
-      "fileCategory": "config"
     },
     {
       "path": "memory/omni-recall/docs/release/branch-protection.md",
       "language": "markdown",
-      "sizeLines": 61,
+      "sizeLines": 65,
       "fileCategory": "docs"
     },
     {
@@ -6262,25 +6350,7 @@
     {
       "path": "memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md",
       "language": "markdown",
-      "sizeLines": 197,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md",
-      "language": "markdown",
-      "sizeLines": 126,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.8.0.md",
-      "language": "markdown",
-      "sizeLines": 76,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.8.1.md",
-      "language": "markdown",
-      "sizeLines": 54,
+      "sizeLines": 201,
       "fileCategory": "docs"
     },
     {
@@ -6472,7 +6542,7 @@
     {
       "path": "memory/omni-recall/docs/testing/README.md",
       "language": "markdown",
-      "sizeLines": 66,
+      "sizeLines": 70,
       "fileCategory": "docs"
     },
     {
@@ -6532,7 +6602,7 @@
     {
       "path": "memory/omni-recall/release-remediation-claim-ci-followup-2026-06-16.md",
       "language": "markdown",
-      "sizeLines": 26,
+      "sizeLines": 30,
       "fileCategory": "docs"
     },
     {
@@ -6622,7 +6692,7 @@
     {
       "path": "memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md",
       "language": "markdown",
-      "sizeLines": 144,
+      "sizeLines": 145,
       "fileCategory": "docs"
     },
     {
@@ -6635,6 +6705,12 @@
       "path": "memory/omni-recall/rfc/RFC_2026_06_23_TENANT_ENTITLEMENTS_SSG_GATE.md",
       "language": "markdown",
       "sizeLines": 96,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "memory/omni-recall/rfc/RFC_2026_06_24_POST_MERGE_SECURITY_CI.md",
+      "language": "markdown",
+      "sizeLines": 76,
       "fileCategory": "docs"
     },
     {
@@ -6658,43 +6734,7 @@
     {
       "path": "memory/omni-recall/start-here.md",
       "language": "markdown",
-      "sizeLines": 85,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/2026-05-29-production-e2e-certification.md",
-      "language": "markdown",
-      "sizeLines": 61,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md",
-      "language": "markdown",
-      "sizeLines": 51,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/2026-06-04-omnidash-production-hardening.md",
-      "language": "markdown",
-      "sizeLines": 86,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md",
-      "language": "markdown",
-      "sizeLines": 48,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/2026-06-14-ci-green-campaign.md",
-      "language": "markdown",
-      "sizeLines": 82,
-      "fileCategory": "docs"
-    },
-    {
-      "path": "memory/omni-recall/state/checkpoints/current-status.md",
-      "language": "markdown",
-      "sizeLines": 601,
+      "sizeLines": 119,
       "fileCategory": "docs"
     },
     {
@@ -7264,7 +7304,7 @@
     {
       "path": "orchestrator/TEST_RESULTS.md",
       "language": "markdown",
-      "sizeLines": 229,
+      "sizeLines": 230,
       "fileCategory": "docs"
     },
     {
@@ -7606,7 +7646,7 @@
     {
       "path": "package.json",
       "language": "json",
-      "sizeLines": 333,
+      "sizeLines": 335,
       "fileCategory": "config"
     },
     {
@@ -7732,7 +7772,7 @@
     {
       "path": "patch_docs.py",
       "language": "python",
-      "sizeLines": 167,
+      "sizeLines": 132,
       "fileCategory": "code"
     },
     {
@@ -7744,7 +7784,7 @@
     {
       "path": "playwright.config.ts",
       "language": "typescript",
-      "sizeLines": 99,
+      "sizeLines": 102,
       "fileCategory": "config"
     },
     {
@@ -7798,7 +7838,7 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "sizeLines": 426,
+      "sizeLines": 440,
       "fileCategory": "docs"
     },
     {
@@ -7880,6 +7920,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "scripts/ci/add-apex-tickets.py",
+      "language": "python",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
       "path": "scripts/ci/assert_no_stubbed_provider_impls.py",
       "language": "python",
       "sizeLines": 106,
@@ -7910,6 +7956,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "scripts/ci/check-doc-paths.sh",
+      "language": "shell",
+      "sizeLines": 41,
+      "fileCategory": "script"
+    },
+    {
       "path": "scripts/ci/check-new-code-coverage.mjs",
       "language": "javascript",
       "sizeLines": 141,
@@ -7930,7 +7982,7 @@
     {
       "path": "scripts/ci/check-ops-doc-drift.mjs",
       "language": "javascript",
-      "sizeLines": 104,
+      "sizeLines": 138,
       "fileCategory": "code"
     },
     {
@@ -7946,6 +7998,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "scripts/ci/check-release-certification-docs.mjs",
+      "language": "javascript",
+      "sizeLines": 93,
+      "fileCategory": "code"
+    },
+    {
       "path": "scripts/ci/check-supabase-migration-versions.mjs",
       "language": "javascript",
       "sizeLines": 73,
@@ -7955,6 +8013,12 @@
       "path": "scripts/ci/ci-utils.mjs",
       "language": "javascript",
       "sizeLines": 53,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/ci/guard-agent-destructive-actions.mjs",
+      "language": "javascript",
+      "sizeLines": 87,
       "fileCategory": "code"
     },
     {
@@ -8018,9 +8082,9 @@
       "fileCategory": "code"
     },
     {
-      "path": "scripts/ci/write-release-evidence.mjs",
+      "path": "scripts/ci/write-release-validation-summary.mjs",
       "language": "javascript",
-      "sizeLines": 106,
+      "sizeLines": 55,
       "fileCategory": "code"
     },
     {
@@ -8314,7 +8378,7 @@
     {
       "path": "scripts/repo-hygiene-guard.sh",
       "language": "shell",
-      "sizeLines": 29,
+      "sizeLines": 36,
       "fileCategory": "script"
     },
     {
@@ -8368,7 +8432,7 @@
     {
       "path": "scripts/test-gateway.ts",
       "language": "typescript",
-      "sizeLines": 228,
+      "sizeLines": 230,
       "fileCategory": "code"
     },
     {
@@ -9310,7 +9374,7 @@
     {
       "path": "src/contracts/omnidash-sidebar-widgets.ts",
       "language": "typescript",
-      "sizeLines": 13,
+      "sizeLines": 17,
       "fileCategory": "code"
     },
     {
@@ -9916,7 +9980,7 @@
     {
       "path": "src/lib/motionPresets.ts",
       "language": "typescript",
-      "sizeLines": 5,
+      "sizeLines": 7,
       "fileCategory": "code"
     },
     {
@@ -10486,7 +10550,7 @@
     {
       "path": "src/omnidash/useOmniDashAction.ts",
       "language": "typescript",
-      "sizeLines": 334,
+      "sizeLines": 338,
       "fileCategory": "code"
     },
     {
@@ -10912,7 +10976,7 @@
     {
       "path": "supabase/functions/_shared/omniport-normalize.ts",
       "language": "typescript",
-      "sizeLines": 115,
+      "sizeLines": 156,
       "fileCategory": "code"
     },
     {
@@ -10970,6 +11034,12 @@
       "fileCategory": "code"
     },
     {
+      "path": "supabase/functions/_shared/response.ts",
+      "language": "typescript",
+      "sizeLines": 81,
+      "fileCategory": "code"
+    },
+    {
       "path": "supabase/functions/_shared/schema-compress.ts",
       "language": "typescript",
       "sizeLines": 96,
@@ -11015,6 +11085,12 @@
       "path": "supabase/functions/_shared/types/byom.ts",
       "language": "typescript",
       "sizeLines": 210,
+      "fileCategory": "code"
+    },
+    {
+      "path": "supabase/functions/_shared/types/module-item.ts",
+      "language": "typescript",
+      "sizeLines": 7,
       "fileCategory": "code"
     },
     {
@@ -11068,7 +11144,7 @@
     {
       "path": "supabase/functions/apex-agent/index.ts",
       "language": "typescript",
-      "sizeLines": 214,
+      "sizeLines": 202,
       "fileCategory": "code"
     },
     {
@@ -11104,7 +11180,7 @@
     {
       "path": "supabase/functions/create-checkout/index.ts",
       "language": "typescript",
-      "sizeLines": 161,
+      "sizeLines": 137,
       "fileCategory": "code"
     },
     {
@@ -11218,7 +11294,7 @@
     {
       "path": "supabase/functions/omnilink-port/index.ts",
       "language": "typescript",
-      "sizeLines": 1469,
+      "sizeLines": 1475,
       "fileCategory": "code"
     },
     {
@@ -11254,7 +11330,7 @@
     {
       "path": "supabase/functions/platform-health/index.ts",
       "language": "typescript",
-      "sizeLines": 213,
+      "sizeLines": 169,
       "fileCategory": "code"
     },
     {
@@ -12164,9 +12240,9 @@
       "fileCategory": "code"
     },
     {
-      "path": "tests/ci/write-release-evidence.test.mjs",
+      "path": "tests/ci/write-release-validation-summary.test.mjs",
       "language": "javascript",
-      "sizeLines": 34,
+      "sizeLines": 55,
       "fileCategory": "code"
     },
     {
@@ -12404,9 +12480,105 @@
       "fileCategory": "code"
     },
     {
+      "path": "tests/e2e-playwright/__sentinels__/mutation-trap.spec.ts",
+      "language": "typescript",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
       "path": "tests/e2e-playwright/byom-login-flow.spec.ts",
       "language": "typescript",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-01-onboarding.spec.ts",
+      "language": "typescript",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-02-byom-login.spec.ts",
+      "language": "typescript",
       "sizeLines": 94,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-03-omnidash-load.spec.ts",
+      "language": "typescript",
+      "sizeLines": 120,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-04-omniboard-app-connect.spec.ts",
+      "language": "typescript",
+      "sizeLines": 121,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-05-action-execution.spec.ts",
+      "language": "typescript",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-06-workflow-automation.spec.ts",
+      "language": "typescript",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-07-add-link.spec.ts",
+      "language": "typescript",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-08-media-upload.spec.ts",
+      "language": "typescript",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-09-media-playback.spec.ts",
+      "language": "typescript",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-10-omniskills.spec.ts",
+      "language": "typescript",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-11-modal-matrix.spec.ts",
+      "language": "typescript",
+      "sizeLines": 199,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-12-ops-visibility.spec.ts",
+      "language": "typescript",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-13-notification-flow.spec.ts",
+      "language": "typescript",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-14-audit-trail.spec.ts",
+      "language": "typescript",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/cp-15-a11y-axe.spec.ts",
+      "language": "typescript",
+      "sizeLines": 27,
       "fileCategory": "code"
     },
     {
@@ -12416,9 +12588,21 @@
       "fileCategory": "code"
     },
     {
+      "path": "tests/e2e-playwright/global-setup.ts",
+      "language": "typescript",
+      "sizeLines": 98,
+      "fileCategory": "code"
+    },
+    {
       "path": "tests/e2e-playwright/helpers/auth.ts",
       "language": "typescript",
-      "sizeLines": 80,
+      "sizeLines": 108,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/e2e-playwright/helpers/modal.ts",
+      "language": "typescript",
+      "sizeLines": 29,
       "fileCategory": "code"
     },
     {
@@ -12695,6 +12879,12 @@
       "path": "tests/lib/MemoryClient.spec.ts",
       "language": "typescript",
       "sizeLines": 591,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/lib/module-items.test.ts",
+      "language": "typescript",
+      "sizeLines": 53,
       "fileCategory": "code"
     },
     {
@@ -13156,7 +13346,7 @@
     {
       "path": "tests/omnidash/hidden-metric.spec.tsx",
       "language": "typescript",
-      "sizeLines": 120,
+      "sizeLines": 118,
       "fileCategory": "code"
     },
     {
@@ -13204,7 +13394,7 @@
     {
       "path": "tests/omnidash/m03-panels.spec.tsx",
       "language": "typescript",
-      "sizeLines": 270,
+      "sizeLines": 272,
       "fileCategory": "code"
     },
     {
@@ -13318,7 +13508,7 @@
     {
       "path": "tests/omnidash/omnidash-shell-coverage.spec.tsx",
       "language": "typescript",
-      "sizeLines": 220,
+      "sizeLines": 224,
       "fileCategory": "code"
     },
     {
@@ -14102,6 +14292,12 @@
       "fileCategory": "docs"
     },
     {
+      "path": "validation_out.txt",
+      "language": "text",
+      "sizeLines": 1403,
+      "fileCategory": "docs"
+    },
+    {
       "path": "vite.config.ts",
       "language": "typescript",
       "sizeLines": 196,
@@ -14110,15 +14306,33 @@
     {
       "path": "vitest.config.ts",
       "language": "typescript",
-      "sizeLines": 185,
+      "sizeLines": 189,
       "fileCategory": "config"
     }
   ],
-  "totalFiles": 2339,
+  "totalFiles": 2372,
   "filteredByIgnore": 0,
   "estimatedComplexity": "very-large",
   "importMap": {
     "__mocks__/framer-motion.ts": [],
+    ".agents/apex-skill-forge-v9-universal/evals/trigger-eval.json": [],
+    ".agents/apex-skill-forge-v9-universal/LICENSE.md": [],
+    ".agents/apex-skill-forge-v9-universal/MANIFEST.json": [],
+    ".agents/apex-skill-forge-v9-universal/README.md": [],
+    ".agents/apex-skill-forge-v9-universal/references/description-engineering.md": [],
+    ".agents/apex-skill-forge-v9-universal/references/distribution.md": [],
+    ".agents/apex-skill-forge-v9-universal/references/evidence-loop.md": [],
+    ".agents/apex-skill-forge-v9-universal/references/token-economics.md": [],
+    ".agents/apex-skill-forge-v9-universal/references/universal-protocol.md": [],
+    ".agents/apex-skill-forge-v9-universal/scorecard.json": [],
+    ".agents/apex-skill-forge-v9-universal/scripts/_forge_rubric.py": [],
+    ".agents/apex-skill-forge-v9-universal/scripts/forge.py": [],
+    ".agents/apex-skill-forge-v9-universal/scripts/run_trigger_eval.py": [],
+    ".agents/apex-skill-forge-v9-universal/SKILL.md": [],
+    ".agents/apex-skill-forge-v9-universal/templates/MANIFEST.template.json": [],
+    ".agents/apex-skill-forge-v9-universal/templates/README.template.md": [],
+    ".agents/apex-skill-forge-v9-universal/templates/SKILL.template.md": [],
+    ".agents/omnihub-orchestrator-core.md": [],
     ".agents/protocols/apex-memory.md": [],
     ".agents/protocols/APEX-POWER-20X-UNIVERSAL.md": [],
     ".agents/protocols/omnidev-v2.md": [],
@@ -14250,23 +14464,6 @@
     ".claude/skills/apex-skill-forge-v9-claude/templates/MANIFEST.template.json": [],
     ".claude/skills/apex-skill-forge-v9-claude/templates/README.template.md": [],
     ".claude/skills/apex-skill-forge-v9-claude/templates/SKILL.template.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/evals/trigger-eval.json": [],
-    ".claude/skills/apex-skill-forge-v9-universal/LICENSE.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/MANIFEST.json": [],
-    ".claude/skills/apex-skill-forge-v9-universal/README.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/references/description-engineering.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/references/distribution.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/references/evidence-loop.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/references/token-economics.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/references/universal-protocol.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/scorecard.json": [],
-    ".claude/skills/apex-skill-forge-v9-universal/scripts/_forge_rubric.py": [],
-    ".claude/skills/apex-skill-forge-v9-universal/scripts/forge.py": [],
-    ".claude/skills/apex-skill-forge-v9-universal/scripts/run_trigger_eval.py": [],
-    ".claude/skills/apex-skill-forge-v9-universal/SKILL.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/templates/MANIFEST.template.json": [],
-    ".claude/skills/apex-skill-forge-v9-universal/templates/README.template.md": [],
-    ".claude/skills/apex-skill-forge-v9-universal/templates/SKILL.template.md": [],
     ".claude/skills/apex-storied-agent/apex-storied-agent/evals/trigger-eval.json": [],
     ".claude/skills/apex-storied-agent/apex-storied-agent/LICENSE.md": [],
     ".claude/skills/apex-storied-agent/apex-storied-agent/MANIFEST.json": [],
@@ -14372,6 +14569,7 @@
     ".githooks/commit-msg": [],
     ".githooks/pre-commit": [],
     ".githooks/pre-commit.d/00-ruff.sh": [],
+    ".githooks/pre-commit.d/10-agent-guard.sh": [],
     ".githooks/pre-commit.d/10-commitlint.sh": [],
     ".githooks/pre-commit.d/20-dependency-security.sh": [],
     ".githooks/pre-commit.d/30-destructive-action-guard.sh": [],
@@ -14393,7 +14591,6 @@
     ".github/workflows/ci-runtime-gates.yml": [],
     ".github/workflows/compliance.yml": [],
     ".github/workflows/dependency-consolidation.yml": [],
-    ".github/workflows/dependency-review.yml": [],
     ".github/workflows/deploy-omnihub-proof.yml": [],
     ".github/workflows/deploy-production-cf-direct.yml": [],
     ".github/workflows/deploy-web3-functions.yml": [],
@@ -14403,30 +14600,30 @@
     ".github/workflows/nightly-evaluation.yml": [],
     ".github/workflows/ops-doc-guard.yml": [],
     ".github/workflows/orchestrator-ci.yml": [],
-    ".github/workflows/production-readiness.yml": [],
     ".github/workflows/release.yml": [],
     ".github/workflows/rsi-governance.yml": [],
     ".github/workflows/secret-scanning.yml": [],
-    ".github/workflows/security-guards.yml": [],
     ".github/workflows/security-regression-guard.yml": [],
     ".gitleaks.toml": [],
     ".husky/pre-commit": [],
     ".jules/bolt.md": [],
     ".lighthouserc.json": [],
+    ".lighthouserc.nightly.json": [],
     ".mcp.json": [],
     ".node-version": [],
     ".osv-scanner.toml": [],
     ".prettierignore": [],
     ".stylelintignore": [],
     ".trufflehog-exclude-paths.txt": [],
+    ".understand-anything/E2E_CANONICAL_BEHAVIOR.md": [],
     ".understand-anything/graph-features.mjs": [],
     ".understand-anything/graph-meta.json": [],
     ".understand-anything/knowledge-graph.html": [],
-    ".understand-anything/knowledge-graph.json": [],
     ".understand-anything/tmp/ua-build-graph.mjs": [],
     ".understand-anything/tmp/ua-project-scan.mjs": [],
     ".understand-anything/tmp/ua-scan-results.json": [],
     ".understand-anything/tmp/ua-watch-server.mjs": [],
+    "accepted-findings.md": [],
     "AGENTS.md": [],
     "android/app/build.gradle": [],
     "android/app/capacitor.build.gradle": [],
@@ -14590,6 +14787,7 @@
     "apps/omnihub-site/dashboard/components/DashboardOverview/components/RecordButton.tsx": [],
     "apps/omnihub-site/dashboard/components/DashboardOverview/constants.ts": [],
     "apps/omnihub-site/dashboard/components/DashboardOverview/DashboardOverview.tsx": [
+      "apps/omnihub-site/dashboard/hooks/useLayoutPersistence.ts",
       "apps/omnihub-site/dashboard/components/DashboardOverview/types.ts",
       "apps/omnihub-site/dashboard/components/DashboardOverview/data.ts",
       "apps/omnihub-site/dashboard/components/DashboardOverview/hooks/useAgentRecording.ts",
@@ -15184,8 +15382,11 @@
     "docs/release/claim-approved-production-release.md": [],
     "docs/release/claim-evidence/README.md": [],
     "docs/release/cloudflare-pages-post-ci-runbook.md": [],
+    "docs/release/owner-approved/.gitkeep": [],
+    "docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md": [],
     "docs/release/post-ci-remediation-2026-06-17.md": [],
     "docs/release/pr-1449-production-release-certification.md": [],
+    "docs/release/templates/MANUAL_PRODUCTION_CERTIFICATION_TEMPLATE.md": [],
     "e2e/capture_preview.spec.ts": [],
     "e2e/omnilink-mobile-pwa.spec.ts": [],
     "ecosystem.config.js": [],
@@ -15310,6 +15511,49 @@
     "memory/omni-recall/apex-dataroom/07-outreach/04-offer-d-armageddon-outreach.md": [],
     "memory/omni-recall/apex-dataroom/07-outreach/05-tda-pivot-email.md": [],
     "memory/omni-recall/apex-dataroom/07-outreach/06-follow-up-sequence.md": [],
+    "memory/omni-recall/archive/CURRENT_PLATFORM_STATE_2026_06_06.md": [],
+    "memory/omni-recall/archive/docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md": [],
+    "memory/omni-recall/archive/docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md": [],
+    "memory/omni-recall/archive/docs/audits/APEX_RELEASE_READINESS_REPORT.md": [],
+    "memory/omni-recall/archive/docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md": [],
+    "memory/omni-recall/archive/docs/audits/CI_GREEN_CAMPAIGN_2026-06-14.md": [],
+    "memory/omni-recall/archive/docs/audits/DEFCON4_REMEDIATION_2026-06-15.md": [],
+    "memory/omni-recall/archive/docs/audits/DOCS_AUDIT_2026_06_22.md": [],
+    "memory/omni-recall/archive/docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md": [],
+    "memory/omni-recall/archive/docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md": [],
+    "memory/omni-recall/archive/docs/audits/M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md": [],
+    "memory/omni-recall/archive/docs/audits/OMNIDASH_BUILD_AUDIT_2026_03_21.md": [],
+    "memory/omni-recall/archive/docs/audits/orphaned-components-map.md": [],
+    "memory/omni-recall/archive/docs/audits/pr-1274-cloudflare-deploy-root-cause.md": [],
+    "memory/omni-recall/archive/docs/audits/pr-1274-final-verification-evidence.md": [],
+    "memory/omni-recall/archive/docs/audits/pr-1274-quantum-debug-report.md": [],
+    "memory/omni-recall/archive/docs/audits/pr-1274-reality-audit.md": [],
+    "memory/omni-recall/archive/docs/audits/PR1405_CI_REMEDIATION_2026-06-16.md": [],
+    "memory/omni-recall/archive/docs/audits/PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md": [],
+    "memory/omni-recall/archive/docs/audits/PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md": [],
+    "memory/omni-recall/archive/docs/audits/PRODUCTION_READINESS_HARDENING_2026-05-16.md": [],
+    "memory/omni-recall/archive/docs/audits/REPO_STATUS_REPORT_2026-06-09.md": [],
+    "memory/omni-recall/archive/docs/audits/REPO_STATUS_REPORT_2026-06-14.md": [],
+    "memory/omni-recall/archive/docs/audits/RUNTIME_REMEDIATION_CALL_GRAPH.md": [],
+    "memory/omni-recall/archive/docs/audits/RUNTIME_REMEDIATION_RESULTS.md": [],
+    "memory/omni-recall/archive/docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md": [],
+    "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md": [],
+    "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md": [],
+    "memory/omni-recall/archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md": [],
+    "memory/omni-recall/archive/docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md": [],
+    "memory/omni-recall/archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md": [],
+    "memory/omni-recall/archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md": [],
+    "memory/omni-recall/archive/docs/release/approved-claims.json": [],
+    "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.6.0.md": [],
+    "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.8.0.md": [],
+    "memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.8.1.md": [],
+    "memory/omni-recall/archive/PRODUCTION_CERTIFICATION_STATUS_2026_06_21_RETIRED.md": [],
+    "memory/omni-recall/archive/state/checkpoints/2026-05-29-production-e2e-certification.md": [],
+    "memory/omni-recall/archive/state/checkpoints/2026-06-01-platform-doc-sync.md": [],
+    "memory/omni-recall/archive/state/checkpoints/2026-06-04-omnidash-production-hardening.md": [],
+    "memory/omni-recall/archive/state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md": [],
+    "memory/omni-recall/archive/state/checkpoints/2026-06-14-ci-green-campaign.md": [],
+    "memory/omni-recall/archive/state/checkpoints/current-status.md": [],
     "memory/omni-recall/BYOM_ARCHITECTURE_RECORD.md": [],
     "memory/omni-recall/CLAUDE.md": [],
     "memory/omni-recall/default-use-rule.md": [],
@@ -15334,35 +15578,7 @@
     "memory/omni-recall/docs/archive/legacy-runbooks/MIGRATION_RUNBOOK_legacy.md": [],
     "memory/omni-recall/docs/archive/legacy-runbooks/OPS_RUNBOOK_legacy_2026-01-25.md": [],
     "memory/omni-recall/docs/archive/legacy-runbooks/PRODUCTION_DEPLOYMENT_GUIDE_legacy.md": [],
-    "memory/omni-recall/docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md": [],
-    "memory/omni-recall/docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md": [],
-    "memory/omni-recall/docs/audits/APEX_RELEASE_READINESS_REPORT.md": [],
-    "memory/omni-recall/docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md": [],
-    "memory/omni-recall/docs/audits/CI_GREEN_CAMPAIGN_2026-06-14.md": [],
-    "memory/omni-recall/docs/audits/DEFCON4_REMEDIATION_2026-06-15.md": [],
-    "memory/omni-recall/docs/audits/DOCS_AUDIT_2026_06_22.md": [],
-    "memory/omni-recall/docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md": [],
-    "memory/omni-recall/docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md": [],
-    "memory/omni-recall/docs/audits/M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md": [],
-    "memory/omni-recall/docs/audits/OMNIDASH_BUILD_AUDIT_2026_03_21.md": [],
-    "memory/omni-recall/docs/audits/orphaned-components-map.md": [],
-    "memory/omni-recall/docs/audits/pr-1274-cloudflare-deploy-root-cause.md": [],
-    "memory/omni-recall/docs/audits/pr-1274-final-verification-evidence.md": [],
-    "memory/omni-recall/docs/audits/pr-1274-quantum-debug-report.md": [],
-    "memory/omni-recall/docs/audits/pr-1274-reality-audit.md": [],
-    "memory/omni-recall/docs/audits/PR1405_CI_REMEDIATION_2026-06-16.md": [],
-    "memory/omni-recall/docs/audits/PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md": [],
-    "memory/omni-recall/docs/audits/PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md": [],
-    "memory/omni-recall/docs/audits/PRODUCTION_READINESS_HARDENING_2026-05-16.md": [],
-    "memory/omni-recall/docs/audits/REPO_STATUS_REPORT_2026-06-09.md": [],
-    "memory/omni-recall/docs/audits/REPO_STATUS_REPORT_2026-06-14.md": [],
-    "memory/omni-recall/docs/audits/RUNTIME_REMEDIATION_CALL_GRAPH.md": [],
-    "memory/omni-recall/docs/audits/RUNTIME_REMEDIATION_RESULTS.md": [],
-    "memory/omni-recall/docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md": [],
-    "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md": [],
-    "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md": [],
-    "memory/omni-recall/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md": [],
-    "memory/omni-recall/docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md": [],
+    "memory/omni-recall/docs/backlog/LEGACY_CERTIFICATION_GAP_TRIAGE_2026_06_24.md": [],
     "memory/omni-recall/docs/capabilities/fortress-protocol.md": [],
     "memory/omni-recall/docs/capabilities/maestro.md": [],
     "memory/omni-recall/docs/capabilities/man-mode.md": [],
@@ -15382,13 +15598,13 @@
     "memory/omni-recall/docs/compliance/TERMS_OF_SERVICE.md": [],
     "memory/omni-recall/docs/compliance/THIRD_PARTY_NOTICES.md": [],
     "memory/omni-recall/docs/csp-policy.md": [],
-    "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_14.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_20.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_21.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_22.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md": [],
     "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md": [],
+    "memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md": [],
     "memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md": [],
     "memory/omni-recall/docs/DRIFT_AUDIT_2026_05_12.md": [],
     "memory/omni-recall/docs/DRIFT_REMEDIATION_REPORT_2026_05_12.md": [],
@@ -15461,14 +15677,10 @@
     "memory/omni-recall/docs/platform/OMNIPORT_API_REFERENCE.md": [],
     "memory/omni-recall/docs/platform/OMNISENTRY.md": [],
     "memory/omni-recall/docs/platform/OMNITRACE.md": [],
-    "memory/omni-recall/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md": [],
-    "memory/omni-recall/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md": [],
     "memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md": [],
-    "memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md": [],
     "memory/omni-recall/docs/quality/QUALITY_ASSURANCE_FRAMEWORK.md": [],
     "memory/omni-recall/docs/README.md": [],
     "memory/omni-recall/docs/release/AG2_REMEDIATION_REPORT_2026-05-28.md": [],
-    "memory/omni-recall/docs/release/approved-claims.json": [],
     "memory/omni-recall/docs/release/branch-protection.md": [],
     "memory/omni-recall/docs/release/cloudflare-pages-post-ci-runbook.md": [],
     "memory/omni-recall/docs/release/GO_NO_GO_CHECKLIST.md": [],
@@ -15500,9 +15712,6 @@
     "memory/omni-recall/docs/release/RELEASE_RUBRIC_SCORE.md": [],
     "memory/omni-recall/docs/release/ROLLBACK_PLAN.md": [],
     "memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md": [],
-    "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md": [],
-    "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.8.0.md": [],
-    "memory/omni-recall/docs/releases/RELEASE_NOTES_v1.8.1.md": [],
     "memory/omni-recall/docs/rsi/BRANCH_PROTECTION_REQUIRED.md": [],
     "memory/omni-recall/docs/rsi/proposals/attestation-verification.md": [],
     "memory/omni-recall/docs/rsi/proposals/github-admin-setup.md": [],
@@ -15562,16 +15771,11 @@
     "memory/omni-recall/rfc/RFC_2026_06_21_WEBAUTHN_OMNITRACE_READ_CONTRACT.md": [],
     "memory/omni-recall/rfc/RFC_2026_06_22_INFRA_SWAP_COMPLETIONS.md": [],
     "memory/omni-recall/rfc/RFC_2026_06_23_TENANT_ENTITLEMENTS_SSG_GATE.md": [],
+    "memory/omni-recall/rfc/RFC_2026_06_24_POST_MERGE_SECURITY_CI.md": [],
     "memory/omni-recall/rfc/RFC_TEMPLATE.md": [],
     "memory/omni-recall/rfc/RFC_USAGE_POLICY.md": [],
     "memory/omni-recall/rfc/RFC-BYOM-Sovereign-Intelligence.md": [],
     "memory/omni-recall/start-here.md": [],
-    "memory/omni-recall/state/checkpoints/2026-05-29-production-e2e-certification.md": [],
-    "memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md": [],
-    "memory/omni-recall/state/checkpoints/2026-06-04-omnidash-production-hardening.md": [],
-    "memory/omni-recall/state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md": [],
-    "memory/omni-recall/state/checkpoints/2026-06-14-ci-green-campaign.md": [],
-    "memory/omni-recall/state/checkpoints/current-status.md": [],
     "memory/omni-recall/user-operating-model.md": [],
     "memory/omni-recall/web-vitals-fix-2026-06-19.md": [],
     "memory/omni-recall/web-vitals-fix-2026-06-22.md": [],
@@ -16031,6 +16235,7 @@
     "scripts/benchmark-logger.ts": [],
     "scripts/check-env-root.mjs": [],
     "scripts/check-react-singleton.mjs": [],
+    "scripts/ci/add-apex-tickets.py": [],
     "scripts/ci/assert_no_stubbed_provider_impls.py": [],
     "scripts/ci/check_doc_code_pointers.mjs": [
       "scripts/ci/ci-utils.mjs"
@@ -16040,6 +16245,7 @@
     ],
     "scripts/ci/check-additive-migrations.ts": [],
     "scripts/ci/check-coverage-integrity.mjs": [],
+    "scripts/ci/check-doc-paths.sh": [],
     "scripts/ci/check-new-code-coverage.mjs": [],
     "scripts/ci/check-omnidash-integrity.mjs": [],
     "scripts/ci/check-omniskills-rebrand.mjs": [
@@ -16048,10 +16254,12 @@
     "scripts/ci/check-ops-doc-drift.mjs": [],
     "scripts/ci/check-pwa-integrity.mjs": [],
     "scripts/ci/check-python-dependency-security.py": [],
+    "scripts/ci/check-release-certification-docs.mjs": [],
     "scripts/ci/check-supabase-migration-versions.mjs": [],
     "scripts/ci/ci-utils.mjs": [
       "scripts/ci/ci-utils.mjs"
     ],
+    "scripts/ci/guard-agent-destructive-actions.mjs": [],
     "scripts/ci/perf-smoke.mjs": [],
     "scripts/ci/release-lattice.mjs": [],
     "scripts/ci/shadow-certification-preflight.mjs": [],
@@ -16064,7 +16272,7 @@
     "scripts/ci/verify-release.mjs": [],
     "scripts/ci/verify-supabase-security.mjs": [],
     "scripts/ci/verify-supply-chain.mjs": [],
-    "scripts/ci/write-release-evidence.mjs": [],
+    "scripts/ci/write-release-validation-summary.mjs": [],
     "scripts/compliance/check_claims_proof.mjs": [],
     "scripts/compliance/check_legal_drift.mjs": [],
     "scripts/compliance/check_retention_consistency.mjs": [],
@@ -16949,7 +17157,9 @@
     "supabase/functions/_shared/omnilinkIntegrationBrain_test.ts": [],
     "supabase/functions/_shared/omnilinkIntegrationBrain.ts": [],
     "supabase/functions/_shared/omnilinkScopes.ts": [],
-    "supabase/functions/_shared/omniport-normalize.ts": [],
+    "supabase/functions/_shared/omniport-normalize.ts": [
+      "supabase/functions/_shared/types/module-item.ts"
+    ],
     "supabase/functions/_shared/pii-scanner.test.ts": [
       "supabase/functions/_shared/pii-scanner.ts"
     ],
@@ -16967,6 +17177,9 @@
     "supabase/functions/_shared/requestUtils.ts": [
       "supabase/functions/_shared/apex-control-plane.ts"
     ],
+    "supabase/functions/_shared/response.ts": [
+      "supabase/functions/_shared/cors.ts"
+    ],
     "supabase/functions/_shared/schema-compress.ts": [],
     "supabase/functions/_shared/semantic-cache.ts": [],
     "supabase/functions/_shared/skill-loader.ts": [
@@ -16979,6 +17192,7 @@
     "supabase/functions/_shared/supabaseClient.ts": [],
     "supabase/functions/_shared/types.ts": [],
     "supabase/functions/_shared/types/byom.ts": [],
+    "supabase/functions/_shared/types/module-item.ts": [],
     "supabase/functions/_shared/universal-adapter.ts": [],
     "supabase/functions/_shared/validation.ts": [],
     "supabase/functions/_shared/voiceSafety.ts": [],
@@ -16997,7 +17211,8 @@
       "supabase/functions/_shared/supabaseClient.ts",
       "supabase/functions/_shared/requestSigning.ts",
       "supabase/functions/_shared/validation.ts",
-      "supabase/functions/apex-agent/guardian.ts"
+      "supabase/functions/apex-agent/guardian.ts",
+      "supabase/functions/_shared/response.ts"
     ],
     "supabase/functions/apex-assistant/index.ts": [
       "supabase/functions/_shared/cors.ts"
@@ -17027,7 +17242,8 @@
       "packages/schema/byom/registry.ts"
     ],
     "supabase/functions/create-checkout/index.ts": [
-      "supabase/functions/_shared/cors.ts"
+      "supabase/functions/_shared/cors.ts",
+      "supabase/functions/_shared/response.ts"
     ],
     "supabase/functions/execute-automation/index.ts": [
       "supabase/functions/_shared/auth.ts",
@@ -17089,7 +17305,9 @@
       "supabase/functions/_shared/cors.ts",
       "supabase/functions/_shared/omnilinkScopes.ts",
       "supabase/functions/_shared/supabaseClient.ts",
-      "supabase/functions/_shared/omniport-normalize.ts"
+      "supabase/functions/_shared/omniport-normalize.ts",
+      "supabase/functions/_shared/types/module-item.ts",
+      "supabase/functions/_shared/response.ts"
     ],
     "supabase/functions/omnilink-retry-scheduler/index.ts": [],
     "supabase/functions/ops-voice-health/index.ts": [
@@ -17109,7 +17327,8 @@
       "supabase/functions/_shared/rate-limiter.ts"
     ],
     "supabase/functions/platform-health/index.ts": [
-      "supabase/functions/_shared/cors.ts"
+      "supabase/functions/_shared/cors.ts",
+      "supabase/functions/_shared/response.ts"
     ],
     "supabase/functions/seed-crypto/index.ts": [
       "supabase/functions/_shared/cockpit-crypto.ts",
@@ -17320,9 +17539,7 @@
     "tests/ci/claim-hygiene-fixtures.test.mjs": [],
     "tests/ci/omniskills-rebrand-fixtures.test.mjs": [],
     "tests/ci/secret-scan-fixtures.test.mjs": [],
-    "tests/ci/write-release-evidence.test.mjs": [
-      "scripts/ci/write-release-evidence.mjs"
-    ],
+    "tests/ci/write-release-validation-summary.test.mjs": [],
     "tests/components/AccessGate.spec.tsx": [],
     "tests/components/ConnectorKit.spec.tsx": [],
     "tests/components/DemoModeBanner.spec.tsx": [],
@@ -17406,9 +17623,56 @@
     "tests/core/security/SpectreHandshake.spec.ts": [
       "src/core/types/index.ts"
     ],
+    "tests/e2e-playwright/__sentinels__/mutation-trap.spec.ts": [],
     "tests/e2e-playwright/byom-login-flow.spec.ts": [],
+    "tests/e2e-playwright/cp-01-onboarding.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-02-byom-login.spec.ts": [],
+    "tests/e2e-playwright/cp-03-omnidash-load.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-04-omniboard-app-connect.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-05-action-execution.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-06-workflow-automation.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-07-add-link.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-08-media-upload.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-09-media-playback.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-10-omniskills.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-11-modal-matrix.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts",
+      "tests/e2e-playwright/helpers/modal.ts"
+    ],
+    "tests/e2e-playwright/cp-12-ops-visibility.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-13-notification-flow.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-14-audit-trail.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
+    "tests/e2e-playwright/cp-15-a11y-axe.spec.ts": [
+      "tests/e2e-playwright/helpers/auth.ts"
+    ],
     "tests/e2e-playwright/diag-console.spec.ts": [],
+    "tests/e2e-playwright/global-setup.ts": [],
     "tests/e2e-playwright/helpers/auth.ts": [],
+    "tests/e2e-playwright/helpers/modal.ts": [],
     "tests/e2e-playwright/helpers/omnidash-helpers.ts": [],
     "tests/e2e-playwright/marketing-smoke.spec.ts": [],
     "tests/e2e-playwright/omniboard-no-feed.spec.ts": [
@@ -17484,6 +17748,9 @@
     "tests/lib/graceful-degradation.extended.spec.ts": [],
     "tests/lib/graceful-degradation.spec.ts": [],
     "tests/lib/MemoryClient.spec.ts": [],
+    "tests/lib/module-items.test.ts": [
+      "supabase/functions/_shared/omniport-normalize.ts"
+    ],
     "tests/lib/monitoring-cache.test.ts": [
       "tests/lib/monitoring-test-helper.ts",
       "src/lib/monitoring.ts"
@@ -17918,6 +18185,7 @@
     "tsconfig.node.json": [],
     "turbo.json": [],
     "Updated Grant Plan 03-11-2026.txt": [],
+    "validation_out.txt": [],
     "vite.config.ts": [],
     "vitest.config.ts": []
   }
