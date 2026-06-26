@@ -1,0 +1,82 @@
+{
+  "version": "2026-06-26.remediation-1",
+  "decision": "GO_WITH_CONDITIONS_REPO_VERIFIED__PRODUCTION_CERTIFICATION_REQUIRES_OWNER_VALIDATION",
+  "repoVerified": [
+    {
+      "area": "dashboard_action_truthfulness",
+      "status": "VERIFIED",
+      "evidence": "src/omnidash/useOmniDashAction.ts records non-OAuth launches as LOCAL_LAUNCHED with local-launch-only metadata; tests/omnidash/useOmniDashAction.spec.tsx and tests/omnidash/fake-success-guardrails.spec.tsx assert this."
+    },
+    {
+      "area": "dependency_workflow_merge_policy",
+      "status": "VERIFIED",
+      "evidence": ".github/workflows/dependency-consolidation.yml updates dependency PR branches only and does not call pulls.merge."
+    },
+    {
+      "area": "placeholder_release_paths",
+      "status": "VERIFIED",
+      "evidence": ".github/workflows/ci-runtime-gates.yml and .github/workflows/cd-staging.yml no longer use ci-placeholder/mock Supabase fallbacks in release/staging build paths."
+    },
+    {
+      "area": "fake_success_guardrails",
+      "status": "VERIFIED",
+      "evidence": "tests/omnidash/fake-success-guardrails.spec.tsx is active and blocks local launches from being marked backend-confirmed LIVE."
+    }
+  ],
+  "manualOrBlocked": [
+    {
+      "area": "current_github_actions_status_and_branch_protection",
+      "status": "BLOCKED",
+      "blocker": "GitHub CLI is not installed in the execution environment and no GitHub API token is exposed for repository settings inspection.",
+      "nextAction": "Owner/Security-Ops must verify required checks in GitHub Settings -> Branches and attach Actions run URLs."
+    },
+    {
+      "area": "live_cloudflare_bundle_and_env",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Cloudflare API token/domain token is not exposed to this shell; live deploy mutation is owner-controlled.",
+      "nextAction": "Owner/Ops must run deployed-bundle verification against the production URL with real Cloudflare environment evidence."
+    },
+    {
+      "area": "supabase_migrations_production_staging",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Supabase CLI is not installed and no service-role/access token is exposed for schema inspection or migration status.",
+      "nextAction": "Owner/Ops must run Supabase migration status/advisors against staging and production and attach sanitized output."
+    },
+    {
+      "area": "supabase_rls_auth_multi_tenant",
+      "status": "BLOCKED",
+      "blocker": "Playwright global setup could not reach the configured Supabase backend from this environment during cp-15 validation.",
+      "nextAction": "QA/Security must run authenticated multi-tenant E2E/RLS validation from an environment with backend reachability and test users."
+    },
+    {
+      "area": "real_integration_oauth_callbacks_and_provider_persistence",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Provider OAuth credentials/test accounts are not exposed to this environment.",
+      "nextAction": "QA/Engineering must run OAuth callback tests for each release-critical provider and verify persisted read-back after reload."
+    },
+    {
+      "area": "billing_payment_sandbox",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Payment sandbox credentials and customer test account are not exposed.",
+      "nextAction": "Product/QA must run subscription, failure, cancellation, and entitlement-transition tests in sandbox."
+    },
+    {
+      "area": "byom_model_calls_key_storage_error_handling",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "BYOM provider keys/test accounts are not exposed.",
+      "nextAction": "QA/Security must run BYOM success/failure/key-redaction tests with real provider sandbox keys."
+    },
+    {
+      "area": "mobile_pwa_native_android_ios",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Device/emulator signing profiles and native CI evidence are not available in this shell.",
+      "nextAction": "Mobile QA must run Android/iOS build and smoke tests on target devices/emulators."
+    },
+    {
+      "area": "webauthn_faceid_touchid_real_device",
+      "status": "REQUIRES_MANUAL_VALIDATION",
+      "blocker": "Real biometric hardware and deployed edge function are required.",
+      "nextAction": "Owner/QA must validate passkey registration/assertion on real devices against deployed Supabase functions."
+    }
+  ]
+}

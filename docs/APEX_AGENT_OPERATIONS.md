@@ -932,3 +932,46 @@ The Supabase Edge deployment workflow (`deploy-web3-functions.yml`) also publish
 The key change in both cases is wrapping `"$GITHUB_OUTPUT"` in double quotes, which is the POSIX-compliant form and prevents word-splitting/glob-expansion on the redirection target. The `version=…` value is already safely captured via command substitution.
 
 **Operational impact:** CI-only fix. No deployed services, start commands, env vars, secrets, DB tables/migrations, or runtime contracts changed. No Playwright browser version or harness behaviour changed — only the reliability of the cache-key derivation step. This note exists solely to satisfy the ops-doc drift guard, which (correctly) treats any `.github/workflows/` change as a critical-path edit.
+
+## 9.19 Release remediation gates — env fail-closed, dependency branch-only automation, and validation matrix (2026-06-26)
+
+**Changed files:** `.github/workflows/cd-staging.yml`, `.github/workflows/ci-runtime-gates.yml`, `.github/workflows/dependency-consolidation.yml`, `.github/workflows/lighthouse.yml`, `.github/workflows/mobile-build-verify.yml`, `package.json`, `scripts/ci/verify-ci-integrity.mjs`, `scripts/ci/verify-release-validation-matrix.mjs`, and `docs/release/release-validation-matrix.json`.
+
+### Environment contract: no release-sensitive placeholder Supabase fallbacks
+
+Release-sensitive workflows now fail closed when required Supabase build-time secrets are missing instead of silently substituting placeholder/mock values:
+
+- `ci-runtime-gates.yml` production bundle and E2E env now require `E2E_SUPABASE_URL` and `E2E_SUPABASE_ANON_KEY` with no `ci-placeholder.supabase.co` fallback.
+- `cd-staging.yml` Terraform plan now consumes staging/Cloudflare/Upstash/Sentry/Datadog secrets directly and no longer supplies `mock-*` or `https://mock.supabase.co` values when `HAS_TF_SECRETS == true`.
+- `lighthouse.yml` and `mobile-build-verify.yml` now build with real `VITE_SUPABASE_*` secrets only; missing secrets should fail the build guard rather than produce release evidence against placeholder config.
+
+**Operational impact:** CI/staging/mobile/lighthouse paths are stricter. A missing required secret is now a configuration failure, not a green build with inert placeholder Supabase values. This intentionally protects release evidence from proving only local buildability.
+
+### Dependency automation contract: branch update only
+
+`dependency-consolidation.yml` no longer calls `github.rest.pulls.merge`. It only updates dependency PR branches and records that required checks plus branch protection remain authoritative for merge decisions.
+
+**Operational impact:** dependency consolidation can no longer bypass failing checks by merging directly. Dependency PR merge remains a branch-protection/owner-controlled action.
+
+### New release validation matrix command
+
+`package.json` adds:
+
+```bash
+npm run release:validation-matrix
+```
+
+This runs `scripts/ci/verify-release-validation-matrix.mjs`, which verifies the repo-level remediation invariants:
+
+- non-OAuth OmniDash launches must remain `LOCAL_LAUNCHED` and must carry `local-launch-only` / `requiresBackendConfirmation` metadata;
+- dependency consolidation must not include direct `pulls.merge` or force-merge language;
+- release/staging workflow paths must not reintroduce `ci-placeholder` / `mock` Supabase fallbacks;
+- live-only items in `docs/release/release-validation-matrix.json` must stay `BLOCKED` or `REQUIRES_MANUAL_VALIDATION` until real owner/live evidence exists.
+
+**Operational impact:** this is a CI/release evidence guard. It does not deploy services or mutate external infrastructure. It prevents future audit evidence from claiming live verification from repo-only checks.
+
+### CI integrity scanner extension
+
+`verify:ci-integrity` now also rejects release-sensitive placeholder config and unsafe workflow merge patterns (`pulls.merge`, `force-merge`, `mustBeGreen: false`) unless an audited `ci-integrity-allow:` exception is present.
+
+**Operational impact:** future workflow edits that weaken release evidence or branch-protection assumptions fail in CI before merge.

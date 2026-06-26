@@ -49,16 +49,16 @@ jobs:
         if: ${{ env.HAS_TF_SECRETS == 'true' }}
         run: terraform plan -out=tfplan
         env:
-          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN || 'mock-token' }}
-          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID || 'mock-zone' }}
-          TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL || 'mock@example.com' }}
-          TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY || 'mock-key' }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+          TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
           TF_VAR_github_repo: ${{ github.repository }}
-          TF_VAR_vite_supabase_url: ${{ secrets.STAGING_SUPABASE_URL || 'https://mock.supabase.co' }}
-          TF_VAR_vite_supabase_publishable_key: ${{ secrets.STAGING_SUPABASE_KEY || 'mock-key' }}
-          TF_VAR_vite_sentry_dsn: ${{ secrets.SENTRY_DSN || 'https://mock@sentry.io/1' }}
-          TF_VAR_vite_datadog_application_id: ${{ secrets.DATADOG_APP_ID || 'mock-id' }}
-          TF_VAR_vite_datadog_client_token: ${{ secrets.DATADOG_CLIENT_TOKEN || 'mock-token' }}
+          TF_VAR_vite_supabase_url: ${{ secrets.STAGING_SUPABASE_URL }}
+          TF_VAR_vite_supabase_publishable_key: ${{ secrets.STAGING_SUPABASE_KEY }}
+          TF_VAR_vite_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_vite_datadog_application_id: ${{ secrets.DATADOG_APP_ID }}
+          TF_VAR_vite_datadog_client_token: ${{ secrets.DATADOG_CLIENT_TOKEN }}
 
       - name: Terraform Apply
         if: ${{ github.ref == 'refs/heads/main' && env.HAS_TF_SECRETS == 'true' }}

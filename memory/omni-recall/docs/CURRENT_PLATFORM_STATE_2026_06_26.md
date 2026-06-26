@@ -8,11 +8,9 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_25.md
 
 # Current Platform State — 2026-06-26
 
-> **CURRENT AUTHORITY (2026-06-26):** `main` HEAD after merge of PR #1497
-> (fix(web-vitals): resolve CLS 0.172 on #cta + WCAG AA contrast fix + doc drift cleanup).
-> Pre-merge `main` HEAD: `e69dd934`.
-> Active dev branch: `claude/gallant-newton-5d57b0`.
-> Release line remains **1.8.2** — CSS-only patch, no version bump.
+> **CURRENT AUTHORITY (2026-06-26):** current worktree documentation baseline after CI/workflow hardening through `fba4e2f` and ops-doc drift repair through `e0c1739`.
+> This document is a living repo-state snapshot, not live-production proof.
+> Release line remains **1.8.2** — no version bump in the release-remediation/doc-sync commits.
 
 ---
 
@@ -21,17 +19,17 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_25.md
 | Field | Value |
 |---|---|
 | Snapshot date | 2026-06-26 |
-| `main` HEAD (pre-merge) | `e69dd934` — fix(ops-widgets-smoke): remove unused expect import after APEX-2021 skip |
-| `main` HEAD (post-merge) | merge commit of PR #1497 |
+| Audited baseline before doc sync | `fba4e2f` — CI/workflow hardening: fail-closed release envs, branch-only dependency updates, release validation matrix, and local-launch guardrails |
+| Ops-doc repair commit | `e0c1739` — docs(ops): document release remediation gates |
 | Previous platform state doc | [`CURRENT_PLATFORM_STATE_2026_06_25.md`](./CURRENT_PLATFORM_STATE_2026_06_25.md) — `main` HEAD `4c0d481` |
-| Active dev branch | `claude/gallant-newton-5d57b0` |
-| Dev branch HEAD | `b2f14b52` — fix(web-vitals): resolve CLS 0.172 on #cta and apply WCAG AA contrast fix |
+| Active branch in local audit environment | `work` |
+| Live/production state | Not verified by this doc sync; see release validation matrix for manual/live gaps |
 | Root package version | `1.8.2` (unchanged) |
 | App package version | `1.3.10` (`apps/omnihub-site/package.json`) |
 | Platform stack | **Vite 7 + React 18 + TypeScript 5.9** — Cloudflare Pages (frontend), Supabase (DB/edge), Render/Temporal (orchestrator) |
-| CI/CD workflow count | **20** (unchanged from 2026-06-25) |
-| Edge function dirs | **33** total (32 function dirs + `_shared`) |
-| SQL migrations | **100** (94 forward + 6 rollback) — 96 unique versions |
+| CI/CD workflow count | **20** |
+| Edge function dirs | **34** total (33 function dirs + `_shared`) |
+| SQL migrations | **100** (96 forward + 4 rollback under `migrations/rollback/`) |
 | Source files (`src/`) | **328** (234 `.ts` + 94 `.tsx`) |
 
 ---
@@ -102,6 +100,18 @@ Note: `--omni-t4` tokens are decorative (borders/dividers) and are intentionally
 
 ---
 
+### 4. Release Remediation / Anti-Drift Closure
+
+**Files:** `.github/workflows/cd-staging.yml`, `.github/workflows/ci-runtime-gates.yml`, `.github/workflows/dependency-consolidation.yml`, `.github/workflows/lighthouse.yml`, `.github/workflows/mobile-build-verify.yml`, `src/omnidash/useOmniDashAction.ts`, `src/stores/omniBoardStore.ts`, `apps/omnihub-site/dashboard/components/Integrations.tsx`, `scripts/ci/verify-ci-integrity.mjs`, `scripts/ci/verify-release-validation-matrix.mjs`, `docs/release/release-validation-matrix.json`, `docs/APEX_AGENT_OPERATIONS.md`.
+
+**Repo-verified changes:**
+- release-sensitive workflow builds no longer use placeholder/mock Supabase fallbacks; missing required secrets should fail closed;
+- dependency consolidation updates PR branches only and does not call `pulls.merge`;
+- non-OAuth OmniDash launches hydrate as `LOCAL_LAUNCHED` with `confirmation: local-launch-only` and `requiresBackendConfirmation: true`, while backend-confirmed OAuth success remains the only path to `LIVE`;
+- `npm run release:validation-matrix` verifies repo-level remediation invariants and preserves manual/live validation boundaries.
+
+**Still not live-verified here:** GitHub branch protection/current Actions status, Cloudflare deployed bundle/env, production/staging Supabase migrations, RLS/auth multi-tenant behavior, provider OAuth callbacks, billing sandbox, BYOM providers, native mobile builds, and real-device WebAuthn/biometrics.
+
 ## Build Reproduction Guide
 
 To reproduce this exact build state from scratch:
@@ -151,7 +161,7 @@ npm run docs:check
 VITE_SUPABASE_URL=<Supabase project URL>
 VITE_SUPABASE_PUBLISHABLE_KEY=<Supabase anon/public key>
 ```
-The build works without these (offline mode, no Supabase features). They are required for the authenticated OmniDash surface.
+Release/CI/production builds fail closed without these values. Local UI-only work may set `APEX_ALLOW_MISSING_SUPABASE_CONFIG=true` outside CI/production, but release evidence must use real Supabase configuration.
 
 ---
 
@@ -211,7 +221,7 @@ The build works without these (offline mode, no Supabase features). They are req
 | `orchestrator-ci.yml` | push/PR | Orchestrator TypeScript CI |
 | `chaos-simulation-ci.yml` | push/PR | Chaos/resilience simulation |
 | `rsi-governance.yml` | push/PR | RSI governance checks |
-| `dependency-consolidation.yml` | schedule | Dependency audit |
+| `dependency-consolidation.yml` | schedule/manual | Dependency PR branch update only; merge remains branch-protection controlled |
 | `nightly-evaluation.yml` | schedule | Nightly eval suite |
 | `mobile-build-verify.yml` | push/PR | Mobile build verification |
 | `deploy-omnihub-proof.yml` | manual | Proof-of-concept deploy |
@@ -252,4 +262,4 @@ The build works without these (offline mode, no Supabase features). They are req
 
 ## Production Certification
 
-See [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_26.md`](../../../docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_26.md) for the full certification record. Owner approval gate: merge of PR #1497 into `main` by the product owner (JR).
+Current repo-verified release-remediation evidence is in [`docs/release/release-validation-matrix.json`](../../../docs/release/release-validation-matrix.json). Full production certification remains owner/manual until the matrix items labeled `BLOCKED` / `REQUIRES_MANUAL_VALIDATION` have live evidence.

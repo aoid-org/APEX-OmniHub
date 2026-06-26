@@ -31,7 +31,7 @@ status: verified
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_25.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_26.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json)** (Current Production Authority)
@@ -60,14 +60,14 @@ The platform relies on a "Holy Trinity" architecture:
 | **Source Files (`src/`)**                        | 328 TypeScript/TSX files (234 `.ts` + 94 `.tsx`)  |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 33 directories (32 function dirs + `_shared`)     |
+| **Edge Functions (`supabase/functions/`)**       | 34 directories (33 function dirs + `_shared`)     |
 | **Database Migrations (`supabase/migrations/`)** | 100 `.sql` files (96 forward + 4 rollback under `migrations/rollback/`) |
 | **CI/CD Workflows (`.github/workflows/`)**       | 20 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 373+ spec/test source files; latest pass counts are recorded in certification status |
+| **Test Specs (`tests/` + `e2e` + `sim` + app/orchestrator/package tests)** | 385 spec/test source files in the current scan; latest pass counts are recorded in audit/validation artifacts |
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~107 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** `main` HEAD `e69dd934` — fix(ops-widgets-smoke): remove unused expect import after APEX-2021 skip. Previous session: PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism" (`4c0d481`). Release line is **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Owner-approved certification: [`docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`](./docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md). **Law: CI validates. Owner certifies.** Active dev branch: `claude/gallant-newton-5d57b0` — 2026-06-26 session: CLS fix (removed `content-visibility: auto` / `contain-intrinsic-size` from platform map host; was causing 100px layout jump for first-time visitors); WCAG AA contrast fix for `--omni-t3` tokens (light: `#64748b`→`#5e6c7e`, dark: `#475569`→`#7c8b9c`). Workflow count: **20**. Edge function dirs: **33** (32 + `_shared`). See [`CURRENT_PLATFORM_STATE_2026_06_25.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md) for the last full platform state assessment.
+**Latest repo-history note:** current audited baseline before this documentation sync is `fba4e2f` — CI/workflow hardening, release validation matrix, and OmniDash local-launch truthfulness. Release line remains **1.8.2** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for the items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **20**. Edge function dirs: **34** (33 + `_shared`). See [`CURRENT_PLATFORM_STATE_2026_06_26.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md) for the current platform state assessment.
 
 ---
 
@@ -165,7 +165,7 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 /supabase/migrations - Database schema (100 .sql files: 96 forward + 4 rollback)
-/supabase/functions  - Edge functions (32 function directories + _shared = 33 total)
+/supabase/functions  - Edge functions (33 function directories + _shared = 34 total)
 /orchestrator        - Temporal workers and orchestration services (~107 Python files)
 /tests               - Automated test suite
 /.github/workflows   - CI/CD workflows (20 workflow files)
@@ -274,7 +274,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json) | Current certification authority |

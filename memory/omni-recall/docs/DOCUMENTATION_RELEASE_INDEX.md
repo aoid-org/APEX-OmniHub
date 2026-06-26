@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.7.0
-last_audited: 2026-06-25
+version: 1.8.0
+last_audited: 2026-06-26
 status: verified
 ---
 
@@ -10,22 +10,22 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-06-25** (integration harness CI fix; `main` PRs #1487/#1488 incorporated). Previous refresh: 2026-06-24 Session 3 (v1.8.2 release cut + guard alignment; PRs #1485/#1486 merged to `main`). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_25.md`.
+> Current repo-truth index refreshed **2026-06-26** (release remediation gates, ops-doc drift repair, local-launch truthfulness, and documentation anti-drift sync). Previous refresh: 2026-06-25 (integration harness CI fix; PRs #1487/#1488 incorporated). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_26.md`.
 
-## Current Repo Facts Verified in This Pass (2026-06-25)
+## Current Repo Facts Verified in This Pass (2026-06-26)
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| `main` HEAD | `4c0d481` — PR #1488 "chore(cert): Production Hardening Sprint & Codebase Determinism" |
-| Active dev branch | `claude/kind-feynman-h5gcbs` — HEAD `6074e0c` (fix(ci): integration-harness playwright install hang) |
+| Audited remediation baseline | `fba4e2f` — CI/workflow hardening, release validation matrix, and local-launch guardrails |
+| Local audit branch | `work`; live production/branch protection not verified by this documentation pass |
 | Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
 | GitHub workflow files | **20** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`) |
 | Release/package versions | Root `package.json` declares **`1.8.2`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_25.md`. |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_26.md`. |
 | SQL migrations | **100** `.sql` files = **96 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **33** (32 function dirs + `_shared`) — git-verified; previously documented as 36 |
+| Edge function dirs | **34** (33 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~107 tracked (excl. `__pycache__`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441; unsupported actions fail-closed, never call `trigger-workflow` |
@@ -37,11 +37,11 @@ status: verified
 | Ops-doc CI guard | `scripts/ci/check-ops-doc-drift.mjs` + `.github/workflows/ops-doc-guard.yml` active on all PRs to `main` |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
 | Agent destructive-action guard | `scripts/ci/guard-agent-destructive-actions.mjs` + `.githooks/pre-commit.d/30-destructive-action-guard.sh` — deployed PR #1485; exemptions aligned with `check-release-certification-docs.mjs` (owner-approved/, templates/, CHANGELOG.md) |
-| Owner-approved certification | `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md` — scoped to `main` HEAD `8bfb1a6` / `v1.8.2`; any later change requires its own owner sign-off |
+| Release validation boundary | `docs/release/release-validation-matrix.json` — repo-verified remediations are recorded; live/manual production checks remain `BLOCKED` / `REQUIRES_MANUAL_VALIDATION` until owner evidence exists |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are now historical.)
+0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
 1. `docs/project-status/release-validation-summary.json` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -59,7 +59,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(current — supersedes 2026-06-24 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_26.md` _(current — supersedes 2026-06-25 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(historical — 2026-06-25 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(historical — 2026-06-24 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_22.md` _(historical — 2026-06-22 snapshot)_
@@ -376,8 +377,8 @@ Full release-rescue audit performed against `main` @ `5870a8ec` (PR #1476, "Rebr
 | `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` | Statement 22 added (OmniSkills rebrand, claim hygiene, OmniSentry full wiring) |
 | `README.md` | HEAD / version / gate status synced to 2026-06-23 |
 
-### Current canonical start point
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (supersedes 2026-06-22 snapshot)
+### Canonical start point at that time
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (historical; superseded by 2026-06-26)
 
 ---
 
@@ -405,9 +406,9 @@ Full repo-truth documentation sync performed against `main` @ `4c0d481` (PR #148
 | Edge function dirs | 36 | **33** | 3 dirs removed (git-verified against live tree) |
 | All other counts | unchanged | unchanged | src 328, tsx 94, hooks 23, migrations 100 |
 
-### Current canonical start point
+### Canonical start point at that time
 
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md` (supersedes 2026-06-24)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_25.md` (historical; superseded by 2026-06-26)
 
 ---
 
@@ -433,9 +434,9 @@ Full repo-truth documentation sync performed against branch `fix/release-certifi
 - **Fixed** IDE warnings: `OmniBoardWizard.tsx` JSX, `omniboard-wizard.spec.tsx` + `ui-surface-integrity.test.tsx` `window` → `globalThis`, `src/lib/supabase/client.ts` `typeof` simplification
 - **CI law:** `CI validates. Owner certifies.` — reaffirmed in all canonical docs
 
-### Current canonical start point
+### Canonical start point at that time
 
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md` (Session 2 block is the latest state)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_24.md` (historical; superseded by 2026-06-26)
 
 ---
 
@@ -461,4 +462,28 @@ Batch 2 of the PR #1477 fix session. Three code files changed; six doc files upd
 | `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path |
 
 ### Current canonical start point
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (Batch 2 section is the latest state)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md` (2026-06-26 release remediation / documentation anti-drift sync is the latest state)
+
+
+## 2026-06-26 Documentation Anti-Drift Sync — release remediation gates
+
+Full repo-truth documentation sync performed against the working tree after release remediation baseline `fba4e2f` and ops-doc repair `e0c1739`. Counts were re-verified with `find`/`git` commands in the local repository. Live infrastructure health, GitHub branch-protection settings, Cloudflare deployed env, Supabase production/staging migrations, provider OAuth, billing, BYOM, native mobile, and real-device WebAuthn were **not** re-verified in this documentation pass.
+
+| File | Change |
+|---|---|
+| `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` | Added repo-evidence vs live-proof doctrine and local-launch truthfulness rule |
+| `README.md` | Current platform-state pointer → 2026-06-26; edge function dirs 34 (33 + `_shared`); test spec count 385; release evidence boundary points to validation matrix |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_26.md` | Updated remediation baseline, counts, fail-closed env contract, dependency branch-only behavior, and manual/live validation boundary |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — v1.8.0 facts table and authority pointers updated to 2026-06-26 |
+| `memory/omni-recall/docs/README.md` | Current platform snapshot/certification boundary updated to 2026-06-26 validation matrix |
+| `docs/audits/documentation-drift-assessment-2026-06-26.md` | New dated report documenting scope, evidence, updates, validation, and remaining manual/live gaps |
+
+### Current count corrections (2026-06-26, repo-verified)
+
+| Metric | Current | Evidence command |
+|---|---:|---|
+| Workflow files | 20 | `find .github/workflows -maxdepth 1 -type f` |
+| `src` TypeScript/TSX files | 328 (234 `.ts` + 94 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
+| Supabase function dirs | 34 (33 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
+| SQL migrations | 100 (96 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
+| Spec/test source files | 385 | `find tests e2e sim apps orchestrator packages ...` |
