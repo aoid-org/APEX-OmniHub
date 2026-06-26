@@ -91,3 +91,14 @@ jobs:
           INTEGRATION_FAN_PASSWORD: ${{ secrets.INTEGRATION_FAN_PASSWORD }}
           INTEGRATION_PPV_ACCESS_CODE: ${{ secrets.INTEGRATION_PPV_ACCESS_CODE }}
           INTEGRATION_PPV_GAME_ID: ${{ secrets.INTEGRATION_PPV_GAME_ID }}
+          SERVICE_BOOT_TIMEOUT: "120000"
+
+      - name: Upload Playwright Report & Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            integration-harness/playwright-report/
+            integration-harness/playwright-results/
+          if-no-files-found: ignore
