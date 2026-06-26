@@ -23,6 +23,8 @@
  * Exit 0 = bundle verified. Non-zero = fail the deploy job.
  */
 
+import { execFileSync } from 'node:child_process';
+
 /** Strip trailing slashes without regex — no backtracking, O(n). */
 function stripTrailingSlashes(s) {
   let result = s;
@@ -38,15 +40,70 @@ const PLACEHOLDER_HOST = 'placeholder.supabase.co';
 // Upper bounds on quantifiers prevent super-linear backtracking (S5852).
 const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,128}|eyJ[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}/;
 
-async function fetchResponse(url) {
-  const response = await fetch(url, {
-    redirect: 'follow',
-    headers: { 'User-Agent': 'apex-omnihub-deploy-smoke-test', 'Cache-Control': 'no-cache' },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} fetching ${url}`);
+const DEFAULT_HEADERS = {
+  'User-Agent': 'apex-omnihub-deploy-smoke-test',
+  'Cache-Control': 'no-cache',
+};
+
+function parseCurlResponse(raw) {
+  const normalized = raw.replace(/\r\n/g, '\n');
+  const blocks = normalized.split('\n\n').filter(Boolean);
+  let headerIndex = -1;
+  for (let i = blocks.length - 1; i >= 0; i -= 1) {
+    if (blocks[i].startsWith('HTTP/')) {
+      headerIndex = i;
+      break;
+    }
   }
-  return response;
+  if (headerIndex === -1) {
+    throw new Error('curl fallback did not return HTTP headers');
+  }
+  const headerLines = blocks[headerIndex].split('\n');
+  const status = Number(headerLines[0].match(/^HTTP\/\S+\s+(\d{3})/)?.[1] ?? 0);
+  const headers = new Map();
+  for (const line of headerLines.slice(1)) {
+    const idx = line.indexOf(':');
+    if (idx > 0) headers.set(line.slice(0, idx).trim().toLowerCase(), line.slice(idx + 1).trim());
+  }
+  const body = blocks.slice(headerIndex + 1).join('\n\n');
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (name) => headers.get(String(name).toLowerCase()) ?? null },
+    text: async () => body,
+  };
+}
+
+async function fetchResponse(url, options = {}) {
+  const headers = { ...DEFAULT_HEADERS, ...(options.headers ?? {}) };
+  try {
+    const response = await fetch(url, { redirect: 'follow', ...options, headers });
+    if (!response.ok && !options.allowErrorStatus) {
+      throw new Error(`HTTP ${response.status} fetching ${url}`);
+    }
+    return response;
+  } catch (error) {
+    // Node's built-in fetch intentionally does not honor HTTP_PROXY/HTTPS_PROXY.
+    // CI runners normally have direct egress, but containerized validation often
+    // requires the proxy that curl already honors. Fallback keeps the smoke test
+    // deterministic instead of reporting a false network failure.
+    const args = ['-sS', '-L', '-i', '--max-time', '30'];
+    const method = options.method ?? 'GET';
+    if (method !== 'GET') args.push('-X', method);
+    for (const [key, value] of Object.entries(headers)) args.push('-H', `${key}: ${value}`);
+    if (options.body !== undefined) args.push('--data-binary', '@-');
+    args.push(url);
+    const raw = execFileSync('curl', args, {
+      encoding: 'utf8',
+      input: options.body === undefined ? undefined : String(options.body),
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    const response = parseCurlResponse(raw);
+    if (!response.ok && !options.allowErrorStatus) {
+      throw new Error(`HTTP ${response.status} fetching ${url} (fetch fallback: ${error.message})`);
+    }
+    return response;
+  }
 }
 
 async function fetchText(url) {
@@ -92,7 +149,7 @@ function hasServiceWorkerRegistration(text) {
 
 async function assertOmniBoardEdgeRoute(label) {
   const edgeUrl = `https://${EXPECTED_HOST}/functions/v1/omnilink-port/omniboard-start`;
-  const response = await fetch(edgeUrl, {
+  const response = await fetchResponse(edgeUrl, {
     method: 'POST',
     headers: {
       'User-Agent': 'apex-omnihub-deploy-smoke-test',
@@ -100,6 +157,7 @@ async function assertOmniBoardEdgeRoute(label) {
       'Content-Type': 'application/json',
     },
     body: '{}',
+    allowErrorStatus: true,
   });
   const cors = response.headers.get('access-control-allow-origin') || '';
   const body = await response.text();
