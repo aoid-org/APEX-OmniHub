@@ -153,7 +153,7 @@ refund_payment() → cancel_hotel() → cancel_flight()
 → CACHE HIT → Inject params → Execute (skip LLM call)
 ```
 
-**Why**: 70% fewer LLM calls = $XXX/month savings + 3x faster
+**Why**: 70% fewer LLM calls = material monthly savings + 3x faster
 
 ---
 

@@ -245,16 +245,14 @@
   .landing-root .hero{padding-top:90px;padding-bottom:60px}
 }
 
-/* Web Vitals: reserve the starmap slot before /omnihub-starmap.js injects content.
- * `contain-intrinsic-size: auto …` makes the browser remember the real rendered
- * height after first paint, so re-entering the viewport never re-jumps and the
- * #maestro section directly below it stays put (eliminates CLS). */
+/* Reserve the starmap slot before /omnihub-starmap.js injects content.
+ * contain-intrinsic-size was removed: its 720px fallback was smaller than
+ * min-height (820px), causing a 100px CLS jump on first-time visitors when
+ * content-visibility: auto rendered the section on scroll. */
 .landing-root .omnihub-platform-map-host {
   display: block;
   min-height: clamp(520px, 72vh, 820px);
   contain: layout paint;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 720px;
 }
 
 .landing-root .omnihub-platform-map-host.ohsm-section {

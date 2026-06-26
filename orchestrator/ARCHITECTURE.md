@@ -242,7 +242,7 @@ if similarity >= 0.85:
 - Common patterns (e.g., "book flight"): 80-90% hit rate
 - Rare/unique requests: 0-20% hit rate
 - Average across production: ~70% hit rate
-- **Cost savings**: 70% fewer LLM calls = $XXX/month saved
+- **Cost savings**: 70% fewer LLM calls = material monthly savings
 
 ### 4. Concurrency & Critical Sections
 
