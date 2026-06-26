@@ -37,23 +37,30 @@ trap cleanup EXIT INT TERM
 [[ -d "$SBBL_REPO" ]] || { echo "SBBL repo not found at $SBBL_REPO"; exit 1; }
 set_alias SBBL_SUPABASE_URL SUPABASE_URL
 set_alias SBBL_SUPABASE_ANON_KEY SUPABASE_ANON_KEY
-require_env SBBL_SUPABASE_URL
-require_env SBBL_SUPABASE_ANON_KEY
 set_alias SBBL_SUPABASE_SERVICE_KEY SBBL_SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_KEY
 set_alias SBBL_SUPABASE_SERVICE_ROLE_KEY SBBL_SUPABASE_SERVICE_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_KEY
 set_alias INTEGRATION_PPV_GAME_ID TEST_PPV_GAME_ID
 set_alias INTEGRATION_PPV_ACCESS_CODE TEST_PPV_ACCESS_CODE
-require_env INTEGRATION_ADMIN_EMAIL
-require_env INTEGRATION_ADMIN_PASSWORD
-require_env INTEGRATION_FAN_EMAIL
-require_env INTEGRATION_FAN_PASSWORD
+
+# Collect all missing env vars; fall back to deterministic-only when any are absent.
+# Every require_env is guarded so set -e does not kill the script before the fallback.
 missing=0
+require_env SBBL_SUPABASE_URL        || missing=1
+require_env SBBL_SUPABASE_ANON_KEY   || missing=1
 require_env SBBL_SUPABASE_SERVICE_KEY || missing=1
+require_env INTEGRATION_ADMIN_EMAIL    || missing=1
+require_env INTEGRATION_ADMIN_PASSWORD || missing=1
+require_env INTEGRATION_FAN_EMAIL      || missing=1
+require_env INTEGRATION_FAN_PASSWORD   || missing=1
 if [[ $missing -ne 0 ]]; then
+  echo ""
+  echo "Required integration secrets are not configured."
   echo "Set one of: SBBL_SUPABASE_URL | SUPABASE_URL"
   echo "Set one of: SBBL_SUPABASE_ANON_KEY | SUPABASE_ANON_KEY"
   echo "Set one of: SBBL_SUPABASE_SERVICE_KEY | SBBL_SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_KEY"
-  echo "WARNING: Required secrets are missing. Falling back to deterministic-only validation."
+  echo "Set: INTEGRATION_ADMIN_EMAIL, INTEGRATION_ADMIN_PASSWORD, INTEGRATION_FAN_EMAIL, INTEGRATION_FAN_PASSWORD"
+  echo ""
+  echo "Falling back to deterministic-only validation (no live infrastructure required)."
   node lib/deterministic-validator.mjs
   exit $?
 fi
