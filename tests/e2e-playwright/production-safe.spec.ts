@@ -2,6 +2,14 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
+// APEX-1506: Opt-in gate — this suite is live production evidence collection only.
+// Default CI Playwright discovery will skip this file unless APEX_RUN_PRODUCTION_SAFE=true.
+// Run explicitly via: npm run test:e2e:production-safe
+test.skip(
+  process.env.APEX_RUN_PRODUCTION_SAFE !== 'true',
+  'Production-safe live validation is opt-in. Run with npm run test:e2e:production-safe.'
+);
+
 const evidenceRoot = path.resolve('artifacts/production-validation');
 const routes = [
   { path: '/', expectation: 'public' },
@@ -94,7 +102,21 @@ test.describe('production-safe live browser evidence', () => {
       const signal = await visibleSignal(page);
       const slug = route.path === '/' ? 'root' : route.path.replace(/^\//, '').replace(/[^a-z0-9-]/gi, '-');
       const screenshot = path.join(evidenceRoot, 'screenshots', `${testInfo.project.name}-${slug}.png`);
-      await page.screenshot({ path: screenshot, fullPage: true });
+
+      // APEX-1506: Bounded viewport capture — fullPage: true caused CI hangs on /request-access and /demo.
+      // Screenshot failures are recorded in evidence JSON but do not fail the route.
+      let screenshotError: string | null = null;
+      try {
+        await page.screenshot({
+          path: screenshot,
+          fullPage: false,
+          animations: 'disabled',
+          caret: 'hide',
+          timeout: 15_000,
+        });
+      } catch (error) {
+        screenshotError = redact(error instanceof Error ? error.message : String(error)).slice(0, 500);
+      }
 
       const classification = classify({
         route: route.path,
@@ -118,6 +140,7 @@ test.describe('production-safe live browser evidence', () => {
         title,
         visibleSignal: signal,
         screenshot,
+        screenshotError,
         consoleErrors,
         pageErrors,
         failedRequests,
