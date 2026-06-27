@@ -32,3 +32,15 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 6. Playwright Navigation & Supabase Long-Polling
 **Invariant:** `networkidle` conditions will timeout in CI because Supabase opens long-polling/websocket connections for real-time features.
 **Rule:** When calling `page.waitForNavigation`, `page.goto`, or `signInWithSupabaseSession`, ALWAYS use `waitUntil: 'domcontentloaded'` instead of `networkidle`. Use explicit visual assertions (e.g., `expect(page.locator('...')).toBeVisible()`) to ensure the page has fully loaded.
+
+## 7. Repo Evidence vs Live Production Proof
+**Invariant:** Repository evidence is implementation evidence, not proof that production/staging/live systems behaved correctly.
+**Rule:** Do not label GitHub Actions status, Cloudflare deployment behavior, Supabase migration state, RLS tenant isolation, billing, BYOM provider calls, OAuth callbacks, mobile native behavior, or WebAuthn/biometric device flows as VERIFIED unless they were actually exercised in the current environment with real credentials/evidence. Use `BLOCKED` or `REQUIRES_MANUAL_VALIDATION` when credentials, devices, backend reachability, or owner-controlled environments are absent.
+
+## 8. OmniDash Local Launch Truthfulness
+**Invariant:** A local UI launch is not the same as a backend-confirmed connector success.
+**Rule:** Spatial/microfrontend/local launches must use `LOCAL_LAUNCHED` plus local-only confirmation metadata. Only flows with a successful backend exchange/mutation/read-back may hydrate OmniBoard as backend-confirmed `LIVE`. Tests must prevent local-only actions from becoming fake success states.
+
+## 9. Production-Safe Live Validation Harness
+**Invariant:** Live production validation must be non-destructive by default and must produce sanitized evidence before any certification claim.
+**Rule:** Use `APEX_PROD_URL=https://apexomnihub.icu npm run test:e2e:production-safe` for public/auth-gated route evidence. Use `npm run perf:k6:smoke` only when k6 is installed; missing k6 is `BLOCKED`, not pass. Do not certify Request Access persistence, auth, OAuth, passkeys, Supabase RLS, BYOM, billing, OmniDash persistence, Cloudflare deployment provenance, or branch protection from route rendering alone.

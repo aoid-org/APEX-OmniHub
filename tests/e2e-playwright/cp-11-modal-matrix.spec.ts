@@ -5,13 +5,18 @@
  */
 import { test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { signInWithSupabaseSession } from './helpers/auth';
+import { signInWithSupabaseSession, skipWithoutSupabaseConfig, isBackendRequired } from './helpers/auth';
 import { assertModalIdentityAndIsolation } from './helpers/modal';
 import crypto from 'node:crypto';
 
 let testUserId: string;
 
 test.beforeAll(async () => {
+  // Render-smoke mode (default test:e2e): no backend — bypass live admin seeding.
+  // Playwright forbids skipping a test from inside beforeAll, so guard with an
+  // early return; each test self-skips via skipWithoutSupabaseConfig() below.
+  if (!isBackendRequired()) return;
+
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const serviceKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
@@ -91,6 +96,7 @@ test.beforeAll(async () => {
 
 test.describe('CP-11 — Modal Correctness Matrix (PARTIAL)', () => {
   test.beforeEach(async ({ page }) => {
+    skipWithoutSupabaseConfig();
     await signInWithSupabaseSession(page);
   });
 

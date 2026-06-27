@@ -20,6 +20,7 @@
     "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
     "test:prompt-defense": "vitest run tests/prompt-defense",
     "test:e2e": "APEX_ALLOW_MISSING_SUPABASE_CONFIG=true playwright test",
+    "test:e2e:backend": "APEX_E2E_BACKEND_REQUIRED=true APEX_ALLOW_MISSING_SUPABASE_CONFIG=false playwright test",
     "test:e2e:ci": "npx playwright test --project=chromium",
     "test:e2e:install": "playwright install chromium",
     "test:assets": "node tests/smoke/assets-check.mjs",
@@ -105,7 +106,9 @@
     "check:new-code-coverage": "node scripts/ci/check-new-code-coverage.mjs",
     "verify:cloudflare-pages-contract": "node scripts/ci/verify-cloudflare-pages-contract.mjs",
     "i18n:check": "node apps/omnihub-site/scripts/i18n-check.mjs && node apps/omnihub-site/scripts/i18n-hardcoded-ui-check.mjs",
-    "release:validation-matrix": "node scripts/ci/verify-release-validation-matrix.mjs"
+    "release:validation-matrix": "node scripts/ci/verify-release-validation-matrix.mjs",
+    "test:e2e:production-safe": "APEX_RUN_PRODUCTION_SAFE=true playwright test -c playwright.production-safe.config.ts",
+    "perf:k6:smoke": "node scripts/ci/perf-k6-smoke.mjs"
   },
   "size-limit": [
     {

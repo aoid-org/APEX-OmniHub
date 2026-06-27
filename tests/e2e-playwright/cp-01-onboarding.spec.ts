@@ -7,6 +7,7 @@
  * Regression guard: verifies no mock/placeholder values render on first load.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { skipWithoutSupabaseConfig } from './helpers/auth';
 
 const FATAL = /createContext|Cannot read properties of undefined|ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/;
 const MOCK_SENTINEL = /placeholder|mock data|lorem ipsum|TODO/i;
@@ -52,7 +53,7 @@ test.describe('CP-01 — Onboarding', () => {
   });
 
   test('post-auth /omnidash load — top header visible, no mock text', async ({ page }) => {
-    test.skip(!process.env.VITE_SUPABASE_URL, 'APEX-1000: BLOCKED(APEX-8004): Requires VITE_SUPABASE_URL for authenticated flow');
+    skipWithoutSupabaseConfig();
     const errors = trackConsole(page);
 
     // Inject a valid session via localStorage to simulate post-sign-up state
