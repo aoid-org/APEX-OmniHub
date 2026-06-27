@@ -20,6 +20,7 @@
     "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
     "test:prompt-defense": "vitest run tests/prompt-defense",
     "test:e2e": "APEX_ALLOW_MISSING_SUPABASE_CONFIG=true playwright test",
+    "test:e2e:backend": "APEX_E2E_BACKEND_REQUIRED=true APEX_ALLOW_MISSING_SUPABASE_CONFIG=false playwright test",
     "test:e2e:ci": "npx playwright test --project=chromium",
     "test:e2e:install": "playwright install chromium",
     "test:assets": "node tests/smoke/assets-check.mjs",
