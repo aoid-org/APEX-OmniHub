@@ -12,9 +12,9 @@ import crypto from 'node:crypto';
 let testUserId: string;
 
 test.beforeAll(async () => {
-  // Render-smoke mode (default test:e2e): no backend — skip live admin seeding.
-  // test.skip() is not permitted inside beforeAll, so guard with an early return;
-  // each test additionally self-skips via skipWithoutSupabaseConfig() below.
+  // Render-smoke mode (default test:e2e): no backend — bypass live admin seeding.
+  // Playwright forbids skipping a test from inside beforeAll, so guard with an
+  // early return; each test self-skips via skipWithoutSupabaseConfig() below.
   if (!isBackendRequired()) return;
 
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;

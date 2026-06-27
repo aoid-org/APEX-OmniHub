@@ -97,10 +97,7 @@ export function skipWithoutSupabaseConfig(): void {
   // allowed — every spec runs at full R4 strictness (doctrine preserved).
   // Render-smoke mode (default): the backend is intentionally absent, so
   // backend-dependent specs skip rather than fail against an unreachable backend.
-  test.skip(
-    !isBackendRequired(),
-    'BLOCKED(APEX-1207): requires live Supabase session — runs under test:e2e:backend only'
-  );
+  test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session — runs under test:e2e:backend only');
 }
 
 export async function signInWithSupabaseSession(page: Page): Promise<void> {
