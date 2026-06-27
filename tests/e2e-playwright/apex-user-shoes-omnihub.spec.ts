@@ -228,12 +228,48 @@ test.describe('APEX User-Shoes — authenticated OmniDash (desktop)', () => {
     expect(fatalErrors(errors), errors.join('\n')).toHaveLength(0);
   });
 
-  // NO-GO finding, tracked: in the live authenticated state the Links module
-  // resolves to UNAVAILABLE and strips its local-only actions, so the operator
-  // sees a bare "UNAVAILABLE" badge with no Add Link / Send to OmniSlate form and
-  // no prerequisite copy (Settings, by contrast, explains its paid-tier gating).
-  // Same Links add-link gap the repo already tracks under APEX-2011.
-  test.skip('Links exposes the Add Link staging affordance', () => { /* NO-GO(APEX-2011): live Links resolves UNAVAILABLE and drops local add-link/send-to-omnislate actions, leaving no add-link form */ }); // APEX-2011
+  // APEX-2011 fix: when Links sync is unavailable the module must NOT dead-end on
+  // a bare "UNAVAILABLE" badge. It keeps an honest status, a working local Add
+  // Link affordance, and stages URLs into visible session-only state. Staging is
+  // local here (no backend write), so the default run stays read-only.
+  test('Links stays usable when sync is unavailable (local Add Link + staging)', async ({ page }) => {
+    const errors = trackConsole(page);
+    test.skip(!(await isDesktopLayout(page)), 'APEX-1001: Sidebar is desktop-only; mobile uses bottom nav.');
+
+    const dialog = await openModuleModal(
+      page,
+      'Links',
+      /URLs and reference sources collected for OmniSlate/i,
+    );
+
+    // Honest unavailable status — explains the state and the local fallback,
+    // never a bare dead-end badge.
+    const unavailableCopy = dialog.getByTestId('links-unavailable-copy');
+    await expect(unavailableCopy).toBeVisible();
+    await expect(unavailableCopy).toContainText(/unavailable/i);
+    await expect(unavailableCopy).toContainText(/local URL context/i);
+
+    // The Add Link affordance remains available even with sync down.
+    const input = dialog.getByTestId('links-add-url-input');
+    await expect(input).toBeVisible();
+    const probeUrl = `https://apex-e2e.example/context-${Date.now()}`;
+    await input.fill(probeUrl);
+    await dialog.getByTestId('links-add-url-button').click();
+
+    // The staged URL appears visibly, marked session-only.
+    const staged = dialog.getByTestId('links-local-staged-link').first();
+    await expect(staged).toBeVisible();
+    await expect(staged).toContainText('apex-e2e.example');
+
+    // Ownership invariant still holds, and nothing degraded into a generic failure.
+    await expect(dialog.getByText(/OmniBoard — App Integration/i)).toHaveCount(0);
+    await expect(dialog.getByText(/Connect App|Add Connection|Connect a Link/i)).toHaveCount(0);
+    await expect(dialog.getByText(GENERIC_FAILURE)).toHaveCount(0);
+
+    await attachScreenshot('links-local-staging.png', dialog);
+    await closeDialog(page);
+    expect(fatalErrors(errors), errors.join('\n')).toHaveLength(0);
+  });
 
   test('Settings exposes meaningful controls and gates paid-only ones honestly', async ({ page }) => {
     const errors = trackConsole(page);
