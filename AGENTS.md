@@ -1,3 +1,13 @@
+---
+
+version: 2.0.2
+last_audited: 2026-06-27
+status: active
+scope: APEX-OmniHub production repository
+owner: APEX Business Systems LTD
+canonical_dev_workflow: omnidev-apex-pro-v2
+-------------------------------------------
+
 # APEX-OmniHub Repository Instructions
 
 This repository belongs to **APEX Business Systems LTD** and supports **APEX-OmniHub**. Treat it as production-grade software.
@@ -14,11 +24,11 @@ APEX-OmniHub is under active production remediation for authenticated `/omnidash
 
 Current production certification status:
 
-```text
+```text id="r5iagi"
 NO-GO for full authenticated desktop OmniHub user-shoes certification until all active blockers are fixed, validated, and evidenced.
 ```
 
-Known active remediation domains include:
+Known active remediation domains:
 
 * OmniDash drag/drop reliability and collision-safe layout.
 * OmniBoard third-party integration gateway/session behavior.
@@ -73,7 +83,7 @@ Do not ship fake functionality, mock-only production behavior, misleading empty 
 
 ## 3. Sole Development Workflow
 
-Use **omnidev-apex-pro-native** as the canonical dev/debug workflow for APEX-OmniHub work.
+Use **omnidev-apex-pro-v2** as the canonical dev/debug workflow for APEX-OmniHub work.
 
 Legacy or adjacent workflows may be read as context only unless explicitly reconciled into the current canonical contract.
 
@@ -83,7 +93,7 @@ Active workflow priority:
 2. `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md`
 3. This `AGENTS.md`
 4. `CLAUDE.md`
-5. `omnidev-apex-pro-native`
+5. `omnidev-apex-pro-v2`
 6. Other legacy skills/docs as read-only references.
 
 If instructions conflict, do not guess. Follow the highest-priority current source and document the conflict.
@@ -94,19 +104,19 @@ If instructions conflict, do not guess. Follow the highest-priority current sour
 
 The live OmniHub app renders from:
 
-```text
+```text id="rtszp4"
 apps/omnihub-site/
 ```
 
 The live OmniDash production surface renders from:
 
-```text
+```text id="4ojcip"
 apps/omnihub-site/dashboard/
 ```
 
 Canonical live paths:
 
-```text
+```text id="0k0guk"
 apps/omnihub-site/dashboard/OmniDashShell.tsx
 apps/omnihub-site/dashboard/DraggableWidget.tsx
 apps/omnihub-site/dashboard/components/
@@ -120,13 +130,13 @@ tests/e2e-playwright/
 
 Do **not** target this path for OmniDash production remediation unless a current import trace proves it is live:
 
-```text
+```text id="d2dl94"
 src/components/dashboard/
 ```
 
 Known rule:
 
-```text
+```text id="8f7tm2"
 If a task targets OmniDash and proposes edits under src/components/dashboard/, STOP and re-resolve the live rendered path under apps/omnihub-site/dashboard/.
 ```
 
@@ -166,7 +176,7 @@ Do not make surface-level assumptions when repo context exists.
 
 Every factual claim about the repo must be backed by a verified path, line, command output, or explicitly marked:
 
-```text
+```text id="sot7m6"
 UNCERTAIN:[gap]
 ```
 
@@ -178,7 +188,7 @@ Before committing implementation changes that alter architecture, ownership, rou
 
 Check and update where present:
 
-```text
+```text id="u2h3gt"
 memory/omni-recall/production-path-registry.md
 memory/omni-recall/production-surface-remediation-baseline.md
 memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md
@@ -215,7 +225,7 @@ Examples:
 
 OmniBoard owns:
 
-```text
+```text id="4umitd"
 third_party_provider_connections
 connector_sessions
 connection_specs
@@ -226,7 +236,7 @@ gateway unavailable states
 
 OmniBoard does **not** own:
 
-```text
+```text id="hlz1ct"
 first-party APEX ecosystem apps
 MCP ecosystem app installation
 media upload
@@ -241,7 +251,7 @@ APEX Apps owns **first-party APEX ecosystem app connection over MCP**.
 
 APEX Apps owns:
 
-```text
+```text id="vcj92n"
 internal_apex_app_registry
 mcp_app_connection_flow
 apex_app_install_state
@@ -250,7 +260,7 @@ first_party_app_permissions
 
 APEX Apps does **not** own:
 
-```text
+```text id="ny14n2"
 third-party SaaS provider connection
 external connector sessions unless explicitly defined
 OmniMedia ingestion
@@ -259,14 +269,14 @@ Files upload
 
 Required routing:
 
-```text
+```text id="x2z551"
 Add APEX App -> apex-apps-mcp
 Connect Third-Party App -> OmniBoard
 ```
 
 Forbidden routing:
 
-```text
+```text id="l1o6bc"
 Add APEX App -> OmniBoard
 ```
 
@@ -274,7 +284,7 @@ Add APEX App -> OmniBoard
 
 Files owns:
 
-```text
+```text id="0kpxkf"
 file_upload
 file_management
 general storage
@@ -286,7 +296,7 @@ Files may feed OmniMedia when an uploaded file is playable media.
 
 OmniMedia owns:
 
-```text
+```text id="5xxu79"
 media_catalog
 media_gallery
 media_playback
@@ -300,7 +310,7 @@ OmniMedia must not rely on hardcoded demo-only media as the production source.
 
 Language owns:
 
-```text
+```text id="ae3ky0"
 locale_selection
 locale_persistence
 visible OmniDash language switching
@@ -350,7 +360,7 @@ If the gateway is unavailable, the UI must say so honestly.
 
 Classify failures accurately:
 
-```text
+```text id="nnvon2"
 BLOCKED-CONFIG — ORCHESTRATOR_URL missing
 BLOCKED-INFRA — ORCHESTRATOR_URL exists but service unreachable/non-2xx
 CODE BUG — edge route misroutes despite reachable orchestrator
@@ -367,13 +377,13 @@ OmniBoard must never:
 
 If an inline HMAC FSM fallback exists, it must be behind:
 
-```text
+```text id="z36sgg"
 OMNIBOARD_INLINE_FSM_FALLBACK
 ```
 
 and must use a dedicated secret:
 
-```text
+```text id="f506uo"
 OMNIBOARD_SESSION_SECRET
 ```
 
@@ -387,7 +397,7 @@ OmniMedia must use a real media pipeline.
 
 Production OmniMedia must not depend on:
 
-```text
+```text id="rc771i"
 DEMO_CLIPS
 Big Buck Bunny
 Elephants Dream
@@ -397,7 +407,7 @@ YouTube-only playback
 
 Required production model:
 
-```text
+```text id="azrb74"
 Files upload UX
   -> classify MIME type
   -> general file goes to omnihub-files
@@ -429,7 +439,7 @@ Desktop widget drag must be deterministic and intuitive.
 
 Required behavior:
 
-```text
+```text id="jpt9gt"
 pointerdown
 setPointerCapture(pointerId)
 pointermove updates candidate position in same gesture
@@ -450,7 +460,7 @@ Forbidden desktop behavior:
 
 Layout must be stored by:
 
-```text
+```text id="cpajwa"
 widgetId
 breakpoint
 layoutVersion
@@ -458,7 +468,7 @@ layoutVersion
 
 Use versioned storage such as:
 
-```text
+```text id="7wjcpu"
 omnidash_layout_v2:{userId}:{breakpoint}
 ```
 
@@ -635,7 +645,7 @@ Do not patch symptoms without understanding cause.
 
 Attempt ceiling:
 
-```text
+```text id="bdublm"
 3 focused attempts, then stop and report UNCERTAIN:[gap].
 ```
 
@@ -682,7 +692,7 @@ Tests must prove behavior, not visibility.
 
 Weak assertions are not enough:
 
-```text
+```text id="mqqr01"
 button visible
 modal visible
 iframe visible
@@ -718,7 +728,7 @@ No narrative-only completion is accepted.
 
 Every claimed fix must include:
 
-```text
+```text id="2pm0xx"
 Resolution proof
 Engine proof
 Completion proof
@@ -755,7 +765,7 @@ Use feature flags for risky changes where appropriate.
 
 Known remediation flags may include:
 
-```text
+```text id="nesd0t"
 VITE_OMNIDASH_POINTER_DRAG_V2
 VITE_OMNIDASH_SURFACE_OWNERSHIP_V2
 VITE_OMNIMEDIA_CATALOG_V1
@@ -795,7 +805,7 @@ When finishing a task, respond with:
 
 For production remediation, use:
 
-```text
+```text id="4tsd68"
 VERIFIED:
 HEALTH:
 TESTS:
@@ -814,61 +824,61 @@ Use only evidence-backed certification language.
 
 If every gate passes:
 
-```text
+```text id="baeb1w"
 GO for authenticated desktop OmniHub user-shoes validation.
 ```
 
 If only Links/APEX-2011 passes:
 
-```text
+```text id="p6h579"
 GO for APEX-2011 Links fallback only. Full OmniHub certification remains blocked.
 ```
 
 If wrong-tree edits are detected:
 
-```text
+```text id="hm1ijx"
 NO-GO. This PR edited non-rendered OmniDash paths and did not remediate the live production dashboard tree.
 ```
 
 If repo docs are stale:
 
-```text
+```text id="usprt5"
 NO-GO. Repo documentation and canonical truth still point agents toward stale or contradictory implementation paths.
 ```
 
 If OmniMedia lacks first-party playback:
 
-```text
+```text id="rzpwcc"
 NO-GO. OmniMedia does not have a certifiable first-party upload-fed playback pipeline.
 ```
 
 If OmniBoard only shows unavailable:
 
-```text
+```text id="ehte3h"
 NO-GO for production OmniBoard functionality. Honest unavailable gating is acceptable UX, but not full functional certification.
 ```
 
 If APEX Apps still opens OmniBoard:
 
-```text
+```text id="h91kql"
 NO-GO. Canonical surface routing is still broken.
 ```
 
 If Integrated Apps still runs a parallel picker:
 
-```text
+```text id="5tj3b0"
 NO-GO. Integrated Apps still violates canonical ownership and duplicates connection routing.
 ```
 
 If language switcher is missing:
 
-```text
+```text id="7xa1g0"
 NO-GO for complete OmniDash UX surface certification.
 ```
 
 If responsive coverage fails:
 
-```text
+```text id="2tgvsg"
 NO-GO. One or more changed OmniDash surfaces fail required mobile/desktop viewport validation.
 ```
 
@@ -909,5 +919,3 @@ No unverified claim is a fact.
 No visible component passes unless its data path works.
 
 No production certification is earned without evidence.
-
-
