@@ -2,13 +2,13 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// APEX-1506: Opt-in gate — this suite is live production evidence collection only.
-// Default CI Playwright discovery will skip this file unless APEX_RUN_PRODUCTION_SAFE=true.
-// Run explicitly via: npm run test:e2e:production-safe
-test.skip(
-  process.env.APEX_RUN_PRODUCTION_SAFE !== 'true',
-  'Production-safe live validation is opt-in. Run with npm run test:e2e:production-safe.'
-);
+// Fail-closed guard: this file is not a .spec.ts so default Playwright CI discovery
+// will not pick it up. If someone runs it directly without the env var, throw immediately.
+if (process.env.APEX_RUN_PRODUCTION_SAFE !== 'true') {
+  throw new Error(
+    'Production-safe live validation is opt-in. Run with npm run test:e2e:production-safe.'
+  );
+}
 
 const evidenceRoot = path.resolve('artifacts/production-validation');
 const routes = [
@@ -19,10 +19,11 @@ const routes = [
   { path: '/omnidash', expectation: 'auth-gated' },
 ] as const;
 
-const redact = (value: string) => value
-  .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[redacted-email]')
-  .replace(/(access_token|refresh_token|id_token|code|token|key|password|secret)=([^&\s]+)/gi, '$1=[redacted]')
-  .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [redacted]');
+const redact = (value: string) =>
+  value
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[redacted-email]')
+    .replace(/(access_token|refresh_token|id_token|code|token|key|password|secret)=([^&\s]+)/gi, '$1=[redacted]')
+    .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [redacted]');
 
 const safeUrl = (value: string) => {
   try {
@@ -103,8 +104,8 @@ test.describe('production-safe live browser evidence', () => {
       const slug = route.path === '/' ? 'root' : route.path.replace(/^\//, '').replace(/[^a-z0-9-]/gi, '-');
       const screenshot = path.join(evidenceRoot, 'screenshots', `${testInfo.project.name}-${slug}.png`);
 
-      // APEX-1506: Bounded viewport capture — fullPage: true caused CI hangs on /request-access and /demo.
-      // Screenshot failures are recorded in evidence JSON but do not fail the route.
+      // Bounded viewport capture — fullPage: true caused CI hangs on /request-access and /demo.
+      // Screenshot failures are recorded in screenshotError but do not fail the route.
       let screenshotError: string | null = null;
       try {
         await page.screenshot({
@@ -151,6 +152,7 @@ test.describe('production-safe live browser evidence', () => {
       };
 
       fs.writeFileSync(path.join(evidenceRoot, 'browser', `${testInfo.project.name}-${slug}.json`), `${JSON.stringify(summary, null, 2)}\n`);
+      // Only fail when route classification is FAILED. Screenshot errors are recorded above.
       expect(classification, JSON.stringify(summary, null, 2)).not.toBe('FAILED');
     });
   }

@@ -4,7 +4,7 @@ const baseURL = process.env.APEX_PROD_URL || 'https://apexomnihub.icu';
 
 export default defineConfig({
   testDir: './tests/e2e-playwright',
-  testMatch: 'production-safe.spec.ts',
+  testMatch: 'production-safe.live.ts',
   fullyParallel: false,
   retries: 0,
   timeout: 90_000,
