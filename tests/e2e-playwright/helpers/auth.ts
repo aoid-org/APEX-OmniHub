@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { createClient, type Session } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -77,8 +77,30 @@ async function createRealSupabaseSession(config: SupabaseBrowserConfig): Promise
   return response.data.session;
 }
 
+/**
+ * True when the suite is running in backend-required mode
+ * (`npm run test:e2e:backend`, APEX_E2E_BACKEND_REQUIRED=true). In that mode
+ * global-setup guarantees a live Supabase backend + provisioned user and the
+ * full Test Integrity Doctrine R4 is enforced. When false, the suite is in
+ * render-smoke mode (default `npm run test:e2e`) against a local preview build
+ * with no backend.
+ */
+export function isBackendRequired(): boolean {
+  return (
+    process.env.APEX_E2E_BACKEND_REQUIRED === 'true' ||
+    process.env.REQUIRE_SUPABASE_E2E === 'true'
+  );
+}
+
 export function skipWithoutSupabaseConfig(): void {
-  // Setup guarantees backend; no skips allowed.
+  // Backend-required mode: global-setup guarantees the backend, so no skips are
+  // allowed — every spec runs at full R4 strictness (doctrine preserved).
+  // Render-smoke mode (default): the backend is intentionally absent, so
+  // backend-dependent specs skip rather than fail against an unreachable backend.
+  test.skip(
+    !isBackendRequired(),
+    'BLOCKED(APEX-1207): requires live Supabase session — runs under test:e2e:backend only'
+  );
 }
 
 export async function signInWithSupabaseSession(page: Page): Promise<void> {
