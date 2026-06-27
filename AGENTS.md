@@ -1,13 +1,3 @@
----
-
-version: 2.0.0
-last_audited: 2026-06-27
-status: active
-scope: APEX-OmniHub production repository
-owner: APEX Business Systems LTD
-canonical_dev_workflow: omnidev-apex-pro-native
------------------------------------------------
-
 # APEX-OmniHub Repository Instructions
 
 This repository belongs to **APEX Business Systems LTD** and supports **APEX-OmniHub**. Treat it as production-grade software.
