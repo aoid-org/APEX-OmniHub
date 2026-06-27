@@ -13,7 +13,7 @@
  *  - confirms the OmniMedia launcher opens the player and its controls respond.
  *
  * DOCTRINE (.understand-anything/E2E_CANONICAL_BEHAVIOR.md):
- *  - `test.fail()` is banned; skips carry an APEX blocker on the SAME line.
+ *  - Forced-fail test APIs are banned; skips carry an APEX blocker on the SAME line.
  *  - Modals are asserted via `assertModalIdentityAndIsolation`.
  *  - Navigation waits on `domcontentloaded` + explicit visual assertions, never
  *    `networkidle` (Supabase long-polling never lets the network idle in CI).
