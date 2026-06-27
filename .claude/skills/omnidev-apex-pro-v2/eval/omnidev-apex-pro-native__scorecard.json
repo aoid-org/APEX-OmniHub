@@ -1,0 +1,106 @@
+{
+  "skill": "omnidev-apex-pro-native",
+  "version": "2.0.0",
+  "forged_against": "apex-skill-forge v9",
+  "date": "2026-06-27",
+  "status": "publish_ready",
+  "note": "Rubric certifies structure and evidence presence, not market outcomes. Trigger accuracy is provided as a validated set for reproduction; it was not run live via forge.py triggers in this environment.",
+
+  "budgets": {
+    "description_chars": 377,
+    "description_cap": 500,
+    "skill_md_lines": 141,
+    "skill_md_line_cap": 200,
+    "skill_md_est_tokens": 2050,
+    "skill_md_token_cap": 2500,
+    "banned_lexicon_hits": 0,
+    "unverified_numeric_claims": 0,
+    "verdict": "all budgets within limit"
+  },
+
+  "rubric_20": {
+    "scale": "20 binary checks x 5 points = 100",
+    "checks": {
+      "01_frontmatter_complete": 5,
+      "02_description_within_cap": 5,
+      "03_description_what_usewhen_excludes": 5,
+      "04_skill_md_within_line_cap": 5,
+      "05_imperative_voice_reasons_stated": 5,
+      "06_decision_tree_at_branch_points": 5,
+      "07_no_banned_hype_lexicon": 5,
+      "08_no_unverified_numeric_or_multiplier_claims": 5,
+      "09_vendor_calls_isolated_one_section": 5,
+      "10_no_exec_fallback_referenced": 5,
+      "11_references_on_demand_with_toc": 5,
+      "12_contract_block_present": 5,
+      "13_never_invent_rule_present": 5,
+      "14_security_hard_stops_present": 5,
+      "15_verification_gate_evidence_first": 5,
+      "16_repo_alignment_live_state_discipline": 5,
+      "17_orchestration_skills_subagents_swarm": 5,
+      "18_decision_discipline_anti_drift_table": 5,
+      "19_responsive_all_viewport_mandate": 5,
+      "20_trigger_eval_set_balanced": 5
+    },
+    "score": 100,
+    "max": 100
+  },
+
+  "alignment": {
+    "platform": "APEX-OmniHub",
+    "alignment_basis": "Verified against the live apps/omnihub-site tree and memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md on 2026-06-27",
+    "canon_statements_encoded": ["Statement 2 (src is a shim)", "Statement 18 (sidebar contract)", "Statement 27 (two-surface ownership)"],
+    "tree_law_enforced": true,
+    "surface_ownership_source_of_truth": "omniSurfaceOwnership.ts"
+  },
+
+  "portability": {
+    "format": "Agent Skills (folder + SKILL.md)",
+    "runtimes": ["Claude Code", "Codex", "Cursor", "no-exec"],
+    "vendor_section": "runtime_adapter (single isolated section)",
+    "no_exec_protocol": "references/universal-protocol.md"
+  },
+
+  "orchestration": {
+    "skill_composition": true,
+    "subagent_delegation_gated": true,
+    "swarm_fan_out_blast_radius_isolated": true,
+    "anti_drift_coordinator_gate": true
+  },
+
+  "trigger_eval": {
+    "should_trigger": [
+      "fix the omniboard modal, it has two close buttons",
+      "add APEX App is opening omniboard instead of the mcp modal",
+      "wire files upload to feed the omnimedia gallery",
+      "the omnidash widgets land off-canvas when I drag them on desktop",
+      "audit /omnidash before we certify it for users",
+      "refactor OmniSpatialHost backdrop to close on outside click",
+      "omnilink-port edge function returns gateway unavailable, debug it",
+      "make the omnimedia gallery responsive on mobile",
+      "split Integrated Apps into third-party and connected APEX app sections"
+    ],
+    "should_not_trigger": [
+      "create a new skill for our omnihub skill marketplace",
+      "write the investor pitch deck for APEX-OmniHub Series A",
+      "draft the GTM launch copy for OmniHub",
+      "run a penetration test on the omnilink-port endpoint",
+      "design the brand visual identity for OmniMedia",
+      "build a marketing landing page for omnihub.icu",
+      "explain how MCP works in general terms",
+      "fix a bug in my unrelated personal python script"
+    ],
+    "should_trigger_count": 9,
+    "should_not_trigger_count": 8,
+    "negatives_are_near_misses": true,
+    "live_measurement": "not_run_in_this_environment; set provided for reproduction via forge.py triggers"
+  },
+
+  "references_to_forge_next": [
+    "platform-map.md",
+    "orchestration.md",
+    "debug.md",
+    "decision-discipline.md",
+    "universal-protocol.md"
+  ]
+}
