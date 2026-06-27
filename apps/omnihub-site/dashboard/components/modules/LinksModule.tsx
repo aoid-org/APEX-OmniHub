@@ -27,6 +27,11 @@ function isValidHttpUrl(value: string): boolean {
   return parsed.protocol === 'http:' || parsed.protocol === 'https:';
 }
 
+interface LocalStagedLink {
+  readonly id: string;
+  readonly url: string;
+}
+
 export default function LinksModule({ onClose }: Props) {
   const state = useOmniModuleState('links');
   const chips = state.items.slice(0, 6);
@@ -36,10 +41,18 @@ export default function LinksModule({ onClose }: Props) {
   const [omniSlateBlocked, setOmniSlateBlocked] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localLinks, setLocalLinks] = useState<readonly LocalStagedLink[]>([]);
 
   const trimmedUrl = url.trim();
   const urlIsValid = isValidHttpUrl(trimmedUrl);
   const showValidationError = touched && trimmedUrl.length > 0 && !urlIsValid;
+
+  // When the Links sync backend is unreachable for this account the module
+  // resolves to 'unavailable' (no live actions). Links staging is local-only by
+  // design, so it must NOT go dark: we keep the Add Link input available and
+  // stage URLs into visible session state instead of presenting a dead end.
+  const syncUnavailable = state.stateKind === 'unavailable';
+  const showStaging = isStaging || syncUnavailable;
 
   // Links collect URL/context — they are NOT app integrations and must never
   // reach OmniBoard or trigger-workflow. add-link/send-to-omnislate are handled
@@ -58,18 +71,35 @@ export default function LinksModule({ onClose }: Props) {
     return false;
   };
 
+  /** Stage a URL into visible, session-only local state — never a fake persist. */
+  const stageLocally = () => {
+    setLocalLinks((prev) =>
+      [{ id: `local-${Date.now()}`, url: trimmedUrl }, ...prev].slice(0, 12),
+    );
+    setUrl('');
+    setTouched(false);
+    setSubmitError(null);
+  };
+
   const handleStageLink = async () => {
     if (!urlIsValid || isSubmitting) {
       setTouched(true);
       return;
     }
-    
+
+    // Sync unavailable → honest local session staging. No backend call is made,
+    // so there is no 500/Failed-to-fetch and no fake "saved" success.
+    if (syncUnavailable) {
+      stageLocally();
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
-    
+
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
-    
+
     if (!userId) {
       setSubmitError('Authentication required to save links.');
       setIsSubmitting(false);
@@ -99,18 +129,30 @@ export default function LinksModule({ onClose }: Props) {
 
   return (
     <ModuleShell state={state} onClose={onClose} onAction={handleAction}>
+      {syncUnavailable && (
+        <div
+          data-testid="links-unavailable-copy"
+          className="flex flex-col gap-1 rounded-lg border border-amber-400/30 px-3 py-2 bg-amber-400/5 text-[11px] text-amber-300/90"
+        >
+          <span className="font-semibold text-amber-300">Link sync is unavailable for this account.</span>
+          <span>You can still stage local URL context for this session.</span>
+          <span className="text-amber-300/70">Connect storage or enable Links sync to persist links across sessions.</span>
+        </div>
+      )}
+
       {omniSlateBlocked && (
         <div className="rounded-lg border border-red-400/30 px-3 py-2 bg-red-400/5 text-[11px] text-red-400">
           OmniSlate context handoff is not connected yet.
         </div>
       )}
 
-      {isStaging ? (
+      {showStaging && (
         <div className="flex flex-col gap-3 rounded-lg border border-border/30 px-3 py-3 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
             Stage URL Context
           </div>
           <input
+            data-testid="links-add-url-input"
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -139,17 +181,20 @@ export default function LinksModule({ onClose }: Props) {
           )}
 
           <div className="flex justify-end gap-2 mt-2">
+            {isStaging && !syncUnavailable && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStaging(false);
+                  setOmniSlateBlocked(false);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            )}
             <button
-              type="button"
-              onClick={() => {
-                setIsStaging(false);
-                setOmniSlateBlocked(false);
-              }}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              Cancel
-            </button>
-            <button
+              data-testid="links-add-url-button"
               type="button"
               onClick={handleStageLink}
               disabled={!urlIsValid || isSubmitting}
@@ -160,33 +205,54 @@ export default function LinksModule({ onClose }: Props) {
                   : 'bg-primary/50 cursor-not-allowed',
               ].join(' ')}
             >
-              {isSubmitting ? 'Saving...' : 'Add Link'}
+              {isSubmitting ? 'Saving...' : (syncUnavailable ? 'Stage Locally' : 'Add Link')}
             </button>
           </div>
         </div>
-      ) : (
-        !state.loading && chips.length > 0 && (
-          <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
-              Context Links
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {chips.map((item) => {
-                const colors = STATUS_COLOR[item.status] ?? STATUS_COLOR.inactive;
-                return (
-                  <div
-                    key={item.id}
-                    title={item.label}
-                    className="px-2 py-1 rounded text-[10px] font-medium max-w-[120px] truncate"
-                    style={{ background: colors.bg, color: colors.text }}
-                  >
-                    {item.label}
-                  </div>
-                );
-              })}
-            </div>
+      )}
+
+      {localLinks.length > 0 && (
+        <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+            Local Context · session only
           </div>
-        )
+          <div className="flex flex-wrap gap-1">
+            {localLinks.map((link) => (
+              <div
+                key={link.id}
+                data-testid="links-local-staged-link"
+                title={link.url}
+                className="px-2 py-1 rounded text-[10px] font-medium max-w-[160px] truncate"
+                style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}
+              >
+                {link.url}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!showStaging && !state.loading && chips.length > 0 && (
+        <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+            Context Links
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {chips.map((item) => {
+              const colors = STATUS_COLOR[item.status] ?? STATUS_COLOR.inactive;
+              return (
+                <div
+                  key={item.id}
+                  title={item.label}
+                  className="px-2 py-1 rounded text-[10px] font-medium max-w-[120px] truncate"
+                  style={{ background: colors.bg, color: colors.text }}
+                >
+                  {item.label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </ModuleShell>
   );
