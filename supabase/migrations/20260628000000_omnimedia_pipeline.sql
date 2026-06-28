@@ -6,6 +6,7 @@
 -- ── Table: public.omnimedia_assets ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.omnimedia_assets (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE deletes a user's OWN media rows when that user is deleted (owner cleanup; no cross-user data loss, owner_user_id is NOT NULL so SET NULL is impossible)
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title         text NOT NULL,
   kind          text NOT NULL CHECK (kind IN ('video', 'audio')),
