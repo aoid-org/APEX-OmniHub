@@ -16,11 +16,17 @@ interface OmniMediaState {
   isPlaying: boolean;
   isDocked: boolean;
   volume: number;
+  /** Bumped whenever the backend catalog changes; galleries refetch on change instead of polling. */
+  catalogVersion: number;
+  mediaError: string | null;
   loadMedia: (item: OmniMediaItem, autoPlay?: boolean) => Promise<void>;
   togglePlay: () => void;
   setDocked: (docked: boolean) => void;
   setVolume: (volume: number) => void;
   close: () => void;
+  bumpCatalog: () => void;
+  clearMediaError: () => void;
+  setMediaError: (message: string) => void;
 }
 
 export const useOmniMedia = create<OmniMediaState>((set) => ({
@@ -28,9 +34,11 @@ export const useOmniMedia = create<OmniMediaState>((set) => ({
   isPlaying: false,
   isDocked: true,
   volume: 0.8,
+  catalogVersion: 0,
+  mediaError: null,
 
   loadMedia: async (item, autoPlay = false) => {
-    set({ currentMedia: item, isPlaying: autoPlay });
+    set({ currentMedia: item, isPlaying: autoPlay, mediaError: null });
   },
 
   togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
@@ -40,4 +48,10 @@ export const useOmniMedia = create<OmniMediaState>((set) => ({
   setVolume: (volume) => set({ volume }),
 
   close: () => set({ currentMedia: null, isPlaying: false }),
+
+  bumpCatalog: () => set((s) => ({ catalogVersion: s.catalogVersion + 1 })),
+
+  clearMediaError: () => set({ mediaError: null }),
+
+  setMediaError: (message) => set({ mediaError: message }),
 }));

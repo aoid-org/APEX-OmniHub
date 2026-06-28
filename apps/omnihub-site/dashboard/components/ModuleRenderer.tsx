@@ -34,6 +34,7 @@ const MODULE_COMPONENTS: Readonly<Record<string, React.LazyExoticComponent<React
   'omniboard-wizard': lazy(() => import('./modules/OmniBoardModule')),
   // First-party APEX ecosystem MCP connect — separate from OmniBoard (third-party).
   'apex-apps-mcp': lazy(() => import('./modules/ApexAppsMcpModule')),
+  omnimedia: lazy(() => import('./modules/OmniMediaModule')),
 };
 
 // ── Loading fallback ────────────────────────────────────────────
