@@ -97,7 +97,7 @@ test.describe('OmniBoard — APEX Truth Test', () => {
       const hasConnect = await connectEntry.isVisible({ timeout: 8_000 }).catch(() => false);
       const hasGate = await gated.isVisible({ timeout: 4_000 }).catch(() => false);
       if (!hasConnect && !hasGate) {
-        test.skip(!isBackendRequired(), 'OmniBoard connect surface unavailable without a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: OmniBoard connect surface unavailable without a live backend');
       }
       expect(hasConnect || hasGate || isBackendRequired()).toBe(true);
     });
@@ -116,7 +116,7 @@ test.describe('OmniBoard — APEX Truth Test', () => {
     await test.step('4. mutation calls expected API when a mutation exists', async () => {
       const connectEntry = page.getByRole('button', { name: /connect|add app|new connection/i }).first();
       if (!(await connectEntry.isVisible({ timeout: 4_000 }).catch(() => false))) {
-        test.skip(!isBackendRequired(), 'No connect mutation surface without a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: No connect mutation surface without a live backend');
         return;
       }
       const calls: string[] = [];
@@ -139,7 +139,7 @@ test.describe('OmniBoard — APEX Truth Test', () => {
 
     await test.step('6. metrics map to real API fields', async () => {
       if (responses.length === 0) {
-        test.skip(!isBackendRequired(), 'No backend API traffic captured in render-smoke mode');
+        test.skip(!isBackendRequired(), 'APEX-1511: No backend API traffic captured in render-smoke mode');
       }
       const reads = responses.filter((r) => r.status >= 200 && r.status < 300);
       expect(reads.length, 'OmniBoard data must come from real successful API reads').toBeGreaterThan(0);
@@ -150,7 +150,7 @@ test.describe('OmniBoard — APEX Truth Test', () => {
       // honest error, not a crash. Guard when the wizard is unavailable.
       const connectEntry = page.getByRole('button', { name: /connect|add app|new connection/i }).first();
       if (!(await connectEntry.isVisible({ timeout: 4_000 }).catch(() => false))) {
-        test.skip(!isBackendRequired(), 'Connect wizard unavailable without a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: Connect wizard unavailable without a live backend');
         return;
       }
       await connectEntry.click().catch(() => {});

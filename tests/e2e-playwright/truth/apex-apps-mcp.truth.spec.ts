@@ -55,7 +55,7 @@ test.describe('APEX Apps MCP — APEX Truth Test', () => {
     await test.step('1. loads with clear purpose (opens via Add APEX App, is the MCP surface)', async () => {
       const opened = await openMcp(page);
       if (!opened) {
-        test.skip(!isBackendRequired(), 'APEX Apps MCP unavailable without a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: APEX Apps MCP unavailable without a live backend');
       }
       const dialog = page.getByTestId('omni-dialog').or(page.getByRole('dialog')).first();
       await expect(dialog).toBeVisible({ timeout: 5_000 });
@@ -91,7 +91,7 @@ test.describe('APEX Apps MCP — APEX Truth Test', () => {
     await test.step('4. mutation calls expected API when a mutation exists (connect)', async () => {
       const connect = page.getByTestId('apex-apps-connect-button').first();
       if (!(await connect.isVisible({ timeout: 4_000 }).catch(() => false))) {
-        test.skip(!isBackendRequired(), 'No resolved app to connect without a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: No resolved app to connect without a live backend');
         return;
       }
       const calls: string[] = [];
@@ -115,7 +115,7 @@ test.describe('APEX Apps MCP — APEX Truth Test', () => {
     await test.step('6. metrics map to real API fields (resolved app shows real metadata)', async () => {
       const reopened = await openMcp(page);
       if (!reopened) {
-        test.skip(!isBackendRequired(), 'MCP unavailable to re-check metadata without backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: MCP unavailable to re-check metadata without backend');
         return;
       }
       const input = page.getByTestId('apex-apps-prompt-input').first();
@@ -135,7 +135,7 @@ test.describe('APEX Apps MCP — APEX Truth Test', () => {
     await test.step('7. invalid input shows useful error (honest not-found)', async () => {
       const input = page.getByTestId('apex-apps-prompt-input').first();
       if (!(await input.isVisible({ timeout: 4_000 }).catch(() => false))) {
-        test.skip(!isBackendRequired(), 'MCP input unavailable without backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: MCP input unavailable without backend');
         return;
       }
       await input.fill('zzz-nonexistent-app-querystring-xyz');
@@ -151,7 +151,7 @@ test.describe('APEX Apps MCP — APEX Truth Test', () => {
     await test.step('8. unauthorized user blocked', async () => {
       const ctx = await page.context().browser()?.newContext();
       if (!ctx) {
-        test.skip(true, 'No browser available for an isolated anonymous context');
+        test.skip(true, 'APEX-1511: No browser available for an isolated anonymous context');
         return;
       }
       const anon = await ctx.newPage();

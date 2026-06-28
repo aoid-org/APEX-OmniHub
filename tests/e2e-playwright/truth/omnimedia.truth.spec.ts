@@ -131,7 +131,7 @@ test.describe('OmniMedia — APEX Truth Test', () => {
 
     await test.step('4. mutation calls expected API (retry re-invokes catalog)', async () => {
       if (state !== 'error') {
-        test.skip(!isBackendRequired(), 'Retry mutation only assertable from an error state with a live backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: Retry mutation only assertable from an error state with a live backend');
         return;
       }
       const calls: string[] = [];
@@ -183,7 +183,7 @@ test.describe('OmniMedia — APEX Truth Test', () => {
     await test.step('8. unauthorized user blocked', async () => {
       const ctx = await page.context().browser()?.newContext();
       if (!ctx) {
-        test.skip(true, 'No browser available for an isolated anonymous context');
+        test.skip(true, 'APEX-1511: No browser available for an isolated anonymous context');
         return;
       }
       const anon = await ctx.newPage();

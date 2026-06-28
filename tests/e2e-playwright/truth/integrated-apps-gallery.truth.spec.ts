@@ -95,7 +95,7 @@ test.describe('Integrated Apps Gallery — APEX Truth Test', () => {
       // Here we assert it is not exposed without a session via a fresh context.
       const ctx = await page.context().browser()?.newContext();
       if (!ctx) {
-        test.skip(true, 'No browser available for an isolated anonymous context');
+        test.skip(true, 'APEX-1511: No browser available for an isolated anonymous context');
         return;
       }
       const anon = await ctx.newPage();

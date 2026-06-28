@@ -113,7 +113,7 @@ test.describe('OmniDash — APEX Truth Test', () => {
       const mcp = page.getByTestId('apex-apps-mcp').first();
       const opened = await mcp.isVisible({ timeout: 8_000 }).catch(() => false);
       if (!opened) {
-        test.skip(!isBackendRequired(), 'APEX Apps MCP mutation surface unavailable without backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: APEX Apps MCP mutation surface unavailable without backend');
       }
       // Close to leave a clean state for later steps.
       await page.keyboard.press('Escape').catch(() => {});
@@ -130,7 +130,7 @@ test.describe('OmniDash — APEX Truth Test', () => {
       // Ops widgets render only when backed by real responses; assert the
       // dashboard issued real API reads rather than fabricating metrics.
       if (responses.length === 0) {
-        test.skip(!isBackendRequired(), 'No backend API traffic captured in render-smoke mode');
+        test.skip(!isBackendRequired(), 'APEX-1511: No backend API traffic captured in render-smoke mode');
       }
       const reads = responses.filter((r) => r.status >= 200 && r.status < 300);
       expect(reads.length, 'OmniDash metrics must be sourced from real successful API reads').toBeGreaterThan(0);
@@ -140,13 +140,13 @@ test.describe('OmniDash — APEX Truth Test', () => {
       const addApp = page.getByRole('button', { name: /add apex app/i }).first();
       const visible = await addApp.isVisible({ timeout: 5_000 }).catch(() => false);
       if (!visible) {
-        test.skip(!isBackendRequired(), 'MCP input surface unavailable without backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: MCP input surface unavailable without backend');
         return;
       }
       await addApp.click().catch(() => {});
       const input = page.getByTestId('apex-apps-prompt-input').first();
       if (!(await input.isVisible({ timeout: 8_000 }).catch(() => false))) {
-        test.skip(!isBackendRequired(), 'MCP prompt input unavailable without backend');
+        test.skip(!isBackendRequired(), 'APEX-1511: MCP prompt input unavailable without backend');
         return;
       }
       await input.fill('zzz-nonexistent-app-querystring-xyz');
