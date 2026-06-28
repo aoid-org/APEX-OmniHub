@@ -194,11 +194,33 @@ jobs:
             echo "No architecture-impacting paths changed. Skipping RFC requirement."
           fi
 
+  ose-token-contract:
+    name: OmniSkin Engine token contract (OSE Guard)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run OSE Guard
+        run: npm run check:omni-skin
+
   governance-gate:
     name: Governance gate (required for branch protection)
     runs-on: ubuntu-22.04
     permissions: {}
-    needs: [apex-policy, secret-scan, dependency-audit, rfc-architecture-marker]
+    needs: [apex-policy, secret-scan, dependency-audit, rfc-architecture-marker, ose-token-contract]
     if: always()
     steps:
       - name: Aggregate result
@@ -206,12 +228,14 @@ jobs:
           if [ "${{ needs.apex-policy.result }}" != "success" ] || \
              [ "${{ needs.secret-scan.result }}" != "success" ] || \
              [ "${{ needs.dependency-audit.result }}" != "success" ] || \
-             [ "${{ needs.rfc-architecture-marker.result }}" != "success" ]; then
+             [ "${{ needs.rfc-architecture-marker.result }}" != "success" ] || \
+             [ "${{ needs.ose-token-contract.result }}" != "success" ]; then
             echo "::error::APEX governance gate FAILED."
             echo "apex-policy: ${{ needs.apex-policy.result }}"
             echo "secret-scan: ${{ needs.secret-scan.result }}"
             echo "dependency-audit: ${{ needs.dependency-audit.result }}"
             echo "rfc-architecture-marker: ${{ needs.rfc-architecture-marker.result }}"
+            echo "ose-token-contract: ${{ needs.ose-token-contract.result }}"
             exit 1
           fi
           echo "APEX governance gate passed."

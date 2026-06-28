@@ -3,6 +3,8 @@ import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
+import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
+import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { OmniSentryWidget } from "./components/OmniSentryWidget";
@@ -40,7 +42,7 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
-import { APEX_APPS_MODULE_KEY, OMNIBOARD_MODULE_KEY } from './contracts/omniSurfaceOwnership';
+import { APEX_APPS_MODULE_KEY } from './contracts/omniSurfaceOwnership';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
@@ -85,10 +87,10 @@ interface OmniDashSidebarProps {
 }
 
 interface OmniDashHeaderProps {
-  tick: number;
   isDark: boolean;
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
+  userInitials: string;
 }
 
 export type OmniHealthState = 'green' | 'yellow' | 'red';
@@ -100,9 +102,7 @@ export interface OmniContextApp {
   iconIdx?: number;
 }
 
-interface AgentWidgetProps {
-  tick: number;
-}
+type AgentWidgetProps = Record<string, never>;
 
 
 
@@ -121,14 +121,17 @@ function getHealthPalette(health: OmniHealthState): {
   bg: string;
   border: string;
   color: string;
+  channel: string;
 } {
+  // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+  // var() token is invalid CSS and silently drops the fill/border.
   if (health === "red") {
-    return { bg: `${T.red}22`, border: `${T.red}66`, color: T.red };
+    return { bg: "rgba(239,68,68,0.13)", border: "rgba(239,68,68,0.40)", color: T.red, channel: "239,68,68" };
   }
   if (health === "yellow") {
-    return { bg: `${T.warn}22`, border: `${T.warn}66`, color: T.warn };
+    return { bg: "rgba(234,179,8,0.13)", border: "rgba(234,179,8,0.40)", color: T.warn, channel: "234,179,8" };
   }
-  return { bg: `${T.green}22`, border: `${T.green}66`, color: T.green };
+  return { bg: "rgba(34,197,94,0.13)", border: "rgba(34,197,94,0.40)", color: T.green, channel: "34,197,94" };
 }
 
 function inferContextHealth(id: string, includeSecurity: boolean): OmniHealthState {
@@ -179,37 +182,9 @@ const IconBadge = ({ idx, size = 19, style = {} }: IconBadgeProps) => (
   </div>
 );
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const pulse = `@keyframes apexPulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:.5; transform:scale(.85); }
-}`;
-const shimmer = `@keyframes apexShimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}`;
-const fadeIn = `@keyframes apexFadeIn {
-  from { opacity:0; transform:translateY(6px); }
-  to   { opacity:1; transform:translateY(0); }
-}`;
-const navGlow = `@keyframes navGlow {
-  0%,100% { box-shadow: 0 0 18px ${T.orange}30, inset 0 0 12px ${T.orange}10; }
-  50%      { box-shadow: 0 0 28px ${T.orange}55, inset 0 0 20px ${T.orange}18; }
-}`;
-const ringRotate = `@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}`;
-const ringBreath = `@keyframes ringBreath {
-  0%,100% { opacity: 0.12; transform: scale(1);    }
-  50%      { opacity: 0.32; transform: scale(1.04); }
-}`;
-const ringBreath2 = `@keyframes ringBreath2 {
-  0%,100% { opacity: 0.08; transform: scale(1);    }
-  50%      { opacity: 0.22; transform: scale(1.06); }
-}`;
-const scanLine = `@keyframes scanLine {
-  0% { top: 0%; } 100% { top: 100%; }
-}`;
+// @keyframes (apexPulse, apexShimmer, apexFadeIn, navGlow, ringRotate,
+// ringBreath, ringBreath2, scanLine) live in ./omniSkin.css, imported once
+// in src/main.tsx — referenced here only by animation name.
 
 
 
@@ -294,7 +269,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
           : `linear-gradient(145deg, #1a2236, #0e1525)`,
         border: resolveBorder(isActive, hov),
         boxShadow: isActive
-          ? `0 0 10px ${T.orange}30, 0 2px 8px rgba(0,0,0,0.5)`
+          ? `0 0 10px rgba(249,115,22,0.19), 0 2px 8px rgba(0,0,0,0.5)`
           : `0 2px 6px rgba(0,0,0,0.4)`,
         transition:"all .18s ease",
       }}>
@@ -385,7 +360,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
             marginTop:12, width:"100%",
             display:"flex", alignItems:"center", justifyContent:"center", gap:7,
             padding:"7px 0", borderRadius:10,
-            background:"rgba(249,115,22,0.06)", border:`1px solid ${T.orange}26`,
+            background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.15)",
             color: signingOut ? T.t3 : "rgba(249,115,22,0.75)",
             fontSize:11.9, fontWeight:600, cursor: signingOut ? "not-allowed" : "pointer",
             letterSpacing:"0.04em", transition:"all .18s",
@@ -407,11 +382,10 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 };
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
-const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
+const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
-  const pulse = tick % 2 === 0;
 
   const handleOmniSkills = () => {
     invoke({
@@ -494,7 +468,9 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
   return (
     <div data-testid="omnidash-top-header" style={{
       height:58, flexShrink:0,
-      background:`${T.surface}f0`,
+      // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+      // var() token is invalid CSS. Theme-aware since this inline style overrides the cascade.
+      background: isDark ? "rgba(11,17,32,0.94)" : "rgba(255,255,255,0.94)",
       borderBottom:`1px solid ${T.border}`,
       backdropFilter:"blur(20px)",
       display:"flex", alignItems:"center",
@@ -547,7 +523,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         <div style={{ position:"relative" }}>
           <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
             display:"flex", alignItems:"center", gap:6,
-            background:T.card, border:`1px solid ${orgOpen ? T.orange+"66" : T.border}`,
+            background:T.card, border:`1px solid ${orgOpen ? "rgba(249,115,22,0.40)" : T.border}`,
             borderRadius:10, padding:"0 10px", height:34,
             color:T.t1, fontSize:12.4, cursor:"pointer", fontWeight:500,
             whiteSpace:"nowrap", maxWidth:170, overflow:"hidden",
@@ -594,16 +570,15 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         {/* Zero Trust */}
         <div style={{
           display:"flex", alignItems:"center", gap:6,
-          border:`1px solid ${T.green}44`,
-          background:`${T.green}12`,
+          border:"1px solid rgba(34,197,94,0.27)",
+          background:"rgba(34,197,94,0.07)",
           borderRadius:10, padding:"0 11px", height:34,
           color:T.green, fontSize:12.4, fontWeight:700,
           whiteSpace:"nowrap",
         }}>
           <div style={{
             width:6, height:6, borderRadius:"50%", background:T.green, flexShrink:0,
-            boxShadow:`0 0 ${pulse?8:4}px ${T.green}`,
-            transition:"box-shadow .5s",
+            animation:"apexPulse 2s ease-in-out infinite",
           }} />
           Zero Trust Active{demoMode ? ' (Simulated)' : ''}
         </div>
@@ -613,7 +588,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           background:`linear-gradient(135deg, ${T.orange} 0%, ${T.orangeDim} 100%)`,
           border:"none", borderRadius:10, padding:"0 13px", height:34,
           color:"#fff", fontSize:12.4, fontWeight:700,
-          cursor:"pointer", boxShadow:`0 4px 16px ${T.orange}44`,
+          cursor:"pointer", boxShadow:"0 4px 16px rgba(249,115,22,0.27)",
           whiteSpace:"nowrap",
           transition:"opacity .15s",
         }}>
@@ -624,7 +599,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
 
         {/* Theme Toggle — Sun/Moon */}
-        <button onClick={() => setIsDark(d => !d)} style={{
+        <button aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
@@ -646,7 +621,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         </button>
 
         {/* Bell */}
-        <button onClick={handleBell} style={{
+        <button aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`} onClick={handleBell} style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
@@ -668,22 +643,25 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           )}
         </button>
 
-        {/* Avatar */}
-        <div style={{
+        {/* Avatar — initials from authenticated user */}
+        <div
+          role="img"
+          aria-label="User avatar"
+          style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:`linear-gradient(135deg,${T.blue},${T.orange})`,
           display:"flex",alignItems:"center",justifyContent:"center",
           color:"#fff",fontSize:11.9,fontWeight:800,
-          boxShadow:`0 2px 8px ${T.blue}44`,
+          boxShadow:"0 2px 8px rgba(59,130,246,0.27)",
           cursor:"pointer",
-        }}>JR</div>
+        }}>{userInitials}</div>
       </div>
     </div>
   );
 };
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
-const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
+const AgentWidget = (_props: AgentWidgetProps) => {
   const { autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -758,7 +736,7 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
                   style={{
                     padding:3, borderRadius:"50%", background:"transparent", cursor:"pointer",
                     border: isSelected ? `2px solid ${T.orange}` : "2px solid rgba(255,255,255,0.12)",
-                    boxShadow: isSelected ? `0 0 12px ${T.orange}66` : "none",
+                    boxShadow: isSelected ? "0 0 12px rgba(249,115,22,0.40)" : "none",
                     transition:"all .18s",
                   }}
                 >
@@ -873,8 +851,8 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             style={{
               width:80, height:80, borderRadius:"50%",
               overflow:"hidden", position:"relative", zIndex:1,
-              border:`2px solid ${T.orange}55`,
-              boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
+              border:"2px solid rgba(249,115,22,0.33)",
+              boxShadow:"0 0 14px rgba(249,115,22,0.16), 0 0 28px rgba(249,115,22,0.07)",
               cursor:"pointer",
               userSelect:"none",
             }}
@@ -892,11 +870,11 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
           title={isRunning ? "Pause" : "Start"}
           style={{
             width:44, height:44, borderRadius:12,
-            border:`1px solid ${T.orange}88`,
-            background: isRunning ? `${T.orange}28` : `${T.orange}18`,
+            border:"1px solid rgba(249,115,22,0.53)",
+            background: isRunning ? "rgba(249,115,22,0.16)" : "rgba(249,115,22,0.09)",
             display:"flex",alignItems:"center",justifyContent:"center",
             cursor:"pointer", color:T.orange,
-            boxShadow: isRunning ? `0 0 10px ${T.orange}44` : "none",
+            boxShadow: isRunning ? "0 0 10px rgba(249,115,22,0.27)" : "none",
             transition:"all .2s",
           }}
         >
@@ -1038,20 +1016,27 @@ const OmniSlateWidget = () => {
   }, []);
 
   let aggregateHealth: string | null = null;
+  // Decimal RGB channels paired with aggregateHealth — CSS var()+hex-append
+  // (e.g. `${aggregateHealth}66`) is invalid CSS, so rgba() needs literal channels.
+  let aggregateHealthChannel: string | null = null;
   if (contextApps.length > 0) {
     if (contextApps.some(a => a.health === "red")) {
       aggregateHealth = T.red;
+      aggregateHealthChannel = "239,68,68";
     } else if (contextApps.some(a => a.health === "yellow")) {
       aggregateHealth = T.warn;
+      aggregateHealthChannel = "234,179,8";
     } else {
       aggregateHealth = T.green;
+      aggregateHealthChannel = "34,197,94";
     }
   }
   const contextAccent = aggregateHealth ?? T.orange;
-  const contextBackground = `${contextAccent}22`;
-  const contextBorderColor = aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`;
+  const contextAccentChannel = aggregateHealthChannel ?? "249,115,22";
+  const contextBackground = `rgba(${contextAccentChannel},0.13)`;
+  const contextBorderColor = aggregateHealthChannel ? `rgba(${aggregateHealthChannel},0.67)` : "rgba(249,115,22,0.27)";
   const contextBorder = `1px solid ${contextBorderColor}`;
-  const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
+  const contextBoxShadow = aggregateHealthChannel ? `0 0 8px rgba(${aggregateHealthChannel},0.27)` : "none";
 
   return (
     <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}>
@@ -1060,13 +1045,13 @@ const OmniSlateWidget = () => {
         height:44, padding:"0 16px", flexShrink:0,
         borderBottom:`1px solid ${T.borderGlow}`,
         display:"flex", alignItems:"center", justifyContent:"space-between",
-        background:`linear-gradient(90deg,${T.orange}08,transparent)`,
+        background:"linear-gradient(90deg,rgba(249,115,22,0.03),transparent)",
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
           <button onClick={() => setMessages([])} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
-            background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
+            background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
 
@@ -1104,9 +1089,9 @@ const OmniSlateWidget = () => {
             {showContext && contextApps.length > 0 && (
                <div style={{
                  position: "absolute", top: "100%", right: 0, marginTop: 8,
-                 background: T.card, border: `1px solid ${aggregateHealth}66`,
+                 background: T.card, border: `1px solid rgba(${contextAccentChannel},0.40)`,
                  borderRadius: 12, padding: 10, width: 240, zIndex: 100,
-                 boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 12px ${aggregateHealth}22`,
+                 boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 12px rgba(${contextAccentChannel},0.13)`,
                  display: "flex", flexDirection: "column", gap: 6,
                }}>
                  <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
@@ -1117,9 +1102,9 @@ const OmniSlateWidget = () => {
                    return (
                      <div key={app.id} style={{
                        fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
-                       background: palette.bg.replace("22", "1a"),
+                       background: palette.bg.replace("0.13", "0.10"),
                        color: palette.color,
-                       border: `1px solid ${palette.color}44`,
+                       border: `1px solid rgba(${palette.channel},0.27)`,
                        display: "flex", alignItems: "center", gap: 6
                      }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
@@ -1157,16 +1142,16 @@ const OmniSlateWidget = () => {
             animation:"apexFadeIn .3s ease",
           }}>
             {m.role==="assistant" && (
-              <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:`1px solid ${T.orange}66`}}>
+              <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:"1px solid rgba(249,115,22,0.40)"}}>
                 <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" decoding="async" />
               </div>
             )}
             <div style={{
               maxWidth:"78%",
               background: m.role==="user"
-                ? `linear-gradient(135deg,${T.orange}22,${T.blue}18)`
-                : `${T.surface}cc`,
-              border:`1px solid ${m.role==="user"?T.orange+"33":T.border}`,
+                ? "linear-gradient(135deg,rgba(249,115,22,0.13),rgba(59,130,246,0.09))"
+                : T.surface,
+              border:`1px solid ${m.role==="user"?"rgba(249,115,22,0.20)":T.border}`,
               borderRadius: m.role==="user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
               padding:"9px 13px", fontSize:14.1, color:T.t1, lineHeight:1.5,
             }}>{m.text}</div>
@@ -1209,7 +1194,7 @@ const OmniSlateWidget = () => {
           onKeyDown={e => e.key==="Enter" && send()}
           placeholder="Ask APEX Agent anything…"
           style={{
-            flex:1, minWidth:0, background:`${T.surface}cc`,
+            flex:1, minWidth:0, background:T.surface,
             border:`1px solid ${T.border}`,
             borderRadius:12, padding:"11px 15px",
             color:T.t1, fontSize:14.6,
@@ -1222,7 +1207,7 @@ const OmniSlateWidget = () => {
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
           border:"none", cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:`0 4px 14px ${T.orange}44`,
+          boxShadow:"0 4px 14px rgba(249,115,22,0.27)",
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
@@ -1232,8 +1217,8 @@ const OmniSlateWidget = () => {
           disabled={!loading}
           style={{
             width:44, height:44, borderRadius:12, flexShrink:0,
-            background: loading ? `${T.orange}12` : T.surface,
-            border:`1px solid ${loading ? T.orange+"55" : T.border}`,
+            background: loading ? "rgba(249,115,22,0.07)" : T.surface,
+            border:`1px solid ${loading ? "rgba(249,115,22,0.33)" : T.border}`,
             cursor: loading ? "pointer" : "not-allowed",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"all .2s",
@@ -1272,8 +1257,8 @@ const EcosystemWidget = () => {
     });
   };
 
-  // Explicit rgba() — appending hex alpha to a CSS var (e.g. `${T.orange}22`) is
-  // invalid CSS and silently drops the orange fill/border/glow.
+  // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+  // var() token is invalid CSS and silently drops the orange fill/border/glow.
   const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
   return (
@@ -1311,105 +1296,71 @@ const EcosystemWidget = () => {
   );
 };
 
-// ─── Widget: Connections (split — Third-Party + Connected APEX Apps) ──────────
-// Canon §4/§7: OmniBoard owns third-party provider connections; APEX Apps owns
-// first-party MCP/OmniPort apps. The legacy "Integrated Apps" widget (hardcoded
-// SaaS picker + admin-privileges dead-end toast + fake "Awaiting" cards) is
-// removed. Each section is single-owner with the correct CTA. Honest empty
-// states until a verified source (connector_sessions / APEX install-state) is
-// wired — tracked as APEX-CONN-SOURCES. No fabricated "connected" state.
-const ConnectionsWidget = () => {
-  const { invoke } = useOmniModal();
-
-  const connectThirdParty = () => {
-    invoke({
-      id: 'connections-third-party',
-      provider: 'omnidash',
-      type: 'module',
-      title: 'Connect Third-Party App',
-      contextData: { moduleKey: OMNIBOARD_MODULE_KEY },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-  };
-
-  const addApexApp = () => {
-    invoke({
-      id: 'connections-apex-app',
-      provider: 'omnidash',
-      type: 'module',
-      title: 'Connect APEX App',
-      contextData: { moduleKey: APEX_APPS_MODULE_KEY },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-  };
-
-  const ORANGE = '249,115,22';
-  const ctaStyle: React.CSSProperties = {
-    background: `rgba(${ORANGE},0.12)`, color: T.orange,
-    fontSize: 12, fontWeight: 700, padding: '8px 12px', borderRadius: 8,
-    cursor: 'pointer', border: `1px solid rgba(${ORANGE},0.4)`,
-    minHeight: 44, fontFamily: "'Space Grotesk',sans-serif",
-  };
-  const sublabel: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: T.t2,
-    textTransform: 'uppercase', letterSpacing: '0.04em',
-  };
-  const headerRow: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    gap: 8, flexWrap: 'wrap',
-  };
-
-  return (
-  <GlassCard style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-    <SectionLabel>Connections</SectionLabel>
-
-    {/* Third-Party Connections — owned by OmniBoard */}
-    <div data-testid="connections-third-party" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={headerRow}>
-        <span style={sublabel}>Third-Party Connections</span>
-        <button type="button" onClick={connectThirdParty} style={ctaStyle}>+ Connect Third-Party App</button>
-      </div>
-      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
-        No third-party connections yet. Connect a provider through OmniBoard to see it here.
-      </p>
+// ─── Widget: Integrated Apps Gallery (display-only — no connection ownership) ──
+// This is a GALLERY, not an integration owner. It shows integrated-app status
+// tiles only and never opens a modal, invokes OmniBoard, or invokes the APEX
+// Apps MCP. Third-party connections are owned exclusively by OmniBoard (sidebar
+// nav); first-party APEX app connections are owned exclusively by the APEX
+// Ecosystem widget's "Add APEX App" → APEX_APPS_MODULE_KEY. The PR #1510
+// retired "Connections" split-panel duplicated both of those owners and must
+// not return (no split sub-panels, no connect CTA in this gallery).
+// "Awaiting" tiles are an honest, non-interactive empty state — no fabricated
+// connected state, no click-through. (User directive 2026-06-28.)
+const IntegratedAppsGalleryWidget = () => (
+  <GlassCard style={{ padding: '16px' }}>
+    <div style={{ marginBottom: 10 }}>
+      <SectionLabel>Integrated Apps Gallery</SectionLabel>
     </div>
-
-    <div style={{ height: 1, background: T.border }} />
-
-    {/* Connected APEX Apps — owned by APEX Apps (MCP / OmniPort) */}
-    <div data-testid="connections-apex-apps" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={headerRow}>
-        <span style={sublabel}>Connected APEX Apps</span>
-        <button type="button" onClick={addApexApp} style={ctaStyle}>+ Add APEX App</button>
-      </div>
-      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
-        No APEX apps connected yet. Add one to open its OmniPort and start chatting.
-      </p>
+    <div data-testid="integrated-apps" className="omni-grid-apps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+      {[1, 2, 3, 4].map(i => (
+        <div
+          key={`integrated-app-ph-${i}`}
+          aria-label={`Integrated app slot ${i} — awaiting connection`}
+          style={{
+            ...APP_TILE_STYLE,
+            background: T.surface,
+            border: `1px dashed ${T.border}`,
+            opacity: 0.6,
+            cursor: 'default',
+          }}
+        >
+          <span style={{
+            width: 22, height: 22, borderRadius: 6,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(255,255,255,0.20)' }} />
+          </span>
+          <span style={{ fontSize: 13, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>Awaiting</span>
+        </div>
+      ))}
     </div>
   </GlassCard>
-  );
-};
+);
 
-function OmniGridTop({ hiddenWidgets, tick, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }>) {
+function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], isDesktop: boolean }>) {
   const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
   const gridHeight = isDesktop ? 300 : undefined;
   return (
     <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
-      {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
+      {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget /></DraggableWidget>}
       {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
       {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
     </div>
   );
 }
 
+const M03_WIDGET_IDS = ['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const;
+const M03_REGION_ID = 'm03-observability';
+
 function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: readonly string[] }>) {
-  if (!(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id))) {
+  if (!M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id))) {
     return null;
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+    <div id={M03_REGION_ID} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
       {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
       {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -1431,10 +1382,10 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
-  const [tick, setTick] = useState<number>(0);
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
+  const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
@@ -1442,6 +1393,23 @@ export default function OmniDashShell() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const { demoMode } = useDemoMode();
   const isDemoMode = ops.demo;
+
+  const userInitials = useMemo(() => {
+    const user = session?.user;
+    if (!user) return '??';
+    const name = (user.user_metadata?.full_name as string | undefined)
+      ?? (user.user_metadata?.name as string | undefined);
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      return (parts[0]?.[0] ?? '').toUpperCase() + (parts.at(-1)?.[0] ?? '').toUpperCase();
+    }
+    const email = user.email;
+    if (email) {
+      const local = email.split('@')[0] ?? '';
+      return local.slice(0, 2).toUpperCase();
+    }
+    return '??';
+  }, [session]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const liveDashData = useDashboardData({ enabled: !isDemoMode });
@@ -1466,18 +1434,6 @@ export default function OmniDashShell() {
   // Sidebar active state is driven purely by handleNav / modal onCancel —
   // no longer derived from location.pathname (modules render as modals, not routes).
 
-  useEffect(() => {
-    // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
-    // This prevents aggressive re-renders from detaching DOM nodes during test execution.
-    if (
-      (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (globalThis.window !== undefined && (globalThis.window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
-    ) {
-      return;
-    }
-    const id = setInterval(() => setTick(t => t+1), 500);
-    return () => clearInterval(id);
-  }, []);
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
@@ -1500,24 +1456,11 @@ export default function OmniDashShell() {
       display:"flex", flexDirection:"column",
       overflow:"hidden",
     }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap');
-
-
-        ${pulse} ${shimmer} ${fadeIn} ${scanLine} ${navGlow} ${ringRotate} ${ringBreath} ${ringBreath2}
-        * { box-sizing: border-box; margin:0; padding:0; }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
-        button { font-family:'Space Grotesk',sans-serif; }
-        input { font-family:'Space Grotesk',sans-serif; }
-      `}</style>
-
       <OmniDashHeader
-        tick={tick}
         isDark={isDark}
         setIsDark={setIsDark}
         invoke={invoke}
+        userInitials={userInitials}
       />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
@@ -1549,8 +1492,8 @@ export default function OmniDashShell() {
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
           background: isDark
-            ? `radial-gradient(ellipse at 30% 20%,${T.orange}08 0%,transparent 60%),${T.bg}`
-            : `radial-gradient(ellipse at 30% 20%,${T.orange}06 0%,transparent 60%),#e8edf5`,
+            ? `radial-gradient(ellipse at 30% 20%,rgba(249,115,22,0.03) 0%,transparent 60%),${T.bg}`
+            : "radial-gradient(ellipse at 30% 20%,rgba(249,115,22,0.02) 0%,transparent 60%),#e8edf5",
         }}>
           {/* Blueprint grid background — bottom layer, theme-aware */}
           <div style={{
@@ -1566,14 +1509,30 @@ export default function OmniDashShell() {
           }} />
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+            {/* Zone 2 — Primary business KPI band (above the fold, honest states) */}
+            <PrimaryKpiBand
+              kpi={dashData.kpiSummary}
+              hasData={dashData.kpiHistory.length > 0}
+              isLoading={dashData.isLoading}
+              error={dashData.error}
+              demoMode={isDemoMode}
+              onRetry={dashData.refresh}
+            />
+
             {/* Primary 3-column grid */}
-            <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
+            <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
 
-            {/* Connections row (split: Third-Party + Connected APEX Apps) */}
-            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><ConnectionsWidget /></DraggableWidget>}
+            {/* Integrated Apps Gallery row — display-only, owns no connection flow */}
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels */}
-            <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />
+            {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
+            <ObservabilityToggle
+              shown={observabilityShown}
+              panelCount={M03_WIDGET_IDS.length}
+              controlsId={M03_REGION_ID}
+              onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
+            />
+            {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
 
             {/* APEX-OmniHub wordmark watermark — above grid, below content */}
             <div style={{

@@ -293,5 +293,15 @@
       "active": "Aktiv",
       "disabled": "Deaktiviert"
     }
+  },
+  "omnimedia": {
+    "loading": "Medien werden geladen…",
+    "unavailable": "OmniMedia ist vorübergehend nicht verfügbar. Versuchen Sie es erneut oder prüfen Sie den Status des Mediendienstes.",
+    "retry": "Erneut versuchen",
+    "empty": "Noch keine Medien. Laden Sie eine Video- oder Audiodatei über Dateien hoch, um sie hier zu sehen.",
+    "playLabel": "{{title}} abspielen",
+    "deleteLabel": "{{title}} löschen",
+    "firstParty": "Eigene",
+    "external": "Extern"
   }
 }

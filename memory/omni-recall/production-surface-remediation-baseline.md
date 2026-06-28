@@ -50,17 +50,30 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   MODULE_KEYS. `ApexAppsMcpModule.tsx` does not exist. An `apexApps.ts` contract exists in
   `dashboard/contracts/` (to be inspected at Phase 3 start). → Phase 3 (build).
 
-## Current Integrated Apps route — REMEDIATED (Phase 4 ✓, 2026-06-28)
+## Current Integrated Apps route — HOTFIX REVERTED (2026-06-28, supersedes the Phase 4 split below)
+
+- The Phase 4 `ConnectionsWidget` split (below) duplicated two existing owners: OmniBoard
+  (third-party) and the APEX Ecosystem widget's "Add APEX App" (first-party, `apex-apps-mcp`).
+  Reverted on user directive.
+- Now: `IntegratedAppsGalleryWidget` (`OmniDashShell.tsx`) — a **display-only gallery**. It owns
+  no connection flow, opens no modal, and has no CTA of its own. OmniBoard owns all third-party
+  connection flows (sidebar nav, `omniboard-wizard`); the APEX Apps MCP (`apex-apps-mcp`) owns
+  all first-party APEX app connection flows, entered exclusively via the APEX Ecosystem widget's
+  "Add APEX App". Heading reads exactly "Integrated Apps Gallery". Empty slots are
+  non-interactive ("Awaiting") — no fabricated connected state, no click-through.
+  Widget label updated in `WidgetSettingsModal.tsx`. E2E `omniboard-wiring.spec.ts` rewritten with
+  guardrail assertions; static regression guard added at
+  `tests/omnidash/integrated-apps-gallery-guardrail.spec.ts`.
+  Note: `DashboardOverview/AppsSection.tsx` also says "Integrated Apps" but is NOT mounted by any
+  live route (dead component) — left untouched per Tree Law.
+
+### Superseded — Phase 4 split (2026-06-28, reverted same day)
 
 - Was: `IntegratedAppsWidget` — 4 fake "Awaiting" slots + hardcoded `INTEGRATIONS` SaaS array +
   admin-privileges dead-end toast; mixed semantics; no split.
-- Now: `ConnectionsWidget` (`OmniDashShell.tsx`) — split into **Third-Party Connections**
-  (CTA → OmniBoard via `OMNIBOARD_MODULE_KEY`) and **Connected APEX Apps** (CTA → `apex-apps-mcp`).
-  Hardcoded picker, admin toast, and fake cards removed. Honest empty states until verified
-  sources (connector_sessions / APEX install-state) are wired — tracked `APEX-CONN-SOURCES`.
-  Widget label updated in `WidgetSettingsModal.tsx`. E2E `omniboard-wiring.spec.ts` rewritten.
-  Note: `DashboardOverview/AppsSection.tsx` also says "Integrated Apps" but is NOT mounted by any
-  live route (dead component) — left untouched per Tree Law.
+- Became (briefly): `ConnectionsWidget` (`OmniDashShell.tsx`) — split into **Third-Party
+  Connections** (CTA → OmniBoard via `OMNIBOARD_MODULE_KEY`) and **Connected APEX Apps**
+  (CTA → `apex-apps-mcp`). This duplicated both owners and was reverted same day — see above.
 
 ## Current OmniMedia source
 

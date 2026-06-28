@@ -64,22 +64,28 @@ Guardian (policy/security) → Planner (decomposition/routing) → Executor (dis
 | E2E | tests/e2e-playwright/ |
 | Canonical truth | memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md |
 
-## Surface Ownership Canon (Statement 27, 2026-06-27)
-App integration has TWO distinct owners. Single-owner models are retired.
+## Surface Ownership Canon (Statement 28, 2026-06-28 — corrects Statement 27)
+App integration has TWO distinct owners. Single-owner models are retired. The
+center-canvas "Integrated Apps" panel is NOT an owner — it is a display-only
+gallery.
 
 | Surface | Owns | Forbidden |
 |---------|------|-----------|
 | OmniBoard | third-party provider connections, connector sessions, connection specs | internal APEX app install, media, playback |
 | APEX Apps | internal APEX ecosystem registry, MCP app connect/install flow | third-party provider connections |
+| Integrated Apps Gallery | read-only display of integrated-app status tiles | any connection flow, any modal invocation, any CTA |
 | Files | file upload, file management; FEEDS OmniMedia | — |
 | OmniMedia | media catalog, gallery, playback, ingestion | third-party connections, app install |
 | Language | locale selection + persistence (apex_locale) | — |
 
 Rules: "Add APEX App" opens the MCP app modal (moduleKey apex-apps-mcp), NEVER OmniBoard.
 Any non-owner surface hands off: third-party to OmniBoard, ecosystem to APEX Apps.
-The ambiguous "Integrated Apps" panel is split into "Third-Party Connections"
-(from connector_sessions) and "Connected APEX Apps" (from install state). No panel
-mixes both. omniSurfaceOwnership.ts is the single source of truth; appIntegrationOwnership.ts
+**Statement 27's "Connections split" (Third-Party Connections / Connected APEX
+Apps with a Connect App CTA) is RETIRED — it duplicated both owners.** The
+canvas panel (`IntegratedAppsGalleryWidget`, testid `widget_apps`/`integrated-apps`,
+heading "Integrated Apps Gallery") shows status only: no split sub-panels, no
+"Connect App" CTA, no modal invocation, non-interactive empty/"Awaiting" slots.
+omniSurfaceOwnership.ts is the single source of truth; appIntegrationOwnership.ts
 must re-export from it or be deprecated.
 
 ## Modal Law

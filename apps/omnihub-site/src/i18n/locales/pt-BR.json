@@ -293,5 +293,15 @@
       "active": "Ativo",
       "disabled": "Desativado"
     }
+  },
+  "omnimedia": {
+    "loading": "Carregando mídia…",
+    "unavailable": "O OmniMedia está temporariamente indisponível. Tente novamente ou verifique o status do serviço de mídia.",
+    "retry": "Tentar novamente",
+    "empty": "Nenhuma mídia ainda. Envie um arquivo de vídeo ou áudio em Arquivos para vê-lo aqui.",
+    "playLabel": "Reproduzir {{title}}",
+    "deleteLabel": "Excluir {{title}}",
+    "firstParty": "Própria",
+    "external": "Externa"
   }
 }

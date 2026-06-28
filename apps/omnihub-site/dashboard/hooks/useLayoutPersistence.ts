@@ -39,6 +39,8 @@ interface UseLayoutPersistenceReturn {
   setPanelLayout: (l: PanelLayout) => void;
   hiddenWidgets: readonly string[];
   toggleWidget: (id: string) => void;
+  /** Atomically show/hide a group of widgets in one persisted update (idempotent). */
+  setGroupHidden: (ids: readonly string[], hidden: boolean) => void;
   resetWidgetPositions: () => void;
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: Dispatch<SetStateAction<boolean>>;
@@ -129,6 +131,19 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
     });
   }, []);
 
+  const setGroupHidden = useCallback((ids: readonly string[], hidden: boolean) => {
+    setHiddenWidgets((prev) => {
+      const set = new Set(prev);
+      let changed = false;
+      for (const id of ids) {
+        if (hidden && !set.has(id)) { set.add(id); changed = true; }
+        if (!hidden && set.has(id)) { set.delete(id); changed = true; }
+      }
+      // Idempotent: identical state returns the same reference (no re-render/persist).
+      return changed ? Array.from(set) : prev;
+    });
+  }, []);
+
   const resetWidgetPositions = useCallback(() => {
     try {
       // Clear new consolidated layout keys
@@ -156,6 +171,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
     setPanelLayout,
     hiddenWidgets,
     toggleWidget,
+    setGroupHidden,
     resetWidgetPositions,
     hasSeenOnboarding,
     setHasSeenOnboarding,

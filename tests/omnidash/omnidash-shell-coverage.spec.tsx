@@ -82,6 +82,7 @@ vi.mock('dashboard/hooks/useLayoutPersistence', () => ({
     setPanelLayout: vi.fn(),
     hiddenWidgets: [],
     toggleWidget: vi.fn(),
+    setGroupHidden: vi.fn(),
     resetWidgetPositions: vi.fn(),
     hasSeenOnboarding: true,
     setHasSeenOnboarding: vi.fn(),
@@ -141,6 +142,11 @@ vi.mock('dashboard/contracts/agentAvatars', () => ({
 }));
 
 // ── Import after all mocks are declared ──────────────────────────────────────
+// The shell renders OmniMediaLaunchWidget → OmniMediaGallery, which goes through
+// the REAL useAppTranslation hook (i18n.exists / t). Initialize the production
+// i18n instance with the real locale bundles — no mock, the actual translation
+// system runs in the test exactly as it does in the app.
+import '../../apps/omnihub-site/src/i18n';
 import OmniDashShell from '../../apps/omnihub-site/dashboard/OmniDashShell';
 import { useViewport } from 'dashboard/hooks/useViewport';
 import { useLayoutPersistence } from 'dashboard/hooks/useLayoutPersistence';
@@ -209,6 +215,7 @@ describe('OmniDashShell', () => {
       setPanelLayout: vi.fn(),
       hiddenWidgets: [],
       toggleWidget: vi.fn(),
+      setGroupHidden: vi.fn(),
       resetWidgetPositions: vi.fn(),
       hasSeenOnboarding: true,
       setHasSeenOnboarding: vi.fn(),

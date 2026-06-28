@@ -293,5 +293,15 @@
       "active": "有効",
       "disabled": "無効"
     }
+  },
+  "omnimedia": {
+    "loading": "メディアを読み込んでいます…",
+    "unavailable": "OmniMedia は一時的に利用できません。再試行するか、メディアサービスの状態を確認してください。",
+    "retry": "再試行",
+    "empty": "メディアはまだありません。「ファイル」から動画または音声ファイルをアップロードすると、ここに表示されます。",
+    "playLabel": "{{title}} を再生",
+    "deleteLabel": "{{title}} を削除",
+    "firstParty": "ファーストパーティ",
+    "external": "外部"
   }
 }

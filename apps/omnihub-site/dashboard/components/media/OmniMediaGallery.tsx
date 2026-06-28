@@ -9,14 +9,18 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Music, RefreshCw, Trash2, Video } from 'lucide-react';
 import { useOmniMedia } from '@/stores/omniMediaStore';
 import {
   deleteOmniMediaAsset,
   fetchOmniMediaCatalog,
+  OmniMediaError,
   type OmniMediaCatalogItem,
 } from '@/dashboard/lib/omniMediaCatalog';
+// Relative i18n import (not @/i18n) to avoid the root @/* alias ambiguity guarded by
+// scripts/i18n-hardcoded-ui-check.mjs. OmniMedia is the first dashboard surface wired for i18n.
+import { useAppTranslation } from '../../../src/i18n/useAppTranslation';
 
 interface Props {
   readonly variant: 'compact' | 'full';
@@ -25,6 +29,7 @@ interface Props {
 type LoadState = 'loading' | 'ready' | 'error';
 
 export function OmniMediaGallery({ variant }: Props) {
+  const { tx } = useAppTranslation();
   const catalogVersion = useOmniMedia((s) => s.catalogVersion);
   const bumpCatalog = useOmniMedia((s) => s.bumpCatalog);
   const loadMedia = useOmniMedia((s) => s.loadMedia);
@@ -35,16 +40,30 @@ export function OmniMediaGallery({ variant }: Props) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Resilience refs (no render coupling): dedupe concurrent loads and read the last-good
+  // catalog inside the error branch without adding `items` to the load() dependency array
+  // (which would re-create load → retrigger the load effect → infinite refetch loop).
+  const inFlightRef = useRef(false);
+  const itemsRef = useRef<readonly OmniMediaCatalogItem[]>(items);
+  itemsRef.current = items;
+
   const load = useCallback(async () => {
-    setState('loading');
+    if (inFlightRef.current) return; // Dedupe: ignore overlapping loads (retry spam / version bumps).
+    inFlightRef.current = true;
+    // Only show the blocking spinner on a cold load; refreshes keep the last-good list visible.
+    if (itemsRef.current.length === 0) setState('loading');
     setErrorMessage(null);
     try {
       const fetched = await fetchOmniMediaCatalog();
       setItems(fetched);
       setState('ready');
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'omnimedia_catalog_failed');
-      setState('error');
+      setErrorMessage(err instanceof OmniMediaError ? err.code : 'omnimedia_catalog_failed');
+      // Preserve the last-good catalog through a transient failure; only fall to the blocking
+      // error surface when there is nothing to keep showing.
+      setState(itemsRef.current.length > 0 ? 'ready' : 'error');
+    } finally {
+      inFlightRef.current = false;
     }
   }, []);
 
@@ -89,7 +108,7 @@ export function OmniMediaGallery({ variant }: Props) {
         className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground"
       >
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading media…
+        {tx('omnimedia.loading', { defaultValue: 'Loading media…' })}
       </div>
     );
   }
@@ -99,9 +118,16 @@ export function OmniMediaGallery({ variant }: Props) {
       <div
         data-testid="omnimedia-gallery-error"
         role="alert"
+        data-error-code={errorMessage ?? undefined}
         className="flex flex-col items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-xs text-red-300"
       >
-        <span>Couldn’t load your media: {errorMessage}</span>
+        {/* Honest, user-safe copy only — never surface raw SDK/Edge errors (the stable code
+            lives in data-error-code for diagnostics/tests, not in user-facing text). */}
+        <span>
+          {tx('omnimedia.unavailable', {
+            defaultValue: 'OmniMedia is temporarily unavailable. Retry, or check media service status.',
+          })}
+        </span>
         <button
           type="button"
           data-testid="omnimedia-gallery-retry"
@@ -109,7 +135,7 @@ export function OmniMediaGallery({ variant }: Props) {
           className="inline-flex items-center gap-1 rounded-md border border-red-400/30 px-2 py-1 text-[11px] font-medium text-red-200 hover:bg-red-500/10"
         >
           <RefreshCw className="h-3 w-3" />
-          Retry
+          {tx('omnimedia.retry', { defaultValue: 'Retry' })}
         </button>
       </div>
     );
@@ -121,7 +147,9 @@ export function OmniMediaGallery({ variant }: Props) {
         data-testid="omnimedia-gallery-empty"
         className="rounded-lg border border-dashed border-border/30 px-3 py-4 text-center text-xs text-muted-foreground"
       >
-        No media yet. Upload a video or audio file from Files to see it here.
+        {tx('omnimedia.empty', {
+          defaultValue: 'No media yet. Upload a video or audio file from Files to see it here.',
+        })}
       </div>
     );
   }
@@ -138,7 +166,7 @@ export function OmniMediaGallery({ variant }: Props) {
             type="button"
             onClick={() => handlePlay(item)}
             className="flex flex-1 min-w-0 items-center gap-2 text-left"
-            aria-label={`Play ${item.title}`}
+            aria-label={tx('omnimedia.playLabel', { title: item.title, defaultValue: `Play ${item.title}` })}
           >
             {item.kind === 'video' ? (
               <Video className="h-3.5 w-3.5 flex-shrink-0 text-orange-400" />
@@ -150,14 +178,16 @@ export function OmniMediaGallery({ variant }: Props) {
                 {item.title}
               </span>
               <span className="block text-[10px] text-muted-foreground">
-                {item.is_external ? item.provider ?? 'External' : 'First-Party'}
+                {item.is_external
+                  ? item.provider ?? tx('omnimedia.external', { defaultValue: 'External' })
+                  : tx('omnimedia.firstParty', { defaultValue: 'First-Party' })}
               </span>
             </span>
           </button>
           {variant === 'full' && (
             <button
               type="button"
-              aria-label={`Delete ${item.title}`}
+              aria-label={tx('omnimedia.deleteLabel', { title: item.title, defaultValue: `Delete ${item.title}` })}
               disabled={deletingId === item.id}
               onClick={() => void handleDelete(item)}
               className="flex-shrink-0 p-1 text-muted-foreground hover:text-red-400 disabled:opacity-50"

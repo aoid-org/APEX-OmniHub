@@ -160,3 +160,6 @@ shadow-preflight.json
 
 # Playwright auth state (runtime-generated; never commit)
 playwright/.auth/
+
+# UI/UX evidence-capture helper (local, do not commit)
+._shoot.mjs

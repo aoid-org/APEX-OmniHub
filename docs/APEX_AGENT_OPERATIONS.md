@@ -1000,3 +1000,34 @@ The production-safe Playwright suite is read-only by default. It captures saniti
 `release:validation-matrix` now validates the detailed item-level production validation matrix. The matrix preserves the NO-GO boundary for full production certification until live Cloudflare provenance, authenticated flows, Supabase/RLS, BYOM, billing, mobile/device, performance, and branch-protection evidence is retained.
 
 **Operational impact:** additive release-validation harness only. No deployed services, DB tables/migrations, start commands, runtime app behavior, secrets, or production write paths are changed. The new commands are evidence gates and must be treated as certification inputs, not certification by themselves.
+
+---
+
+## 9.21 OmniSkin Engine (OSE v1.0) — OSE Guard CI gate (2026-06-28, CCEX-OSE-001)
+
+**Changed files:** `package.json`, `.github/workflows/apex-governance.yml`, `scripts/ci/check-omni-skin.mjs` (new), `apps/omnihub-site/dashboard/omniSkinTokens.ts` (new), `apps/omnihub-site/dashboard/omniSkin.css` (new).
+
+### New CI Script: `check:omni-skin`
+
+```json
+"check:omni-skin": "node scripts/ci/check-omni-skin.mjs"
+```
+
+**Purpose:** Enforces the OmniDash token/CSS contract introduced by the APEX OmniSkin
+Engine (token forge `omniSkinTokens.ts` + static CSS `omniSkin.css`, see
+`memory/omni-recall/design-token-reconciliation.md`). Fails CI if: a JSX `<style>` tag
+is reintroduced into `apps/omnihub-site/dashboard/`; the invalid CSS `var()`+hex-alpha
+pattern (e.g. `` ${T.x}22 ``, which silently drops the declaration) reappears in
+dashboard module files or `OmniDashShell.tsx`; `var(--od-*)` reappears in the
+Shell/token-forge files this contract owns; `omniSkin.css` is not imported exactly once
+in `apps/omnihub-site/src/main.tsx`; or the `src/components/dashboard/` ghost path
+gains an unexpected file. This is a linting/governance check — it does not affect
+deployed services, start commands, or runtime contracts.
+
+**Script location:** `scripts/ci/check-omni-skin.mjs`
+
+### `.github/workflows/apex-governance.yml` — new `ose-token-contract` job
+
+A new job runs `npm run check:omni-skin` (checkout → `actions/setup-node` → `npm ci --ignore-scripts` → guard) and was added to `governance-gate`'s `needs:` aggregation, so a failing OSE Guard now blocks the required governance gate.
+
+**Operational impact:** None to deployed services, infrastructure, secrets, env vars, database, or runtime contracts. This is a CI-only static-analysis gate over `apps/omnihub-site/dashboard/` source files.

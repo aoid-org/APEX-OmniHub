@@ -293,5 +293,15 @@
       "active": "Active",
       "disabled": "Disabled"
     }
+  },
+  "omnimedia": {
+    "loading": "Loading media…",
+    "unavailable": "OmniMedia is temporarily unavailable. Retry, or check media service status.",
+    "retry": "Retry",
+    "empty": "No media yet. Upload a video or audio file from Files to see it here.",
+    "playLabel": "Play {{title}}",
+    "deleteLabel": "Delete {{title}}",
+    "firstParty": "First-Party",
+    "external": "External"
   }
 }

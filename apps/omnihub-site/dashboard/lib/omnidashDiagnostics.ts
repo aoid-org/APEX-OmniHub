@@ -30,7 +30,6 @@ export function collectDiagnostics(overrides?: {
     timestamp: new Date().toISOString(),
     viewport: { width: w, height: h, breakpoint: bp },
     flags: {
-      VITE_ENABLE_OMNIMEDIA_DEMOS: flag('VITE_ENABLE_OMNIMEDIA_DEMOS'),
       VITE_MAESTRO_ENABLED: flag('VITE_MAESTRO_ENABLED'),
       VITE_CONNECT_AI_ENABLED: flag('VITE_CONNECT_AI_ENABLED'),
       VITE_DEMO_MODE: flag('VITE_DEMO_MODE'),

@@ -293,5 +293,15 @@
       "active": "已启用",
       "disabled": "已禁用"
     }
+  },
+  "omnimedia": {
+    "loading": "正在加载媒体…",
+    "unavailable": "OmniMedia 暂时不可用。请重试，或检查媒体服务状态。",
+    "retry": "重试",
+    "empty": "暂无媒体。请从“文件”上传视频或音频文件，即可在此查看。",
+    "playLabel": "播放 {{title}}",
+    "deleteLabel": "删除 {{title}}",
+    "firstParty": "第一方",
+    "external": "外部"
   }
 }

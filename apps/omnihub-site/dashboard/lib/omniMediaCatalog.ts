@@ -21,6 +21,36 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
+/**
+ * Stable, user-safe error codes. The OmniMedia UI maps these to honest copy — it must NEVER
+ * render a raw SDK/Edge string. In particular, a Supabase FunctionsHttpError carries the
+ * message "Edge Function returned a non-2xx status code"; surfacing that verbatim is a
+ * forbidden fake/raw-error surface, so every failure is collapsed to one of these codes.
+ */
+export type OmniMediaErrorCode =
+  | 'omnimedia_catalog_failed'
+  | 'omnimedia_ingest_failed'
+  | 'omnimedia_delete_failed';
+
+export class OmniMediaError extends Error {
+  readonly code: OmniMediaErrorCode;
+  constructor(code: OmniMediaErrorCode) {
+    super(code);
+    this.name = 'OmniMediaError';
+    this.code = code;
+  }
+}
+
+/**
+ * Collapses any raw invoke/SDK/timeout failure into a stable OmniMediaError. The raw cause is
+ * logged for developers only — it is never thrown onward, so backend implementation language
+ * (omnilink-port, non-2xx, FunctionsHttpError) can never reach the OmniMedia surface.
+ */
+function failOmniMedia(code: OmniMediaErrorCode, cause: unknown): never {
+  if (cause) console.warn(`[omnimedia] ${code}:`, cause);
+  throw new OmniMediaError(code);
+}
+
 export type OmniMediaKind = 'video' | 'audio';
 
 /** Mirrors the bucket's allowed_mime_types in 20260628000000_omnimedia_pipeline.sql. */
@@ -67,12 +97,17 @@ interface CatalogResponse {
 }
 
 export async function fetchOmniMediaCatalog(): Promise<OmniMediaCatalogItem[]> {
-  const { data, error } = await withTimeout(
-    supabase.functions.invoke('omnilink-port/omnimedia-catalog', { body: {} }),
-    CATALOG_TIMEOUT_MS,
-  );
-  if (error) throw new Error(error.message || 'omnimedia_catalog_failed');
-  return ((data as CatalogResponse | null)?.items ?? []);
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke('omnilink-port/omnimedia-catalog', { body: {} }),
+      CATALOG_TIMEOUT_MS,
+    );
+    if (error) failOmniMedia('omnimedia_catalog_failed', error);
+    return ((data as CatalogResponse | null)?.items ?? []);
+  } catch (err) {
+    if (err instanceof OmniMediaError) throw err;
+    failOmniMedia('omnimedia_catalog_failed', err);
+  }
 }
 
 export interface IngestUploadedMediaInput {
@@ -84,28 +119,38 @@ export interface IngestUploadedMediaInput {
 }
 
 export async function ingestUploadedMedia(input: IngestUploadedMediaInput): Promise<string> {
-  const { data, error } = await withTimeout(
-    supabase.functions.invoke('omnilink-port/omnimedia-ingest-from-upload', {
-      body: {
-        storage_path: input.storagePath,
-        title: input.title,
-        kind: input.kind,
-        mime_type: input.mimeType,
-        size_bytes: input.sizeBytes,
-      },
-    }),
-    CATALOG_TIMEOUT_MS,
-  );
-  if (error) throw new Error(error.message || 'omnimedia_ingest_failed');
-  const id = (data as { ok?: boolean; id?: string } | null)?.id;
-  if (!id) throw new Error('omnimedia_ingest_failed');
-  return id;
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke('omnilink-port/omnimedia-ingest-from-upload', {
+        body: {
+          storage_path: input.storagePath,
+          title: input.title,
+          kind: input.kind,
+          mime_type: input.mimeType,
+          size_bytes: input.sizeBytes,
+        },
+      }),
+      CATALOG_TIMEOUT_MS,
+    );
+    if (error) failOmniMedia('omnimedia_ingest_failed', error);
+    const id = (data as { ok?: boolean; id?: string } | null)?.id;
+    if (!id) failOmniMedia('omnimedia_ingest_failed', null);
+    return id;
+  } catch (err) {
+    if (err instanceof OmniMediaError) throw err;
+    failOmniMedia('omnimedia_ingest_failed', err);
+  }
 }
 
 export async function deleteOmniMediaAsset(id: string): Promise<void> {
-  const { error } = await withTimeout(
-    supabase.functions.invoke('omnilink-port/omnimedia-delete-asset', { body: { id } }),
-    CATALOG_TIMEOUT_MS,
-  );
-  if (error) throw new Error(error.message || 'omnimedia_delete_failed');
+  try {
+    const { error } = await withTimeout(
+      supabase.functions.invoke('omnilink-port/omnimedia-delete-asset', { body: { id } }),
+      CATALOG_TIMEOUT_MS,
+    );
+    if (error) failOmniMedia('omnimedia_delete_failed', error);
+  } catch (err) {
+    if (err instanceof OmniMediaError) throw err;
+    failOmniMedia('omnimedia_delete_failed', err);
+  }
 }

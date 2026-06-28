@@ -1,12 +1,11 @@
 ---
-
-version: 2.0.2
-last_audited: 2026-06-27
+version: 2.0.3
+last_audited: 2026-06-28
 status: active
 scope: APEX-OmniHub production repository
 owner: APEX Business Systems LTD
 canonical_dev_workflow: omnidev-apex-pro-v2
--------------------------------------------
+---
 
 # APEX-OmniHub Repository Instructions
 
