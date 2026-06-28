@@ -44,7 +44,6 @@ export function OmniMobileDrawer({ isOpen, onClose, title, children }: OmniMobil
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      aria-hidden="true"
     >
       <dialog
         open

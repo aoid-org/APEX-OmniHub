@@ -23,12 +23,15 @@ vi.mock('@/lib/useAuth', () => ({
   useAuth: vi.fn(() => ({ session: null, user: null, isLoading: false })),
 }));
 
-vi.mock('@/contracts/omnidash-sidebar-widgets', () => ({
-  OMNIDASH_SIDEBAR_WIDGETS: [
-    { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: 'omniboard' },
-    { id: 'audits', label: 'Audits', iconIdx: 1, moduleKey: 'audits' },
-  ],
-}));
+// The `@/contracts/omnidash-sidebar-widgets` alias resolves (per
+// vitest.config.ts) to an intentionally empty test stub, so it must be
+// redirected even when we want the REAL data. We re-export the actual,
+// non-stub module's exports here (not a hand-copied fake list) so the
+// "every primary sidebar module reachable" assertion below proves
+// reachability for all 9 real modules, not just a 2-item stand-in pair.
+vi.mock('@/contracts/omnidash-sidebar-widgets', async () => {
+  return await vi.importActual('../../apps/omnihub-site/src/contracts/omnidash-sidebar-widgets');
+});
 
 vi.mock('../../apps/omnihub-site/src/contexts/DemoModeContext', () => ({
   useDemoMode: vi.fn(() => ({
@@ -122,6 +125,7 @@ vi.mock('dashboard/contracts/agentAvatars', () => ({
 import '../../apps/omnihub-site/src/i18n';
 import OmniDashShell from '../../apps/omnihub-site/dashboard/OmniDashShell';
 import { useOmniModal } from '../../apps/omnihub-site/src/stores/omniModalStore';
+import { OMNIDASH_SIDEBAR_WIDGETS, OMNIDASH_SIDEBAR_WIDGET_COUNT } from '../../apps/omnihub-site/src/contracts/omnidash-sidebar-widgets';
 
 if (typeof Element.prototype.scrollIntoView === 'undefined') {
   Element.prototype.scrollIntoView = () => {};
@@ -136,9 +140,12 @@ describe('OmniDashShell — mobile/tablet surface controller (P0)', () => {
   });
 
   it('opens the Apps drawer with every primary sidebar module reachable', () => {
+    expect(OMNIDASH_SIDEBAR_WIDGETS).toHaveLength(OMNIDASH_SIDEBAR_WIDGET_COUNT);
     render(<OmniDashShell />);
     fireEvent.click(screen.getByRole('tab', { name: /^apps$/i }));
-    expect(screen.getByText('Audits')).toBeTruthy();
+    for (const { label } of OMNIDASH_SIDEBAR_WIDGETS) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
   });
 
   it('tapping a module in the Apps drawer invokes the shared sidebar module modal and closes the drawer', () => {
