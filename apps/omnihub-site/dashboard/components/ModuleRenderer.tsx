@@ -37,6 +37,8 @@ const MODULE_COMPONENTS: Readonly<Record<string, React.LazyExoticComponent<React
   omnimedia: lazy(() => import('./modules/OmniMediaModule')),
 };
 
+export const MODULE_COMPONENT_KEYS = Object.freeze(Object.keys(MODULE_COMPONENTS));
+
 // ── Loading fallback ────────────────────────────────────────────
 
 function ModuleLoadingFallback() {
