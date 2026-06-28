@@ -1,0 +1,52 @@
+/* ─── APEX OmniSkin Engine (OSE v1.0) — Static CSS (Layer 2) ───────────────
+ * Canonical home for OmniDash's @keyframes and shell-scoped resets.
+ * Extracted from the JSX <style> tag in OmniDashShell.tsx so they load once
+ * as a static asset instead of being re-injected into the DOM on every
+ * render. Imported once in src/main.tsx.
+ */
+
+@keyframes apexPulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:.5; transform:scale(.85); }
+}
+
+@keyframes apexShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes apexFadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+@keyframes navGlow {
+  0%,100% { box-shadow: 0 0 18px rgba(249,115,22,0.19), inset 0 0 12px rgba(249,115,22,0.06); }
+  50%      { box-shadow: 0 0 28px rgba(249,115,22,0.33), inset 0 0 20px rgba(249,115,22,0.11); }
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes ringBreath {
+  0%,100% { opacity: 0.12; transform: scale(1);    }
+  50%      { opacity: 0.32; transform: scale(1.04); }
+}
+
+@keyframes ringBreath2 {
+  0%,100% { opacity: 0.08; transform: scale(1);    }
+  50%      { opacity: 0.22; transform: scale(1.06); }
+}
+
+@keyframes scanLine {
+  0% { top: 0%; } 100% { top: 100%; }
+}
+
+* { box-sizing: border-box; margin:0; padding:0; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+button { font-family:'Space Grotesk',sans-serif; }
+input { font-family:'Space Grotesk',sans-serif; }
