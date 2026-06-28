@@ -153,7 +153,7 @@ export const ManModeReviewQueue = () => {
     <GlassCard style={{ padding: 16, height: 250, overflowY: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <SectionLabel>MAN Mode Review</SectionLabel>
-        <span style={{ fontSize: 10, background: `${T.orange}22`, color: T.orange, padding: '2px 6px', borderRadius: 10 }}>Requires Auth</span>
+        <span style={{ fontSize: 10, background: "rgba(249,115,22,0.13)", color: T.orange, padding: '2px 6px', borderRadius: 10 }}>Requires Auth</span>
       </div>
       <div style={{ marginTop: 16, color: T.t3, fontSize: 12, textAlign: 'center' }}>
         Zero pending manual approvals in queue.
@@ -184,10 +184,10 @@ export const WorkflowStatusBoard = () => {
           <div key={status} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: 8 }}>
             <div style={{ fontSize: 10, textTransform: 'uppercase', color: T.t2, fontWeight: 600, marginBottom: 8 }}>{status}</div>
             {status === 'Completed' ? (
-              <div style={{ fontSize: 11, color: T.t1, background: `${T.green}22`, padding: 4, borderRadius: 4 }}>Sync CRM</div>
+              <div style={{ fontSize: 11, color: T.t1, background: "rgba(34,197,94,0.13)", padding: 4, borderRadius: 4 }}>Sync CRM</div>
             ) : null}
             {status === 'Running' ? (
-              <div style={{ fontSize: 11, color: T.t1, background: `${T.cyan}22`, padding: 4, borderRadius: 4 }}>Invoice Batch</div>
+              <div style={{ fontSize: 11, color: T.t1, background: "rgba(6,182,212,0.13)", padding: 4, borderRadius: 4 }}>Invoice Batch</div>
             ) : null}
           </div>
         ))}

@@ -123,14 +123,17 @@ function getHealthPalette(health: OmniHealthState): {
   bg: string;
   border: string;
   color: string;
+  channel: string;
 } {
+  // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+  // var() token is invalid CSS and silently drops the fill/border.
   if (health === "red") {
-    return { bg: `${T.red}22`, border: `${T.red}66`, color: T.red };
+    return { bg: "rgba(239,68,68,0.13)", border: "rgba(239,68,68,0.40)", color: T.red, channel: "239,68,68" };
   }
   if (health === "yellow") {
-    return { bg: `${T.warn}22`, border: `${T.warn}66`, color: T.warn };
+    return { bg: "rgba(234,179,8,0.13)", border: "rgba(234,179,8,0.40)", color: T.warn, channel: "234,179,8" };
   }
-  return { bg: `${T.green}22`, border: `${T.green}66`, color: T.green };
+  return { bg: "rgba(34,197,94,0.13)", border: "rgba(34,197,94,0.40)", color: T.green, channel: "34,197,94" };
 }
 
 function inferContextHealth(id: string, includeSecurity: boolean): OmniHealthState {
@@ -181,37 +184,9 @@ const IconBadge = ({ idx, size = 19, style = {} }: IconBadgeProps) => (
   </div>
 );
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const pulse = `@keyframes apexPulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:.5; transform:scale(.85); }
-}`;
-const shimmer = `@keyframes apexShimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}`;
-const fadeIn = `@keyframes apexFadeIn {
-  from { opacity:0; transform:translateY(6px); }
-  to   { opacity:1; transform:translateY(0); }
-}`;
-const navGlow = `@keyframes navGlow {
-  0%,100% { box-shadow: 0 0 18px ${T.orange}30, inset 0 0 12px ${T.orange}10; }
-  50%      { box-shadow: 0 0 28px ${T.orange}55, inset 0 0 20px ${T.orange}18; }
-}`;
-const ringRotate = `@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}`;
-const ringBreath = `@keyframes ringBreath {
-  0%,100% { opacity: 0.12; transform: scale(1);    }
-  50%      { opacity: 0.32; transform: scale(1.04); }
-}`;
-const ringBreath2 = `@keyframes ringBreath2 {
-  0%,100% { opacity: 0.08; transform: scale(1);    }
-  50%      { opacity: 0.22; transform: scale(1.06); }
-}`;
-const scanLine = `@keyframes scanLine {
-  0% { top: 0%; } 100% { top: 100%; }
-}`;
+// @keyframes (apexPulse, apexShimmer, apexFadeIn, navGlow, ringRotate,
+// ringBreath, ringBreath2, scanLine) live in ./omniSkin.css, imported once
+// in src/main.tsx — referenced here only by animation name.
 
 
 
@@ -296,7 +271,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
           : `linear-gradient(145deg, #1a2236, #0e1525)`,
         border: resolveBorder(isActive, hov),
         boxShadow: isActive
-          ? `0 0 10px ${T.orange}30, 0 2px 8px rgba(0,0,0,0.5)`
+          ? `0 0 10px rgba(249,115,22,0.19), 0 2px 8px rgba(0,0,0,0.5)`
           : `0 2px 6px rgba(0,0,0,0.4)`,
         transition:"all .18s ease",
       }}>
@@ -387,7 +362,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
             marginTop:12, width:"100%",
             display:"flex", alignItems:"center", justifyContent:"center", gap:7,
             padding:"7px 0", borderRadius:10,
-            background:"rgba(249,115,22,0.06)", border:`1px solid ${T.orange}26`,
+            background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.15)",
             color: signingOut ? T.t3 : "rgba(249,115,22,0.75)",
             fontSize:11.9, fontWeight:600, cursor: signingOut ? "not-allowed" : "pointer",
             letterSpacing:"0.04em", transition:"all .18s",
@@ -496,7 +471,9 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
   return (
     <div data-testid="omnidash-top-header" style={{
       height:58, flexShrink:0,
-      background:`${T.surface}f0`,
+      // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+      // var() token is invalid CSS. Theme-aware since this inline style overrides the cascade.
+      background: isDark ? "rgba(11,17,32,0.94)" : "rgba(255,255,255,0.94)",
       borderBottom:`1px solid ${T.border}`,
       backdropFilter:"blur(20px)",
       display:"flex", alignItems:"center",
@@ -549,7 +526,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         <div style={{ position:"relative" }}>
           <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
             display:"flex", alignItems:"center", gap:6,
-            background:T.card, border:`1px solid ${orgOpen ? T.orange+"66" : T.border}`,
+            background:T.card, border:`1px solid ${orgOpen ? "rgba(249,115,22,0.40)" : T.border}`,
             borderRadius:10, padding:"0 10px", height:34,
             color:T.t1, fontSize:12.4, cursor:"pointer", fontWeight:500,
             whiteSpace:"nowrap", maxWidth:170, overflow:"hidden",
@@ -596,8 +573,8 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         {/* Zero Trust */}
         <div style={{
           display:"flex", alignItems:"center", gap:6,
-          border:`1px solid ${T.green}44`,
-          background:`${T.green}12`,
+          border:"1px solid rgba(34,197,94,0.27)",
+          background:"rgba(34,197,94,0.07)",
           borderRadius:10, padding:"0 11px", height:34,
           color:T.green, fontSize:12.4, fontWeight:700,
           whiteSpace:"nowrap",
@@ -615,7 +592,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           background:`linear-gradient(135deg, ${T.orange} 0%, ${T.orangeDim} 100%)`,
           border:"none", borderRadius:10, padding:"0 13px", height:34,
           color:"#fff", fontSize:12.4, fontWeight:700,
-          cursor:"pointer", boxShadow:`0 4px 16px ${T.orange}44`,
+          cursor:"pointer", boxShadow:"0 4px 16px rgba(249,115,22,0.27)",
           whiteSpace:"nowrap",
           transition:"opacity .15s",
         }}>
@@ -676,7 +653,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           background:`linear-gradient(135deg,${T.blue},${T.orange})`,
           display:"flex",alignItems:"center",justifyContent:"center",
           color:"#fff",fontSize:11.9,fontWeight:800,
-          boxShadow:`0 2px 8px ${T.blue}44`,
+          boxShadow:"0 2px 8px rgba(59,130,246,0.27)",
           cursor:"pointer",
         }}>JR</div>
       </div>
@@ -760,7 +737,7 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
                   style={{
                     padding:3, borderRadius:"50%", background:"transparent", cursor:"pointer",
                     border: isSelected ? `2px solid ${T.orange}` : "2px solid rgba(255,255,255,0.12)",
-                    boxShadow: isSelected ? `0 0 12px ${T.orange}66` : "none",
+                    boxShadow: isSelected ? "0 0 12px rgba(249,115,22,0.40)" : "none",
                     transition:"all .18s",
                   }}
                 >
@@ -875,8 +852,8 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             style={{
               width:80, height:80, borderRadius:"50%",
               overflow:"hidden", position:"relative", zIndex:1,
-              border:`2px solid ${T.orange}55`,
-              boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
+              border:"2px solid rgba(249,115,22,0.33)",
+              boxShadow:"0 0 14px rgba(249,115,22,0.16), 0 0 28px rgba(249,115,22,0.07)",
               cursor:"pointer",
               userSelect:"none",
             }}
@@ -894,11 +871,11 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
           title={isRunning ? "Pause" : "Start"}
           style={{
             width:44, height:44, borderRadius:12,
-            border:`1px solid ${T.orange}88`,
-            background: isRunning ? `${T.orange}28` : `${T.orange}18`,
+            border:"1px solid rgba(249,115,22,0.53)",
+            background: isRunning ? "rgba(249,115,22,0.16)" : "rgba(249,115,22,0.09)",
             display:"flex",alignItems:"center",justifyContent:"center",
             cursor:"pointer", color:T.orange,
-            boxShadow: isRunning ? `0 0 10px ${T.orange}44` : "none",
+            boxShadow: isRunning ? "0 0 10px rgba(249,115,22,0.27)" : "none",
             transition:"all .2s",
           }}
         >
@@ -1040,20 +1017,27 @@ const OmniSlateWidget = () => {
   }, []);
 
   let aggregateHealth: string | null = null;
+  // Decimal RGB channels paired with aggregateHealth — CSS var()+hex-append
+  // (e.g. `${aggregateHealth}66`) is invalid CSS, so rgba() needs literal channels.
+  let aggregateHealthChannel: string | null = null;
   if (contextApps.length > 0) {
     if (contextApps.some(a => a.health === "red")) {
       aggregateHealth = T.red;
+      aggregateHealthChannel = "239,68,68";
     } else if (contextApps.some(a => a.health === "yellow")) {
       aggregateHealth = T.warn;
+      aggregateHealthChannel = "234,179,8";
     } else {
       aggregateHealth = T.green;
+      aggregateHealthChannel = "34,197,94";
     }
   }
   const contextAccent = aggregateHealth ?? T.orange;
-  const contextBackground = `${contextAccent}22`;
-  const contextBorderColor = aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`;
+  const contextAccentChannel = aggregateHealthChannel ?? "249,115,22";
+  const contextBackground = `rgba(${contextAccentChannel},0.13)`;
+  const contextBorderColor = aggregateHealthChannel ? `rgba(${aggregateHealthChannel},0.67)` : "rgba(249,115,22,0.27)";
   const contextBorder = `1px solid ${contextBorderColor}`;
-  const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
+  const contextBoxShadow = aggregateHealthChannel ? `0 0 8px rgba(${aggregateHealthChannel},0.27)` : "none";
 
   return (
     <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}>
@@ -1062,13 +1046,13 @@ const OmniSlateWidget = () => {
         height:44, padding:"0 16px", flexShrink:0,
         borderBottom:`1px solid ${T.borderGlow}`,
         display:"flex", alignItems:"center", justifyContent:"space-between",
-        background:`linear-gradient(90deg,${T.orange}08,transparent)`,
+        background:"linear-gradient(90deg,rgba(249,115,22,0.03),transparent)",
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
           <button onClick={() => setMessages([])} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
-            background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
+            background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
 
@@ -1106,9 +1090,9 @@ const OmniSlateWidget = () => {
             {showContext && contextApps.length > 0 && (
                <div style={{
                  position: "absolute", top: "100%", right: 0, marginTop: 8,
-                 background: T.card, border: `1px solid ${aggregateHealth}66`,
+                 background: T.card, border: `1px solid rgba(${contextAccentChannel},0.40)`,
                  borderRadius: 12, padding: 10, width: 240, zIndex: 100,
-                 boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 12px ${aggregateHealth}22`,
+                 boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 12px rgba(${contextAccentChannel},0.13)`,
                  display: "flex", flexDirection: "column", gap: 6,
                }}>
                  <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
@@ -1119,9 +1103,9 @@ const OmniSlateWidget = () => {
                    return (
                      <div key={app.id} style={{
                        fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
-                       background: palette.bg.replace("22", "1a"),
+                       background: palette.bg.replace("0.13", "0.10"),
                        color: palette.color,
-                       border: `1px solid ${palette.color}44`,
+                       border: `1px solid rgba(${palette.channel},0.27)`,
                        display: "flex", alignItems: "center", gap: 6
                      }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
@@ -1159,16 +1143,16 @@ const OmniSlateWidget = () => {
             animation:"apexFadeIn .3s ease",
           }}>
             {m.role==="assistant" && (
-              <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:`1px solid ${T.orange}66`}}>
+              <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:"1px solid rgba(249,115,22,0.40)"}}>
                 <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" decoding="async" />
               </div>
             )}
             <div style={{
               maxWidth:"78%",
               background: m.role==="user"
-                ? `linear-gradient(135deg,${T.orange}22,${T.blue}18)`
-                : `${T.surface}cc`,
-              border:`1px solid ${m.role==="user"?T.orange+"33":T.border}`,
+                ? "linear-gradient(135deg,rgba(249,115,22,0.13),rgba(59,130,246,0.09))"
+                : T.surface,
+              border:`1px solid ${m.role==="user"?"rgba(249,115,22,0.20)":T.border}`,
               borderRadius: m.role==="user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
               padding:"9px 13px", fontSize:14.1, color:T.t1, lineHeight:1.5,
             }}>{m.text}</div>
@@ -1211,7 +1195,7 @@ const OmniSlateWidget = () => {
           onKeyDown={e => e.key==="Enter" && send()}
           placeholder="Ask APEX Agent anything…"
           style={{
-            flex:1, minWidth:0, background:`${T.surface}cc`,
+            flex:1, minWidth:0, background:T.surface,
             border:`1px solid ${T.border}`,
             borderRadius:12, padding:"11px 15px",
             color:T.t1, fontSize:14.6,
@@ -1224,7 +1208,7 @@ const OmniSlateWidget = () => {
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
           border:"none", cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:`0 4px 14px ${T.orange}44`,
+          boxShadow:"0 4px 14px rgba(249,115,22,0.27)",
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
@@ -1234,8 +1218,8 @@ const OmniSlateWidget = () => {
           disabled={!loading}
           style={{
             width:44, height:44, borderRadius:12, flexShrink:0,
-            background: loading ? `${T.orange}12` : T.surface,
-            border:`1px solid ${loading ? T.orange+"55" : T.border}`,
+            background: loading ? "rgba(249,115,22,0.07)" : T.surface,
+            border:`1px solid ${loading ? "rgba(249,115,22,0.33)" : T.border}`,
             cursor: loading ? "pointer" : "not-allowed",
             display:"flex", alignItems:"center", justifyContent:"center",
             transition:"all .2s",
@@ -1274,8 +1258,8 @@ const EcosystemWidget = () => {
     });
   };
 
-  // Explicit rgba() — appending hex alpha to a CSS var (e.g. `${T.orange}22`) is
-  // invalid CSS and silently drops the orange fill/border/glow.
+  // Explicit rgba() — appending a literal hex-alpha pair directly after a CSS
+  // var() token is invalid CSS and silently drops the orange fill/border/glow.
   const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
   return (
@@ -1469,19 +1453,6 @@ export default function OmniDashShell() {
       display:"flex", flexDirection:"column",
       overflow:"hidden",
     }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap');
-
-
-        ${pulse} ${shimmer} ${fadeIn} ${scanLine} ${navGlow} ${ringRotate} ${ringBreath} ${ringBreath2}
-        * { box-sizing: border-box; margin:0; padding:0; }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
-        button { font-family:'Space Grotesk',sans-serif; }
-        input { font-family:'Space Grotesk',sans-serif; }
-      `}</style>
-
       <OmniDashHeader
         tick={tick}
         isDark={isDark}
@@ -1518,8 +1489,8 @@ export default function OmniDashShell() {
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
           background: isDark
-            ? `radial-gradient(ellipse at 30% 20%,${T.orange}08 0%,transparent 60%),${T.bg}`
-            : `radial-gradient(ellipse at 30% 20%,${T.orange}06 0%,transparent 60%),#e8edf5`,
+            ? `radial-gradient(ellipse at 30% 20%,rgba(249,115,22,0.03) 0%,transparent 60%),${T.bg}`
+            : "radial-gradient(ellipse at 30% 20%,rgba(249,115,22,0.02) 0%,transparent 60%),#e8edf5",
         }}>
           {/* Blueprint grid background — bottom layer, theme-aware */}
           <div style={{
