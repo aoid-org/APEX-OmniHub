@@ -50,12 +50,17 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   MODULE_KEYS. `ApexAppsMcpModule.tsx` does not exist. An `apexApps.ts` contract exists in
   `dashboard/contracts/` (to be inspected at Phase 3 start). → Phase 3 (build).
 
-## Current Integrated Apps route
+## Current Integrated Apps route — REMEDIATED (Phase 4 ✓, 2026-06-28)
 
-- `OmniDashShell.tsx:1313-1400` IntegratedAppsWidget: 4 "Awaiting" placeholder slots + hardcoded
-  `INTEGRATIONS` SaaS array (Salesforce/Slack/QuickBooks/etc.); connect → toast
-  `"Integration {id} setup requires administrator privileges."` (`:1340`) = dead-end. No
-  Third-Party vs Connected-APEX split; no `connector_sessions` reference in dashboard. → Phase 4.
+- Was: `IntegratedAppsWidget` — 4 fake "Awaiting" slots + hardcoded `INTEGRATIONS` SaaS array +
+  admin-privileges dead-end toast; mixed semantics; no split.
+- Now: `ConnectionsWidget` (`OmniDashShell.tsx`) — split into **Third-Party Connections**
+  (CTA → OmniBoard via `OMNIBOARD_MODULE_KEY`) and **Connected APEX Apps** (CTA → `apex-apps-mcp`).
+  Hardcoded picker, admin toast, and fake cards removed. Honest empty states until verified
+  sources (connector_sessions / APEX install-state) are wired — tracked `APEX-CONN-SOURCES`.
+  Widget label updated in `WidgetSettingsModal.tsx`. E2E `omniboard-wiring.spec.ts` rewritten.
+  Note: `DashboardOverview/AppsSection.tsx` also says "Integrated Apps" but is NOT mounted by any
+  live route (dead component) — left untouched per Tree Law.
 
 ## Current OmniMedia source
 
@@ -135,7 +140,24 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   (CI bypasses repo-owned script; no machine-readable artifact). → Phase 14/15.
 - `artifacts/production-validation/` directory does not exist (only `build-artifacts/`).
 
-## Current Supabase env classification
+## OmniBoard gateway — VERIFIED (Phase 5, 2026-06-28)
+
+`OmniBoardWizard.tsx` already meets the §5 required behaviors: starts session on open
+(`useEffect→startSession`), shows loading, enables input only when a session exists and not
+COMPLETION, Retry performs a real network call, hides raw transport errors
+(`describeConnectionError` maps non-2xx/timeout → honest copy), and never marks connected without
+a verified `connection_spec` (`onComplete` only on `state==='COMPLETION' && connection_spec`).
+Edge classification: `ORCHESTRATOR_URL` unset → 503 `connect_unavailable` (BLOCKED-CONFIG);
+timeout → `connect_timeout` / network → `connect_unreachable` (BLOCKED-INFRA). No fake connected.
+DEFERRED (optional per §5/§28): inline HMAC FSM fallback (`OMNIBOARD_INLINE_FSM_FALLBACK` +
+`OMNIBOARD_SESSION_SECRET`). Honest "unavailable" gate is acceptable UX; full functional OmniBoard
+certification remains NO-GO until a reachable orchestrator or the inline fallback is wired.
+
+## Current Supabase env classification — DOCUMENTED (Phase 6 ✓, 2026-06-28)
+
+See `memory/omni-recall/docs/security/ENV_CLASSIFICATION.md` (full table + service-role proof).
+Source-level proof: client rejects service_role (`supabaseConfig.ts:63,71`); no client reads a
+service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original findings below.
 
 - Client (`apps/omnihub-site/src`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (legacy
   fallback `VITE_SUPABASE_ANON_KEY`). `supabaseConfig.ts:63,71` actively detects & rejects
