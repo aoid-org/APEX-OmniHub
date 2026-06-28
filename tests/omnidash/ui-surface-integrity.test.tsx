@@ -26,9 +26,6 @@ Object.defineProperty(globalThis, 'matchMedia', {
 describe('OmniDash UI Surface Integrity', () => {
   it('explicitly labels Metric Cards as (Simulated) when in demo mode', () => {
     const mockKpi = {
-      tradeline_paid_starts: 0,
-      tradeline_active_pilots: 0,
-      tradeline_churn_risks: 0,
       flowbills_demos: 0,
       flowbills_paid_accounts: 0,
       cash_days_to_cash: 0,

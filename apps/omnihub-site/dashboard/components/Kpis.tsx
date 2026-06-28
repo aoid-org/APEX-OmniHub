@@ -9,7 +9,7 @@ import { fetchKpiDaily, upsertKpiDailyEntry } from '@/omnidash/api';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 import { HiddenValue } from './HiddenMetric';
-import { LineChart, PlayCircle, AlertTriangle, MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
+import { MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -34,9 +34,6 @@ export const Kpis = () => {
   );
 
   const [form, setForm] = useState({
-    tradeline_paid_starts: todayRow?.tradeline_paid_starts ?? 0,
-    tradeline_active_pilots: todayRow?.tradeline_active_pilots ?? 0,
-    tradeline_churn_risks: todayRow?.tradeline_churn_risks ?? 0,
     flowbills_demos: todayRow?.flowbills_demos ?? 0,
     flowbills_paid_accounts: todayRow?.flowbills_paid_accounts ?? 0,
     cash_days_to_cash: todayRow?.cash_days_to_cash ?? 0,
@@ -46,9 +43,6 @@ export const Kpis = () => {
   useEffect(() => {
     if (todayRow) {
       setForm({
-        tradeline_paid_starts: todayRow.tradeline_paid_starts,
-        tradeline_active_pilots: todayRow.tradeline_active_pilots,
-        tradeline_churn_risks: todayRow.tradeline_churn_risks,
         flowbills_demos: todayRow.flowbills_demos,
         flowbills_paid_accounts: todayRow.flowbills_paid_accounts,
         cash_days_to_cash: todayRow.cash_days_to_cash ?? 0,
@@ -108,9 +102,6 @@ export const Kpis = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Day</TableHead>
-                <TableHead>TradeLine paid starts</TableHead>
-                <TableHead>Active pilots</TableHead>
-                <TableHead>Churn risks</TableHead>
                 <TableHead>FLOWBills demos</TableHead>
                 <TableHead>FLOWBills paid</TableHead>
                 <TableHead>Days to cash</TableHead>
@@ -121,9 +112,6 @@ export const Kpis = () => {
               {(kpiQuery.data || []).map((row) => (
                 <TableRow key={row.id}>
                   <TableCell><HiddenValue icon={Clock} value={row.day} /></TableCell>
-                  <TableCell><HiddenValue icon={LineChart} value={row.tradeline_paid_starts} /></TableCell>
-                  <TableCell><HiddenValue icon={PlayCircle} value={row.tradeline_active_pilots} /></TableCell>
-                  <TableCell><HiddenValue icon={AlertTriangle} value={row.tradeline_churn_risks} /></TableCell>
                   <TableCell><HiddenValue icon={MonitorPlay} value={row.flowbills_demos} /></TableCell>
                   <TableCell><HiddenValue icon={CreditCard} value={row.flowbills_paid_accounts} /></TableCell>
                   <TableCell>

@@ -36,6 +36,11 @@ interface OmniMediaState {
   readonly isPlaying: boolean;
   readonly isDocked: boolean;
   readonly volume: number;
+  // Batch 3b catalog/error API — kept in lock-step with the omnihub-site app store
+  // (apps/omnihub-site/src/stores/omniMediaStore.ts) so the dashboard media
+  // components typecheck identically under both alias-resolution targets.
+  readonly catalogVersion: number;
+  readonly mediaError: string | null;
   loadMedia: (payload: MediaPayload, autoPlay?: boolean) => Promise<void>;
   play: () => void;
   pause: () => void;
@@ -43,6 +48,9 @@ interface OmniMediaState {
   setDocked: (docked: boolean) => void;
   setVolume: (vol: number) => void;
   close: () => void;
+  bumpCatalog: () => void;
+  clearMediaError: () => void;
+  setMediaError: (message: string) => void;
 }
 
 // ============================================================================
@@ -54,6 +62,8 @@ export const useOmniMedia = create<OmniMediaState>((set, get) => ({
   isPlaying: false,
   isDocked: false,
   volume: 1,
+  catalogVersion: 0,
+  mediaError: null,
 
   loadMedia: async (payload, autoPlay = true) => {
     // Close previous media first (revoke blob URLs, reset state)
@@ -96,4 +106,10 @@ export const useOmniMedia = create<OmniMediaState>((set, get) => ({
     }
     set({ currentMedia: null, isPlaying: false, isDocked: false });
   },
+
+  bumpCatalog: () => set((state) => ({ catalogVersion: state.catalogVersion + 1 })),
+
+  clearMediaError: () => set({ mediaError: null }),
+
+  setMediaError: (message) => set({ mediaError: message }),
 }));

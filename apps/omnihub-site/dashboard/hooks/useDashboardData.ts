@@ -33,9 +33,6 @@ interface OmniDashSettings {
 interface KpiDaily {
   id: string;
   day: string;
-  tradeline_paid_starts: number | null;
-  tradeline_active_pilots: number | null;
-  tradeline_churn_risks: number | null;
   flowbills_demos: number | null;
   flowbills_paid_accounts: number | null;
   cash_days_to_cash: number | null;
@@ -106,7 +103,7 @@ export function useDashboardData(options?: { enabled?: boolean }): DashboardData
             .maybeSingle(),
           supabase
             .from('omnidash_kpi_daily')
-            .select('id, day, tradeline_paid_starts, tradeline_active_pilots, tradeline_churn_risks, flowbills_demos, flowbills_paid_accounts, cash_days_to_cash, ops_sev1_incidents')
+            .select('id, day, flowbills_demos, flowbills_paid_accounts, cash_days_to_cash, ops_sev1_incidents')
             .eq('user_id', userId)
             .order('day', { ascending: false })
             .limit(7),
@@ -171,9 +168,6 @@ export function useDashboardData(options?: { enabled?: boolean }): DashboardData
 
   const kpiSummary: KpiSummary = kpiHistory[0]
     ? {
-        tradeline_paid_starts: kpiHistory[0].tradeline_paid_starts ?? 0,
-        tradeline_active_pilots: kpiHistory[0].tradeline_active_pilots ?? 0,
-        tradeline_churn_risks: kpiHistory[0].tradeline_churn_risks ?? 0,
         flowbills_demos: kpiHistory[0].flowbills_demos ?? 0,
         flowbills_paid_accounts: kpiHistory[0].flowbills_paid_accounts ?? 0,
         cash_days_to_cash: kpiHistory[0].cash_days_to_cash ?? 0,

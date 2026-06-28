@@ -3,6 +3,8 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { UploadCloud, FileText, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getPlayableMediaKind, ingestUploadedMedia, sanitizeFilename } from '@/dashboard/lib/omniMediaCatalog';
+import { useOmniMedia } from '../../../src/stores/omniMediaStore';
 
 interface Props {
   readonly onClose: () => void;
@@ -10,6 +12,7 @@ interface Props {
 
 export default function FilesModule({ onClose }: Props) {
   const state = useOmniModuleState('files');
+  const bumpCatalog = useOmniMedia((s) => s.bumpCatalog);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [staged, setStaged] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -30,9 +33,11 @@ export default function FilesModule({ onClose }: Props) {
     e.target.value = '';
   };
 
-  // Real end-to-end upload to the tenant-scoped 'omnihub-files' bucket
-  // (RLS: first path segment must equal auth.uid() — migration 20260531000002).
-  // Mirrors the proven LinksModule auth -> write -> refetch pattern; honest on failure.
+  // Real end-to-end upload. Non-playable files go to the tenant-scoped 'omnihub-files'
+  // bucket (RLS: first path segment must equal auth.uid() — migration 20260531000002).
+  // Playable video/audio (detected from the browser-sniffed MIME type, never the filename)
+  // routes to the private 'omnimedia-assets' bucket and is ingested into the OmniMedia
+  // catalog so it shows up in the gallery/player instead of the plain files list.
   const handleUpload = async () => {
     if (!staged || isUploading) return;
     setIsUploading(true);
@@ -44,6 +49,39 @@ export default function FilesModule({ onClose }: Props) {
       setIsUploading(false);
       return;
     }
+
+    const mediaKind = getPlayableMediaKind(staged.type);
+
+    if (mediaKind) {
+      const path = `${userId}/media/${Date.now()}-${sanitizeFilename(staged.name)}`;
+      const { error } = await supabase.storage
+        .from('omnimedia-assets')
+        .upload(path, staged, { upsert: false, contentType: staged.type });
+      if (error) {
+        setIsUploading(false);
+        setUploadError(`Upload failed: ${error.message}`);
+        return;
+      }
+      try {
+        await ingestUploadedMedia({
+          storagePath: path,
+          title: staged.name,
+          kind: mediaKind,
+          mimeType: staged.type,
+          sizeBytes: staged.size,
+        });
+      } catch (err) {
+        setIsUploading(false);
+        setUploadError(`Upload failed: ${err instanceof Error ? err.message : 'omnimedia_ingest_failed'}`);
+        return;
+      }
+      setIsUploading(false);
+      setStaged(null);
+      bumpCatalog();
+      state.refetch?.();
+      return;
+    }
+
     const path = `${userId}/${Date.now()}-${staged.name}`;
     const { error } = await supabase.storage
       .from('omnihub-files')

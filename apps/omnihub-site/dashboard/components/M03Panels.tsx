@@ -33,11 +33,7 @@ export const SystemHealthOverview = () => {
   return (
     <GlassCard style={{ padding: 16 }}>
       <SectionLabel>System Health Overview</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginTop: 12 }}>
-        <div style={{ background: T.surface, padding: 12, borderRadius: 8, border: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 12, color: T.t2 }}>Agents Active</div>
-          <div style={{ fontSize: 20, color: T.cyan, fontWeight: 600 }}>{kpi.tradeline_active_pilots || 0}</div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 12 }}>
         <div style={{ background: T.surface, padding: 12, borderRadius: 8, border: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 12, color: T.t2 }}>Workflows</div>
           <div style={{ fontSize: 20, color: T.blue, fontWeight: 600 }}>{kpi.flowbills_paid_accounts || 0}</div>
@@ -47,8 +43,8 @@ export const SystemHealthOverview = () => {
           <div style={{ fontSize: 20, color: kpi.ops_sev1_incidents ? T.warn : T.green, fontWeight: 600 }}>{kpi.ops_sev1_incidents || 0}</div>
         </div>
         <div style={{ background: T.surface, padding: 12, borderRadius: 8, border: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 12, color: T.t2 }}>MAN Mode</div>
-          <div style={{ fontSize: 20, color: T.orange, fontWeight: 600 }}>{kpi.tradeline_churn_risks || 0}</div>
+          <div style={{ fontSize: 12, color: T.t2 }}>FLOWBills Demos</div>
+          <div style={{ fontSize: 20, color: T.cyan, fontWeight: 600 }}>{kpi.flowbills_demos || 0}</div>
         </div>
       </div>
     </GlassCard>
@@ -82,7 +78,7 @@ export const AgentActivityTimeline = () => {
 
   const data = dashData.kpiHistory.map(d => ({
     time: new Date(d.day).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    calls: d.tradeline_paid_starts || 0
+    calls: d.flowbills_demos || 0
   })).reverse();
 
   return (

@@ -33,10 +33,10 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   kpi: KpiSummary;
   systemHealth?: SystemHealthState;
 }) {
-  const eventsTracked = demoMode ? 0 : (kpi.tradeline_paid_starts ?? 0);
+  const eventsTracked = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
   const healthDisplay = demoMode ? 'Healthy' : systemHealth ? systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) : 'Unknown';
-  const guardianLoops = demoMode ? 1 : (kpi.tradeline_active_pilots ?? 0);
-  const staleChecks = demoMode ? 0 : (kpi.tradeline_churn_risks ?? 0);
+  const guardianLoops = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
+  const staleChecks = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
   const healthIsGreen = demoMode || systemHealth === 'healthy';
 
   return (

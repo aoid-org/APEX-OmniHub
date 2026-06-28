@@ -40,6 +40,7 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
+import { APEX_APPS_MODULE_KEY, OMNIBOARD_MODULE_KEY } from './contracts/omniSurfaceOwnership';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
@@ -1245,7 +1246,7 @@ const OmniSlateWidget = () => {
   );
 };
 
-// ─── Shared tile dimensions (used by both APEX Ecosystem and Integrated Apps)
+// ─── Shared tile dimensions (used by the APEX Ecosystem widget)
 const APP_TILE_STYLE: React.CSSProperties = {
   borderRadius:14,
   padding:"18px 14px",
@@ -1259,12 +1260,13 @@ const EcosystemWidget = () => {
   const { invoke } = useOmniModal();
 
   const handleAddApp = () => {
+    // Canon: APEX ecosystem apps open the APEX Apps MCP modal, NEVER OmniBoard.
     invoke({
       id: 'ecosystem-add-apex-app',
       provider: 'omnidash',
       type: 'module',
-      title: 'Connect App',
-      contextData: { moduleKey: 'omniboard-wizard' },
+      title: 'Connect APEX App',
+      contextData: { moduleKey: APEX_APPS_MODULE_KEY },
       onComplete: async () => {},
       onCancel: () => {},
     });
@@ -1309,91 +1311,82 @@ const EcosystemWidget = () => {
   );
 };
 
-// ─── Widget: Integrated Apps ──────────────────────────────────────────────────
-const IntegratedAppsWidget = () => {
+// ─── Widget: Connections (split — Third-Party + Connected APEX Apps) ──────────
+// Canon §4/§7: OmniBoard owns third-party provider connections; APEX Apps owns
+// first-party MCP/OmniPort apps. The legacy "Integrated Apps" widget (hardcoded
+// SaaS picker + admin-privileges dead-end toast + fake "Awaiting" cards) is
+// removed. Each section is single-owner with the correct CTA. Honest empty
+// states until a verified source (connector_sessions / APEX install-state) is
+// wired — tracked as APEX-CONN-SOURCES. No fabricated "connected" state.
+const ConnectionsWidget = () => {
   const { invoke } = useOmniModal();
 
-  const INTEGRATIONS = [
-    { id: 'salesforce', label: 'Salesforce CRM — Real-time pipeline sync' },
-    { id: 'slack', label: 'Slack — Team notifications & alerts' },
-    { id: 'quickbooks', label: 'QuickBooks — Accounting & invoicing' },
-    { id: 'github', label: 'GitHub — Code repositories & CI/CD' },
-    { id: 'stripe', label: 'Stripe — Payment processing & billing' },
-    { id: 'google-workspace', label: 'Google Workspace — Docs, Sheets, Drive' },
-    { id: 'hubspot', label: 'HubSpot — Marketing & lead management' },
-    { id: 'jira', label: 'Jira — Project tracking & sprints' },
-    { id: 'shopify', label: 'Shopify — E-commerce storefront' },
-    { id: 'twilio', label: 'Twilio — SMS, calls & communications' },
-  ];
-
-  const handleConnectApp = (slot: number) => {
+  const connectThirdParty = () => {
     invoke({
-      id: `integrated-app-connect-${slot}`,
+      id: 'connections-third-party',
       provider: 'omnidash',
-      type: 'selection',
-      title: 'Connect Integration',
-      description: 'Choose a third-party application to connect to your APEX workspace.',
-      schema: { items: INTEGRATIONS },
-      onComplete: async (result: Record<string, unknown>) => {
-        const selectedId = (result.data as Record<string, string>)?.selectedId;
-        if (selectedId) {
-          toast.info(`Integration ${selectedId} setup requires administrator privileges.`);
-        } else {
-          toast.info('Integration setup cancelled.');
-        }
-      },
+      type: 'module',
+      title: 'Connect Third-Party App',
+      contextData: { moduleKey: OMNIBOARD_MODULE_KEY },
+      onComplete: async () => {},
       onCancel: () => {},
     });
   };
 
+  const addApexApp = () => {
+    invoke({
+      id: 'connections-apex-app',
+      provider: 'omnidash',
+      type: 'module',
+      title: 'Connect APEX App',
+      contextData: { moduleKey: APEX_APPS_MODULE_KEY },
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
+
+  const ORANGE = '249,115,22';
+  const ctaStyle: React.CSSProperties = {
+    background: `rgba(${ORANGE},0.12)`, color: T.orange,
+    fontSize: 12, fontWeight: 700, padding: '8px 12px', borderRadius: 8,
+    cursor: 'pointer', border: `1px solid rgba(${ORANGE},0.4)`,
+    minHeight: 44, fontFamily: "'Space Grotesk',sans-serif",
+  };
+  const sublabel: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, color: T.t2,
+    textTransform: 'uppercase', letterSpacing: '0.04em',
+  };
+  const headerRow: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    gap: 8, flexWrap: 'wrap',
+  };
+
   return (
-  <GlassCard style={{ padding:"16px" }}>
-    <div style={{ marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-      <SectionLabel>Integrated Apps</SectionLabel>
-      <button
-        onClick={() => handleConnectApp(0)}
-        style={{
-          background: `${T.orange}22`, color: T.orange,
-          fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
-          cursor: "pointer", border: `1px solid ${T.orange}55`,
-          boxShadow: `0 0 8px ${T.orange}22`,
-          fontFamily: "'Space Grotesk',sans-serif",
-          transition: "all .18s",
-        }}
-      >
-        + Connect App
-      </button>
+  <GlassCard style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <SectionLabel>Connections</SectionLabel>
+
+    {/* Third-Party Connections — owned by OmniBoard */}
+    <div data-testid="connections-third-party" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={headerRow}>
+        <span style={sublabel}>Third-Party Connections</span>
+        <button type="button" onClick={connectThirdParty} style={ctaStyle}>+ Connect Third-Party App</button>
+      </div>
+      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
+        No third-party connections yet. Connect a provider through OmniBoard to see it here.
+      </p>
     </div>
-    {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
-      {[1,2,3,4].map(i => (
-        <button
-          key={`integrated-app-ph-${i}`}
-          draggable
-          onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: `awaiting-${i}`, label: `Awaiting Node ${i}` }))}
-          onClick={() => handleConnectApp(i)}
-          title="Connect app"
-          style={{
-            ...APP_TILE_STYLE,
-            background:T.surface,
-            border:`1px dashed ${T.border}`,
-            opacity:0.55,
-            cursor:"pointer",
-            transition:"opacity .2s, border-color .2s",
-          }}
-        >
-          <div style={{
-            width:22, height:22, borderRadius:6,
-            background:"rgba(255,255,255,0.06)",
-            border:"1px solid rgba(255,255,255,0.14)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            flexShrink:0,
-          }}>
-            <div style={{width:10,height:10,borderRadius:2,background:"rgba(255,255,255,0.20)"}} />
-          </div>
-          <div style={{fontSize:13,color:T.t3,letterSpacing:"0.04em",textTransform:"uppercase",fontWeight:600}}>Awaiting</div>
-        </button>
-      ))}
+
+    <div style={{ height: 1, background: T.border }} />
+
+    {/* Connected APEX Apps — owned by APEX Apps (MCP / OmniPort) */}
+    <div data-testid="connections-apex-apps" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={headerRow}>
+        <span style={sublabel}>Connected APEX Apps</span>
+        <button type="button" onClick={addApexApp} style={ctaStyle}>+ Add APEX App</button>
+      </div>
+      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
+        No APEX apps connected yet. Add one to open its OmniPort and start chatting.
+      </p>
     </div>
   </GlassCard>
   );
@@ -1456,7 +1449,7 @@ export default function OmniDashShell() {
   // Use static demo data if in demo mode to prevent showing empty unauthenticated states
   const dashData = isDemoMode ? {
     settings: { user_id: 'demo', demo_mode: true, anonymize_kpis: false, freeze_mode: false, updated_at: new Date().toISOString() },
-    kpiSummary: { tradeline_paid_starts: 142, tradeline_active_pilots: 12, tradeline_churn_risks: 1, flowbills_demos: 0, flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0 },
+    kpiSummary: { flowbills_demos: 0, flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0 },
     kpiHistory: [],
     openIncidents: [
       { id: 'inc-1', severity: 'sev2' as const, status: 'open' as const, title: 'Invoice batch #1042 processing delay', occurred_at: new Date().toISOString() },
@@ -1495,8 +1488,8 @@ export default function OmniDashShell() {
 
 
   const layoutContextValue = useMemo(() => ({
-    hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions
-  }), [hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions]);
+    hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions, userId
+  }), [hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions, userId]);
 
   return (
     <LayoutContext.Provider value={layoutContextValue}>
@@ -1576,8 +1569,8 @@ export default function OmniDashShell() {
             {/* Primary 3-column grid */}
             <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
 
-            {/* Integrated Apps row */}
-            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>}
+            {/* Connections row (split: Third-Party + Connected APEX Apps) */}
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><ConnectionsWidget /></DraggableWidget>}
 
             {/* M-03 Observability Panels */}
             <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />

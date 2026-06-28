@@ -2,6 +2,7 @@ import { encodeBase64Url } from 'https://deno.land/std@0.224.0/encoding/base64ur
 import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed } from '../_shared/cors.ts';
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
+import { handleOmniMediaRequest } from './omnimedia.ts';
 import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
 import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
@@ -594,7 +595,7 @@ async function resolveDashboard(
   const [kpiRes, incidentRes] = await Promise.allSettled([
     anonClient
       .from('omnidash_kpi_daily')
-      .select('tradeline_paid_starts, tradeline_active_pilots, ops_sev1_incidents')
+      .select('ops_sev1_incidents')
       .order('day', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -606,8 +607,6 @@ async function resolveDashboard(
   ]);
 
   const kpi = (kpiRes.status === 'fulfilled' ? kpiRes.value.data : null) as {
-    tradeline_paid_starts: number | null;
-    tradeline_active_pilots: number | null;
     ops_sev1_incidents: number | null;
   } | null;
 
@@ -620,8 +619,6 @@ async function resolveDashboard(
   }>;
 
   const items = normalizeModuleItems([
-    { id: 'paid_starts', label: 'Paid Starts', status: 'active', detail: String(kpi?.tradeline_paid_starts ?? 0) },
-    { id: 'active_pilots', label: 'Active Pilots', status: 'active', detail: String(kpi?.tradeline_active_pilots ?? 0) },
     {
       id: 'sev1_incidents',
       label: 'SEV1 Incidents',
@@ -1455,6 +1452,10 @@ async function handleServeRequest(req: Request): Promise<Response> {
 
   if (route === 'omniboard-next' && req.method === 'POST') {
     return handleOmniBoardNext(req, corsHeaders);
+  }
+
+  if (route.startsWith('omnimedia-') && req.method === 'POST') {
+    return handleOmniMediaRequest(route, req, corsHeaders);
   }
 
   const taskResponse = await routeTaskRequest(route, req, corsHeaders);

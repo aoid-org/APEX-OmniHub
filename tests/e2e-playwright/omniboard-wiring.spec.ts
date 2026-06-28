@@ -1,31 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
 
-test.describe('OmniBoard Modal Integration Wiring', () => {
+test.describe('Connections surface wiring (two-owner canon)', () => {
   test.beforeEach(async ({ page }) => {
     skipWithoutSupabaseConfig();
     await signInWithSupabaseSession(page);
   });
 
-  test('clicking an unconnected integration opens the Connect Integration modal', async ({ page }) => {
-    const appsHeader = page.getByText('Integrated Apps');
-    await appsHeader.scrollIntoViewIfNeeded();
-    await expect(appsHeader).toBeVisible();
-
+  test('Connections widget splits Third-Party and Connected APEX Apps', async ({ page }) => {
     const appsWidget = page.getByTestId('widget_apps');
-    const awaitingTile = appsWidget.getByRole('button', { name: /Awaiting/i }).first();
-    await expect(awaitingTile).toBeVisible();
+    await appsWidget.scrollIntoViewIfNeeded();
+    await expect(appsWidget.getByText('Connections', { exact: true })).toBeVisible();
+    await expect(appsWidget.getByTestId('connections-third-party')).toBeVisible();
+    await expect(appsWidget.getByTestId('connections-apex-apps')).toBeVisible();
+    // No legacy hardcoded picker / fake "Awaiting" tiles remain.
+    await expect(appsWidget.getByRole('button', { name: /Awaiting/i })).toHaveCount(0);
+  });
 
-    await awaitingTile.click();
-
-    const modalDialog = page.getByRole('dialog');
-    await expect(modalDialog).toBeVisible({ timeout: 5000 });
-    await expect(modalDialog.getByText('Connect Integration')).toBeVisible();
-    await expect(modalDialog.getByText('Choose a third-party application')).toBeVisible();
+  test('Connect Third-Party App opens OmniBoard (App Integration)', async ({ page }) => {
+    const appsWidget = page.getByTestId('widget_apps');
+    await appsWidget.getByRole('button', { name: /connect third-party app/i }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await expect(dialog.getByText(/app integration|omniboard/i)).toBeVisible();
     await expect(page).toHaveURL(/\/omnidash/);
   });
 
-  test('clicking Add APEX App opens the Connect APEX App modal without route drift', async () => {
-    test.skip(true, 'APEX-2016: Connect APEX App / Select an APEX module text absent from apps/omnihub-site source; EcosystemWidget Add APEX App CTA not yet wired to modal'); // APEX-2016
+  test('Add APEX App (Connections) opens the APEX Apps MCP modal, not OmniBoard', async ({ page }) => {
+    const appsWidget = page.getByTestId('widget_apps');
+    await appsWidget.getByRole('button', { name: /add apex app/i }).click();
+    await expect(page.getByTestId('apex-apps-mcp')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('apex-apps-prompt-input')).toBeVisible();
   });
 });

@@ -4,7 +4,7 @@
  */
 
 import { Connector, ConnectorRegistry } from '../types/connector';
-import { BarChart3, MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera } from 'lucide-react';
+import { MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera } from 'lucide-react';
 
 export interface IntegrationDef {
   id: string;
@@ -18,7 +18,6 @@ export interface IntegrationDef {
 }
 
 export const availableIntegrations: IntegrationDef[] = [
-  { id: '1', name: 'TradeLine 24/7', type: 'tradeline247', description: 'Analytics and business intelligence', icon: BarChart3, requiresApiKey: true },
   { id: '2', name: 'WhatsApp', type: 'whatsapp', description: 'Business messaging platform', icon: MessageCircle, requiresApiKey: true },
   { id: '3', name: 'Meta', type: 'facebook', description: 'Social media integration', icon: Globe, requiresApiKey: true },
   { id: '4', name: 'Messenger', type: 'messenger', description: 'Facebook Messenger integration', icon: MessageCircle, requiresApiKey: true },

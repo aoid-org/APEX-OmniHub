@@ -50,9 +50,6 @@ export const DEFAULT_OPS_STATE: OmniDashOpsState = {
 // ── KPI Summary ──────────────────────────────────────────────────────────────
 
 export interface KpiSummary {
-  tradeline_paid_starts: number;
-  tradeline_active_pilots: number;
-  tradeline_churn_risks: number;
   flowbills_demos: number;
   flowbills_paid_accounts: number;
   cash_days_to_cash: number;
@@ -60,9 +57,6 @@ export interface KpiSummary {
 }
 
 export const EMPTY_KPI_SUMMARY: KpiSummary = {
-  tradeline_paid_starts: 0,
-  tradeline_active_pilots: 0,
-  tradeline_churn_risks: 0,
   flowbills_demos: 0,
   flowbills_paid_accounts: 0,
   cash_days_to_cash: 0,

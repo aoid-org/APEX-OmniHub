@@ -21,7 +21,7 @@ const CANVAS_WIDGETS: ReadonlyArray<{ id: string; label: string }> = [
   { id: 'widget_agent', label: 'APEX Agent' },
   { id: 'widget_slate', label: 'OmniSlate AI' },
   { id: 'widget_eco', label: 'Ecosystem' },
-  { id: 'widget_apps', label: 'Integrated Apps' },
+  { id: 'widget_apps', label: 'Connections' },
   { id: 'm03_1', label: 'System Health Overview' },
   { id: 'm03_2', label: 'Agent Activity Timeline' },
   { id: 'm03_3', label: 'Guardian Alert Feed' },

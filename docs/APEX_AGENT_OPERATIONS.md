@@ -114,6 +114,7 @@ Deploy: `supabase functions deploy generate-business-skills --project-ref rtopre
 | Object | Used by | If missing |
 |---|---|---|
 | `agent_runs` (migration `20251221000001_omnilink_ops_pack.sql`) | gateway insert/poll, worker write-back | whole pipeline breaks |
+| `omnimedia_assets` + private `omnimedia-assets` storage bucket (migration `20260628000000_omnimedia_pipeline.sql`, **applied to `rtopreovkywofgwgmozi` 2026-06-28**) | OmniMedia upload-fed catalog/gallery/playback; fed by Files. RLS owner-scoped (`owner_user_id = auth.uid()`); bucket private, 200 MB, media MIME allowlist | OmniMedia catalog/ingest/playback breaks |
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
 | `user_generated_skills` + `check_skill_entitlement()` / `enforce_skill_entitlement` trigger (migrations `20260214000001`, `20260610000000`; free cap raised 3→5 by `20260622000000_skill_entitlement_free_cap_5.sql`) | SkillForge generation + paywall (BASIC = 5 active skills, 6th = 402) | SkillForge create + paywall breaks |

@@ -150,17 +150,33 @@ export function OmniSpatialHost() {
     }
   }, [isOpen]);
 
-  // Escape key minimizes dialog-mode (does not destroy — top-right X destroys)
+  // Modal Law: Escape CLOSES ordinary dialog modals (dismiss). Minimize is an
+  // explicit button only — it no longer hijacks Escape. Matches the top-right
+  // Close control semantics (abortModal → USER_DISMISSED).
   useEffect(() => {
     if (!isOpen || renderMode !== 'dialog' || isMinimized) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMinimized(true);
+      if (e.key === 'Escape') abortModal('USER_DISMISSED');
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isOpen, isMinimized, renderMode]);
+  }, [isOpen, isMinimized, renderMode, abortModal]);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Modal Law: return focus to the element that opened the modal on close.
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    openerRef.current =
+      typeof document !== 'undefined'
+        ? (document.activeElement as HTMLElement | null)
+        : null;
+    return () => {
+      openerRef.current?.focus?.();
+      openerRef.current = null;
+    };
+  }, [isOpen]);
 
   // Focus-trap logic: trap focus within the dialog node
   useEffect(() => {
@@ -282,7 +298,8 @@ export function OmniSpatialHost() {
               className="fixed inset-0 z-[9000] w-full h-full border-none bg-transparent cursor-default animate-in fade-in-0"
               onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                  minimizeModal();
+                  // Modal Law: backdrop click CLOSES ordinary modals.
+                  abortModal('USER_DISMISSED');
                 }
               }}
             />

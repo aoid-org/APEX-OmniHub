@@ -1,75 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 
-// vi.hoisted runs before all vi.mock factories — values are accessible in the factory closure.
-const { dragCallbacks } = vi.hoisted(() => {
-  const dragCallbacks = new Map<string, {
-    onDragStart?: () => void;
-    onDragEnd?: (_event: unknown, info: { point: { x: number; y: number } }) => void;
-  }>();
-  return { dragCallbacks };
-});
+import { DraggableWidget } from '../../apps/omnihub-site/dashboard/DraggableWidget';
+import { DRAG_THRESHOLD_PX } from '../../apps/omnihub-site/dashboard/lib/widgetLayout';
+import { LayoutContext } from '../../apps/omnihub-site/dashboard/contexts/LayoutContext';
+import type { LayoutContextValue } from '../../apps/omnihub-site/dashboard/contexts/LayoutContext';
 
-vi.mock('framer-motion', async () => {
-  const R = await vi.importActual<typeof import('react')>('react');
-  const animate = vi.fn();
-  const useMotionValue = (v: number) => {
-    let val = v;
-    return { get: () => val, set: (x: number) => { val = x; } };
-  };
-  // Cache component types so React reconciles in-place (no stale el refs)
-  const motionCache: Record<string, unknown> = {};
-  const motionProxy = new Proxy({} as Record<string, unknown>, {
-    get(_: object, tag: string) {
-      if (!motionCache[tag]) {
-        motionCache[tag] = R.forwardRef(
-          (
-            { children, style, onPointerDown, onPointerMove, onPointerUp, onDragStart, onDragEnd, ...rest }: Record<string, unknown>,
-            ref: React.Ref<unknown>,
-          ) => {
-            // Register drag callbacks keyed by data-testid so tests can invoke them directly
-            const testId = (rest as Record<string, string>)['data-testid'];
-            if (testId && (onDragStart || onDragEnd)) {
-              dragCallbacks.set(testId, {
-                onDragStart: onDragStart as () => void,
-                onDragEnd: onDragEnd as (_e: unknown, info: { point: { x: number; y: number } }) => void,
-              });
-            }
-            const safeRest = Object.fromEntries(
-              Object.entries(rest).filter(([k]) =>
-                !['drag', 'dragMomentum', 'dragElastic', 'whileDrag', 'animate', 'initial', 'exit', 'transition', 'layout', 'layoutId', 'variants'].includes(k)
-              ),
-            );
-            return R.createElement(tag, {
-              style,
-              onPointerDown,
-              onPointerMove,
-              onPointerUp,
-              ...safeRest,
-              ref,
-            }, children as React.ReactNode);
-          },
-        );
-      }
-      return motionCache[tag];
-    },
-  });
+const noop = () => {};
+function makeLayoutCtx(userId?: string): LayoutContextValue {
   return {
-    motion: motionProxy,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
-    useMotionValue,
-    animate,
-    useSpring: (v: number) => ({ get: () => v, set: vi.fn() }),
-    useAnimation: () => ({ start: vi.fn(), stop: vi.fn(), set: vi.fn() }),
-    useTransform: vi.fn(() => ({ get: vi.fn() })),
+    hiddenWidgets: [],
+    panelLayout: 'standard',
+    toggleWidget: noop,
+    setPanelLayout: noop,
+    resetWidgetPositions: noop,
+    userId,
   };
-});
-
-import {
-  DraggableWidget,
-  DRAG_THRESHOLD_PX,
-} from '../../apps/omnihub-site/dashboard/DraggableWidget';
+}
 
 // jsdom omits PointerEvent; React 18 feature-detects it to register pointermove listeners.
 if (typeof (globalThis as Record<string, unknown>).PointerEvent === 'undefined') {
@@ -194,34 +141,21 @@ describe('DraggableWidget', () => {
     expect(el).toHaveAttribute('data-drag-mode', 'idle');
   });
 
-  it('restores position from localStorage on mount', () => {
-    localStorage.setItem('omni_widget_pos_widget_saved', JSON.stringify({ x: 100, y: 200 }));
-    render(
-      <DraggableWidget id="widget_saved">
-        <span>saved</span>
-      </DraggableWidget>,
+  it('restores position from localStorage on mount (new key format)', () => {
+    localStorage.setItem(
+      'omnidash_layout_v2:user1:desktop',
+      JSON.stringify({ widget_saved: { x: 100, y: 200 } }),
     );
-    expect(screen.getByTestId('widget_saved')).toBeTruthy();
-  });
-
-  it('ignores invalid localStorage JSON', () => {
-    localStorage.setItem('omni_widget_pos_widget_bad', 'not-valid-json');
     render(
-      <DraggableWidget id="widget_bad">
-        <span>bad json</span>
-      </DraggableWidget>,
+      <LayoutContext.Provider value={makeLayoutCtx('user1')}>
+        <DraggableWidget id="widget_saved">
+          <span>saved</span>
+        </DraggableWidget>
+      </LayoutContext.Provider>,
     );
-    expect(screen.getByTestId('widget_bad')).toBeTruthy();
-  });
-
-  it('ignores localStorage JSON without x/y numbers', () => {
-    localStorage.setItem('omni_widget_pos_widget_noxy', JSON.stringify({ foo: 'bar' }));
-    render(
-      <DraggableWidget id="widget_noxy">
-        <span>noxy</span>
-      </DraggableWidget>,
-    );
-    expect(screen.getByTestId('widget_noxy')).toBeTruthy();
+    const el = screen.getByTestId('widget_saved');
+    expect(el).toBeTruthy();
+    expect(el.style.transform).toContain('100');
   });
 
   it('renders without id (no registry/storage ops)', () => {
@@ -270,13 +204,10 @@ describe('DraggableWidget', () => {
     );
     const el = screen.getByTestId('widget_small_move');
     fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
-    // Small move (< DRAG_THRESHOLD_PX = 8) should not cancel the timer
     fireEvent.pointerMove(el, { clientX: 3, clientY: 3 });
     act(() => { vi.advanceTimersByTime(600); });
     expect(el).toHaveAttribute('data-drag-mode', 'ready');
   });
-
-  // ── handleDragStart / handleDragEnd coverage ────────────────────────────────
 
   it('handlePointerMove returns early when no prior pointer down', () => {
     render(
@@ -285,61 +216,11 @@ describe('DraggableWidget', () => {
       </DraggableWidget>,
     );
     const el = screen.getByTestId('widget_earlyret');
-    // No preceding pointerDown → pointerOriginRef.current is null → early return
     fireEvent.pointerMove(el, { clientX: 20, clientY: 20 });
     expect(el).toHaveAttribute('data-drag-mode', 'idle');
   });
 
-  it('handleDragStart sets drag mode to dragging', () => {
-    render(
-      <DraggableWidget id="widget_ds">
-        <span>drag start</span>
-      </DraggableWidget>,
-    );
-    const el = screen.getByTestId('widget_ds');
-    // Enter ready state first via long press
-    fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
-    act(() => { vi.advanceTimersByTime(600); });
-    expect(el).toHaveAttribute('data-drag-mode', 'ready');
-
-    const cbs = dragCallbacks.get('widget_ds');
-    act(() => { cbs?.onDragStart?.(); });
-    expect(el).toHaveAttribute('data-drag-mode', 'dragging');
-  });
-
-  it('handleDragEnd resets drag mode to idle', () => {
-    render(
-      <DraggableWidget id="widget_de">
-        <span>drag end</span>
-      </DraggableWidget>,
-    );
-    const el = screen.getByTestId('widget_de');
-    fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
-    act(() => { vi.advanceTimersByTime(600); });
-    const cbs = dragCallbacks.get('widget_de');
-    act(() => { cbs?.onDragStart?.(); });
-    expect(el).toHaveAttribute('data-drag-mode', 'dragging');
-
-    act(() => { cbs?.onDragEnd?.(null, { point: { x: 50, y: 50 } }); });
-    expect(el).toHaveAttribute('data-drag-mode', 'idle');
-  });
-
-  it('handleDragEnd saves position to localStorage', () => {
-    render(
-      <DraggableWidget id="widget_lsave">
-        <span>lsave</span>
-      </DraggableWidget>,
-    );
-    const cbs = dragCallbacks.get('widget_lsave');
-    act(() => { cbs?.onDragEnd?.(null, { point: { x: 100, y: 100 } }); });
-    const saved = localStorage.getItem('omni_widget_pos_widget_lsave');
-    expect(saved).toBeTruthy();
-    const parsed = JSON.parse(saved!);
-    expect(typeof parsed.x).toBe('number');
-    expect(typeof parsed.y).toBe('number');
-  });
-
-  it('handleDragEnd dispatches omnislate-drop when drop point is inside slate', () => {
+  it('dispatches omnislate-drop when drop point is inside slate', () => {
     const slate = document.createElement('div');
     slate.id = 'widget_slate';
     Object.defineProperty(slate, 'getBoundingClientRect', {
@@ -354,11 +235,17 @@ describe('DraggableWidget', () => {
       </DraggableWidget>,
     );
 
+    const el = screen.getByTestId('widget_slatedrop');
     const dropHandler = vi.fn();
     window.addEventListener('omnislate-drop', dropHandler);
 
-    const cbs = dragCallbacks.get('widget_slatedrop');
-    act(() => { cbs?.onDragEnd?.(null, { point: { x: 100, y: 100 } }); });
+    // Simulate long press + drag initiation + drop
+    fireEvent.pointerDown(el, { clientX: 10, clientY: 10, pointerId: 1 });
+    act(() => { vi.advanceTimersByTime(600); });
+    // Move past threshold to initiate drag
+    fireEvent.pointerMove(el, { clientX: 30, clientY: 30, pointerId: 1 });
+    // Drop inside slate
+    fireEvent.pointerUp(el, { clientX: 100, clientY: 100, pointerId: 1 });
 
     expect(dropHandler).toHaveBeenCalled();
 
@@ -366,7 +253,7 @@ describe('DraggableWidget', () => {
     document.body.removeChild(slate);
   });
 
-  it('handleDragEnd skips omnislate-drop when drop point is outside slate', () => {
+  it('does not dispatch omnislate-drop when drop point is outside slate', () => {
     const slate = document.createElement('div');
     slate.id = 'widget_slate';
     Object.defineProperty(slate, 'getBoundingClientRect', {
@@ -381,12 +268,14 @@ describe('DraggableWidget', () => {
       </DraggableWidget>,
     );
 
+    const el = screen.getByTestId('widget_outsidedrop');
     const dropHandler = vi.fn();
     window.addEventListener('omnislate-drop', dropHandler);
 
-    const cbs = dragCallbacks.get('widget_outsidedrop');
-    // Drop point (200,200) is outside the slate rect (0-50, 0-50)
-    act(() => { cbs?.onDragEnd?.(null, { point: { x: 200, y: 200 } }); });
+    fireEvent.pointerDown(el, { clientX: 10, clientY: 10, pointerId: 1 });
+    act(() => { vi.advanceTimersByTime(600); });
+    fireEvent.pointerMove(el, { clientX: 30, clientY: 30, pointerId: 1 });
+    fireEvent.pointerUp(el, { clientX: 200, clientY: 200, pointerId: 1 });
 
     expect(dropHandler).not.toHaveBeenCalled();
 

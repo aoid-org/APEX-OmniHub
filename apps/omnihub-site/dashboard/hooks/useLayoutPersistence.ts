@@ -131,10 +131,11 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
 
   const resetWidgetPositions = useCallback(() => {
     try {
+      // Clear new consolidated layout keys
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith('omni_widget_pos_')) {
+        if (key?.startsWith('omnidash_layout_v2:') || key?.startsWith('omni_widget_pos_')) {
           keys.push(key);
         }
       }

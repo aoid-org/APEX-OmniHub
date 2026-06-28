@@ -68,7 +68,6 @@ vi.mock('dashboard/DraggableWidget', () => ({
   DraggableWidget: ({ children, id }: { children?: ReactNode; id?: string }) => (
     <div data-testid={id}>{children}</div>
   ),
-  DRAG_THRESHOLD_PX: 8,
 }));
 
 vi.mock('dashboard/hooks/useLayoutPersistence', () => ({
@@ -92,8 +91,7 @@ vi.mock('dashboard/hooks/useLayoutPersistence', () => ({
 vi.mock('dashboard/hooks/useDashboardData', () => ({
   useDashboardData: vi.fn(() => ({
     kpi: {
-      tradeline_paid_starts: 0, tradeline_active_pilots: 0,
-      tradeline_churn_risks: 0, flowbills_demos: 0,
+      flowbills_demos: 0,
       flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0,
     },
     settings: null, kpiHistory: [], openIncidents: [],

@@ -7,9 +7,8 @@ import type { KpiSummary } from '../../apps/omnihub-site/dashboard/types/dashboa
 const kpiWithIncidents: KpiSummary = {
   ...EMPTY_KPI_SUMMARY,
   ops_sev1_incidents: 2,
-  tradeline_paid_starts: 10,
-  tradeline_active_pilots: 3,
-  tradeline_churn_risks: 1,
+  flowbills_demos: 10,
+  flowbills_paid_accounts: 3,
 };
 
 describe('SystemHealthRow', () => {
@@ -50,7 +49,7 @@ describe('SystemHealthRow', () => {
 
   it('renders stale checks count when non-zero', () => {
     render(<SystemHealthRow demoMode={false} kpi={kpiWithIncidents} />);
-    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
   });
 
   it('renders 1 loop in demo mode', () => {

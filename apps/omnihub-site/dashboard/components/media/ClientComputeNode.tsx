@@ -19,6 +19,7 @@
 
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useOmniMedia } from '@/stores/omniMediaStore';
+import { fetchOmniMediaCatalog } from '@/dashboard/lib/omniMediaCatalog';
 
 export interface ClientComputeNodeHandle {
   readonly mediaElement: HTMLMediaElement | null;
@@ -26,10 +27,38 @@ export interface ClientComputeNodeHandle {
 
 export const ClientComputeNode = forwardRef<ClientComputeNodeHandle>(
   function ClientComputeNode(_props, ref) {
-    const { currentMedia, isPlaying, volume } = useOmniMedia();
+    const { currentMedia, isPlaying, volume, mediaError, loadMedia, setMediaError, clearMediaError } = useOmniMedia();
     const mediaRef = useRef<HTMLMediaElement | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+    // A playback error (e.g. expired signed URL) sets mediaError. The next play
+    // attempt re-resolves a fresh signed URL from the catalog instead of retrying
+    // the same dead URL.
+    useEffect(() => {
+      if (!isPlaying || !mediaError || !currentMedia || currentMedia.type === 'embed') return;
+      let cancelled = false;
+      (async () => {
+        try {
+          const items = await fetchOmniMediaCatalog();
+          const fresh = items.find((i) => i.id === currentMedia.id);
+          if (cancelled || !fresh?.source) return;
+          clearMediaError();
+          await loadMedia(
+            { ...currentMedia, source: fresh.source },
+            true,
+          );
+        } catch {
+          if (!cancelled) {
+            setMediaError('omnimedia_refresh_failed');
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPlaying, mediaError]);
 
     // Expose media element to parent for seek/progress tracking
     useImperativeHandle(ref, () => ({
@@ -118,6 +147,7 @@ export const ClientComputeNode = forwardRef<ClientComputeNodeHandle>(
           playsInline
           className="w-full h-full object-cover rounded-md"
           controls={false}
+          onError={() => setMediaError('omnimedia_playback_error')}
         >
           <track kind="captions" />
         </video>
@@ -130,6 +160,7 @@ export const ClientComputeNode = forwardRef<ClientComputeNodeHandle>(
         src={currentMedia.source}
         crossOrigin="anonymous"
         className="hidden"
+        onError={() => setMediaError('omnimedia_playback_error')}
       >
         <track kind="captions" />
       </audio>

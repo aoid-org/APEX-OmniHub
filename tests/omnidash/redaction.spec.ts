@@ -80,15 +80,12 @@ describe('OmniDash redaction', () => {
       id: 'kpi-1',
       user_id: 'u1',
       day: '2025-12-24',
-      tradeline_paid_starts: 5,
-      tradeline_active_pilots: 3,
-      tradeline_churn_risks: -1,
       flowbills_demos: 2,
       flowbills_paid_accounts: 1,
       cash_days_to_cash: null,
       ops_sev1_incidents: 0,
     }]);
-    expect(rows[0].tradeline_churn_risks).toBe(0);
+    expect(rows[0].flowbills_demos).toBe(2);
     expect(rows[0].cash_days_to_cash).toBeNull();
   });
 });

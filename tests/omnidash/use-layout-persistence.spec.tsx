@@ -95,14 +95,16 @@ describe('useLayoutPersistence', () => {
     expect(result.current.panelLayout).toBe('reversed');
   });
 
-  it('resetWidgetPositions removes omni_widget_pos_ keys from localStorage', () => {
+  it('resetWidgetPositions removes both legacy and new layout keys from localStorage', () => {
     localStorage.setItem('omni_widget_pos_widget_agent', JSON.stringify({ x: 100, y: 200 }));
     localStorage.setItem('omni_widget_pos_widget_eco', JSON.stringify({ x: 50, y: 50 }));
+    localStorage.setItem('omnidash_layout_v2:user1:desktop', JSON.stringify({ a: { x: 1, y: 1 } }));
     localStorage.setItem('other_key', 'keep-me');
     const { result } = renderHook(() => useLayoutPersistence());
     act(() => { result.current.resetWidgetPositions(); });
     expect(localStorage.getItem('omni_widget_pos_widget_agent')).toBeNull();
     expect(localStorage.getItem('omni_widget_pos_widget_eco')).toBeNull();
+    expect(localStorage.getItem('omnidash_layout_v2:user1:desktop')).toBeNull();
     expect(localStorage.getItem('other_key')).toBe('keep-me');
   });
 
