@@ -2,6 +2,7 @@ import { encodeBase64Url } from 'https://deno.land/std@0.224.0/encoding/base64ur
 import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed } from '../_shared/cors.ts';
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
+import { handleOmniMediaRequest } from './omnimedia.ts';
 import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
 import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
@@ -1455,6 +1456,10 @@ async function handleServeRequest(req: Request): Promise<Response> {
 
   if (route === 'omniboard-next' && req.method === 'POST') {
     return handleOmniBoardNext(req, corsHeaders);
+  }
+
+  if (route.startsWith('omnimedia-') && req.method === 'POST') {
+    return handleOmniMediaRequest(route, req, corsHeaders);
   }
 
   const taskResponse = await routeTaskRequest(route, req, corsHeaders);
