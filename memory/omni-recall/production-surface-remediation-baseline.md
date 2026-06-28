@@ -302,3 +302,19 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
   functional claims.
 - UI-006 remains open as P2. This patch is containment/a11y/test hardening only;
   it does not implement a real drag/snap/collision-safe layout solution.
+
+## PR #1515 bottom-nav P0 API alignment — 2026-06-28
+
+- Context: PR #1515 was rebased onto `origin/main`, where Claude/P0 exposes the
+  `OmniMobileBottomNav` callback as `onSelect` instead of the stale
+  `setActiveTab` prop.
+- Root cause: the new exactly-one-active-tab regression test still passed
+  `setActiveTab`, causing CI `npm run typecheck` to fail with TS2322.
+- Fix: update the test-only call site to pass `onSelect={setActiveTab}` and keep
+  the existing assertion that exactly one tab has `aria-selected="true"` for each
+  real mobile tab.
+- Validation: `npm test -- tests/omnidash/omni-mobile-bottom-nav.spec.tsx`,
+  `npm run typecheck`, and `git diff --check` passed locally after the rebase.
+- Certification note: this is CI/API alignment only. It does not add browser
+  evidence for modal behavior, UI-005 widget-control obstruction, or UI-020
+  network proof for `omnimedia-catalog`.

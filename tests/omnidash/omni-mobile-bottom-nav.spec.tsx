@@ -26,7 +26,7 @@ describe('OmniMobileBottomNav', () => {
 
   it.each(TABS)('exposes exactly one active tab when "%s" is selected', (tab) => {
     const setActiveTab = vi.fn();
-    render(<OmniMobileBottomNav activeTab={tab} setActiveTab={setActiveTab} />);
+    render(<OmniMobileBottomNav activeTab={tab} onSelect={setActiveTab} />);
 
     const selectedTabs = screen.getAllByRole('tab').filter((button) =>
       button.getAttribute('aria-selected') === 'true',
@@ -43,7 +43,7 @@ describe('OmniMobileBottomNav', () => {
     expect(appsTab).toHaveAttribute('aria-selected', 'false');
   });
 
-  it('calls setActiveTab when a tab is clicked', () => {
+  it('calls onSelect when a tab is clicked', () => {
     const setActiveTab = vi.fn();
     render(<OmniMobileBottomNav activeTab="home" onSelect={setActiveTab} />);
     fireEvent.click(screen.getByRole('tab', { name: /insights/i }));
