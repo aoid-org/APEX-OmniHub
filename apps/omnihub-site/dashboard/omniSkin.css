@@ -50,3 +50,117 @@
 ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
 button { font-family:'Space Grotesk',sans-serif; }
 input { font-family:'Space Grotesk',sans-serif; }
+
+/* ─── OmniSkin Engine (OSE v1.1) — Component Classes (Layer 2b) ─────────────
+ * Static, repeated, interactive OmniDash surfaces extracted from JSX inline
+ * styles. Visually 1:1 with the prior inline styles; the win is shared
+ * :hover / :focus-visible / disabled / coarse-pointer (44px) parity that
+ * inline styles cannot express. Dynamic values (theme color, live state,
+ * runtime geometry) stay inline on the element.
+ */
+
+/* Header icon-only buttons (theme toggle, notification bell). 34×34 base;
+ * the theme toggle sets its own color inline (warn/blue by theme). */
+.ose-icon-button {
+  width: 34px; height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--omni-card);
+  border: 1px solid var(--omni-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--omni-t2);
+  cursor: pointer;
+  position: relative;
+  transition: color .2s, border-color .15s, background .15s;
+}
+.ose-icon-button:hover { border-color: var(--omni-orange); }
+.ose-icon-button:focus-visible {
+  outline: 2px solid var(--omni-orange);
+  outline-offset: 2px;
+}
+.ose-icon-button:disabled,
+.ose-icon-button[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+/* Unread badge anchored to an icon button. */
+.ose-icon-button__badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--omni-orange);
+  border: 2px solid var(--omni-surface);
+  color: #fff; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Header avatar — auth-derived initials. Gradient/shape static; text dynamic. */
+.ose-avatar-button {
+  width: 34px; height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--omni-blue), var(--omni-orange));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 11.9px; font-weight: 800;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.27);
+  cursor: pointer;
+}
+.ose-avatar-button:focus-visible {
+  outline: 2px solid var(--omni-orange);
+  outline-offset: 2px;
+}
+
+/* Integrated Apps Gallery (display-only — owns no connection flow). */
+.ose-integrated-apps-gallery { padding: 16px; }
+.ose-integrated-apps-grid {
+  display: grid;
+  /* min(100%, 150px) keeps slots from overflowing containers narrower than 150px */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+}
+.ose-integrated-apps-slot {
+  border-radius: 14px;
+  padding: 18px 14px;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+  min-height: 72px;
+  background: var(--omni-surface);
+  border: 1px dashed var(--omni-border);
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Coarse-pointer (touch) — guarantee 44px minimum hit targets. */
+@media (pointer: coarse) {
+  .ose-icon-button,
+  .ose-avatar-button { min-width: 44px; min-height: 44px; }
+}
+
+/* ─── Live-shell responsive repair ─────────────────────────────────────────
+ * The OmniDashShell `.omni-*` classes previously carried NO CSS rules — layout
+ * was entirely inline + JS (useViewport). These rules add the missing
+ * narrow-desktop behaviour without disturbing the JS desktop/tablet/mobile
+ * branching. Rail width is driven by --omni-rail-width (theme.css default 300px).
+ */
+
+/* Flanking rails read the shared width token (was an inline literal). */
+.omni-sidebar,
+.omni-right-panel { width: var(--omni-rail-width, 300px); }
+
+/* Header + canvas children must be allowed to shrink (prevent overflow/clipping). */
+.omni-shell-main { min-width: 0; }
+.omni-header-search { min-width: 0; }
+.omni-header-actions { min-width: 0; }
+.omni-canvas-container { min-width: 0; }
+
+/* Narrow desktop (1025–1365px): still `isDesktop` in JS, so both 300px rails
+ * render. Shrink them so the center canvas keeps usable width. */
+@media (min-width: 1025px) and (max-width: 1365px) {
+  :root { --omni-rail-width: 240px; }
+  /* Let the header search collapse further before any control clips. */
+  .omni-header-search { margin-right: 6px; }
+}
+
+/* Below the JS desktop threshold the rails fold into the drawer; ensure no
+ * residual fixed width leaks in. */
+@media (max-width: 1024px) {
+  :root { --omni-rail-width: 100%; }
+}

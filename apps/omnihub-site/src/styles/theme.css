@@ -126,6 +126,10 @@
   /* Grid texture (subtle) */
   --grid-texture: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 40V0h1v40H0zm40-40v40h-1V0h1z' fill='%230f1729' fill-opacity='0.02'/%3E%3Cpath d='M0 0h40v1H0V0zm0 40h40v-1H0v1z' fill='%230f1729' fill-opacity='0.02'/%3E%3C/svg%3E");
 
+  /* OmniDash flanking-rail width — single source of truth; narrowed in the
+     1025–1365px band (see omniSkin.css) so the center canvas never crams. */
+  --omni-rail-width: 300px;
+
   /* === OmniDash Tokens (Light) === */
   --omni-bg: #f8fafc;
   --omni-surface: #ffffff;

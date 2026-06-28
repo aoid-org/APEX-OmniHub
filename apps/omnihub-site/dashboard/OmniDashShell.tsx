@@ -49,11 +49,12 @@ import type { CSSProperties, Dispatch, SetStateAction } from "react";
 
 // ─── Layout constants ───
 /**
- * Single source of truth for BOTH flanking rail widths (left nav + right panel).
- * One constant guarantees the two sides can never desync, so the central canvas
- * stays optically centered. Do NOT replace with inline literals.
+ * Flanking-rail width (left nav + right panel) is owned by the `--omni-rail-width`
+ * CSS custom property (theme.css default 300px), applied via the `.omni-sidebar`
+ * / `.omni-right-panel` classes in omniSkin.css. A single token keeps the two
+ * sides in sync AND lets the 1025–1365px narrow-desktop media query shrink them
+ * so the center canvas never crams — something an inline literal cannot do.
  */
-const OMNI_RAIL_WIDTH = 300;
 
 interface AppIconProps {
   idx: number;
@@ -328,7 +329,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 
   return (
     <div className="omni-sidebar" style={{
-      width:OMNI_RAIL_WIDTH, flexShrink:0,
+      flexShrink:0,
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
       display:"flex", flexDirection:"column",
@@ -599,13 +600,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
 
         {/* Theme Toggle — Sun/Moon */}
-        <button aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{
-          width:34, height:34, borderRadius:9, flexShrink:0,
-          background:T.card, border:`1px solid ${T.border}`,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          cursor:"pointer", color: isDark ? T.warn : T.blue,
-          transition:"color .2s",
-        }}>
+        <button className="ose-icon-button" aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
           {isDark
             ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5"/>
@@ -621,40 +616,19 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
         </button>
 
         {/* Bell */}
-        <button aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`} onClick={handleBell} style={{
-          width:34, height:34, borderRadius:9, flexShrink:0,
-          background:T.card, border:`1px solid ${T.border}`,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          cursor:"pointer", color:T.t2, position:"relative",
-          transition:"border-color .15s",
-        }}>
+        <button className="ose-icon-button" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`} onClick={handleBell}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
           {unreadCount > 0 && (
-            <div style={{
-              position:"absolute", top:-4, right:-4, minWidth:16, height:16, 
-              borderRadius:8, background:T.orange, border:`2px solid ${T.surface}`,
-              color:"#fff", fontSize:9, fontWeight:800, display:"flex",
-              alignItems:"center", justifyContent:"center", padding:"0 4px"
-            }}>
+            <div className="ose-icon-button__badge">
               {unreadCount}
             </div>
           )}
         </button>
 
         {/* Avatar — initials from authenticated user */}
-        <div
-          role="img"
-          aria-label="User avatar"
-          style={{
-          width:34, height:34, borderRadius:9, flexShrink:0,
-          background:`linear-gradient(135deg,${T.blue},${T.orange})`,
-          display:"flex",alignItems:"center",justifyContent:"center",
-          color:"#fff",fontSize:11.9,fontWeight:800,
-          boxShadow:"0 2px 8px rgba(59,130,246,0.27)",
-          cursor:"pointer",
-        }}>{userInitials}</div>
+        <div className="ose-avatar-button" role="img" aria-label="User avatar">{userInitials}</div>
       </div>
     </div>
   );
@@ -1311,18 +1285,12 @@ const IntegratedAppsGalleryWidget = () => (
     <div style={{ marginBottom: 10 }}>
       <SectionLabel>Integrated Apps Gallery</SectionLabel>
     </div>
-    <div data-testid="integrated-apps" className="omni-grid-apps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+    <div data-testid="integrated-apps" className="omni-grid-apps ose-integrated-apps-grid">
       {[1, 2, 3, 4].map(i => (
         <div
           key={`integrated-app-ph-${i}`}
+          className="ose-integrated-apps-slot"
           aria-label={`Integrated app slot ${i} — awaiting connection`}
-          style={{
-            ...APP_TILE_STYLE,
-            background: T.surface,
-            border: `1px dashed ${T.border}`,
-            opacity: 0.6,
-            cursor: 'default',
-          }}
         >
           <span style={{
             width: 22, height: 22, borderRadius: 6,
@@ -1341,7 +1309,9 @@ const IntegratedAppsGalleryWidget = () => (
 );
 
 function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], isDesktop: boolean }>) {
-  const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
+  // Side columns use minmax(0, …) so they shrink before the center widget on
+  // narrow desktops (the old fixed `220px` columns squeezed the center canvas).
+  const gridCols = isDesktop ? "minmax(0, 220px) minmax(0, 1fr) minmax(0, 220px)" : "1fr";
   const gridHeight = isDesktop ? 300 : undefined;
   return (
     <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
@@ -1471,7 +1441,7 @@ export default function OmniDashShell() {
             data-testid="rt_security"
             className="omni-right-panel"
             style={{
-              width: OMNI_RAIL_WIDTH, flexShrink: 0,
+              flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
@@ -1562,7 +1532,7 @@ export default function OmniDashShell() {
             data-testid="rt_security"
             className="omni-right-panel"
             style={{
-              width: OMNI_RAIL_WIDTH, flexShrink: 0,
+              flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
