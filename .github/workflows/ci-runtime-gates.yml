@@ -455,12 +455,19 @@ jobs:
           retention-days: 7
 
       - name: Run K6 Performance Tests (SOFT gate / p99<800ms)
-        run: |
-          if command -v k6 &> /dev/null; then
-            k6 run loadtest.js
-          else
-            echo "k6 not-yet-accessible: missing from runner image"
-          fi
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        continue-on-error: true
+        run: npm run perf:k6:smoke
+
+      - name: Upload performance evidence
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        continue-on-error: true
+        with:
+          name: performance-summary
+          path: artifacts/production-validation/performance-summary.json
+          retention-days: 30
+          if-no-files-found: ignore
 
       - name: Upload test screenshots
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

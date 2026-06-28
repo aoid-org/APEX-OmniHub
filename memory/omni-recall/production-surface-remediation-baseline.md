@@ -125,20 +125,23 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   (APEX-2009) are `test.skip`; no `readyState`/`currentTime`/`media.error` assertions anywhere.
   → Phase 12.
 
-## Current accepted findings and code-wiring status
+## Current accepted findings and code-wiring status — REMEDIATED (Phase 14 ✓, 2026-06-28)
 
-- `accepted-findings.md` lists only **APEX-1202** (k6 perf, `p99 < 800ms`, SOFT/main-only,
-  ACCEPTED-DEFERRED). **APEX-2011** (Links fallback) referenced only in `AGENTS.md:831-834`, not in
-  the registry. No machine-readable evidence artifact. → Phase 14 (code-wire + register).
+- `accepted-findings.md` registers **APEX-1202** (k6 perf, `p99 < 800ms`, SOFT/main-only,
+  ACCEPTED-DEFERRED) and **APEX-2011** (Links fallback, SOFT/non-blocking, ACCEPTED-DEFERRED).
+  Machine-readable evidence artifact `artifacts/production-validation/performance-summary.json`
+  is created at runtime by `perf-k6-smoke.mjs` and uploaded by CI.
 
-## Current CI / runtime gate behavior
+## Current CI / runtime gate behavior — REMEDIATED (Phase 14/15 ✓, 2026-06-28)
 
-- `ci-runtime-gates.yml:457-463` k6 step runs **inline `k6 run loadtest.js`**, NOT the repo-owned
-  `perf:k6:smoke` (`package.json:111` → `node scripts/ci/perf-k6-smoke.mjs`). No
-  `continue-on-error`, no branch-scope guard on the step, no upload of
-  `artifacts/production-validation/performance-summary.json`. This is a contract automatic-NO-GO
-  (CI bypasses repo-owned script; no machine-readable artifact). → Phase 14/15.
-- `artifacts/production-validation/` directory does not exist (only `build-artifacts/`).
+- `ci-runtime-gates.yml` k6 step now runs **`npm run perf:k6:smoke`** (repo-owned script),
+  with `continue-on-error: true` (SOFT gate), scoped to `main`/`master` branches only
+  (`if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'`). Separate step
+  uploads `artifacts/production-validation/performance-summary.json` as a CI artifact (30-day
+  retention, `if-no-files-found: ignore`). CI and `package.json:111` now agree on
+  `npm run perf:k6:smoke` → `node scripts/ci/perf-k6-smoke.mjs`.
+- `artifacts/production-validation/` is created at runtime by the script (line 8 of
+  `perf-k6-smoke.mjs`).
 
 ## OmniBoard gateway — VERIFIED (Phase 5, 2026-06-28)
 
@@ -217,9 +220,17 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
 - Deployed staging URL / live `ORCHESTRATOR_URL` may be unavailable in this environment → Phases
   5/18 report `BLOCKED` honestly rather than certifying from localhost.
 
+## Feature flags — REMEDIATED (Phase 13 ✓, 2026-06-28)
+
+- Was: scattered inline `import.meta.env.VITE_*` checks with no centralized accessor;
+  `vite-env.d.ts` missing 5 actively-used env var types.
+- Now: `dashboard/lib/featureFlags.ts` exports typed `flag(name)` accessor for all boolean
+  feature flags (safe-off default). `vite-env.d.ts` extended with `VITE_CONNECT_AI_ENABLED`,
+  `VITE_DASHBOARD_URL`, `VITE_DEMO_MODE`, `VITE_ENABLE_OMNIMEDIA_DEMOS`, `VITE_SITE_URL`,
+  `VITE_CF_PAGES_URL`. `OmniMediaLaunchWidget.tsx` migrated to `flag()`. Remaining inline
+  usages in non-dashboard files (Login, Layout, RequestAccess) are stable and not contract-gated.
+
 ## UNCERTAIN (resolve at owning phase)
 
-- Exact current drag-layout helper module path (no `dashboard/lib/*.ts`) — Phase 10.
-- `dashboard/contracts/apexApps.ts` contents/role vs new `apex-apps-mcp` — Phase 3.
 - Viewport-hook coverage across all modules — Phase 17.
 - Deployed staging URL + live edge env presence — Phases 5/18.

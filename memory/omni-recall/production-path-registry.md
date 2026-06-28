@@ -94,10 +94,11 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | Auth helper | `tests/e2e-playwright/helpers/auth.ts` | [EXISTS] |
 | Modal contract spec | `tests/e2e-playwright/omnidash-modal-contract.spec.ts` | [EXISTS] P2 ✓ |
 | Authz access control spec | `tests/e2e-playwright/omnidash-authz.spec.ts` | [DONE] P12 |
-| CI runtime gates | `.github/workflows/ci-runtime-gates.yml` | [EXISTS] rewire k6 P14/15 |
-| k6 smoke script (repo-owned) | `scripts/ci/perf-k6-smoke.mjs` (`npm run perf:k6:smoke`) | [EXISTS] wire into CI P14/15 |
-| Perf evidence artifact | `artifacts/production-validation/performance-summary.json` | [NET-NEW] P14/15 |
-| Accepted findings registry | `accepted-findings.md` | [EXISTS] expand P14 |
+| CI runtime gates | `.github/workflows/ci-runtime-gates.yml` | [DONE] P14/15 — k6 rewired to `npm run perf:k6:smoke`, SOFT/main-only |
+| k6 smoke script (repo-owned) | `scripts/ci/perf-k6-smoke.mjs` (`npm run perf:k6:smoke`) | [DONE] P14/15 — CI now calls repo-owned script |
+| Perf evidence artifact | `artifacts/production-validation/performance-summary.json` | [DONE] P14/15 — uploaded by CI, created at runtime |
+| Accepted findings registry | `accepted-findings.md` | [DONE] P14 — APEX-1202 + APEX-2011 registered |
+| Feature flag accessor | `apps/omnihub-site/dashboard/lib/featureFlags.ts` | [DONE] P13 — typed `flag()` accessor |
 
 ## Canon & memory
 

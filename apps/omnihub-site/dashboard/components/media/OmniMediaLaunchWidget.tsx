@@ -12,6 +12,7 @@
 import { useOmniMedia } from '@/stores/omniMediaStore';
 import { useOmniModal } from '@/stores/omniModalStore';
 import { Play, Video } from 'lucide-react';
+import { flag } from '../../lib/featureFlags';
 import { OmniMediaGallery } from './OmniMediaGallery';
 
 const OMNIMEDIA_MODULE_KEY = 'omnimedia';
@@ -38,7 +39,7 @@ const DEMO_CLIPS: readonly DemoClip[] = [
   },
 ];
 
-const DEMOS_ENABLED = import.meta.env.VITE_ENABLE_OMNIMEDIA_DEMOS === 'true';
+const DEMOS_ENABLED = flag('VITE_ENABLE_OMNIMEDIA_DEMOS');
 
 export function OmniMediaLaunchWidget() {
   const { loadMedia, setDocked } = useOmniMedia();
