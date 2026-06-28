@@ -140,17 +140,12 @@ vi.mock('dashboard/contracts/agentAvatars', () => ({
   agentNameFromAvatarFile: (f: string) => f.replace('-avatar-icon.png', ''),
 }));
 
-// The shell renders OmniMediaLaunchWidget → OmniMediaGallery, which calls
-// useAppTranslation (real react-i18next). i18n is not initialized in the vitest
-// setup, so mock the hook (same resolved module the component imports relatively)
-// to return the English defaultValue — matching omnimedia-gallery-honesty.spec.tsx.
-vi.mock('../../apps/omnihub-site/src/i18n/useAppTranslation', () => ({
-  useAppTranslation: () => ({
-    tx: (_key: string, opts?: { defaultValue?: string }) => opts?.defaultValue ?? _key,
-  }),
-}));
-
 // ── Import after all mocks are declared ──────────────────────────────────────
+// The shell renders OmniMediaLaunchWidget → OmniMediaGallery, which goes through
+// the REAL useAppTranslation hook (i18n.exists / t). Initialize the production
+// i18n instance with the real locale bundles — no mock, the actual translation
+// system runs in the test exactly as it does in the app.
+import '../../apps/omnihub-site/src/i18n';
 import OmniDashShell from '../../apps/omnihub-site/dashboard/OmniDashShell';
 import { useViewport } from 'dashboard/hooks/useViewport';
 import { useLayoutPersistence } from 'dashboard/hooks/useLayoutPersistence';
