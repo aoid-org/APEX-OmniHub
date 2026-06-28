@@ -1,22 +1,19 @@
-/**
- * APEX Truth Test — generic product truthfulness proof.
- *
- * The "APEX Truth Test" (APEX Bible contract) asserts that the product a real
- * user lands on is HONEST: no placeholder/fake-surface text, no silently-failed
- * API calls, no raw SDK/Edge error strings leaking into the UI, and that state
- * survives a refresh. It is deliberately surface-agnostic so it can run against
- * any deployed entry point.
- *
- * ──────────────────────────────────────────────────────────────────────────
- * testDir NOTE:
- *   Placed under playwright.config.ts `testDir` ('./tests/e2e-playwright') so
- *   Playwright auto-discovers it and vitest (which globs tests/**/*.spec.ts)
- *   excludes the e2e-playwright tree. Run: npx playwright test tests/e2e-playwright
- * ──────────────────────────────────────────────────────────────────────────
- *
- * Auth: matches repo convention — backend-required mode gates real Supabase
- * sessions via helpers/auth.ts. No mocked auth is ever used as release proof.
- */
+// APEX Truth Test — generic product truthfulness proof.
+//
+// The "APEX Truth Test" (APEX Bible contract) asserts that the product a real
+// user lands on is HONEST: no placeholder/fake-surface text, no silently-failed
+// API calls, no raw SDK/Edge error strings leaking into the UI, and that state
+// survives a refresh. It is deliberately surface-agnostic so it can run against
+// any deployed entry point.
+//
+// testDir note:
+//   This file lives under playwright.config.ts testDir ('./tests/e2e-playwright')
+//   so Playwright auto-discovers it. Vitest excludes the e2e-playwright tree.
+//   Run: npx playwright test tests/e2e-playwright
+//
+// Auth note:
+//   Backend-required mode gates real Supabase sessions through helpers/auth.ts.
+//   Mocked auth is never accepted as release proof.
 import { test, expect, type Page } from '@playwright/test';
 import {
   signInWithSupabaseSession,
