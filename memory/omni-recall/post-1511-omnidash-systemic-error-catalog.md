@@ -81,6 +81,48 @@ tablet or mobile.
   `DashboardOverview` tree; the live route renders `OmniDashShell` (`App.tsx:68`).
 - "AWAITING" gallery → intentional display-only empty state (PR #1511), not a bug.
 
+## 4b. CLASSIFIED CATALOG (owner UI-### IDs = canonical; taxonomy-mapped)
+
+Taxonomy: NAV_STATE · DEAD_CONTROL · RESPONSIVE_MOUNTING · LAYOUT_OVERFLOW ·
+Z_INDEX_LAYERING · MODAL_CONTRACT · DRAG_SNAP · INTEGRATION_STATE · DATA_MODE ·
+ACCESSIBILITY · REGRESSION_TEST_GAP.
+
+| UI-ID | Failure | Taxonomy (primary + secondary) | Root cause (code evidence) | Sev | xref |
+|---|---|---|---|---|---|
+| UI-001 | Footer buttons do nothing | DEAD_CONTROL + NAV_STATE + REGRESSION_TEST_GAP | `mobileTab` set but never consumed by any surface — `OmniDashShell.tsx:1361,1616` | Blocker | E1 |
+| UI-002 | Home always selected | NAV_STATE | active tab not derived from a route/surface; no controller switches content — `OmniMobileBottomNav.tsx:88` | Blocker | E2 |
+| UI-003 | OmniBoard always selected | NAV_STATE | `activeNav` defaults to / resets to `'OmniBoard'`; only opens modals — `handleNav`, `onCancel:setActiveNav('OmniBoard')` | Blocker | E3 |
+| UI-004 | Widgets missing on tablet/mobile | RESPONSIVE_MOUNTING | sidebar + both rails gated on `isDesktop`; drawer carries 3/5 — shell mounting branches | Blocker | E4 |
+| UI-005 | No widget launcher/restorer | RESPONSIVE_MOUNTING + DEAD_CONTROL | no mobile widget-control contract; `DraggableWidget` renders only a DRAG badge — `DraggableWidget.tsx:310-349` | Blocker | E5 |
+| UI-006 | Widgets cover OmniSlate | Z_INDEX_LAYERING + DRAG_SNAP | persisted `translate()` offsets + viewport-based collision overlap siblings — `DraggableWidget.tsx:199-251` | Blocker | E8 |
+| UI-007 | Background scrolls with content | LAYOUT_OVERFLOW | blueprint grid `position:absolute inset:0` INSIDE `overflow:auto` canvas — `OmniDashShell.tsx:1460-1479` | Major | E9 |
+| UI-008 | Snap/drop misaligns | DRAG_SNAP | transform offsets on flow layout; viewport-rect math drifts — `DraggableWidget.tsx:199-251` | Major | E7 |
+| UI-009 | Click-outside doesn't close modal | MODAL_CONTRACT | draggable panel + `pointer-events-none` centering layer over backdrop — `OmniSpatialHost.tsx:289-344` | Major | E10 |
+| UI-010 | Duplicate close buttons | MODAL_CONTRACT | host chrome X + module renders own header X via `onClose` — `OmniSpatialHost.tsx:336` + `ModuleRenderer.tsx:18` | Major | E11 |
+| UI-011 | OmniMedia not playable | INTEGRATION_STATE + REGRESSION_TEST_GAP | backend `omnimedia-catalog` → 404; omnilink-port stuck v32 (FE honest-error IS live) | Blocker | E12 |
+| UI-012 | Gateway unavailable | INTEGRATION_STATE | backend `omniboard-start` → 502 — live console | Blocker | E13 |
+| UI-013 | Export/compliance not connected | INTEGRATION_STATE | AuditsModule action; same edge-stack gap / unwired backend — `modules/AuditsModule.tsx` | Blocker | (new) |
+| UI-014 | Simulated labels in prod | DATA_MODE | demo mode active in prod drives "(Simulated)" — `isDemoMode`/`demoMode` | Major | E14 |
+| UI-015 | Top nav clipped tablet/mobile | LAYOUT_OVERFLOW | header action buttons `flexShrink:0` + `whiteSpace:nowrap`, no wrap/overflow strategy — `OmniDashShell.tsx:522,578,593` (min-width:0 added in #post-1511 does NOT fix this) | Major | (new) |
+| UI-016 | Bottom-nav icons lack behavior | DEAD_CONTROL + NAV_STATE | **labels ARE present** (`aria-label`, `aria-selected`, `role=tab` — `OmniMobileBottomNav.tsx:78-89`); real defect is no behavior wiring (= UI-001) | Major | E1 |
+| UI-017 | Billing leaks raw SDK error | INTEGRATION_STATE + (error-honesty) | `BillingModule` shows "Edge Function returned a non-2xx" verbatim; only OmniMedia was sanitized in #1511 | Major | E15 |
+
+### Correction to seed catalog
+- **UI-016**: the bottom nav *does* carry semantic labels/roles (aria-label,
+  aria-selected, role=tab). It is therefore **DEAD_CONTROL/NAV_STATE**, not an
+  accessibility-label gap. Keyboard path exists; behavior does not.
+
+### Taxonomy roll-up (where the work concentrates)
+- NAV_STATE: UI-001, UI-002, UI-003, UI-016
+- RESPONSIVE_MOUNTING: UI-004, UI-005
+- MODAL_CONTRACT: UI-009, UI-010
+- DRAG_SNAP / Z_INDEX_LAYERING: UI-006, UI-008
+- LAYOUT_OVERFLOW: UI-007, UI-015
+- INTEGRATION_STATE: UI-011, UI-012, UI-013, UI-017
+- DATA_MODE: UI-014
+- DEAD_CONTROL: UI-001, UI-005, UI-016
+- REGRESSION_TEST_GAP: UI-001, UI-011 (and broadly — no test caught footer-dead)
+
 ## 5. Proposed repair order (for the NEXT pass, pending go-ahead)
 P0 first: (a) navigation controller that both footer + sidebar drive and that
 switches the rendered surface + active state; (b) mount sidebar/rails on
