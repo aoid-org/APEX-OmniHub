@@ -4,6 +4,7 @@ import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
+import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { OmniSentryWidget } from "./components/OmniSentryWidget";
@@ -1405,12 +1406,15 @@ function OmniGridTop({ hiddenWidgets, tick, isDesktop }: Readonly<{ hiddenWidget
   );
 }
 
+const M03_WIDGET_IDS = ['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const;
+const M03_REGION_ID = 'm03-observability';
+
 function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: readonly string[] }>) {
-  if (!(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id))) {
+  if (!M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id))) {
     return null;
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+    <div id={M03_REGION_ID} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
       {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
       {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -1435,7 +1439,8 @@ export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
+  const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
@@ -1583,8 +1588,14 @@ export default function OmniDashShell() {
             {/* Connections row (split: Third-Party + Connected APEX Apps) */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><ConnectionsWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels */}
-            <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />
+            {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
+            <ObservabilityToggle
+              shown={observabilityShown}
+              panelCount={M03_WIDGET_IDS.length}
+              controlsId={M03_REGION_ID}
+              onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
+            />
+            {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
 
             {/* APEX-OmniHub wordmark watermark — above grid, below content */}
             <div style={{

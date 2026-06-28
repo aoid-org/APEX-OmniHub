@@ -209,6 +209,7 @@ describe('OmniDashShell', () => {
       setPanelLayout: vi.fn(),
       hiddenWidgets: [],
       toggleWidget: vi.fn(),
+      setGroupHidden: vi.fn(),
       resetWidgetPositions: vi.fn(),
       hasSeenOnboarding: true,
       setHasSeenOnboarding: vi.fn(),
