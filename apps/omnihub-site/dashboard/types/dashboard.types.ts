@@ -11,15 +11,14 @@
 
 // ── Navigation ──────────────────────────────────────────────────────────────
 
-export type DashboardNavSection =
-  | 'OmniBoard'
-  | 'Today'
-  | 'Pipeline'
-  | 'KPIs'
-  | 'Events'
-  | 'Ops'
-  | 'Runs'
-  | 'Integrations';
+import type { OmniDashSidebarWidgetLabel } from '@/contracts/omnidash-sidebar-widgets';
+
+/**
+ * Canonical "current surface" value shared by the sidebar (desktop) and the
+ * bottom nav (mobile/tablet). 'Home' is the persistent canvas with no module
+ * modal open; every sidebar widget label is a real, navigable module surface.
+ */
+export type DashboardNavSection = OmniDashSidebarWidgetLabel | 'Home';
 
 // ── Health State ───────────────────────────────────────────────────────────────
 
@@ -89,7 +88,7 @@ export interface PersistedLayoutState {
 }
 
 export const DEFAULT_PERSISTED_LAYOUT: PersistedLayoutState = {
-  activeNav: 'OmniBoard',
+  activeNav: 'Home',
   isDark: true,
   ops: DEFAULT_OPS_STATE,
   panelLayout: 'standard',
