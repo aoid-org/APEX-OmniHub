@@ -103,11 +103,15 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   (en-US default, incl. RTL ar); `apex_locale` persisted in localStorage. Dashboard is
   English-only by design (not a gap — dashboard is internal tooling).
 
-## Current responsive behavior
+## Current responsive behavior — VERIFIED (Phase 17 ✓, 2026-06-28)
 
-- Layout switcher renders desktop + mobile variants (above). Full per-surface multi-viewport
-  validation not yet established for changed surfaces. UNCERTAIN:[viewport hook coverage across
-  all dashboard modules — to measure at Phase 17].
+- `useViewport` hook (Apple-standard breakpoints: mobile ≤640, tablet 641-1024, desktop >1024)
+  used by `OmniDashShell.tsx`. `omnidash-layout.css` provides 5 responsive media query tiers,
+  `env(safe-area-inset-bottom)` support (7 rules), and `@media (pointer: coarse)` 44px touch
+  targets for all nav items. `OmniSpatialHost.tsx` has dynamic PiP/full modal sizing
+  (mobile vs desktop). `OmniMobileBottomNav.tsx` renders iOS-style bottom nav at mobile viewport.
+  Multi-viewport E2E added: `omnidash-responsive.spec.ts` tests desktop (1440px) and mobile
+  (393px) — shell rendering, nav presence, touch target enforcement, no chunk-load errors.
 
 ## Current E2E auth / session setup
 
@@ -230,7 +234,34 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
   `VITE_CF_PAGES_URL`. `OmniMediaLaunchWidget.tsx` migrated to `flag()`. Remaining inline
   usages in non-dashboard files (Login, Layout, RequestAccess) are stable and not contract-gated.
 
+## Observability — REMEDIATED (Phase 16 ✓, 2026-06-28)
+
+- Was: scattered unstructured `console.error` calls with no centralized diagnostic capability.
+- Now: `dashboard/lib/omnidashDiagnostics.ts` exports `collectDiagnostics()` — structured
+  non-sensitive snapshot covering viewport, feature flags, layout persistence pattern, known
+  deferrals (APEX-1202/2011), media catalog state, and gateway classification. Never exposes
+  secrets, tokens, signed URLs, or PII. Unit tests: `tests/unit/omnidashDiagnostics.test.ts`
+  (7 tests including secret-safety assertion). Existing infra: `OmniSentryWidget` (circuit
+  breaker monitor), `omniTrace.ts` (forensic audit ordering), production-safe redaction
+  (`production-safe.live.ts` sanitization).
+
+## Deployed smoke — DOCUMENTED (Phase 18 ✓, 2026-06-28)
+
+- Production-safe smoke suite exists at `tests/e2e-playwright/production-safe.live.ts` (160 lines)
+  with `playwright.production-safe.config.ts` (desktop + mobile projects). Run via
+  `npm run test:e2e:production-safe` (requires `APEX_RUN_PRODUCTION_SAFE=true`). Tests 5 routes
+  ('/', '/login', '/request-access', '/demo', '/omnidash') with redacted evidence, screenshot
+  capture, classification (FAILED/PUBLIC_RENDER_VERIFIED/AUTH_GATE_VERIFIED/WORKFLOW_VERIFIED),
+  and JSON output to `artifacts/production-validation/browser/`.
+- BLOCKED:[deployed smoke verification] — no staging URL available in this ephemeral container
+  environment. `APEX_PROD_URL` defaults to `https://apexomnihub.icu`. To run: set
+  `APEX_PROD_URL=<staging-url>` and `APEX_RUN_PRODUCTION_SAFE=true`, then
+  `npm run test:e2e:production-safe`. Bundle cache/chunk verification requires live deployment.
+- Render smoke (`render.spec.ts`) runs against local preview build and covers: chunk-load errors,
+  React context duplication, blank page detection, unknown route fallback, asset access
+  (manifest.webmanifest, favicon.ico, robots.txt).
+
 ## UNCERTAIN (resolve at owning phase)
 
-- Viewport-hook coverage across all modules — Phase 17.
+(No remaining UNCERTAIN items — all resolved through Phases 10-18.)
 - Deployed staging URL + live edge env presence — Phases 5/18.

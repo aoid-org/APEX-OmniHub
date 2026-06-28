@@ -99,6 +99,11 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | Perf evidence artifact | `artifacts/production-validation/performance-summary.json` | [DONE] P14/15 — uploaded by CI, created at runtime |
 | Accepted findings registry | `accepted-findings.md` | [DONE] P14 — APEX-1202 + APEX-2011 registered |
 | Feature flag accessor | `apps/omnihub-site/dashboard/lib/featureFlags.ts` | [DONE] P13 — typed `flag()` accessor |
+| Diagnostics module | `apps/omnihub-site/dashboard/lib/omnidashDiagnostics.ts` | [DONE] P16 — safe non-sensitive snapshot |
+| Diagnostics unit tests | `tests/unit/omnidashDiagnostics.test.ts` | [DONE] P16 (7 tests) |
+| Responsive E2E spec | `tests/e2e-playwright/omnidash-responsive.spec.ts` | [DONE] P17 — desktop+mobile viewport |
+| Production-safe smoke | `tests/e2e-playwright/production-safe.live.ts` | [EXISTS] — verified P18 |
+| Production-safe config | `playwright.production-safe.config.ts` | [EXISTS] — verified P18 |
 
 ## Canon & memory
 
