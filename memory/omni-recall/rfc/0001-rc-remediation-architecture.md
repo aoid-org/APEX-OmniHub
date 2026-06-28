@@ -38,10 +38,16 @@ APEX app's OmniPort. No new backend; honest gateway (opens, never fakes
 `OmniSpatialHost` ordinary modals close on Escape/backdrop (was: minimize);
 minimize is an explicit button; focus returns to opener.
 
-### 4. Connections split (Batch 2)
-`ConnectionsWidget` replaces the dishonest Integrated Apps picker with two
+### 4. Connections split (Batch 2) — REVERTED 2026-06-28
+`ConnectionsWidget` replaced the dishonest Integrated Apps picker with two
 single-owner sections + honest empty states. Source wiring
 (`connector_sessions` / APEX install-state) deferred (`APEX-CONN-SOURCES`).
+**Superseded:** the split duplicated the OmniBoard (third-party) and APEX
+Apps MCP (first-party "Add APEX App") owners it was meant to route to. It was
+reverted to a display-only `IntegratedAppsGalleryWidget` — see
+`memory/omni-recall/production-surface-remediation-baseline.md`. OmniBoard
+owns third-party connection flows; APEX Apps MCP owns first-party flows; the
+gallery owns neither.
 
 ### 5. OmniMedia pipeline (Batch 3) — DB + storage + edge
 - **DB (additive):** `public.omnimedia_assets` (RLS, owner-scoped) +

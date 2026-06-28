@@ -42,7 +42,7 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
-import { APEX_APPS_MODULE_KEY, OMNIBOARD_MODULE_KEY } from './contracts/omniSurfaceOwnership';
+import { APEX_APPS_MODULE_KEY } from './contracts/omniSurfaceOwnership';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
@@ -1313,86 +1313,49 @@ const EcosystemWidget = () => {
   );
 };
 
-// ─── Widget: Connections (split — Third-Party + Connected APEX Apps) ──────────
-// Canon §4/§7: OmniBoard owns third-party provider connections; APEX Apps owns
-// first-party MCP/OmniPort apps. The legacy "Integrated Apps" widget (hardcoded
-// SaaS picker + admin-privileges dead-end toast + fake "Awaiting" cards) is
-// removed. Each section is single-owner with the correct CTA. Honest empty
-// states until a verified source (connector_sessions / APEX install-state) is
-// wired — tracked as APEX-CONN-SOURCES. No fabricated "connected" state.
-const ConnectionsWidget = () => {
-  const { invoke } = useOmniModal();
-
-  const connectThirdParty = () => {
-    invoke({
-      id: 'connections-third-party',
-      provider: 'omnidash',
-      type: 'module',
-      title: 'Connect Third-Party App',
-      contextData: { moduleKey: OMNIBOARD_MODULE_KEY },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-  };
-
-  const addApexApp = () => {
-    invoke({
-      id: 'connections-apex-app',
-      provider: 'omnidash',
-      type: 'module',
-      title: 'Connect APEX App',
-      contextData: { moduleKey: APEX_APPS_MODULE_KEY },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-  };
-
-  const ORANGE = '249,115,22';
-  const ctaStyle: React.CSSProperties = {
-    background: `rgba(${ORANGE},0.12)`, color: T.orange,
-    fontSize: 12, fontWeight: 700, padding: '8px 12px', borderRadius: 8,
-    cursor: 'pointer', border: `1px solid rgba(${ORANGE},0.4)`,
-    minHeight: 44, fontFamily: "'Space Grotesk',sans-serif",
-  };
-  const sublabel: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: T.t2,
-    textTransform: 'uppercase', letterSpacing: '0.04em',
-  };
-  const headerRow: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    gap: 8, flexWrap: 'wrap',
-  };
-
-  return (
-  <GlassCard style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-    <SectionLabel>Connections</SectionLabel>
-
-    {/* Third-Party Connections — owned by OmniBoard */}
-    <div data-testid="connections-third-party" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={headerRow}>
-        <span style={sublabel}>Third-Party Connections</span>
-        <button type="button" onClick={connectThirdParty} style={ctaStyle}>+ Connect Third-Party App</button>
-      </div>
-      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
-        No third-party connections yet. Connect a provider through OmniBoard to see it here.
-      </p>
+// ─── Widget: Integrated Apps Gallery (display-only — no connection ownership) ──
+// This is a GALLERY, not an integration owner. It shows integrated-app status
+// tiles only and never opens a modal, invokes OmniBoard, or invokes the APEX
+// Apps MCP. Third-party connections are owned exclusively by OmniBoard (sidebar
+// nav); first-party APEX app connections are owned exclusively by the APEX
+// Ecosystem widget's "Add APEX App" → APEX_APPS_MODULE_KEY. The PR #1510
+// retired "Connections" split-panel duplicated both of those owners and must
+// not return (no split sub-panels, no connect CTA in this gallery).
+// "Awaiting" tiles are an honest, non-interactive empty state — no fabricated
+// connected state, no click-through. (User directive 2026-06-28.)
+const IntegratedAppsGalleryWidget = () => (
+  <GlassCard style={{ padding: '16px' }}>
+    <div style={{ marginBottom: 10 }}>
+      <SectionLabel>Integrated Apps Gallery</SectionLabel>
     </div>
-
-    <div style={{ height: 1, background: T.border }} />
-
-    {/* Connected APEX Apps — owned by APEX Apps (MCP / OmniPort) */}
-    <div data-testid="connections-apex-apps" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={headerRow}>
-        <span style={sublabel}>Connected APEX Apps</span>
-        <button type="button" onClick={addApexApp} style={ctaStyle}>+ Add APEX App</button>
-      </div>
-      <p style={{ fontSize: 12, color: T.t3, margin: 0 }}>
-        No APEX apps connected yet. Add one to open its OmniPort and start chatting.
-      </p>
+    <div data-testid="integrated-apps" className="omni-grid-apps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+      {[1, 2, 3, 4].map(i => (
+        <div
+          key={`integrated-app-ph-${i}`}
+          aria-label={`Integrated app slot ${i} — awaiting connection`}
+          style={{
+            ...APP_TILE_STYLE,
+            background: T.surface,
+            border: `1px dashed ${T.border}`,
+            opacity: 0.6,
+            cursor: 'default',
+          }}
+        >
+          <span style={{
+            width: 22, height: 22, borderRadius: 6,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(255,255,255,0.20)' }} />
+          </span>
+          <span style={{ fontSize: 13, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>Awaiting</span>
+        </div>
+      ))}
     </div>
   </GlassCard>
-  );
-};
+);
 
 function OmniGridTop({ hiddenWidgets, tick, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }>) {
   const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
@@ -1585,8 +1548,8 @@ export default function OmniDashShell() {
             {/* Primary 3-column grid */}
             <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
 
-            {/* Connections row (split: Third-Party + Connected APEX Apps) */}
-            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><ConnectionsWidget /></DraggableWidget>}
+            {/* Integrated Apps Gallery row — display-only, owns no connection flow */}
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
             {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
             <ObservabilityToggle
