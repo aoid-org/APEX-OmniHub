@@ -44,19 +44,24 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 
 | Layer | Path | Status |
 |---|---|---|
-| Launch widget | `apps/omnihub-site/dashboard/components/media/OmniMediaLaunchWidget.tsx` | [EXISTS] demo-only |
+| Launch widget | `apps/omnihub-site/dashboard/components/media/OmniMediaLaunchWidget.tsx` | [DONE] P9 — catalog-backed, demos opt-in |
 | Player | `apps/omnihub-site/dashboard/components/media/OmniMediaPlayer.tsx` | [EXISTS] |
-| Gallery (catalog-backed) | `apps/omnihub-site/dashboard/components/media/OmniMediaGallery.tsx` | [NET-NEW] P9 |
-| Store | `apps/omnihub-site/src/stores/omniMediaStore.ts` | UNCERTAIN:[verify P9] |
+| Gallery (catalog-backed) | `apps/omnihub-site/dashboard/components/media/OmniMediaGallery.tsx` | [DONE] P9 |
+| OmniMedia module | `apps/omnihub-site/dashboard/components/modules/OmniMediaModule.tsx` | [DONE] P9 |
+| Catalog API client | `apps/omnihub-site/dashboard/lib/omniMediaCatalog.ts` | [DONE] P8/P9 |
+| Store | `apps/omnihub-site/src/stores/omniMediaStore.ts` | [DONE] P9 — catalogVersion, mediaError added |
+| Files module MIME routing | `apps/omnihub-site/dashboard/components/modules/FilesModule.tsx` | [DONE] P8 — playable→omnimedia-assets |
 
 ## Drag/drop & layout
 
 | Layer | Path | Status |
 |---|---|---|
-| Draggable widget | `apps/omnihub-site/dashboard/DraggableWidget.tsx` | [EXISTS] rewrite P10 |
-| Layout persistence hook | `apps/omnihub-site/dashboard/.../useLayoutPersistence.ts` | [EXISTS] |
-| Collision/clamp resolver + tests | `apps/omnihub-site/dashboard/lib/widgetLayout.ts` (+ `.test.ts`) | [NET-NEW] P10 |
-| Layout storage key | `omnidash_layout_v2:{userId}:{breakpoint}` | [NET-NEW] P10 (migrate `omni_widget_pos_*`) |
+| Draggable widget | `apps/omnihub-site/dashboard/DraggableWidget.tsx` | [DONE] rewritten P10 — native pointer capture |
+| Layout persistence hook | `apps/omnihub-site/dashboard/hooks/useLayoutPersistence.ts` | [DONE] updated P10 |
+| Layout context | `apps/omnihub-site/dashboard/contexts/LayoutContext.tsx` | [DONE] userId added P10 |
+| Collision/clamp resolver | `apps/omnihub-site/dashboard/lib/widgetLayout.ts` | [DONE] P10 |
+| Widget layout tests | `tests/unit/widgetLayout.test.ts` | [DONE] P10 (18 tests) |
+| Layout storage key | `omnidash_layout_v2:{userId}:{breakpoint}` | [DONE] P10 (migrates `omni_widget_pos_*`) |
 
 ## i18n
 
@@ -85,8 +90,10 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 |---|---|---|
 | E2E suite | `tests/e2e-playwright/` | [EXISTS] |
 | Global auth setup | `tests/e2e-playwright/global-setup.ts` | [EXISTS] |
+| Global teardown (cleanup) | `tests/e2e-playwright/global-teardown.ts` | [DONE] P12 |
 | Auth helper | `tests/e2e-playwright/helpers/auth.ts` | [EXISTS] |
 | Modal contract spec | `tests/e2e-playwright/omnidash-modal-contract.spec.ts` | [EXISTS] P2 ✓ |
+| Authz access control spec | `tests/e2e-playwright/omnidash-authz.spec.ts` | [DONE] P12 |
 | CI runtime gates | `.github/workflows/ci-runtime-gates.yml` | [EXISTS] rewire k6 P14/15 |
 | k6 smoke script (repo-owned) | `scripts/ci/perf-k6-smoke.mjs` (`npm run perf:k6:smoke`) | [EXISTS] wire into CI P14/15 |
 | Perf evidence artifact | `artifacts/production-validation/performance-summary.json` | [NET-NEW] P14/15 |

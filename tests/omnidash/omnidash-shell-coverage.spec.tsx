@@ -68,7 +68,6 @@ vi.mock('dashboard/DraggableWidget', () => ({
   DraggableWidget: ({ children, id }: { children?: ReactNode; id?: string }) => (
     <div data-testid={id}>{children}</div>
   ),
-  DRAG_THRESHOLD_PX: 8,
 }));
 
 vi.mock('dashboard/hooks/useLayoutPersistence', () => ({

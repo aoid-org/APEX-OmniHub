@@ -1488,8 +1488,8 @@ export default function OmniDashShell() {
 
 
   const layoutContextValue = useMemo(() => ({
-    hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions
-  }), [hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions]);
+    hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions, userId
+  }), [hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions, userId]);
 
   return (
     <LayoutContext.Provider value={layoutContextValue}>

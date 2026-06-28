@@ -80,28 +80,28 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
 
 ## Current drag/drop behavior
 
-- `DraggableWidget.tsx:1-300` uses Framer-Motion drag (`useMotionValue` x/y, `motion.div` drag
-  props :131-134) as placement owner — **contract forbids** Framer-Motion as the placement gesture
-  owner. Pointer handlers exist (:208-216). Collision via `findFreePosition()` (:71-121, square
-  shells up to 800px). Persists per-widget key `omni_widget_pos_${id}` (:148,:276-278);
-  `useLayoutPersistence.ts:137-141` resets those keys. Contract requires pointer-capture
-  one-gesture placement + `omnidash_layout_v2:{userId}:{breakpoint}`. → Phase 10 (rewrite).
+- **[DONE: Phase 10]** `DraggableWidget.tsx` rewritten to use native pointer capture
+  (`setPointerCapture`/`releasePointerCapture`) instead of Framer-Motion drag. Framer-Motion
+  is still a project dependency (used for animations in other components) but is no longer
+  the placement owner. Collision resolution extracted to `dashboard/lib/widgetLayout.ts`
+  (`resolveCollisions`, `clampToCanvas`, `rectsOverlap`). Position storage migrated from
+  per-widget `omni_widget_pos_${id}` keys to consolidated `omnidash_layout_v2:{userId}:{breakpoint}`
+  key via `widgetLayout.ts` (`saveLayout`/`loadLayout`/`migrateFromLegacy`). userId flows via
+  `LayoutContext`. Long-press activation (500ms, 8px threshold) preserved via native pointer events.
+  Unit tests: `tests/unit/widgetLayout.test.ts` (18 tests), `tests/omnidash/draggable-widget.spec.tsx`
+  (18 tests, framer-motion mock removed).
 
 ## Current modal host behavior
 
-- `OmniSpatialHost.tsx` owns chrome: `role="dialog"` (:302), `aria-modal` (:303), focus trap
-  (:166-209), single labeled Close (:319), minimize button (:316), dock chip restore/close
-  (:340-361). **Divergence:** Escape (:154-161) and backdrop click (:279-288) **minimize**, not
-  **close** — contract requires ordinary modals to **close** on Esc/backdrop (minimize = explicit
-  button only). `omnidash-modal-contract.spec.ts` does not exist. → Phase 2.
+- **[DONE: Phase 2]** `OmniSpatialHost.tsx` Escape and backdrop click now **close** ordinary
+  modals via `abortModal('USER_DISMISSED')`. Minimize is explicit button only. Focus returns to
+  opener via `openerRef`. Tests: `omnidash-modal-contract.spec.ts` (5 tests).
 
 ## Current language / i18n exposure
 
-- Language switcher already visible: `Layout.tsx` desktop (`:252`) + mobile (`:283`); handler
-  `handleLanguageChange()` → `i18n.changeLanguage()` + `localStorage.setItem('apex_locale', …)`
-  (`:51`). `i18n/locales.ts:1-85` defines 9 locales (en-US default, incl. RTL ar). Largely
-  contract-compliant. Gap: OmniDash dashboard strings are hardcoded English. → Phase 11 (verify +
-  evidence; minor).
+- **[DONE: Phase 11]** Language switcher verified: `Layout.tsx` desktop + mobile; 9 locales
+  (en-US default, incl. RTL ar); `apex_locale` persisted in localStorage. Dashboard is
+  English-only by design (not a gap — dashboard is internal tooling).
 
 ## Current responsive behavior
 

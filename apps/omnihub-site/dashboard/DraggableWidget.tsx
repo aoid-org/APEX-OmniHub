@@ -1,44 +1,49 @@
 /**
  * DraggableWidget — Free-position drag with collision-aware snap-lock.
  *
+ * Uses native pointer capture (pointerdown/pointermove/pointerup) instead of
+ * framer-motion drag. Positions are stored via widgetLayout.ts under a
+ * consolidated key scoped by userId and breakpoint.
+ *
  * LONG-PRESS ACTIVATION MODEL:
  *   Drag activates only after a 500ms long-press. Incidental touch / scroll
  *   (pointer moves > 8px before timer fires) cancels the timer and keeps
  *   the widget non-draggable. This prevents accidental drags during scroll.
  *
  * DRAG MODE STATE MACHINE:
- *   idle → (500ms hold) → ready → (drag start) → dragging → (drag end) → idle
+ *   idle → (500ms hold) → ready → (pointer move) → dragging → (pointer up) → idle
  *   ready → (Escape / click outside / pointer-up before drag) → idle
  *
  * SNAP-LOCK COLLISION AVOIDANCE:
  *   On drag end the widget resolves to the nearest available space that does
  *   not overlap any sibling widget. Search expands outward in square shells
- *   (SNAP-grid steps) until a free slot is found, then animates smoothly.
+ *   (SNAP-grid steps) until a free slot is found.
+ *
+ * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, useMotionValue, animate } from 'framer-motion';
+import { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import type { ReactNode, CSSProperties } from 'react';
-
-/** Minimum pointer travel (px) before drag cancels the long-press timer. */
-export const DRAG_THRESHOLD_PX = 8;
+import {
+  resolveCollisions,
+  loadLayout,
+  saveLayout,
+  detectBreakpoint,
+  migrateFromLegacy,
+  DRAG_THRESHOLD_PX,
+} from './lib/widgetLayout';
+import type { WidgetPositionMap } from './lib/widgetLayout';
+import { LayoutContext } from './contexts/LayoutContext';
 
 /** Long-press duration before drag mode activates (ms). */
 const LONG_PRESS_MS = 500;
 
-/** Grid step used for snapping and collision search (px). */
-const SNAP = 20;
+/** Spring animation duration (ms). */
+const SPRING_DURATION_MS = 200;
 
-/** Maximum outward search radius when resolving collisions (px). */
-const MAX_SEARCH_RADIUS = 800;
-
-/** Drag mode type — drives framer-motion drag prop and visual feedback. */
 type DragMode = 'idle' | 'ready' | 'dragging';
 
 // ─── Widget Registry ─────────────────────────────────────────────────────────
-// Module-level map: widgetId → live DOM element.
-// Read only on dragEnd — no reactive subscriptions, no re-renders.
-
 const widgetRegistry = new Map<string, HTMLElement>();
 
 function registerWidget(id: string, el: HTMLElement) {
@@ -49,78 +54,36 @@ function unregisterWidget(id: string) {
   widgetRegistry.delete(id);
 }
 
-// ─── Collision Helpers ────────────────────────────────────────────────────────
+// ─── Layout Store ────────────────────────────────────────────────────────────
+// Module-level cache so all DraggableWidget instances share positions.
+let cachedUserId = '';
+let cachedBreakpoint = '';
+let cachedPositions: WidgetPositionMap = {};
+let migrationDone = false;
 
-function rectsOverlap(
-  a: { left: number; top: number; right: number; bottom: number },
-  b: DOMRect,
-): boolean {
-  return !(
-    a.right <= b.left ||
-    a.left >= b.right ||
-    a.bottom <= b.top ||
-    a.top >= b.bottom
-  );
+function ensureLayoutLoaded(userId: string): WidgetPositionMap {
+  const bp = detectBreakpoint();
+  if (!migrationDone && userId) {
+    migrateFromLegacy(userId, bp);
+    migrationDone = true;
+  }
+  if (userId !== cachedUserId || bp !== cachedBreakpoint) {
+    cachedUserId = userId;
+    cachedBreakpoint = bp;
+    cachedPositions = loadLayout(userId, bp);
+  }
+  return cachedPositions;
 }
 
-/**
- * Returns the nearest position (snapped to SNAP grid) where the given
- * proposed rect does not overlap any of the provided sibling rects.
- * Searches square shells outward from the proposed point.
- */
-function findFreePosition(
-  proposed: { left: number; top: number; width: number; height: number },
-  siblings: DOMRect[],
-): { left: number; top: number } {
-  const hasCollision = (left: number, top: number): boolean => {
-    const r = {
-      left,
-      top,
-      right: left + proposed.width,
-      bottom: top + proposed.height,
-    };
-    return siblings.some((s) => rectsOverlap(r, s));
-  };
-
-  // Snap proposed position to grid first
-  const snapLeft = Math.round(proposed.left / SNAP) * SNAP;
-  const snapTop = Math.round(proposed.top / SNAP) * SNAP;
-
-  if (!hasCollision(snapLeft, snapTop)) {
-    return { left: snapLeft, top: snapTop };
+function persistPosition(userId: string, widgetId: string, x: number, y: number): void {
+  const bp = detectBreakpoint();
+  cachedPositions = { ...cachedPositions, [widgetId]: { x, y } };
+  if (userId) {
+    saveLayout(userId, bp, cachedPositions);
   }
-
-  const checkCandidates = (candidates: {left: number; top: number}[]) => {
-    for (const c of candidates) {
-      if (c.top >= 0 && !hasCollision(c.left, c.top)) return c;
-    }
-    return null;
-  };
-
-  // Expand outward in square shells until a free slot is found
-  for (let radius = SNAP; radius <= MAX_SEARCH_RADIUS; radius += SNAP) {
-    // Top and bottom edges
-    for (let dx = -radius; dx <= radius; dx += SNAP) {
-      const match = checkCandidates([
-        { left: snapLeft + dx, top: snapTop - radius },
-        { left: snapLeft + dx, top: snapTop + radius },
-      ]);
-      if (match) return match;
-    }
-    // Left and right edges (skip corners already covered above)
-    for (let dy = -radius + SNAP; dy < radius; dy += SNAP) {
-      const match = checkCandidates([
-        { left: snapLeft - radius, top: snapTop + dy },
-        { left: snapLeft + radius, top: snapTop + dy },
-      ]);
-      if (match) return match;
-    }
-  }
-
-  return { left: snapLeft, top: snapTop };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────────
 
 interface DraggableWidgetProps {
   id?: string;
@@ -129,9 +92,11 @@ interface DraggableWidgetProps {
 }
 
 export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetProps) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const layoutCtx = useContext(LayoutContext);
+  const userId = layoutCtx?.userId ?? '';
   const elRef = useRef<HTMLDivElement>(null);
+  const posRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragStartPos = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
 
   const [dragMode, setDragMode] = useState<DragMode>('idle');
   const pointerOriginRef = useRef<{ x: number; y: number } | null>(null);
@@ -144,41 +109,25 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
     if (id) {
       registerWidget(id, el);
-
-      const saved = localStorage.getItem(`omni_widget_pos_${id}`);
+      const positions = ensureLayoutLoaded(userId);
+      const saved = positions[id];
       if (saved) {
-        try {
-          const parsed: unknown = JSON.parse(saved);
-          if (
-            parsed !== null &&
-            typeof parsed === 'object' &&
-            'x' in parsed &&
-            'y' in parsed &&
-            typeof (parsed as Record<string, unknown>).x === 'number' &&
-            typeof (parsed as Record<string, unknown>).y === 'number'
-          ) {
-            x.set((parsed as { x: number; y: number }).x);
-            y.set((parsed as { x: number; y: number }).y);
-          }
-        } catch {
-          // Ignore parse errors
-        }
+        posRef.current = { x: saved.x, y: saved.y };
+        el.style.transform = `translate(${saved.x}px, ${saved.y}px)`;
       }
     }
 
     return () => {
       if (id) unregisterWidget(id);
     };
-  }, [id, x, y]);
+  }, [id, userId]);
 
   // Escape key cancels 'ready' state
   useEffect(() => {
     if (dragMode !== 'ready') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setDragMode('idle');
-      }
+      if (e.key === 'Escape') setDragMode('idle');
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -190,9 +139,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
     const handlePointerDown = (e: PointerEvent) => {
       const el = elRef.current;
-      if (el && !el.contains(e.target as Node)) {
-        setDragMode('idle');
-      }
+      if (el && !el.contains(e.target as Node)) setDragMode('idle');
     };
     document.addEventListener('pointerdown', handlePointerDown, true);
     return () => document.removeEventListener('pointerdown', handlePointerDown, true);
@@ -217,11 +164,22 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Handle active dragging with pointer capture
+      if (dragStartPos.current && elRef.current) {
+        const dx = e.clientX - dragStartPos.current.x;
+        const dy = e.clientY - dragStartPos.current.y;
+        const newX = dragStartPos.current.offsetX + dx;
+        const newY = dragStartPos.current.offsetY + dy;
+        posRef.current = { x: newX, y: newY };
+        elRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
+        return;
+      }
+
+      // Pre-drag: check if pointer moved too far (cancel long-press)
       if (!pointerOriginRef.current) return;
       const dx = e.clientX - pointerOriginRef.current.x;
       const dy = e.clientY - pointerOriginRef.current.y;
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
-        // User is scrolling — cancel long-press timer; stay idle
         cancelLongPress();
         pointerOriginRef.current = null;
       }
@@ -229,79 +187,118 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     [cancelLongPress],
   );
 
-  const handlePointerUp = useCallback(() => {
-    cancelLongPress();
-    pointerOriginRef.current = null;
-    // Only reset to idle if not in dragging state (dragging has its own end handler)
-    setDragMode((prev) => (prev === 'dragging' ? prev : 'idle'));
-  }, [cancelLongPress]);
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      // End active drag
+      if (dragStartPos.current && elRef.current) {
+        elRef.current.releasePointerCapture?.(e.pointerId);
+        dragStartPos.current = null;
+        setDragMode('idle');
+        pointerOriginRef.current = null;
 
-  const handleDragStart = useCallback(() => {
-    setDragMode('dragging');
-  }, []);
+        const el = elRef.current;
+        const myRect = el.getBoundingClientRect();
 
-  const handleDragEnd = useCallback(
-    (_event: unknown, info: { point: { x: number; y: number } }) => {
-      setDragMode('idle');
-      pointerOriginRef.current = null;
+        // Collect sibling rects
+        const siblings: { left: number; top: number; right: number; bottom: number }[] = [];
+        widgetRegistry.forEach((sibEl, regId) => {
+          if (regId !== id) {
+            const r = sibEl.getBoundingClientRect();
+            siblings.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+          }
+        });
 
-      if (!elRef.current) return;
-
-      // Current visual rect (includes current motion offset)
-      const myRect = elRef.current.getBoundingClientRect();
-
-      // Collect all sibling rects (excluding self)
-      const siblings: DOMRect[] = [];
-      widgetRegistry.forEach((el, regId) => {
-        if (regId !== id) siblings.push(el.getBoundingClientRect());
-      });
-
-      // Find nearest non-colliding snapped position
-      const free = findFreePosition(
-        { left: myRect.left, top: myRect.top, width: myRect.width, height: myRect.height },
-        siblings,
-      );
-
-      // Compute the delta to apply to current motion values
-      const deltaX = free.left - myRect.left;
-      const deltaY = free.top - myRect.top;
-      const finalX = x.get() + deltaX;
-      const finalY = y.get() + deltaY;
-
-      // Animate smoothly to resolved position
-      animate(x, finalX, { type: 'spring', stiffness: 300, damping: 30 });
-      animate(y, finalY, { type: 'spring', stiffness: 300, damping: 30 });
-
-      if (id) {
-        localStorage.setItem(
-          `omni_widget_pos_${id}`,
-          JSON.stringify({ x: finalX, y: finalY }),
+        // Resolve collisions
+        const free = resolveCollisions(
+          { left: myRect.left, top: myRect.top, width: myRect.width, height: myRect.height },
+          siblings,
         );
 
-        // OmniSlate drop detection
-        const slate = document.getElementById('widget_slate');
-        if (slate) {
-          const rect = slate.getBoundingClientRect();
-          const { x: dropX, y: dropY } = info.point;
-          if (
-            dropX >= rect.left &&
-            dropX <= rect.right &&
-            dropY >= rect.top &&
-            dropY <= rect.bottom
-          ) {
-            globalThis.window.dispatchEvent(
-              new CustomEvent('omnislate-drop', {
-                detail: { id, label: `Widget: ${id.replace('rt_', '').replace('widget_', '')}` },
-              }),
-            );
+        const deltaX = free.left - myRect.left;
+        const deltaY = free.top - myRect.top;
+        const finalX = posRef.current.x + deltaX;
+        const finalY = posRef.current.y + deltaY;
+
+        // Animate to resolved position
+        posRef.current = { x: finalX, y: finalY };
+        el.style.transition = `transform ${SPRING_DURATION_MS}ms cubic-bezier(0.25,0.1,0.25,1)`;
+        el.style.transform = `translate(${finalX}px, ${finalY}px)`;
+        setTimeout(() => { el.style.transition = ''; }, SPRING_DURATION_MS);
+
+        if (id) {
+          persistPosition(userId, id, finalX, finalY);
+
+          // OmniSlate drop detection
+          const slate = document.getElementById('widget_slate');
+          if (slate) {
+            const rect = slate.getBoundingClientRect();
+            if (
+              e.clientX >= rect.left &&
+              e.clientX <= rect.right &&
+              e.clientY >= rect.top &&
+              e.clientY <= rect.bottom
+            ) {
+              globalThis.window.dispatchEvent(
+                new CustomEvent('omnislate-drop', {
+                  detail: { id, label: `Widget: ${id.replace('rt_', '').replace('widget_', '')}` },
+                }),
+              );
+            }
           }
         }
+
+        // Reset scale
+        el.style.transform = `translate(${finalX}px, ${finalY}px) scale(1)`;
+        el.style.zIndex = '';
+        return;
       }
+
+      cancelLongPress();
+      pointerOriginRef.current = null;
+      setDragMode((prev) => (prev === 'dragging' ? prev : 'idle'));
     },
-    [id, x, y],
+    [cancelLongPress, id, userId],
   );
 
-  // Visual feedback styles for drag mode
+  // Start drag when in ready state and pointer moves
+  const handleDragInitiate = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (dragMode !== 'ready') return;
+
+      const el = elRef.current;
+      if (!el) return;
+
+      el.setPointerCapture?.(e.pointerId);
+      dragStartPos.current = {
+        x: e.clientX,
+        y: e.clientY,
+        offsetX: posRef.current.x,
+        offsetY: posRef.current.y,
+      };
+      setDragMode('dragging');
+
+      // Visual: lift widget
+      el.style.zIndex = '999';
+      el.style.transform = `translate(${posRef.current.x}px, ${posRef.current.y}px) scale(1.015)`;
+    },
+    [dragMode],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (dragMode === 'ready' && pointerOriginRef.current) {
+        const dx = e.clientX - pointerOriginRef.current.x;
+        const dy = e.clientY - pointerOriginRef.current.y;
+        if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+          handleDragInitiate(e);
+          return;
+        }
+      }
+      handlePointerMove(e);
+    },
+    [dragMode, handlePointerMove, handleDragInitiate],
+  );
+
   const dragModeStyle: CSSProperties =
     dragMode === 'idle'
       ? {}
@@ -311,31 +308,22 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         };
 
   return (
-    <motion.div
+    <div
       ref={elRef}
       id={id}
-      drag={dragMode !== 'idle'}
-      dragMomentum={false}
-      dragElastic={0.05}
       style={{
         ...style,
         ...dragModeStyle,
-        x,
-        y,
         position: 'relative',
-        zIndex: 'auto' as unknown as number,
+        touchAction: dragMode !== 'idle' ? 'none' : undefined,
       }}
-      whileDrag={{ scale: 1.015, zIndex: 999 }}
       data-testid={id}
       data-drag-mode={dragMode}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
+      onPointerMove={onPointerMove}
       onPointerUp={handlePointerUp}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
     >
       {children}
-      {/* DRAG badge — visible in ready/dragging states */}
       {dragMode !== 'idle' && (
         <div
           style={{
@@ -357,6 +345,6 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
           DRAG
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };

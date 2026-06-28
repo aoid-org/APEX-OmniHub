@@ -18,6 +18,7 @@ export interface LayoutContextValue {
   toggleWidget: (id: string) => void;
   setPanelLayout: (l: PanelLayout) => void;
   resetWidgetPositions: () => void;
+  userId?: string;
 }
 
 export const LayoutContext = createContext<LayoutContextValue | null>(null);
