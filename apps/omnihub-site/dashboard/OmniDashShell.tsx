@@ -87,10 +87,10 @@ interface OmniDashSidebarProps {
 }
 
 interface OmniDashHeaderProps {
-  tick: number;
   isDark: boolean;
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
+  userInitials: string;
 }
 
 export type OmniHealthState = 'green' | 'yellow' | 'red';
@@ -102,9 +102,7 @@ export interface OmniContextApp {
   iconIdx?: number;
 }
 
-interface AgentWidgetProps {
-  tick: number;
-}
+type AgentWidgetProps = Record<string, never>;
 
 
 
@@ -384,11 +382,10 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 };
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
-const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
+const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
-  const pulse = tick % 2 === 0;
 
   const handleOmniSkills = () => {
     invoke({
@@ -581,8 +578,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         }}>
           <div style={{
             width:6, height:6, borderRadius:"50%", background:T.green, flexShrink:0,
-            boxShadow:`0 0 ${pulse?8:4}px ${T.green}`,
-            transition:"box-shadow .5s",
+            animation:"apexPulse 2s ease-in-out infinite",
           }} />
           Zero Trust Active{demoMode ? ' (Simulated)' : ''}
         </div>
@@ -603,7 +599,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
 
         {/* Theme Toggle — Sun/Moon */}
-        <button onClick={() => setIsDark(d => !d)} style={{
+        <button aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
@@ -625,7 +621,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
         </button>
 
         {/* Bell */}
-        <button onClick={handleBell} style={{
+        <button aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`} onClick={handleBell} style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
@@ -647,22 +643,25 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           )}
         </button>
 
-        {/* Avatar */}
-        <div style={{
+        {/* Avatar — initials from authenticated user */}
+        <div
+          role="img"
+          aria-label="User avatar"
+          style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:`linear-gradient(135deg,${T.blue},${T.orange})`,
           display:"flex",alignItems:"center",justifyContent:"center",
           color:"#fff",fontSize:11.9,fontWeight:800,
           boxShadow:"0 2px 8px rgba(59,130,246,0.27)",
           cursor:"pointer",
-        }}>JR</div>
+        }}>{userInitials}</div>
       </div>
     </div>
   );
 };
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
-const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
+const AgentWidget = (_props: AgentWidgetProps) => {
   const { autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -1341,12 +1340,12 @@ const IntegratedAppsGalleryWidget = () => (
   </GlassCard>
 );
 
-function OmniGridTop({ hiddenWidgets, tick, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], tick: number, isDesktop: boolean }>) {
+function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], isDesktop: boolean }>) {
   const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
   const gridHeight = isDesktop ? 300 : undefined;
   return (
     <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
-      {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
+      {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget /></DraggableWidget>}
       {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
       {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
     </div>
@@ -1383,7 +1382,6 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
-  const [tick, setTick] = useState<number>(0);
   const { session } = useAuth();
   const userId = session?.user?.id;
   const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
@@ -1395,6 +1393,23 @@ export default function OmniDashShell() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const { demoMode } = useDemoMode();
   const isDemoMode = ops.demo;
+
+  const userInitials = useMemo(() => {
+    const user = session?.user;
+    if (!user) return '??';
+    const name = (user.user_metadata?.full_name as string | undefined)
+      ?? (user.user_metadata?.name as string | undefined);
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      return (parts[0]?.[0] ?? '').toUpperCase() + (parts.at(-1)?.[0] ?? '').toUpperCase();
+    }
+    const email = user.email;
+    if (email) {
+      const local = email.split('@')[0] ?? '';
+      return local.slice(0, 2).toUpperCase();
+    }
+    return '??';
+  }, [session]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const liveDashData = useDashboardData({ enabled: !isDemoMode });
@@ -1419,18 +1434,6 @@ export default function OmniDashShell() {
   // Sidebar active state is driven purely by handleNav / modal onCancel —
   // no longer derived from location.pathname (modules render as modals, not routes).
 
-  useEffect(() => {
-    // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
-    // This prevents aggressive re-renders from detaching DOM nodes during test execution.
-    if (
-      (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (globalThis.window !== undefined && (globalThis.window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
-    ) {
-      return;
-    }
-    const id = setInterval(() => setTick(t => t+1), 500);
-    return () => clearInterval(id);
-  }, []);
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
@@ -1454,10 +1457,10 @@ export default function OmniDashShell() {
       overflow:"hidden",
     }}>
       <OmniDashHeader
-        tick={tick}
         isDark={isDark}
         setIsDark={setIsDark}
         invoke={invoke}
+        userInitials={userInitials}
       />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
@@ -1517,7 +1520,7 @@ export default function OmniDashShell() {
             />
 
             {/* Primary 3-column grid */}
-            <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
+            <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
 
             {/* Integrated Apps Gallery row — display-only, owns no connection flow */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
