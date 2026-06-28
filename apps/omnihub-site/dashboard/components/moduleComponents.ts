@@ -18,6 +18,7 @@ const MODULE_KEYS: ReadonlySet<string> = new Set([
   'translation',
   'omniboard',
   'omniboard-wizard',
+  'apex-apps-mcp',
 ]);
 
 /** Returns true when a lazy-loaded module component exists for the given key. */

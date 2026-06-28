@@ -40,6 +40,7 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
+import { APEX_APPS_MODULE_KEY } from './contracts/omniSurfaceOwnership';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
@@ -1259,12 +1260,13 @@ const EcosystemWidget = () => {
   const { invoke } = useOmniModal();
 
   const handleAddApp = () => {
+    // Canon: APEX ecosystem apps open the APEX Apps MCP modal, NEVER OmniBoard.
     invoke({
       id: 'ecosystem-add-apex-app',
       provider: 'omnidash',
       type: 'module',
-      title: 'Connect App',
-      contextData: { moduleKey: 'omniboard-wizard' },
+      title: 'Connect APEX App',
+      contextData: { moduleKey: APEX_APPS_MODULE_KEY },
       onComplete: async () => {},
       onCancel: () => {},
     });

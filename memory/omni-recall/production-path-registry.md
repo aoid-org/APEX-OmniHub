@@ -27,8 +27,8 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 
 | Layer | Path | Status |
 |---|---|---|
-| Integration ownership (legacy single-owner) | `apps/omnihub-site/dashboard/contracts/appIntegrationOwnership.ts` | [EXISTS] reconcile P1 |
-| Surface ownership canon (two-owner) | `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts` | [NET-NEW] P1 |
+| Integration ownership (legacy → deprecated shim) | `apps/omnihub-site/dashboard/contracts/appIntegrationOwnership.ts` | [EXISTS] re-exports canon (P1 ✓) |
+| Surface ownership canon (two-owner) | `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts` (+ `.test.ts`) | [EXISTS] P1 ✓ |
 | APEX Apps contract | `apps/omnihub-site/dashboard/contracts/apexApps.ts` | [EXISTS] inspect P3 |
 | Module action capabilities | `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` | [EXISTS] |
 
@@ -38,7 +38,7 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 |---|---|---|
 | OmniBoard wizard (3rd-party only) | `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx` | [EXISTS] |
 | Files module (upload entry) | `apps/omnihub-site/dashboard/components/modules/FilesModule.tsx` | [EXISTS] ingest P8 |
-| APEX Apps MCP module | `apps/omnihub-site/dashboard/components/modules/ApexAppsMcpModule.tsx` | [NET-NEW] P3 |
+| APEX Apps MCP module (prompt-first, OmniPort handoff) | `apps/omnihub-site/dashboard/components/modules/ApexAppsMcpModule.tsx` | [EXISTS] P1 ✓ |
 
 ## OmniMedia
 
@@ -86,7 +86,7 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | E2E suite | `tests/e2e-playwright/` | [EXISTS] |
 | Global auth setup | `tests/e2e-playwright/global-setup.ts` | [EXISTS] |
 | Auth helper | `tests/e2e-playwright/helpers/auth.ts` | [EXISTS] |
-| Modal contract spec | `tests/e2e-playwright/omnidash-modal-contract.spec.ts` | [NET-NEW] P2 |
+| Modal contract spec | `tests/e2e-playwright/omnidash-modal-contract.spec.ts` | [EXISTS] P2 ✓ |
 | CI runtime gates | `.github/workflows/ci-runtime-gates.yml` | [EXISTS] rewire k6 P14/15 |
 | k6 smoke script (repo-owned) | `scripts/ci/perf-k6-smoke.mjs` (`npm run perf:k6:smoke`) | [EXISTS] wire into CI P14/15 |
 | Perf evidence artifact | `artifacts/production-validation/performance-summary.json` | [NET-NEW] P14/15 |
