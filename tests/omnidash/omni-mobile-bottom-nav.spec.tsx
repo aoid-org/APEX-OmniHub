@@ -24,6 +24,18 @@ describe('OmniMobileBottomNav', () => {
     expect(slateTab).toHaveAttribute('aria-selected', 'true');
   });
 
+  it.each(TABS)('exposes exactly one active tab when "%s" is selected', (tab) => {
+    const setActiveTab = vi.fn();
+    render(<OmniMobileBottomNav activeTab={tab} setActiveTab={setActiveTab} />);
+
+    const selectedTabs = screen.getAllByRole('tab').filter((button) =>
+      button.getAttribute('aria-selected') === 'true',
+    );
+
+    expect(selectedTabs).toHaveLength(1);
+    expect(selectedTabs[0]).toHaveAccessibleName(new RegExp(tab, 'i'));
+  });
+
   it('marks inactive tabs as not selected', () => {
     const setActiveTab = vi.fn();
     render(<OmniMobileBottomNav activeTab="home" setActiveTab={setActiveTab} />);

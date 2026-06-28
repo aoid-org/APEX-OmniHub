@@ -57,11 +57,15 @@ vi.mock('@/dashboard/components/modules/BillingModule', () => ({
 vi.mock('@/dashboard/components/modules/SettingsModule', () => ({
   default: () => <div data-testid="mod-settings" />,
 }));
+vi.mock('@/dashboard/components/modules/OmniBoardModule', () => ({
+  default: () => <div data-testid="mod-omniboard" />,
+}));
 vi.mock('@/dashboard/components/modules/TranslationModule', () => ({
   default: () => <div data-testid="mod-translation" />,
 }));
 
-import { ModuleRenderer } from '@/dashboard/components/ModuleRenderer';
+import { ModuleRenderer, MODULE_COMPONENT_KEYS } from '@/dashboard/components/ModuleRenderer';
+import { OMNIDASH_SIDEBAR_WIDGETS } from '../../apps/omnihub-site/src/contracts/omnidash-sidebar-widgets';
 
 describe('ModuleRenderer', () => {
   beforeEach(() => {
@@ -91,17 +95,32 @@ describe('ModuleRenderer', () => {
   });
 
   describe('Known moduleKey - Suspense boundary', () => {
+    it('registers every canonical sidebar module key in the production module map', () => {
+      const registeredModuleKeys = new Set(MODULE_COMPONENT_KEYS);
+
+      for (const widget of OMNIDASH_SIDEBAR_WIDGETS) {
+        expect(registeredModuleKeys).toContain(widget.moduleKey);
+      }
+    });
+
     it('does NOT render fallback text for known key', () => {
       render(<ModuleRenderer moduleKey="omniskills" onClose={vi.fn()} />);
       expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
     });
 
-    // Verify Suspense boundary renders for each known module key
-    it.each([
-      'physiomni', 'audits', 'links', 'automations',
-      'workflows', 'files', 'billing', 'settings', 'translation'
-    ])('does not show unavailable fallback for key "%s"', (key) => {
-      render(<ModuleRenderer moduleKey={key} onClose={vi.fn()} />);
+    it.each(OMNIDASH_SIDEBAR_WIDGETS)(
+      'renders real sidebar module "$label" from the locked 9-widget rail',
+      async (widget) => {
+        render(<ModuleRenderer moduleKey={widget.moduleKey} onClose={vi.fn()} />);
+
+        expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
+        expect(await screen.findByTestId(`mod-${widget.moduleKey}`)).toBeInTheDocument();
+      },
+    );
+
+    // Verify Suspense boundary renders for a known non-sidebar module key.
+    it('does not show unavailable fallback for key "translation"', () => {
+      render(<ModuleRenderer moduleKey="translation" onClose={vi.fn()} />);
       expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
     });
   });

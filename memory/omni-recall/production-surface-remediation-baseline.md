@@ -278,3 +278,27 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
 
 (No remaining UNCERTAIN items — all resolved through Phases 10-18.)
 - Deployed staging URL + live edge env presence — Phases 5/18.
+
+## Drawer accessibility containment — 2026-06-28
+
+- Scope: mobile/tablet OmniDash drawer containment only. This patch removes the
+  `aria-hidden="true"` parent state from the active drawer overlay so the nested
+  `dialog` and its controls remain exposed to assistive technology.
+- Regression coverage: `tests/omnidash/omni-mobile-drawer.spec.tsx` asserts the
+  open drawer has an accessible `dialog`, the overlay parent is not `aria-hidden`,
+  and backdrop/Escape/visible close button dismissal all invoke close.
+- Sidebar reachability coverage: `tests/omnidash/module-renderer.spec.tsx` now
+  renders every module from the canonical 9-widget sidebar registry rather than
+  proving only a narrowed mocked subset.
+- Manual preview gates still required before certification: tablet/mobile Home
+  tab, Slate tab, Apps drawer, Insights drawer, More drawer, module open from
+  Apps, drawer close, and exactly one active tab.
+- Owner-gated backend state: APEX leadership supplied `ORCHESTRATOR_URL` as
+  `https://apex-orchestrator-api.onrender.com` for this follow-up, and the
+  presence check was rerun with that environment value. This confirms the
+  configuration value is available for owner-gated validation, but Gateway and
+  OmniMedia are not certified fixed by this containment patch. Live route
+  behavior must still be probed in the owner-controlled environment before
+  functional claims.
+- UI-006 remains open as P2. This patch is containment/a11y/test hardening only;
+  it does not implement a real drag/snap/collision-safe layout solution.
