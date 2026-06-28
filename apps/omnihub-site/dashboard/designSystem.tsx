@@ -24,29 +24,8 @@ interface SectionLabelProps {
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 // eslint-disable-next-line react-refresh/only-export-components
-export const T = {
-  bg:        "var(--omni-bg)",
-  surface:   "var(--omni-surface)",
-  card:      "var(--omni-card)",
-  cardHover: "var(--omni-card-hover)",
-  border:    "var(--omni-border)",
-  borderGlow:"var(--omni-border-glow)",
-  orange:    "var(--omni-orange)",
-  orangeDim: "var(--omni-orange-dim)",
-  orangeGlow:"var(--omni-orange-glow)",
-  blue:      "var(--omni-blue)",
-  blueDim:   "var(--omni-blue-dim)",
-  blueGlow:  "var(--omni-blue-glow)",
-  cyan:      "var(--omni-cyan)",
-  green:     "var(--omni-green)",
-  warn:      "var(--omni-warn)",
-  red:       "var(--omni-red)",
-  purple:    "var(--omni-purple)",
-  t1:        "var(--omni-t1)",
-  t2:        "var(--omni-t2)",
-  t3:        "var(--omni-t3)",
-  t4:        "var(--omni-t4)",
-};
+export { T } from './omniSkinTokens';
+import { T } from './omniSkinTokens';
 
 export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
   <div style={{
