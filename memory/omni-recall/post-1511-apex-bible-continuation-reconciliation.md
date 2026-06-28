@@ -52,3 +52,22 @@ this PR** (stable error codes + honest i18n copy + Retry + last-good catalog
 preservation + in-flight dedupe). Live authenticated confirmation of the rendered
 behavior remains **BLOCKED** on an authenticated browser session and on live
 `omnilink-port` edge-function logs.
+
+---
+
+## UPDATE 2026-06-28 (lead) — executed evidence + CI
+
+- **OmniMedia error — root cause VERIFIED (was UNVERIFIED):** live probes prove deployed
+  `omnilink-port` v32 returns **404** on `omnimedia-catalog` (no omnimedia routing); `OMNILINK_ENABLED`
+  is enabled (probe returned 403 not 503). Frontend honesty fix shipped (commit `a104425`); backend
+  fix deploys via CI on merge (`deploy-production-cf-direct.yml:163`, `deploy-web3-functions.yml:64`).
+- **Static fake-surface scan — PASS** (executed; see `evidence/apex-truth-test/01-static-scan.md`).
+- **PR closeout forbidden-string scan — PASS:** zero of {ConnectionsWidget, Third-Party Connections,
+  Connected APEX Apps, connections-third-party, connections-apex-apps, Connect Third-Party App} in
+  `apps/omnihub-site/dashboard`; "Integrated Apps Gallery" present and display-only.
+- **Local gates — PASS:** typecheck (`tsc -b`), eslint (changed files), `i18n:check` (both scripts),
+  vitest (OmniMedia honesty specs 6/6), production build (exit 0).
+- **CI fix:** `build-and-test` had failed the Test Integrity R2 skip-ban; all truth-test skips now
+  carry the `APEX-1511` ticket (commit `6277200`). Re-run pending.
+- **Live MCP redeploy:** deliberately NOT performed (owner gate) — avoids replacing the whole
+  multi-route `omnilink-port` from a proxied container. Deferred to merge pipeline.
