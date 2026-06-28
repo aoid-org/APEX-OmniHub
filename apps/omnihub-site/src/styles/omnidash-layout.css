@@ -1150,7 +1150,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 9000;
+  /* Must stay above .omni-drawer-overlay (9500) — otherwise the open-drawer
+     backdrop covers the nav and swallows taps meant for the other tabs,
+     so a user can only close the current drawer, never switch directly
+     to a different one. */
+  z-index: 9600;
   display: none; /* shown via media queries */
   align-items: stretch;
   justify-content: space-around;
@@ -1242,7 +1246,14 @@
 
 .omni-drawer-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Stop above the bottom nav (56px + safe-area) instead of inset:0 — the
+     nav now paints above this overlay (z-index 9600 > 9500), so without
+     this the sheet would still visually run underneath/behind the nav
+     for that strip while remaining functionally unreachable. */
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   z-index: 9500;
   background: rgba(6, 10, 19, 0.55);
   backdrop-filter: blur(12px) saturate(1.4);
@@ -1261,7 +1272,11 @@
 .omni-drawer {
   width: 100%;
   max-width: 560px;
-  max-height: 85dvh;
+  /* % (not dvh) so this resolves against .omni-drawer-overlay's own fixed
+     height — which already stops above the bottom nav — instead of the
+     full device viewport, which would let the sheet overflow back down
+     behind the nav regardless of the overlay's own bottom inset. */
+  max-height: 85%;
   background: rgba(10, 14, 24, 0.95);
   backdrop-filter: blur(48px) saturate(180%);
   -webkit-backdrop-filter: blur(48px) saturate(180%);
@@ -1727,7 +1742,7 @@
   /* Drawer goes full-width on phone */
   .omni-drawer {
     max-width: 100%;
-    max-height: 90dvh;
+    max-height: 90%;
     border-radius: var(--od-radius-xl) var(--od-radius-xl) 0 0;
   }
 }

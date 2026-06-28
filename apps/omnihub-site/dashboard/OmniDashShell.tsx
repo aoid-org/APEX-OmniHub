@@ -83,8 +83,29 @@ interface NavItemProps {
 import type { DashboardNavSection } from "./types/dashboard.types";
 
 interface OmniDashSidebarProps {
-  activeNav: string;
-  setActiveNav: Dispatch<SetStateAction<string>>;
+  activeNav: DashboardNavSection;
+  setActiveNav: Dispatch<SetStateAction<DashboardNavSection>>;
+}
+
+/**
+ * Shared surface controller — the single place that opens a sidebar module
+ * modal and marks it as the current surface. Used by the desktop sidebar AND
+ * the mobile/tablet "Apps" drawer so both stay in sync (P0 rule 1).
+ */
+function invokeSidebarModule(
+  widget: OmniDashSidebarWidget,
+  setActiveNav: Dispatch<SetStateAction<DashboardNavSection>>,
+) {
+  setActiveNav(widget.label);
+  useOmniModal.getState().invoke({
+    id: `sidebar-module-${widget.moduleKey}`,
+    provider: 'omnidash',
+    type: 'module',
+    title: widget.label,
+    contextData: { moduleKey: widget.moduleKey },
+    onComplete: async () => {},
+    onCancel: () => { setActiveNav('Home'); },
+  });
 }
 
 interface OmniDashHeaderProps {
@@ -309,23 +330,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     }
   }, [signingOut]);
 
-  const handleNav = (widget: OmniDashSidebarWidget) => {
-    setActiveNav(widget.label);
-
-
-
-    // All modules open as modal overlays over the persistent OmniBoard canvas.
-    // Non-reactive: getState().invoke() so this handler never subscribes to modal state.
-    useOmniModal.getState().invoke({
-      id: `sidebar-module-${widget.moduleKey}`,
-      provider: 'omnidash',
-      type: 'module',
-      title: widget.label,
-      contextData: { moduleKey: widget.moduleKey },
-      onComplete: async () => {},
-      onCancel: () => { setActiveNav('OmniBoard'); },
-    });
-  };
+  const handleNav = (widget: OmniDashSidebarWidget) => invokeSidebarModule(widget, setActiveNav);
 
   return (
     <div className="omni-sidebar" style={{
@@ -1316,7 +1321,7 @@ function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: rea
   return (
     <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
       {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget /></DraggableWidget>}
-      {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
+      {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none", zIndex: 1 }}><OmniSlateWidget /></DraggableWidget>}
       {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
     </div>
   );
@@ -1358,9 +1363,31 @@ export default function OmniDashShell() {
   const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
-  const [mobileTab, setMobileTab] = useState<MobileTab>("home");
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  // Mobile/tablet surface state — drawerView is the open sheet (if any);
+  // canvasFocus is which part of the always-mounted canvas is current when no
+  // sheet is open. mobileTab is fully derived so exactly one tab is ever active.
+  const [drawerView, setDrawerView] = useState<'apps' | 'insights' | 'more' | null>(null);
+  const [canvasFocus, setCanvasFocus] = useState<'home' | 'slate'>('home');
+  const mobileTab: MobileTab = drawerView ?? canvasFocus;
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const handleMobileTabSelect = useCallback((tab: MobileTab) => {
+    if (tab === 'home' || tab === 'slate') {
+      useOmniModal.getState().close();
+      setDrawerView(null);
+      setCanvasFocus(tab);
+      const targetId = tab === 'slate' ? 'widget_slate' : undefined;
+      const target = targetId ? document.getElementById(targetId) : canvasRef.current;
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setDrawerView(tab);
+  }, []);
+
+  const handleMobileModuleSelect = useCallback((widget: OmniDashSidebarWidget) => {
+    setDrawerView(null);
+    invokeSidebarModule(widget, setActiveNav);
+  }, [setActiveNav]);
   const { demoMode } = useDemoMode();
   const isDemoMode = ops.demo;
 
@@ -1407,7 +1434,7 @@ export default function OmniDashShell() {
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
-    if (isDesktop) setTimeout(() => setDrawerOpen(false), 0);
+    if (isDesktop) setTimeout(() => setDrawerView(null), 0);
   }, [isDesktop]);
 
   // Responsive grid columns
@@ -1435,7 +1462,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
-        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
             data-testid="rt_security"
@@ -1548,14 +1575,14 @@ export default function OmniDashShell() {
         )}
 
         {/* Sidebar — reversed layout: right side */}
-        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
           <button
             type="button"
             className="omni-mobile-drawer-btn"
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => setDrawerView('insights')}
             aria-label="Open insights panel"
             style={{
               position: "fixed",
@@ -1596,24 +1623,62 @@ export default function OmniDashShell() {
         </div>
       </div>
 
-      {/* Mobile/Tablet — Insights drawer for right panel content */}
+      {/* Mobile/Tablet — surface drawer: Insights rail, Apps picker, or More */}
       {!isDesktop && (
         <OmniMobileDrawer
-          isOpen={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          title="Insights & Controls"
+          isOpen={drawerView !== null}
+          onClose={() => setDrawerView(null)}
+          title={
+            drawerView === 'apps' ? 'Apps'
+              : drawerView === 'more' ? 'More'
+              : 'Insights & Controls'
+          }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
-            <OmniTraceFeed />
-            <SentinelPanel />
-          </div>
+          {drawerView === 'apps' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '14px 12px' }}>
+              {OMNIDASH_SIDEBAR_WIDGETS.map((widget) => (
+                <NavItem
+                  key={widget.id}
+                  n={widget}
+                  isActive={activeNav === widget.label}
+                  onClick={() => handleMobileModuleSelect(widget)}
+                />
+              ))}
+            </div>
+          )}
+          {drawerView === 'insights' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
+              <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+              <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+              <OmniSentryWidget />
+              <SentinelPanel />
+              <OmniMediaLaunchWidget />
+            </div>
+          )}
+          {drawerView === 'more' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 12px' }}>
+              <button
+                type="button"
+                onClick={() => setIsDark((d) => !d)}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: 'transparent', color: T.t1, fontSize: 13, cursor: 'pointer' }}
+              >
+                {isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { void supabase.auth.signOut().then(() => { globalThis.location.href = '/login'; }); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: 'transparent', color: T.t1, fontSize: 13, cursor: 'pointer' }}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
         </OmniMobileDrawer>
       )}
 
-      {/* Mobile/Tablet bottom navigation */}
+      {/* Mobile/Tablet bottom navigation — shared surface controller */}
       {!isDesktop && (
-        <OmniMobileBottomNav activeTab={mobileTab} setActiveTab={setMobileTab} />
+        <OmniMobileBottomNav activeTab={mobileTab} onSelect={handleMobileTabSelect} />
       )}
 
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}

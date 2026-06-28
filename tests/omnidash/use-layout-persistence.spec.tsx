@@ -18,7 +18,7 @@ describe('useLayoutPersistence', () => {
 
   it('returns default state when localStorage is empty', () => {
     const { result } = renderHook(() => useLayoutPersistence());
-    expect(result.current.activeNav).toBe('OmniBoard');
+    expect(result.current.activeNav).toBe('Home');
     expect(result.current.isDark).toBe(true);
     expect(result.current.panelLayout).toBe('standard');
   });
@@ -27,7 +27,7 @@ describe('useLayoutPersistence', () => {
     localStorage.setItem(
       LAYOUT_STORAGE_KEY,
       JSON.stringify({
-        activeNav: 'KPIs',
+        activeNav: 'Audits',
         isDark: false,
         ops: { demo: false, autoPilot: true, guardian: false, live: true },
         panelLayout: 'reversed',
@@ -35,7 +35,7 @@ describe('useLayoutPersistence', () => {
       }),
     );
     const { result } = renderHook(() => useLayoutPersistence());
-    expect(result.current.activeNav).toBe('KPIs');
+    expect(result.current.activeNav).toBe('Audits');
     expect(result.current.isDark).toBe(false);
     expect(result.current.panelLayout).toBe('reversed');
     expect(result.current.hiddenWidgets).toContain('widget_eco');
