@@ -99,31 +99,33 @@ interface UpgradePromptProps {
   readonly requiredTier: SubscriptionTier;
 }
 
+// ⚡ Bolt: Moved `features` object outside of the `UpgradePrompt` component to prevent unnecessary memory reallocation on every render.
+// Expected Impact: Reduces garbage collection overhead, particularly if the component re-renders frequently.
+const features = {
+  starter: [
+    'Full Dashboard Access',
+    'Link & File Management',
+    'Basic Automations',
+    'Email Support',
+  ],
+  pro: [
+    'Everything in Starter',
+    'Advanced Automations',
+    'Priority Support',
+    'API Access',
+    'Custom Integrations',
+  ],
+  enterprise: [
+    'Everything in Pro',
+    'Dedicated Account Manager',
+    'SLA Guarantee',
+    'Custom Development',
+    'On-premise Options',
+  ],
+};
+
 const UpgradePrompt = ({ currentTier, requiredTier }: UpgradePromptProps) => {
   const navigate = useNavigate();
-
-  const features = {
-    starter: [
-      'Full Dashboard Access',
-      'Link & File Management',
-      'Basic Automations',
-      'Email Support',
-    ],
-    pro: [
-      'Everything in Starter',
-      'Advanced Automations',
-      'Priority Support',
-      'API Access',
-      'Custom Integrations',
-    ],
-    enterprise: [
-      'Everything in Pro',
-      'Dedicated Account Manager',
-      'SLA Guarantee',
-      'Custom Development',
-      'On-premise Options',
-    ],
-  };
 
   const tierFeatures = features[requiredTier as keyof typeof features] || features.starter;
 
