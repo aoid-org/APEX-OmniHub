@@ -26,7 +26,7 @@ describe('dashboard.types constants', () => {
   });
 
   it('DEFAULT_PERSISTED_LAYOUT uses defaults', () => {
-    expect(DEFAULT_PERSISTED_LAYOUT.activeNav).toBe('OmniBoard');
+    expect(DEFAULT_PERSISTED_LAYOUT.activeNav).toBe('Home');
     expect(DEFAULT_PERSISTED_LAYOUT.isDark).toBe(true);
     expect(DEFAULT_PERSISTED_LAYOUT.panelLayout).toBe('standard');
     expect(DEFAULT_PERSISTED_LAYOUT.ops).toEqual(DEFAULT_OPS_STATE);

@@ -5,13 +5,13 @@
  * 5 tabs: Home, OmniSlate, Apps, Insights, More
  * ≥44×44px touch targets, env(safe-area-inset-bottom) aware.
  */
-import type { Dispatch, SetStateAction, FC } from "react";
+import type { FC } from "react";
 
 export type MobileTab = "home" | "slate" | "apps" | "insights" | "more";
 
 interface OmniMobileBottomNavProps {
   readonly activeTab: MobileTab;
-  readonly setActiveTab: Dispatch<SetStateAction<MobileTab>>;
+  readonly onSelect: (tab: MobileTab) => void;
 }
 
 // ── SVG Icon Components ───────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ const TABS: readonly { readonly id: MobileTab; readonly label: string }[] = [
   { id: "more",     label: "More" },
 ];
 
-export function OmniMobileBottomNav({ activeTab, setActiveTab }: OmniMobileBottomNavProps) {
+export function OmniMobileBottomNav({ activeTab, onSelect }: OmniMobileBottomNavProps) {
   return (
     <div
       className="omni-mobile-bottom-nav"
@@ -88,7 +88,7 @@ export function OmniMobileBottomNav({ activeTab, setActiveTab }: OmniMobileBotto
             aria-selected={isActive}
             aria-label={tab.label}
             className={`omni-mobile-tab${isActive ? " omni-mobile-tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => onSelect(tab.id)}
             type="button"
           >
             <span className="omni-mobile-tab__icon"><Icon /></span>
