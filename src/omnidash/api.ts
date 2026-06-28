@@ -21,7 +21,7 @@ export const OMNIDASH_COLUMNS = {
 
   pipeline_items: 'id, user_id, account_name, product, owner, stage, last_touch_at, next_touch_at, expected_mrr, probability, notes, created_at, updated_at',
 
-  kpi_daily: 'id, user_id, day, tradeline_paid_starts, tradeline_active_pilots, tradeline_churn_risks, flowbills_demos, flowbills_paid_accounts, cash_days_to_cash, ops_sev1_incidents, updated_at',
+  kpi_daily: 'id, user_id, day, flowbills_demos, flowbills_paid_accounts, cash_days_to_cash, ops_sev1_incidents, updated_at',
 
   incidents: 'id, user_id, severity, status, title, description, resolution_notes, occurred_at, resolved_at, created_at, updated_at',
 } as const;

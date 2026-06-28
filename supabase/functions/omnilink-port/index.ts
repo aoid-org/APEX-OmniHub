@@ -595,7 +595,7 @@ async function resolveDashboard(
   const [kpiRes, incidentRes] = await Promise.allSettled([
     anonClient
       .from('omnidash_kpi_daily')
-      .select('tradeline_paid_starts, tradeline_active_pilots, ops_sev1_incidents')
+      .select('ops_sev1_incidents')
       .order('day', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -607,8 +607,6 @@ async function resolveDashboard(
   ]);
 
   const kpi = (kpiRes.status === 'fulfilled' ? kpiRes.value.data : null) as {
-    tradeline_paid_starts: number | null;
-    tradeline_active_pilots: number | null;
     ops_sev1_incidents: number | null;
   } | null;
 
@@ -621,8 +619,6 @@ async function resolveDashboard(
   }>;
 
   const items = normalizeModuleItems([
-    { id: 'paid_starts', label: 'Paid Starts', status: 'active', detail: String(kpi?.tradeline_paid_starts ?? 0) },
-    { id: 'active_pilots', label: 'Active Pilots', status: 'active', detail: String(kpi?.tradeline_active_pilots ?? 0) },
     {
       id: 'sev1_incidents',
       label: 'SEV1 Incidents',

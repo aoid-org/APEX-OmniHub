@@ -40,9 +40,6 @@ export function redactTodayItems(items: TodayItem[]): TodayItem[] {
 export function redactKpiDaily(rows: KpiDaily[]): KpiDaily[] {
   return rows.map((row) => ({
     ...row,
-    tradeline_paid_starts: Math.max(0, row.tradeline_paid_starts),
-    tradeline_active_pilots: Math.max(0, row.tradeline_active_pilots),
-    tradeline_churn_risks: Math.max(0, row.tradeline_churn_risks),
     flowbills_demos: Math.max(0, row.flowbills_demos),
     flowbills_paid_accounts: Math.max(0, row.flowbills_paid_accounts),
     cash_days_to_cash: row.cash_days_to_cash ?? null,

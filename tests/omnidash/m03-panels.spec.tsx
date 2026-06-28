@@ -7,9 +7,6 @@ vi.mock('../../apps/omnihub-site/src/contexts/DemoModeContext', () => ({
 
 const defaultDashData = {
   kpiSummary: {
-    tradeline_paid_starts: 4,
-    tradeline_active_pilots: 5,
-    tradeline_churn_risks: 3,
     flowbills_demos: 8,
     flowbills_paid_accounts: 12,
     cash_days_to_cash: 30,
@@ -19,9 +16,6 @@ const defaultDashData = {
     {
       id: 'kpi-2026-06-01',
       day: '2026-06-01T00:00:00Z',
-      tradeline_paid_starts: 4,
-      tradeline_active_pilots: 5,
-      tradeline_churn_risks: 3,
       flowbills_demos: 8,
       flowbills_paid_accounts: 12,
       cash_days_to_cash: 30,
@@ -30,9 +24,6 @@ const defaultDashData = {
     {
       id: 'kpi-2026-06-02',
       day: '2026-06-02T00:00:00Z',
-      tradeline_paid_starts: 6,
-      tradeline_active_pilots: 5,
-      tradeline_churn_risks: 3,
       flowbills_demos: 8,
       flowbills_paid_accounts: 12,
       cash_days_to_cash: 30,
@@ -78,9 +69,9 @@ describe('M03Panels', () => {
       expect(screen.getByText('System Health Overview')).toBeTruthy();
     });
 
-    it('renders agents active count from kpiSummary', () => {
+    it('renders workflows count from kpiSummary', () => {
       render(<SystemHealthOverview />);
-      expect(screen.getByText('5')).toBeTruthy();
+      expect(screen.getByText('12')).toBeTruthy();
     });
 
     it('renders loading skeleton when isLoading', () => {

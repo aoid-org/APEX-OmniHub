@@ -38,7 +38,6 @@ import {
   Eye,
   RefreshCw,
   Fingerprint,
-  Target,
   Sparkles,
 } from 'lucide-react';
 
@@ -402,17 +401,6 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
   // Development
 
   // Apps
-  {
-    id: 'apps-tradeline',
-    path: '/apps/tradeline247',
-    label: 'TradeLine 24/7',
-    description: 'TradeLine 24/7 integration',
-    icon: Target,
-    category: 'integrations',
-    requiredScopes: ['authenticated'],
-    isEnabled: true,
-    order: 60,
-  },
   {
     id: 'apps-autorepai',
     path: '/apps/autorepai',

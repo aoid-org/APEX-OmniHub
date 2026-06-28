@@ -44,7 +44,7 @@ type EventListener = (event: TemporalEvent) => void;
 
 const DEMO_EVENT_LOG: TemporalEvent[] = [
   { id: 'te-001', type: 'session.started', source: 'omnidash', timestamp: '2026-03-20T08:00:00Z', data: { userId: 'demo-user', mode: 'executive' } },
-  { id: 'te-002', type: 'kpi.updated', source: 'temporal', timestamp: '2026-03-20T08:01:00Z', data: { metric: 'tradeline_paid_starts', value: 12, delta: 3 } },
+  { id: 'te-002', type: 'kpi.updated', source: 'temporal', timestamp: '2026-03-20T08:01:00Z', data: { metric: 'flowbills_demos', value: 12, delta: 3 } },
   { id: 'te-003', type: 'pipeline.stage_changed', source: 'omniconnect', timestamp: '2026-03-20T08:02:00Z', data: { dealId: 'pipe-001', from: 'proposal', to: 'negotiation', value: 75000 } },
   { id: 'te-004', type: 'incident.created', source: 'guardian', timestamp: '2026-03-20T08:03:00Z', data: { severity: 'sev2', title: 'API latency spike detected', service: 'apex-agent' } },
   { id: 'te-005', type: 'workflow.completed', source: 'temporal', timestamp: '2026-03-20T08:05:00Z', data: { workflowId: 'lead-enrichment', duration: 5200, steps: 5 } },

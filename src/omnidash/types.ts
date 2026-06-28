@@ -56,9 +56,6 @@ export interface KpiDaily {
   id: string;
   user_id: string;
   day: string;
-  tradeline_paid_starts: number;
-  tradeline_active_pilots: number;
-  tradeline_churn_risks: number;
   flowbills_demos: number;
   flowbills_paid_accounts: number;
   cash_days_to_cash: number | null;

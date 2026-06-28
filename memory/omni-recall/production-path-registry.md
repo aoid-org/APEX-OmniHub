@@ -106,6 +106,27 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | Production-safe config | `playwright.production-safe.config.ts` | [EXISTS] — verified P18 |
 | RC certification report | `artifacts/production-validation/rc-remediation-certification.md` | [DONE] P19 |
 
+## TradeLine 24/7 decommission (Task 9)
+
+| Layer | Path | Status |
+|---|---|---|
+| Feature registry route (removed) | `src/features/registry.ts` | [DONE] Task 9 — `apps-tradeline` entry removed |
+| Integration registry (removed) | `src/omniconnect/core/registry.ts` | [DONE] Task 9 — TradeLine integration removed |
+| KPI types (tradeline fields removed) | `apps/omnihub-site/dashboard/types/dashboard.types.ts` | [DONE] Task 9 |
+| KPI types (src, tradeline fields removed) | `src/omnidash/types.ts` | [DONE] Task 9 |
+| API column selection (tradeline removed) | `src/omnidash/api.ts` | [DONE] Task 9 |
+| KPI redaction (tradeline removed) | `src/omnidash/redaction.ts` | [DONE] Task 9 |
+| Dashboard data hook (tradeline removed) | `apps/omnihub-site/dashboard/hooks/useDashboardData.ts` | [DONE] Task 9 |
+| KPI table (tradeline columns removed) | `apps/omnihub-site/dashboard/components/Kpis.tsx` | [DONE] Task 9 |
+| System health panels (tradeline refs removed) | `apps/omnihub-site/dashboard/components/M03Panels.tsx` | [DONE] Task 9 |
+| System health row (rewired to non-TL fields) | `apps/omnihub-site/dashboard/components/SystemHealthRow.tsx` | [DONE] Task 9 |
+| Shell demo data (tradeline removed) | `apps/omnihub-site/dashboard/OmniDashShell.tsx` | [DONE] Task 9 |
+| Edge function KPI (tradeline queries removed) | `supabase/functions/omnilink-port/index.ts` | [DONE] Task 9 |
+| Demo event cache (tradeline metric removed) | `src/lib/demo/TemporalEventCache.ts` | [DONE] Task 9 |
+| Responsive E2E (CI-safe rewrite) | `tests/e2e-playwright/omnidash-responsive.spec.ts` | [DONE] Task 9 |
+| Decommission contract test | `tests/omnidash/apex-apps-contract.spec.ts` | [EXISTS] — verifies TradeLine NOT in LIVE_APEX_APPS |
+| DB columns (additive-only, not dropped) | `supabase/migrations/20251224000002_omnidash.sql` | [KEPT] — no destructive migration |
+
 ## Canon & memory
 
 | Layer | Path | Status |
