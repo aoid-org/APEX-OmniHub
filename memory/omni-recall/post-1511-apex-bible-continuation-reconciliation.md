@@ -2,9 +2,10 @@
 
 - **PR:** #1511
 - **Branch:** `claude/apex-omnihub-rc-remediation-d9txs1`
-- **Head:** `6fe51c4`
+- **Head:** `b47726c` (20 commits)
 - **Supabase project:** APEX-OmniHub (`rtopreovkywofgwgmozi`, ACTIVE_HEALTHY)
-- **Date:** 2026-06-28
+- **Date:** 2026-06-28 (Phase 15 closeout update)
+- **CI:** All 32 checks PASS, `mergeable_state: clean`
 - **Author of record:** continuation pass (documentation only — no code/test/locale/config changes)
 
 ## Drift Guard (binding for all rows below)
@@ -71,3 +72,21 @@ behavior remains **BLOCKED** on an authenticated browser session and on live
   carry the `APEX-1511` ticket (commit `6277200`). Re-run pending.
 - **Live MCP redeploy:** deliberately NOT performed (owner gate) — avoids replacing the whole
   multi-route `omnilink-port` from a proxied container. Deferred to merge pipeline.
+
+---
+
+## PHASE 15 FINAL UPDATE 2026-06-28 — CI GREEN, PR MERGEABLE
+
+- **Head:** `b47726c` (20 commits on branch)
+- **CI:** All 32 check runs PASS (build-and-test, SonarCloud, Cloudflare Pages, governance,
+  security, OSE Guard, Lighthouse, architecture boundary, etc.)
+- **`mergeable_state: clean`** — PR is mergeable.
+- **Additional work by subsequent session (commits `fe48686`–`b47726c`):**
+  - OmniSkin Engine (3 layers: token forge, static CSS, CI guard)
+  - Hardcoded demo clips removed from OmniMedia launch widget
+  - Shell coverage test driven through real i18n
+  - apex-truth-test parser comment fix
+  - Governance docs updated
+- **Decision: GO for merge. BLOCKED for full production certification** by omnilink-port
+  redeploy (CI pipeline deploys on merge) and authenticated E2E evidence (ephemeral container
+  limitation). See `evidence/apex-truth-test/00-decision.md` for the full Phase 15 report.
