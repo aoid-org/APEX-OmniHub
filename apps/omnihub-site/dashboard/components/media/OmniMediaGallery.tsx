@@ -60,7 +60,7 @@ export function OmniMediaGallery({ variant }: Props) {
         source: item.source,
         type: item.kind,
         title: item.title,
-        provider: item.provider ?? undefined,
+        provider: item.provider ?? 'First-Party',
       },
       true,
     );
