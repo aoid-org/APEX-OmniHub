@@ -104,6 +104,7 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | Responsive E2E spec | `tests/e2e-playwright/omnidash-responsive.spec.ts` | [DONE] P17 — desktop+mobile viewport |
 | Production-safe smoke | `tests/e2e-playwright/production-safe.live.ts` | [EXISTS] — verified P18 |
 | Production-safe config | `playwright.production-safe.config.ts` | [EXISTS] — verified P18 |
+| RC certification report | `artifacts/production-validation/rc-remediation-certification.md` | [DONE] P19 |
 
 ## Canon & memory
 
