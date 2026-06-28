@@ -8,7 +8,7 @@ Every row verified against current repo truth before any fix.
 | Audit Finding | Severity | Status | Evidence | Fix Required | Phase |
 |---|---|---|---|---|---|
 | Inline style abuse (~135 `style={{`) | HIGH | VERIFIED_PRESENT | `apps/omnihub-site/dashboard/OmniDashShell.tsx` (1698 lines, 135 inline blocks) | yes (surgical) | 5 |
-| Competing token systems (3) | HIGH | VERIFIED_PRESENT | `dashboard/designSystem.ts` (T/`--omni-*`), `src/styles/omnidash-layout.css` (`--od-*` :23-46), `src/styles/theme.css` (`--color-*`/`--omni-*`) | yes (alias) | 4 |
+| Competing token systems (3) | HIGH | PARTIALLY_FIXED (CCEX-OSE-001) | `dashboard/omniSkinTokens.ts` is now the canonical `T`/`--omni-*` source (`designSystem.ts`/`.tsx` re-export from it); `--od-*` alias-layer migration into `omnidash-layout.css` is still a documented follow-up, not yet implemented; `--color-*` app-wide layer unchanged (out of scope). See `memory/omni-recall/design-token-reconciliation.md`. | partial (alias layer pending) | 4 |
 | KPIs buried (not above fold) | HIGH | VERIFIED_PRESENT | Business KPIs only in M03 `SystemHealthOverview` (`dashboard.types.ts:96` hides all m03_*) + 300px rail `SystemHealthRow.tsx`; above-fold = agent orb/OmniSlate/Add-App | yes | 2 |
 | KPI labels lack units/timeframe | MEDIUM | VERIFIED_PRESENT | `SystemHealthRow.tsx:48` "Events Tracked" (no unit); only "Alerts 24h" has timeframe | yes | 2,12 |
 | Cognitive overload (25+ elements) | MED-HIGH | VERIFIED_PRESENT | shell composition: 7 M03 + 5 rail modules + 8 nav + 8 header + footer | yes | 3 |
@@ -20,7 +20,7 @@ Every row verified against current repo truth before any fix.
 | backdrop-filter stacking (~15) | MEDIUM | VERIFIED_PRESENT | header/nav/cards/modals across dashboard | yes (trim) | 10 |
 | 1698-line OmniDashShell (>600 rule) | MEDIUM | VERIFIED_PRESENT | `wc -l OmniDashShell.tsx` = 1698 | partial (deferred split) | 5 |
 | Responsive cramming (58px header, 220/1fr/220 grid) | HIGH | VERIFIED_PRESENT | `OmniDashShell.tsx:496` `height:58`; `:1396` `gridCols="220px 1fr 220px"` | yes | 11 |
-| Invalid CSS `var()`+hex-alpha | HIGH | VERIFIED_PRESENT | `${T.red}22` → `var(--omni-red)22` (silently transparent) in dozens of spots | yes (touched files) | 4 |
+| Invalid CSS `var()`+hex-alpha | HIGH | FIXED (CCEX-OSE-001) | All ~33 instances in `OmniDashShell.tsx` + `M03Panels.tsx` converted to `rgba()`/`omniRgba()`; CI-enforced via `scripts/ci/check-omni-skin.mjs` (`ose-token-contract` job in `apex-governance.yml`) so the pattern cannot regress | done | 4 |
 | Empty states weak / NO DATA / zero-point chart | MEDIUM | PARTIAL | `M03Panels.tsx` `No route telemetry`, `NO DATA`, `AgentActivityTimeline` `[{time:'00:00',calls:0}]` | yes | 8,12 |
 | Severity color-only (Guardian) | MEDIUM | PARTIAL | `M03Panels.tsx:135` StatusDot color + far-right text badge | yes | 12 |
 | Demo/static data honesty | — | MOSTLY_OK | gated by `isDemoMode` (`OmniDashShell.tsx:1450`), labeled `(Simulated)` (`SystemHealthRow.tsx:48`) | no (verify only) | 8 |
