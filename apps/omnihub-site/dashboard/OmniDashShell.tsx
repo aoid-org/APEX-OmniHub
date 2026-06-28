@@ -3,6 +3,7 @@ import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
+import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { OmniSentryWidget } from "./components/OmniSentryWidget";
@@ -1566,6 +1567,16 @@ export default function OmniDashShell() {
           }} />
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+            {/* Zone 2 — Primary business KPI band (above the fold, honest states) */}
+            <PrimaryKpiBand
+              kpi={dashData.kpiSummary}
+              hasData={dashData.kpiHistory.length > 0}
+              isLoading={dashData.isLoading}
+              error={dashData.error}
+              demoMode={isDemoMode}
+              onRetry={dashData.refresh}
+            />
+
             {/* Primary 3-column grid */}
             <OmniGridTop hiddenWidgets={hiddenWidgets} tick={tick} isDesktop={isDesktop} />
 
