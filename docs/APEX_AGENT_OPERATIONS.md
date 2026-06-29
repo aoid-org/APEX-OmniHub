@@ -1059,3 +1059,47 @@ automatically and surface in the right-rail mini gallery.
 
 **Failure modes:** image ingest 400 (`invalid_request`) if the function is older
 than this change; `429` on cap breach with honest user copy (no raw backend text).
+
+---
+
+## 9.22 OmniDash P1 regression repair — observability footer-only, System Health restored (2026-06-29)
+
+Owner P1 layout-regression repair that **supersedes the PR #1516 layout decision**.
+The #1516 guard wrongly protected the mistake (it required `SystemHealthRow` to be
+*absent* and treated `SidebarKpiBar` as the System Health replacement). The guard
+and tests were **replaced** (not weakened) to encode the correct owner contract.
+
+Corrected canonical invariants (CI-enforced — `npm run check:omnidash`):
+
+- **System Health retained.** `SystemHealthRow` (`data-testid="rt_analytics"`) is
+  restored as a real surface in the right rail and the mobile/tablet Insights
+  drawer. It is **not** removed as a substitute for `SidebarKpiBar`; both coexist
+  (KPIs in the left sidebar footer, System Health in the rail).
+- **Observability is footer-only.** The M-03 observability toggle/panels are
+  removed from the main canvas. New `FooterObservabilityRow`
+  (`apps/omnihub-site/dashboard/components/FooterObservabilityRow.tsx`,
+  `data-testid="footer-observability"`) renders inside the static
+  `.omni-footer-bar` — **fixed, clipped (`overflow:hidden`), immovable** (never a
+  `DraggableWidget`) — fed by **real** shell state (system health, events tracked,
+  Guardian loops, open incidents/queue, live/demo/sync). No decorative-only data.
+- **Rail + KPI width parity.** Left/right rails share one width token
+  (`--omni-rail-width`); `SystemHealthRow` is a full-rail-width sibling.
+- **OmniSlate accessibility.** Prompt input (`omnislate-prompt-input`) + submit
+  (`submit-prompt`) stay visible/focusable/usable; the input row is `flexShrink:0`
+  so the message canvas absorbs height and the input is never compressed/clipped.
+- **Glass/tile generation (root cause of "collapse into plain words").** The
+  production entry is the ROOT app (`src/main.tsx`); `tailwind.config.ts` content
+  globs previously scanned `apps/omnihub-site/src/**` but **not**
+  `apps/omnihub-site/dashboard/**`, so dashboard-only Tailwind utilities (e.g.
+  OmniMedia gallery tiles `bg-muted/5`, `border-border/20`) were never generated
+  and the right-rail/OmniMedia surfaces rendered as unstyled plain text. Fixed by
+  adding `./apps/omnihub-site/dashboard/**/*.{ts,tsx}` to the content globs; guarded
+  by a new `check:omnidash` invariant.
+
+**Files:** `apps/omnihub-site/dashboard/OmniDashShell.tsx`,
+`apps/omnihub-site/dashboard/components/FooterObservabilityRow.tsx` (new),
+`tailwind.config.ts`, `scripts/ci/check-omnidash-integrity.mjs`, plus realigned
+tests under `tests/omnidash/` and `tests/e2e-playwright/`.
+
+**No service/schema change** — pure shell layout, CSS-token, and build-config repair
+(no migration/RFC required).

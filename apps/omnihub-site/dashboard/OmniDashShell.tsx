@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
-import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { OmniSentryWidget } from "./components/OmniSentryWidget";
@@ -10,15 +9,8 @@ import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useViewport } from "./hooks/useViewport";
-import {
-  SystemHealthOverview,
-  AgentActivityTimeline,
-  GuardianAlertFeed,
-  ManModeReviewQueue,
-  OmniRouteTraffic,
-  WorkflowStatusBoard,
-  SystemSparklines
-} from './components/M03Panels';
+import { SystemHealthRow } from './components/SystemHealthRow';
+import { FooterObservabilityRow } from './components/FooterObservabilityRow';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
@@ -1176,7 +1168,7 @@ const OmniSlateWidget = () => {
 
       {/* Uniform Context Icons Map */}
       {contextApps.length > 0 && (
-        <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8, flexShrink: 0 }}>
           {contextApps.map(app => (
             <ContextDroplet
               key={app.id}
@@ -1187,10 +1179,12 @@ const OmniSlateWidget = () => {
         </div>
       )}
 
-      {/* Input */}
+      {/* Input — flexShrink:0 so the prompt + submit are never compressed out of
+          view, even when the message canvas grows. The message canvas (flex:1,
+          overflowY:auto) absorbs all height pressure instead. */}
       <div style={{
         padding:"0 14px 14px",
-        display:"flex", gap:10, alignItems:"center",
+        display:"flex", gap:10, alignItems:"center", flexShrink:0,
       }}>
         <input
           data-testid="omnislate-prompt-input"
@@ -1366,40 +1360,11 @@ function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: rea
   );
 }
 
-const M03_WIDGET_IDS = ['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const;
-const M03_REGION_ID = 'm03-observability';
-
-function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: readonly string[] }>) {
-  if (!M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id))) {
-    return null;
-  }
-  return (
-    <div id={M03_REGION_ID} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-      {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
-      {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
-          {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
-        </div>
-      )}
-      {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
-          {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
-        </div>
-      )}
-      {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
-      {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
-    </div>
-  );
-}
-
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
-  const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
+  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   // Mobile/tablet surface state — drawerView is the open sheet (if any);
@@ -1520,6 +1485,9 @@ export default function OmniDashShell() {
             <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
+            {/* System Health surface — real metric tiles. Full-rail width, so it
+                matches the sibling rail widgets above it (owner KPI/status parity). */}
+            <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
           </div>
         )}
 
@@ -1564,14 +1532,10 @@ export default function OmniDashShell() {
             {/* App Gallery row — display-only, four horizontal Awaiting slots */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
-            <ObservabilityToggle
-              shown={observabilityShown}
-              panelCount={M03_WIDGET_IDS.length}
-              controlsId={M03_REGION_ID}
-              onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
-            />
-            {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
+            {/* Observability is no longer rendered in the main canvas (owner P1
+                contract). It is footer-only — see FooterObservabilityRow in the
+                static footer bar below. System Health remains a real surface in
+                the right rail (SystemHealthRow). */}
           </div>
         </div>
 
@@ -1593,6 +1557,9 @@ export default function OmniDashShell() {
             <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
+            {/* System Health surface — real metric tiles. Full-rail width, so it
+                matches the sibling rail widgets above it (owner KPI/status parity). */}
+            <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
           </div>
         )}
 
@@ -1623,19 +1590,31 @@ export default function OmniDashShell() {
         )}
       </div>
 
-      {/* Footer bar — hidden on mobile via CSS */}
+      {/* Footer bar — hidden on mobile via CSS. Fixed-height static row; the
+          observability/status strip is clipped to these bounds and is NOT a
+          DraggableWidget, so it is permanently immovable on the footer. */}
       <div className="omni-footer-bar" style={{
-        height:28, background:T.surface,
+        height:28, flexShrink:0, background:T.surface,
         borderTop:`1px solid ${T.border}`,
         display:"flex", alignItems:"center",
-        padding:"0 20px", gap:16,
+        padding:"0 20px", gap:8,
         fontSize:10.3, color:T.t3,
+        overflow:"hidden",
       }}>
-        <div style={{display:"flex",alignItems:"center",gap:5}}>
+        <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
           <StatusDot color={T.green} pulse={false} />
           © 2026 APEX Business Systems Ltd.
         </div>
-        <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
+        {/* Footer-only observability/status — fed by real shell state. */}
+        <FooterObservabilityRow
+          demoMode={isDemoMode}
+          kpi={dashData.kpiSummary}
+          systemHealth={dashData.systemHealth}
+          openIncidentsCount={dashData.openIncidents?.length ?? 0}
+          isLoading={dashData.isLoading}
+          error={dashData.error}
+        />
+        <div className="footer-right" style={{display:"flex", gap:14, alignItems:"center", flexShrink:0}}>
           <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
         </div>
       </div>
@@ -1670,6 +1649,8 @@ export default function OmniDashShell() {
               <OmniSentryWidget />
               <SentinelPanel />
               <OmniMediaLaunchWidget />
+              {/* System Health surface retained on mobile/tablet via the Insights drawer. */}
+              <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             </div>
           )}
           {drawerView === 'more' && (

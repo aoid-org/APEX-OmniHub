@@ -220,14 +220,20 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
     assertNoFatal(ev);
   });
 
-  test('7b. SidebarKpiBar present; right-rail metric tiles removed', async ({ page }) => {
+  test('7b. SidebarKpiBar present; System Health surface restored; observability is footer-only', async ({ page }) => {
     test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.locator('.omni-sidebar')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('sidebar-kpi-bar')).toBeVisible();
-    await expect(page.getByTestId('rt_analytics')).toHaveCount(0);
-    await shot(page, 'sidebar-kpi-expanded.png');
+    // Owner P1 contract (supersedes #1516): System Health remains a real surface
+    // in the right rail — it is NOT removed as a substitute for SidebarKpiBar.
+    await expect(page.getByTestId('rt_analytics')).toBeVisible();
+    // Observability is footer-only: it must NOT render in the main canvas.
+    await expect(page.getByTestId('observability-toggle')).toHaveCount(0);
+    // Footer observability/status strip carries real system state.
+    await expect(page.getByTestId('footer-observability')).toBeVisible();
+    await shot(page, 'sidebar-kpi-and-footer-observability.png');
     assertNoFatal(ev);
   });
 
@@ -275,6 +281,47 @@ test.describe('OmniDash — mobile navigation (390×844)', () => {
     await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });
     await noHorizontalOverflow(page);
     await shot(page, 'mobile-home.png');
+    assertNoFatal(ev);
+  });
+
+  // Owner P1 contract item 11: flick-to-set must be proven with a real mobile
+  // gesture, not source inspection. We long-press a top widget, flick it toward
+  // OmniSlate, release, and assert the resulting context placement (a Context
+  // droplet labelled for the flicked widget) becomes user-visible.
+  test('11. flick-to-set sends a widget context into OmniSlate (gesture-driven)', async ({ page }) => {
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
+    const ev = attachEvidence(page);
+    await signInWithSupabaseSession(page);
+
+    const agent = page.getByTestId('widget_agent');
+    const slate = page.getByTestId('widget_slate');
+    await expect(agent).toBeVisible({ timeout: 15_000 });
+    await expect(slate).toBeVisible();
+
+    const a = await agent.boundingBox();
+    const s = await slate.boundingBox();
+    expect(a, 'agent widget has no box').not.toBeNull();
+    expect(s, 'slate widget has no box').not.toBeNull();
+
+    const startX = a!.x + a!.width / 2;
+    const startY = a!.y + 24;
+    const endX = s!.x + s!.width / 2;
+    const endY = s!.y + s!.height / 2;
+
+    // 1) press → 2) hold past the 500ms long-press → 3) move past threshold to
+    // enter drag → 4) a single fast final segment (the flick) → 5) release.
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.waitForTimeout(560);                 // long-press activation
+    await page.mouse.move(startX + 16, startY + 4); // exceed DRAG_THRESHOLD → dragging
+    await page.mouse.move(endX, endY, { steps: 1 }); // fast flick segment (≥24px, ~instant)
+    await page.mouse.up();
+
+    // User-visible result: OmniSlate now carries the flicked widget's context.
+    const droplet = page.locator('button[title^="Remove Widget:"]');
+    await expect(droplet.first(), 'flick-to-set must place a context droplet in OmniSlate')
+      .toBeVisible({ timeout: 5_000 });
+    await shot(page, 'flick-to-set-context.png');
     assertNoFatal(ev);
   });
 });
