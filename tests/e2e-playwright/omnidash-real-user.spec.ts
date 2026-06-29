@@ -100,7 +100,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
   test('1. authenticated shell load — header, sidebar, canvas, widgets', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): runs under test:e2e:backend with real Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): runs under test:e2e:backend with real Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
 
@@ -114,7 +114,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('1b. canonical top row (Agent/Slate/Ecosystem) fully below header on load — no auto-scroll clip', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });
@@ -138,7 +138,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('2. canonical layout composition — sidebar nav, no overflow', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.locator('.omni-sidebar')).toBeVisible({ timeout: 15_000 });
@@ -152,7 +152,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('3. App Gallery ownership — 4 Awaiting slots, no Connect, non-interactive', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
 
@@ -176,7 +176,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('5. OmniSlate input is interactive and does not crash the surface', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
 
@@ -192,7 +192,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('8. language switcher visible in header and persists after refresh', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
 
@@ -221,7 +221,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('7b. SidebarKpiBar present; right-rail metric tiles removed', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.locator('.omni-sidebar')).toBeVisible({ timeout: 15_000 });
@@ -232,7 +232,7 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
   });
 
   test('10. production build shows no Simulated/demo labels', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });
@@ -253,7 +253,7 @@ for (const [name, viewport] of Object.entries(VIEWPORTS)) {
     test.use({ viewport });
 
     test(`12. no horizontal overflow @ ${name}`, async ({ page }) => {
-      test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+      test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
       const ev = attachEvidence(page);
       await signInWithSupabaseSession(page);
       await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });
@@ -269,7 +269,7 @@ test.describe('OmniDash — mobile navigation (390×844)', () => {
   test.use({ viewport: VIEWPORTS.mobile });
 
   test('7. mobile shell loads, bottom nav usable, OmniSlate reachable', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });
@@ -283,7 +283,7 @@ test.describe('OmniDash — tablet navigation (768×1024)', () => {
   test.use({ viewport: VIEWPORTS.tabletPortrait });
 
   test('7. tablet shell loads without overflow', async ({ page }) => {
-    test.skip(!isBackendRequired(), 'BLOCKED(AUTH): requires live Supabase session');
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);
     await signInWithSupabaseSession(page);
     await expect(page.getByTestId('omnidash-top-header')).toBeVisible({ timeout: 15_000 });

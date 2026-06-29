@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, Music, RefreshCw, Trash2, Video } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Music, RefreshCw, Trash2, Video } from 'lucide-react';
 import { useOmniMedia } from '@/stores/omniMediaStore';
 import {
   deleteOmniMediaAsset,
@@ -73,11 +73,16 @@ export function OmniMediaGallery({ variant }: Props) {
 
   const handlePlay = (item: OmniMediaCatalogItem) => {
     if (!item.source) return;
+    // Images aren't dock-playable media — open the signed URL for preview instead.
+    if (item.kind === 'image') {
+      globalThis.open(item.source, '_blank', 'noopener,noreferrer');
+      return;
+    }
     void loadMedia(
       {
         id: item.id,
         source: item.source,
-        type: item.kind,
+        type: item.kind, // narrowed to 'video' | 'audio' after the image guard
         title: item.title,
         provider: item.provider ?? 'First-Party',
       },
@@ -170,6 +175,8 @@ export function OmniMediaGallery({ variant }: Props) {
           >
             {item.kind === 'video' ? (
               <Video className="h-3.5 w-3.5 flex-shrink-0 text-orange-400" />
+            ) : item.kind === 'image' ? (
+              <ImageIcon className="h-3.5 w-3.5 flex-shrink-0 text-orange-400" />
             ) : (
               <Music className="h-3.5 w-3.5 flex-shrink-0 text-orange-400" />
             )}
