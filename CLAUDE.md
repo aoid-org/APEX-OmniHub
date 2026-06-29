@@ -22,6 +22,24 @@ status: verified
 
 All three skills are in `.claude/skills/`. Invoke via the `Skill` tool with the exact skill name above.
 
+## OmniDash Canonical Layout Law (owner-approved 2026-06-29, PR #1516 — DO NOT REGRESS)
+
+The approved OmniDash shell layout is locked and CI-enforced. Before changing
+`apps/omnihub-site/dashboard/OmniDashShell.tsx`, read the full record in
+`APEX_SURFACE_REGISTRY.md` ("Canonical Layout Law") and
+`memory/omni-recall/rfc/2026-06-29-omnidash-p2plus-omnimedia.md`.
+
+- **Static guard:** `npm run check:omnidash` (`scripts/ci/check-omnidash-integrity.mjs`).
+- **Runtime shield:** `tests/e2e-playwright/omnidash-real-user.spec.ts`.
+
+Locked invariants: top row (Agent/Slate/Ecosystem) above the fold (OmniSlate
+`scrollIntoView` guarded on mount); App Gallery = four horizontal "Awaiting" slots,
+no Connect, no Primary Metrics band; `SidebarKpiBar` in the left sidebar footer
+(no right-rail `SystemHealthRow`); wallpaper grid + wordmark `position:fixed`;
+footer = copyright + Guardian only; language switcher in the header. OmniMedia
+`kind ∈ {video,audio,image}`, Files-fed, with **server-side** upload caps (5/24h,
+25 MB total). Breaking any invariant fails CI — fix the change, not the guard.
+
 ### Canonical dev/debug workflow alias
 
 `omnidev-apex-pro-v2` is the canonical full-platform dev/debug workflow. This matches

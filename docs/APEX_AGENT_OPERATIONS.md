@@ -1031,3 +1031,31 @@ deployed services, start commands, or runtime contracts.
 A new job runs `npm run check:omni-skin` (checkout → `actions/setup-node` → `npm ci --ignore-scripts` → guard) and was added to `governance-gate`'s `needs:` aggregation, so a failing OSE Guard now blocks the required governance gate.
 
 **Operational impact:** None to deployed services, infrastructure, secrets, env vars, database, or runtime contracts. This is a CI-only static-analysis gate over `apps/omnihub-site/dashboard/` source files.
+
+## 9.11 OmniMedia — image support + Files-fed mini gallery + upload caps (PR #1516) — 2026-06-29
+
+**Migration:** `supabase/migrations/20260629120000_omnimedia_images_and_caps.sql`
+(additive, idempotent). Applied to `rtopreovkywofgwgmozi`:
+
+- `omnimedia_assets.kind` CHECK constraint widened from `('video','audio')` to
+  `('video','audio','image')`.
+- `omnimedia-assets` storage bucket: `allowed_mime_types` extended with
+  `image/jpeg,image/png,image/webp,image/gif,image/avif`; per-file
+  `file_size_limit` tightened to **25 MB** (matches the per-user total cap).
+
+**Edge function `omnilink-port` (`omnimedia.ts`):** `omnimedia-ingest-from-upload`
+now accepts `kind=image` and enforces two **server-side** upload caps (cannot be
+bypassed by the client), scoped per-user by RLS:
+
+- **5 uploads / rolling 24h** → `429 daily_limit`.
+- **25 MB cumulative** across a user's uploaded assets → `429 storage_cap`.
+
+Deploy command (unchanged): `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi`.
+
+**Pipeline:** Files already routes media uploads to the `omnimedia-assets` bucket
+and calls `omnimedia-ingest-from-upload` via `getPlayableMediaKind`; adding image
+MIME types to that map means images flow through the same Files→OmniMedia pipeline
+automatically and surface in the right-rail mini gallery.
+
+**Failure modes:** image ingest 400 (`invalid_request`) if the function is older
+than this change; `429` on cap breach with honest user copy (no raw backend text).

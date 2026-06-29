@@ -60,6 +60,26 @@ Awaiting escalation.
 
 All Omnidash-touching PRs require CODEOWNERS sign-off + green contract tests before merge.
 
+## 8. Canonical Layout Law (owner-approved, PR #1516 — do not regress)
+
+The approved OmniDash shell layout is locked. Enforced by
+`scripts/ci/check-omnidash-integrity.mjs` (`npm run check:omnidash`) and the
+runtime shield `tests/e2e-playwright/omnidash-real-user.spec.ts`. Full record:
+`APEX_SURFACE_REGISTRY.md` → "Canonical Layout Law" and
+`memory/omni-recall/rfc/2026-06-29-omnidash-p2plus-omnimedia.md`.
+
+Invariants (a change that breaks any of these is an architecture change → STOP):
+- Top row (APEX Agent · OmniSlate · APEX Ecosystem) is above the fold on load;
+  OmniSlate `scrollIntoView` is guarded (`messages.length === 0 → return`).
+- App Gallery = four horizontal "Awaiting" slots, no Connect affordance; the
+  Primary Metrics / `PrimaryKpiBand` band is removed (do not reintroduce).
+- `SidebarKpiBar` lives in the left sidebar footer; right-rail `SystemHealthRow`
+  is removed.
+- Wallpaper grid + wordmark are `position:fixed` (static, never scroll).
+- Footer status bar = copyright + Guardian only; language switcher in the header.
+- OmniMedia: `kind ∈ {video, audio, image}`, fed by Files; upload caps
+  (5/24h, 25 MB total) are enforced **server-side**, never client-only.
+
 ## Failure Protocol
 
 - If contract tests fail → **STOP**. Do not attempt fixes without a failing test first.
