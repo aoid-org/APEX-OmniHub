@@ -1,0 +1,107 @@
+import { useState, useCallback } from 'react';
+import { T, omniRgba } from '../omniSkinTokens';
+import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
+
+const STORAGE_KEY = 'apex.sidebar.kpi.collapsed';
+
+function getSavedCollapsed(): boolean {
+  try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
+}
+
+interface Tile {
+  icon: string;
+  value: string | number;
+  label: string;
+  color: string;
+}
+
+interface SidebarKpiBarProps {
+  readonly kpi: KpiSummary;
+  readonly systemHealth?: SystemHealthState;
+  readonly demoMode: boolean;
+}
+
+export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProps) {
+  const [collapsed, setCollapsed] = useState(getSavedCollapsed);
+
+  const toggle = useCallback(() => {
+    setCollapsed(c => {
+      const next = !c;
+      try { localStorage.setItem(STORAGE_KEY, String(next)); } catch { /* noop */ }
+      return next;
+    });
+  }, []);
+
+  const isHealthy = demoMode ? true : systemHealth === 'healthy';
+  const events    = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
+  const guardian  = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
+  const stale     = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
+
+  const tiles: Tile[] = [
+    { icon: '⚡', value: events,                          label: 'Events Tracked',  color: T.t2 },
+    { icon: '🛡️', value: isHealthy ? '✓' : '!', label: 'System Health', color: isHealthy ? T.green : T.warn },
+    { icon: '🔄', value: guardian,                  label: 'Guardian Loops',  color: T.orange },
+    { icon: '✅', value: stale === 0 ? '0' : stale,       label: 'Stale Checks',    color: stale === 0 ? T.green : T.warn },
+  ];
+
+  return (
+    <div
+      data-testid="sidebar-kpi-bar"
+      style={{
+        margin: '0 8px 8px',
+        borderRadius: 10,
+        border: `1px solid ${omniRgba('orange', 0.18)}`,
+        background: omniRgba('orange', 0.04),
+        overflow: 'hidden',
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls="sidebar-kpi-grid"
+        onClick={toggle}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '6px 10px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: T.t3, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+          textTransform: 'uppercase' as const,
+        }}
+      >
+        <span>System KPIs</span>
+        <span aria-hidden="true" style={{ fontSize: 8 }}>{collapsed ? '▸' : '▾'}</span>
+      </button>
+
+      {!collapsed && (
+        <div
+          id="sidebar-kpi-grid"
+          style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr',
+            gap: 4, padding: '0 8px 8px',
+          }}
+        >
+          {tiles.map(tile => (
+            <div
+              key={tile.label}
+              title={tile.label}
+              aria-label={`${tile.label}: ${tile.value}`}
+              style={{
+                background: omniRgba('orange', 0.06),
+                border: `1px solid ${omniRgba('orange', 0.12)}`,
+                borderRadius: 7,
+                padding: '5px 7px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 2,
+              }}
+            >
+              <span style={{ fontSize: 12 }}>{tile.icon}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: tile.color, lineHeight: 1 }}>
+                {tile.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

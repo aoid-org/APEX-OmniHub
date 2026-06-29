@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
-import { SystemHealthRow } from "./components/SystemHealthRow";
 import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
 import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
@@ -38,6 +37,7 @@ import {
 } from '@/contracts/omnidash-sidebar-widgets';
 import { toast } from 'sonner';
 import { LanguageSelector } from '../src/components/LanguageSelector';
+import { SidebarKpiBar } from './components/SidebarKpiBar';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -86,6 +86,9 @@ import type { DashboardNavSection } from "./types/dashboard.types";
 interface OmniDashSidebarProps {
   activeNav: DashboardNavSection;
   setActiveNav: Dispatch<SetStateAction<DashboardNavSection>>;
+  kpi: import('./types/dashboard.types').KpiSummary;
+  systemHealth?: import('./types/dashboard.types').SystemHealthState;
+  demoMode: boolean;
 }
 
 /**
@@ -317,7 +320,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode: sidebarDemoMode }: OmniDashSidebarProps) => {
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -351,6 +354,8 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
           onClick={() => handleNav(widget)}
         />
       ))}
+
+      <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
 
       {/* Status Footer */}
       <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
@@ -1466,7 +1471,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
-        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} demoMode={isDemoMode} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
             data-testid="rt_security"
@@ -1479,7 +1484,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1570,7 +1575,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1579,7 +1584,7 @@ export default function OmniDashShell() {
         )}
 
         {/* Sidebar — reversed layout: right side */}
-        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} demoMode={isDemoMode} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
@@ -1652,7 +1657,7 @@ export default function OmniDashShell() {
           )}
           {drawerView === 'insights' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-              <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+  
               <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
               <OmniSentryWidget />
               <SentinelPanel />
