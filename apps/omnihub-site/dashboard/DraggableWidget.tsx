@@ -41,6 +41,16 @@ const LONG_PRESS_MS = 500;
 /** Spring animation duration (ms). */
 const SPRING_DURATION_MS = 200;
 
+/**
+ * Flick-to-set (mobile/tablet only): after a long-press pick-up, a fast flick
+ * release sends the widget's context flying into OmniSlate without needing a
+ * precise drop. Tuned so a deliberate flick clears the bar but a slow drag does
+ * not. Desktop keeps precise drag-and-drop only.
+ */
+const FLICK_VELOCITY_PX_PER_MS = 0.5;
+const FLICK_MIN_DISTANCE_PX = 24;
+const FLICK_FLY_MS = 360;
+
 type DragMode = 'idle' | 'ready' | 'dragging';
 
 // ─── Widget Registry ─────────────────────────────────────────────────────────
@@ -101,6 +111,8 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
   const [dragMode, setDragMode] = useState<DragMode>('idle');
   const pointerOriginRef = useRef<{ x: number; y: number } | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Most recent pointer-move sample (position + time) for flick velocity.
+  const flickSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   // Restore persisted position and register in registry
   useEffect(() => {
@@ -172,6 +184,8 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         const newY = dragStartPos.current.offsetY + dy;
         posRef.current = { x: newX, y: newY };
         elRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
+        // Sample for flick velocity (mobile/tablet flick-to-set).
+        flickSampleRef.current = { x: e.clientX, y: e.clientY, t: performance.now() };
         return;
       }
 
@@ -228,25 +242,52 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         if (id) {
           persistPosition(userId, id, finalX, finalY);
 
-          // OmniSlate drop detection
           const slate = document.getElementById('widget_slate');
           if (slate) {
             const rect = slate.getBoundingClientRect();
-            if (
-              e.clientX >= rect.left &&
-              e.clientX <= rect.right &&
-              e.clientY >= rect.top &&
-              e.clientY <= rect.bottom
-            ) {
+            const droppedOnSlate =
+              e.clientX >= rect.left && e.clientX <= rect.right &&
+              e.clientY >= rect.top && e.clientY <= rect.bottom;
+
+            // Flick-to-set (mobile/tablet only): a fast flick release sends the
+            // widget's context flying into OmniSlate without a precise drop.
+            let isFlick = false;
+            if (detectBreakpoint() !== 'desktop' && flickSampleRef.current) {
+              const dt = performance.now() - flickSampleRef.current.t;
+              const dist = Math.hypot(e.clientX - flickSampleRef.current.x, e.clientY - flickSampleRef.current.y);
+              isFlick = dt > 0 && dist >= FLICK_MIN_DISTANCE_PX && dist / dt >= FLICK_VELOCITY_PX_PER_MS;
+            }
+
+            if (droppedOnSlate || isFlick) {
               globalThis.window.dispatchEvent(
                 new CustomEvent('omnislate-drop', {
                   detail: { id, label: `Widget: ${id.replace('rt_', '').replace('widget_', '')}` },
                 }),
               );
+              if (isFlick) {
+                // "Fly" the widget toward OmniSlate, then settle back in place —
+                // the widget persists; only its context is sent.
+                const elRect = el.getBoundingClientRect();
+                const toX = finalX + (rect.left + rect.width / 2) - (elRect.left + elRect.width / 2);
+                const toY = finalY + (rect.top + rect.height / 2) - (elRect.top + elRect.height / 2);
+                el.style.transition = `transform ${FLICK_FLY_MS}ms cubic-bezier(0.4,0,0.2,1), opacity ${FLICK_FLY_MS}ms`;
+                el.style.transform = `translate(${toX}px, ${toY}px) scale(0.25)`;
+                el.style.opacity = '0.35';
+                setTimeout(() => {
+                  el.style.transition = 'transform 240ms ease, opacity 240ms ease';
+                  el.style.transform = `translate(${finalX}px, ${finalY}px) scale(1)`;
+                  el.style.opacity = '1';
+                  setTimeout(() => { el.style.transition = ''; }, 240);
+                }, FLICK_FLY_MS);
+                el.style.zIndex = '';
+                flickSampleRef.current = null;
+                return;
+              }
             }
           }
         }
 
+        flickSampleRef.current = null;
         // Reset scale
         el.style.transform = `translate(${finalX}px, ${finalY}px) scale(1)`;
         el.style.zIndex = '';
