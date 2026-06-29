@@ -17,9 +17,17 @@ describe('getPlayableMediaKind', () => {
     expect(getPlayableMediaKind('audio/webm')).toBe('audio');
   });
 
+  it('resolves every allowlisted image MIME type to "image" (PR #1516)', () => {
+    expect(getPlayableMediaKind('image/jpeg')).toBe('image');
+    expect(getPlayableMediaKind('image/png')).toBe('image');
+    expect(getPlayableMediaKind('image/webp')).toBe('image');
+    expect(getPlayableMediaKind('image/gif')).toBe('image');
+    expect(getPlayableMediaKind('image/avif')).toBe('image');
+  });
+
   it('returns null for non-playable MIME types', () => {
     expect(getPlayableMediaKind('application/pdf')).toBeNull();
-    expect(getPlayableMediaKind('image/png')).toBeNull();
+    expect(getPlayableMediaKind('image/svg+xml')).toBeNull();
     expect(getPlayableMediaKind('text/plain')).toBeNull();
     expect(getPlayableMediaKind('')).toBeNull();
   });

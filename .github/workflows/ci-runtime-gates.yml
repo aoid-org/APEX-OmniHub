@@ -336,6 +336,9 @@ jobs:
       - name: PWA source + dist integrity guard
         run: npm run check:pwa
 
+      - name: OmniDash canonical layout + integrity guard
+        run: npm run check:omnidash
+
       # Folded from the retired Production Readiness Gate: the SSG bundle build is
       # a distinct artifact (apps/omnihub-site) not produced by the root build above.
       - name: Build SSG bundle (apps/omnihub-site)
