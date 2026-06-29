@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
-import { SystemHealthRow } from "./components/SystemHealthRow";
-import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
 import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
@@ -37,6 +35,8 @@ import {
   type OmniDashSidebarWidget,
 } from '@/contracts/omnidash-sidebar-widgets';
 import { toast } from 'sonner';
+import { LanguageSelector } from '../src/components/LanguageSelector';
+import { SidebarKpiBar } from './components/SidebarKpiBar';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -85,6 +85,9 @@ import type { DashboardNavSection } from "./types/dashboard.types";
 interface OmniDashSidebarProps {
   activeNav: DashboardNavSection;
   setActiveNav: Dispatch<SetStateAction<DashboardNavSection>>;
+  kpi: import('./types/dashboard.types').KpiSummary;
+  systemHealth?: import('./types/dashboard.types').SystemHealthState;
+  demoMode: boolean;
 }
 
 /**
@@ -113,6 +116,7 @@ interface OmniDashHeaderProps {
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
   userInitials: string;
+  isDesktop: boolean;
 }
 
 export type OmniHealthState = 'green' | 'yellow' | 'red';
@@ -316,7 +320,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode: sidebarDemoMode }: OmniDashSidebarProps) => {
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -351,14 +355,14 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
         />
       ))}
 
-      {/* Status Footer */}
-      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+      {/* Status Footer — System KPIs clipped to the footer block */}
+      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"12px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+        <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
           <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>All Systems Operational</span>
         </div>
-        <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd.</div>
-        <div style={{ fontSize:9.8, color:T.t4, marginTop:2 }}>Edmonton, AB · Canada</div>
+        <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd. · Edmonton, AB</div>
         <button
           onClick={handleSignOut}
           disabled={signingOut}
@@ -388,7 +392,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 };
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
-const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHeaderProps) => {
+const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
@@ -489,7 +493,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
           data-testid="top-header-logo"
           src={IMG_WORDMARK}
           alt="APEX-OmniHub"
-          style={{ height:30, width:210, objectFit:"contain", display:"block" }}
+          style={{ height:30, width: isDesktop ? 210 : 132, objectFit:"contain", display:"block" }}
         />
       </div>
 
@@ -506,25 +510,36 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
         OmniSkills
       </button>
 
-      {/* Search — takes all remaining center space, max 360px */}
-      <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-        <div style={{
-          display:"flex", alignItems:"center", gap:9,
-          background:T.card, border:`1px solid ${T.border}`,
-          borderRadius:10, padding:"0 12px",
-          width:"100%", maxWidth:360, height:44,
-          color:T.t2, fontSize:13,
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
-          <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
+      {/* Search — desktop only; on mobile/tablet it is dropped so the action
+          controls are never clipped. A flex spacer keeps actions right-aligned. */}
+      {isDesktop ? (
+        <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
+          <div style={{
+            display:"flex", alignItems:"center", gap:9,
+            background:T.card, border:`1px solid ${T.border}`,
+            borderRadius:10, padding:"0 12px",
+            width:"100%", maxWidth:360, height:44,
+            color:T.t2, fontSize:13,
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
+            <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ flex:1, minWidth:8 }} aria-hidden="true" />
+      )}
 
       {/* Right actions — functional buttons */}
-      <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
+      <div className="omni-header-actions" style={{
+        display:"flex", alignItems:"center", gap:8,
+        // Mobile/tablet: shrink + scroll so no control is ever clipped/obfuscated.
+        flexShrink: isDesktop ? 0 : 1,
+        minWidth: 0,
+        overflowX: isDesktop ? undefined : "auto",
+      }}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
           <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
@@ -603,6 +618,9 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
 
         {/* Divider — separates action buttons from icon tray */}
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
+
+        {/* Language Selector */}
+        <LanguageSelector className="omni-header-lang" />
 
         {/* Theme Toggle — Sun/Moon */}
         <button className="ose-icon-button" aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
@@ -775,9 +793,9 @@ const AgentWidget = (_props: AgentWidgetProps) => {
             <svg width="108" height="108" viewBox="0 0 108 108" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="cometGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%"   stopColor={T.orange} stopOpacity="0"/>
-                  <stop offset="60%"  stopColor={T.orange} stopOpacity="0.6"/>
-                  <stop offset="100%" stopColor={T.orange} stopOpacity="1"/>
+                  <stop offset="0%"   stopColor="#f97316" stopOpacity="0"/>
+                  <stop offset="60%"  stopColor="#f97316" stopOpacity="0.6"/>
+                  <stop offset="100%" stopColor="#f97316" stopOpacity="1"/>
                 </linearGradient>
               </defs>
               {/* Arc using strokeDasharray — shows ~35% of circumference as the comet tail */}
@@ -804,9 +822,9 @@ const AgentWidget = (_props: AgentWidgetProps) => {
             <svg width="92" height="92" viewBox="0 0 92 92" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="cometGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%"   stopColor={T.cyan} stopOpacity="0"/>
-                  <stop offset="70%"  stopColor={T.cyan} stopOpacity="0.35"/>
-                  <stop offset="100%" stopColor={T.cyan} stopOpacity="0.7"/>
+                  <stop offset="0%"   stopColor="#06b6d4" stopOpacity="0"/>
+                  <stop offset="70%"  stopColor="#06b6d4" stopOpacity="0.35"/>
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.7"/>
                 </linearGradient>
               </defs>
               <circle
@@ -988,7 +1006,14 @@ const OmniSlateWidget = () => {
     return () => globalThis.removeEventListener("omnislate-drop", handleWidgetDrop);
   }, [addContextApp]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
+  // Only scroll to the latest message once a conversation exists. Firing this on
+  // mount (empty messages) scrolls the shared canvas container and clips the
+  // canonical top row (Agent/Slate/Ecosystem) under the viewport. block:"nearest"
+  // also prevents scrolling when the anchor is already visible.
+  useEffect(() => {
+    if (messages.length === 0) return;
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages]);
 
   const handleRemoveContextApp = useCallback((appId: string) => {
     setContextApps(prev => prev.filter(a => a.id !== appId));
@@ -1287,26 +1312,40 @@ const EcosystemWidget = () => {
 // connected state, no click-through. (User directive 2026-06-28.)
 const IntegratedAppsGalleryWidget = () => (
   <GlassCard style={{ padding: '16px' }}>
-    <div style={{ marginBottom: 10 }}>
-      <SectionLabel>Integrated Apps Gallery</SectionLabel>
+    <div style={{ marginBottom: 12 }}>
+      <SectionLabel>App Gallery</SectionLabel>
     </div>
-    <div data-testid="integrated-apps" className="omni-grid-apps ose-integrated-apps-grid">
+    {/* Four horizontal slots per canonical layout — same card shell as the
+        former metrics band. Honest, non-interactive "Awaiting" empty state. */}
+    <div
+      data-testid="integrated-apps"
+      className="omni-grid-apps"
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}
+    >
       {[1, 2, 3, 4].map(i => (
         <div
           key={`integrated-app-ph-${i}`}
           className="ose-integrated-apps-slot"
-          aria-label={`Integrated app slot ${i} — awaiting connection`}
+          aria-label={`App slot ${i} — awaiting connection`}
+          style={{
+            background: T.card,
+            border: `1px solid ${T.border}`,
+            borderRadius: 12,
+            padding: '16px 14px',
+            display: 'flex', flexDirection: 'column', gap: 10,
+            alignItems: 'flex-start', minWidth: 0,
+          }}
         >
           <span style={{
-            width: 22, height: 22, borderRadius: 6,
+            width: 28, height: 28, borderRadius: 8,
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.14)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(255,255,255,0.20)' }} />
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.20)' }} />
           </span>
-          <span style={{ fontSize: 13, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>Awaiting</span>
+          <span style={{ fontSize: 12, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700 }}>Awaiting</span>
         </div>
       ))}
     </div>
@@ -1359,7 +1398,7 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
 export default function OmniDashShell() {
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
+  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
   const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
@@ -1389,7 +1428,7 @@ export default function OmniDashShell() {
     invokeSidebarModule(widget, setActiveNav);
   }, [setActiveNav]);
   const { demoMode } = useDemoMode();
-  const isDemoMode = ops.demo;
+  const isDemoMode = demoMode;
 
   const userInitials = useMemo(() => {
     const user = session?.user;
@@ -1458,11 +1497,12 @@ export default function OmniDashShell() {
         setIsDark={setIsDark}
         invoke={invoke}
         userInitials={userInitials}
+        isDesktop={isDesktop}
       />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
-        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} demoMode={isDemoMode} />}
         {isDesktop && panelLayout === 'reversed' && (
           <div
             data-testid="rt_security"
@@ -1475,7 +1515,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1494,7 +1534,7 @@ export default function OmniDashShell() {
         }}>
           {/* Blueprint grid background — bottom layer, theme-aware */}
           <div style={{
-            position:"absolute", inset:0, zIndex:0, pointerEvents:"none",
+            position:"fixed", inset:0, zIndex:0, pointerEvents:"none",
             backgroundImage: isDark
               ? `linear-gradient(rgba(30,80,140,0.18) 1px, transparent 1px),
                  linear-gradient(90deg, rgba(30,80,140,0.18) 1px, transparent 1px),
@@ -1504,22 +1544,24 @@ export default function OmniDashShell() {
                  linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 55%, rgba(30,80,180,0.06) 100%)`,
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
+          {/* APEX-OmniHub wordmark — fixed watermark layer; shifts only with the
+              wallpaper, never scrolls into the content flow. */}
+          <div style={{
+            position:"fixed", inset:0, zIndex:0, pointerEvents:"none", userSelect:"none",
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+            <img src={IMG_APEX_WM} alt="" style={{
+              width:"42%", maxWidth:520, objectFit:"contain",
+              opacity: isDark ? 0.07 : 0.06,
+              filter: isDark ? "brightness(1.6) saturate(0.4)" : "brightness(0.4) saturate(0.3)",
+            }} />
+          </div>
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-            {/* Zone 2 — Primary business KPI band (above the fold, honest states) */}
-            <PrimaryKpiBand
-              kpi={dashData.kpiSummary}
-              hasData={dashData.kpiHistory.length > 0}
-              isLoading={dashData.isLoading}
-              error={dashData.error}
-              demoMode={isDemoMode}
-              onRetry={dashData.refresh}
-            />
-
-            {/* Primary 3-column grid */}
+            {/* Primary 3-column grid — above the fold per canonical layout */}
             <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
 
-            {/* Integrated Apps Gallery row — display-only, owns no connection flow */}
+            {/* App Gallery row — display-only, four horizontal Awaiting slots */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
             {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
@@ -1530,26 +1572,6 @@ export default function OmniDashShell() {
               onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
             />
             {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
-
-            {/* APEX-OmniHub wordmark watermark — above grid, below content */}
-            <div style={{
-              flex:1, display:"flex", alignItems:"center", justifyContent:"center",
-              pointerEvents:"none", userSelect:"none", minHeight:80,
-              position:"relative", zIndex:1,
-            }}>
-              <img
-                src={IMG_APEX_WM}
-                alt=""
-                style={{
-                  width:"55%", maxWidth:380,
-                  objectFit:"contain",
-                  opacity: isDark ? 0.23 : 0.15,
-                  filter: isDark
-                    ? "brightness(1.6) saturate(0.4)"
-                    : "brightness(0.4) saturate(0.3)",
-                }}
-              />
-            </div>
           </div>
         </div>
 
@@ -1566,7 +1588,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1575,7 +1597,7 @@ export default function OmniDashShell() {
         )}
 
         {/* Sidebar — reversed layout: right side */}
-        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} demoMode={isDemoMode} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
@@ -1611,15 +1633,10 @@ export default function OmniDashShell() {
       }}>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
           <StatusDot color={T.green} pulse={false} />
-          APEX-OmniHub v2.5.0
+          © 2026 APEX Business Systems Ltd.
         </div>
-        <div>© 2026 APEX Business Systems Ltd.</div>
         <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
-          <span>Edmonton, AB</span>
-          <span style={{color:T.t4}}>|</span>
           <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
-          <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON{demoMode ? ' (Simulated)' : ''}</span>
         </div>
       </div>
 
@@ -1648,7 +1665,7 @@ export default function OmniDashShell() {
           )}
           {drawerView === 'insights' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-              <div data-testid="rt_analytics"><SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} /></div>
+  
               <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
               <OmniSentryWidget />
               <SentinelPanel />

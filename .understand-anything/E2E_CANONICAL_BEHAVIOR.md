@@ -44,3 +44,14 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 9. Production-Safe Live Validation Harness
 **Invariant:** Live production validation must be non-destructive by default and must produce sanitized evidence before any certification claim.
 **Rule:** Use `APEX_PROD_URL=https://apexomnihub.icu npm run test:e2e:production-safe` for public/auth-gated route evidence. Use `npm run perf:k6:smoke` only when k6 is installed; missing k6 is `BLOCKED`, not pass. Do not certify Request Access persistence, auth, OAuth, passkeys, Supabase RLS, BYOM, billing, OmniDash persistence, Cloudflare deployment provenance, or branch protection from route rendering alone.
+
+## 10. OmniDash Canonical Layout + Mobile/Tablet Behavior (PR #1516)
+**Invariant:** The owner-approved OmniDash layout and one-handed mobile/tablet UX are locked; silent regressions are drift.
+**Rule:** Enforced by `npm run check:omnidash` (`scripts/ci/check-omnidash-integrity.mjs`) and `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do not regress: top row (Agent/Slate/Ecosystem) above the fold with OmniSlate `scrollIntoView` guarded on mount; App Gallery = four horizontal "Awaiting" slots, no Connect, no Primary Metrics band; `SidebarKpiBar` in the left sidebar footer (no right-rail `SystemHealthRow`); wallpaper grid + wordmark `position:fixed`; footer = copyright + Guardian only; language switcher in the header.
+- **Mobile/tablet (<1024px):** the header drops the search field, shrinks the wordmark, and the action cluster shrinks + scrolls so no control (Zero Trust, Connect AI, language, theme, notifications, account) is ever clipped/obfuscated. Driven by `OmniDashHeader`'s `isDesktop` branch (inline styles override CSS).
+- **Flick-to-set (mobile/tablet only):** after a long-press pick-up, a fast flick release flings a widget's context into OmniSlate via the `omnislate-drop` event. Velocity-gated (`>=0.5px/ms`, `>=24px`) to avoid scroll conflict; desktop keeps precise drag-and-drop.
+- **OmniBoard modal:** single Close control (chrome X) — the wizard owns no `✕`; voice stops on unmount. Backdrop click and Esc close.
+
+## 11. OmniMedia images + Files pipeline + server-side caps (PR #1516)
+**Invariant:** OmniMedia is a Files-fed mini-gallery for video/audio/image, and its upload caps must be real (server-side), never client-only.
+**Rule:** `omnimedia_assets.kind ∈ {video,audio,image}`; bucket allows image MIME types; per-file limit 25 MB (migration `20260629120000_omnimedia_images_and_caps.sql`). Upload caps (5 uploads / 24h, 25 MB cumulative per user) are enforced in `omnilink-port/omnimedia-ingest-from-upload` and return `429` on breach — do not move them client-side. Files routes media uploads through `getPlayableMediaKind` into the same pipeline; images included.

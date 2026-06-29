@@ -87,6 +87,13 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:4173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Pre-provisioned sandboxes ship a Chromium build that may not match the
+    // pinned @playwright/test revision. When PW_CHROMIUM_EXECUTABLE points at a
+    // local binary, launch it directly (bypasses the revision download). Unset
+    // in CI, so CI behavior is unchanged.
+    ...(process.env.PW_CHROMIUM_EXECUTABLE
+      ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
+      : {}),
   },
 
   projects: isCI ? ciProjects : allProjects,

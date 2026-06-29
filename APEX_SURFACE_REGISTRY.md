@@ -89,6 +89,25 @@ Registered sidebar entries: `omniboard`, `physiomni`, `audits`, `links`, `automa
 **FORBIDDEN sidebar labels** (must never appear in sidebar): `OmniSkills`, `Orchestrator`,
 `Fortress`, `OmniPort`, `Maestro`, `BYOM`
 
+### 🔒 Canonical Layout Law (owner-approved, PR #1516 — enforced by CI)
+
+Static guard: `scripts/ci/check-omnidash-integrity.mjs` (`npm run check:omnidash`).
+Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. RFC:
+`memory/omni-recall/rfc/2026-06-29-omnidash-p2plus-omnimedia.md`. Do **not** regress:
+
+- **Top row above the fold:** APEX Agent · OmniSlate · APEX Ecosystem must be fully
+  visible on load. OmniSlate's `scrollIntoView` is guarded (`messages.length === 0
+  → return`) so it never auto-scrolls the canvas on mount.
+- **App Gallery:** four **horizontal** "Awaiting" slots (`repeat(4, minmax(0,1fr))`),
+  label "App Gallery", **no Connect affordance**, non-interactive. The Primary
+  Metrics / `PrimaryKpiBand` band is **removed** — do not reintroduce it.
+- **System KPIs:** `SidebarKpiBar` lives in the **left sidebar footer block**
+  (full width, matches nav items). The right-rail `SystemHealthRow` is removed.
+- **Wallpaper + wordmark:** both `position:fixed` — static, never scroll.
+- **Footer status bar:** copyright + Guardian only (no version chip, no duplicate
+  Edmonton, no redundant Zero Trust). Location joins the sidebar branding.
+- **Language switcher:** surfaced in the OmniDash header (`.omni-header-lang`).
+
 ---
 
 ## Module Map — All Module Keys → Components → API → DB
@@ -170,9 +189,11 @@ All modules open as modal overlays via `OmniSpatialHost` + `ModuleRenderer`.
 | Catalog client | `apps/omnihub-site/dashboard/lib/omniMediaCatalog.ts` |
 | Store | `apps/omnihub-site/src/stores/omniMediaStore.ts` |
 | Edge fns | `omnilink-port/omnimedia-catalog`, `omnilink-port/omnimedia-ingest-from-upload`, `omnilink-port/omnimedia-delete-asset` |
-| DB table | `omnimedia_assets` |
+| DB table | `omnimedia_assets` (`kind ∈ {video, audio, image}`) |
+| Media kinds | **video · audio · image** (image added PR #1516); fed by Files via `getPlayableMediaKind` |
+| Upload caps | **server-side** in `omnimedia-ingest-from-upload`: 5 uploads / 24h, 25 MB total per user (`429` on breach) |
 | **OWNS** | Media catalog, gallery, playback, ingestion, uploaded media metadata |
-| **FORBIDDEN** | Hardcoded demo clips, Big Buck Bunny, Elephants Dream, hardcoded arrays, YouTube-only playback |
+| **FORBIDDEN** | Hardcoded demo clips, Big Buck Bunny, Elephants Dream, hardcoded arrays, YouTube-only playback, client-only upload caps |
 
 ---
 

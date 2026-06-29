@@ -163,4 +163,9 @@ input { font-family:'Space Grotesk',sans-serif; }
  * residual fixed width leaks in. */
 @media (max-width: 1024px) {
   :root { --omni-rail-width: 100%; }
+  /* Mobile/tablet header de-clip (search drop, logo shrink, action scroll) is
+   * driven by the Shell's isDesktop branch — inline styles there override CSS,
+   * so the behavior lives in OmniDashHeader, not here. */
+  .omni-header-actions { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .omni-header-actions::-webkit-scrollbar { display: none; }
 }

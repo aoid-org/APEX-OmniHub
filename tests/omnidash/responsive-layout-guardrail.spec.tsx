@@ -157,9 +157,12 @@ describe('OmniDash responsive-layout guardrail', () => {
     expect(screen.getByRole('img', { name: 'User avatar' })).toBeTruthy();
   });
 
-  it('Integrated Apps Gallery grid uses the responsive ose grid class and stays display-only', () => {
+  it('App Gallery renders four display-only Awaiting slots', () => {
+    // Owner-approved (PR #1516): four horizontal slots under data-testid
+    // "integrated-apps"; the legacy ose grid class was replaced with an inline
+    // 4-column grid. See APEX_SURFACE_REGISTRY.md Canonical Layout Law.
     const { container } = render(<OmniDashShell />);
-    const grid = container.querySelector('.ose-integrated-apps-grid');
+    const grid = container.querySelector('[data-testid="integrated-apps"]');
     expect(grid).not.toBeNull();
     expect(container.querySelectorAll('.ose-integrated-apps-slot').length).toBe(4);
     // Ownership guard: no Connect App CTA, no Connections split, no duplicate Add APEX App.

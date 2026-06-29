@@ -75,7 +75,7 @@ interface WizardProps {
   readonly onDismiss: () => void;
 }
 
-export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
+export function OmniBoardWizard({ onComplete }: WizardProps) {
   const [context, setContext] = useState<FSMContext | null>(null);
   const [message, setMessage] = useState<string>('Tell OmniBoard what app or provider you want to connect.');
   const [input, setInput] = useState('');
@@ -87,10 +87,9 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
     onError: () => setError('Voice capture failed. Please retry.'),
   });
 
-  const handleDismiss = useCallback(() => {
-    stopVoice();
-    onDismiss();
-  }, [onDismiss, stopVoice]);
+  // The modal chrome (OmniSpatialHost) owns the single Close control. Stop voice
+  // capture on unmount so closing via that X / backdrop / Esc still releases the mic.
+  useEffect(() => () => { stopVoice(); }, [stopVoice]);
 
   const startSession = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -144,9 +143,8 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border border-border/40 max-w-md w-[400px]">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
-        <button type="button" onClick={handleDismiss} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
       </div>
       {error && <p className="text-xs text-red-400">{error}</p>}
       <div className="rounded-lg bg-muted/20 p-3 text-xs text-foreground leading-relaxed min-h-[60px]">

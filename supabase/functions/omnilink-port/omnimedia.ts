@@ -19,11 +19,20 @@ import { createAnonClient } from '../_shared/supabaseClient.ts';
 const BUCKET = 'omnimedia-assets';
 const SIGNED_URL_TTL_SECONDS = 3600; // 1h; clients refetch the catalog to refresh.
 
+// Upload caps (owner direction): a mini-gallery, not a media host.
+const DAILY_UPLOAD_LIMIT = 5;              // max uploaded assets per rolling 24h
+const TOTAL_BYTES_CAP = 25 * 1024 * 1024;  // 25 MB cumulative across all of a user's uploads
+
+type MediaKind = 'video' | 'audio' | 'image';
+function isMediaKind(value: unknown): value is MediaKind {
+  return value === 'video' || value === 'audio' || value === 'image';
+}
+
 interface AssetRow {
   id: string;
   owner_user_id: string;
   title: string;
-  kind: 'video' | 'audio';
+  kind: MediaKind;
   storage_path: string | null;
   bucket: string | null;
   external_url: string | null;
@@ -122,12 +131,38 @@ async function ingestFromUpload(
   const storagePath = body.storage_path as string | undefined;
   const title = body.title as string | undefined;
   const kind = body.kind as string | undefined;
-  if (!storagePath || !title || (kind !== 'video' && kind !== 'audio')) {
-    return json({ error: 'invalid_request', message: 'storage_path, title, kind(video|audio) required' }, 400, corsHeaders);
+  if (!storagePath || !title || !isMediaKind(kind)) {
+    return json({ error: 'invalid_request', message: 'storage_path, title, kind(video|audio|image) required' }, 400, corsHeaders);
   }
   // Ownership before write: the object must live under the caller's own prefix.
   if (!storagePath.startsWith(`${userId}/`)) {
     return json({ error: 'forbidden', message: 'storage_path must be under your own prefix' }, 403, corsHeaders);
+  }
+
+  // ── Upload caps (RLS scopes both reads to the caller's own rows) ───────────
+  const newBytes = typeof body.size_bytes === 'number' ? body.size_bytes : 0;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count: dailyCount } = await client
+    .from('omnimedia_assets')
+    .select('id', { count: 'exact', head: true })
+    .not('storage_path', 'is', null)
+    .gte('created_at', since);
+  if ((dailyCount ?? 0) >= DAILY_UPLOAD_LIMIT) {
+    return json(
+      { error: 'daily_limit', message: `Daily upload limit reached (${DAILY_UPLOAD_LIMIT} per day). Try again tomorrow.` },
+      429, corsHeaders,
+    );
+  }
+  const { data: sizeRows } = await client
+    .from('omnimedia_assets')
+    .select('size_bytes')
+    .not('storage_path', 'is', null);
+  const usedBytes = (sizeRows ?? []).reduce((sum: number, r: { size_bytes: number | null }) => sum + (r.size_bytes ?? 0), 0);
+  if (usedBytes + newBytes > TOTAL_BYTES_CAP) {
+    return json(
+      { error: 'storage_cap', message: `Storage cap reached (25 MB total). Delete media to free space.` },
+      429, corsHeaders,
+    );
   }
 
   const { data, error } = await client
@@ -156,8 +191,8 @@ async function registerExternal(
   const title = body.title as string | undefined;
   const kind = body.kind as string | undefined;
   const externalUrl = body.external_url;
-  if (!title || (kind !== 'video' && kind !== 'audio') || !isHttpsUrl(externalUrl)) {
-    return json({ error: 'invalid_request', message: 'title, kind(video|audio), https external_url required' }, 400, corsHeaders);
+  if (!title || !isMediaKind(kind) || !isHttpsUrl(externalUrl)) {
+    return json({ error: 'invalid_request', message: 'title, kind(video|audio|image), https external_url required' }, 400, corsHeaders);
   }
   const { data, error } = await client
     .from('omnimedia_assets')

@@ -51,9 +51,13 @@ function failOmniMedia(code: OmniMediaErrorCode, cause: unknown): never {
   throw new OmniMediaError(code);
 }
 
-export type OmniMediaKind = 'video' | 'audio';
+export type OmniMediaKind = 'video' | 'audio' | 'image';
 
-/** Mirrors the bucket's allowed_mime_types in 20260628000000_omnimedia_pipeline.sql. */
+/**
+ * Mirrors the bucket's allowed_mime_types (20260628000000_omnimedia_pipeline.sql +
+ * 20260629120000_omnimedia_images_and_caps.sql). Images join video/audio so the
+ * widget acts as a mini media gallery fed from the Files pipeline.
+ */
 const PLAYABLE_MEDIA_MIME_TYPES: Readonly<Record<string, OmniMediaKind>> = {
   'video/mp4': 'video',
   'video/webm': 'video',
@@ -64,6 +68,11 @@ const PLAYABLE_MEDIA_MIME_TYPES: Readonly<Record<string, OmniMediaKind>> = {
   'audio/ogg': 'audio',
   'audio/wav': 'audio',
   'audio/webm': 'audio',
+  'image/jpeg': 'image',
+  'image/png': 'image',
+  'image/webp': 'image',
+  'image/gif': 'image',
+  'image/avif': 'image',
 };
 
 /**
