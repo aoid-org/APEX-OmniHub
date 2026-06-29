@@ -354,16 +354,14 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
         />
       ))}
 
-      <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
-
-      {/* Status Footer */}
-      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+      {/* Status Footer — System KPIs clipped to the footer block */}
+      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"12px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+        <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
           <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>All Systems Operational</span>
         </div>
-        <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd.</div>
-        <div style={{ fontSize:9.8, color:T.t4, marginTop:2 }}>Edmonton, AB · Canada</div>
+        <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd. · Edmonton, AB</div>
         <button
           onClick={handleSignOut}
           disabled={signingOut}
@@ -1622,15 +1620,10 @@ export default function OmniDashShell() {
       }}>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
           <StatusDot color={T.green} pulse={false} />
-          APEX-OmniHub v2.5.0
+          © 2026 APEX Business Systems Ltd.
         </div>
-        <div>© 2026 APEX Business Systems Ltd.</div>
         <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
-          <span>Edmonton, AB</span>
-          <span style={{color:T.t4}}>|</span>
           <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
-          <span style={{color:T.t4}}>|</span>
-          <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON{demoMode ? ' (Simulated)' : ''}</span>
         </div>
       </div>
 
