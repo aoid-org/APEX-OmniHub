@@ -36,6 +36,7 @@ status: verified
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./memory/omni-recall/docs/project-status/release-validation-summary.json)** (Current Production Authority)
 - [CI Status Policy](./memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md)
+- **[OmniDash Canonical Layout Law + P2+ Enhancements (PR #1516)](./memory/omni-recall/omnidash-p2plus-enhancements-2026-06-29.md)** — locked OmniDash layout, mobile/tablet one-handed UX (flick-to-set, header de-clip), and OmniMedia images + Files pipeline + server-side upload caps. Enforced by `npm run check:omnidash`.
 
 ---
 
