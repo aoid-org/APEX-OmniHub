@@ -1069,6 +1069,3 @@ automatically and surface in the right-rail mini gallery.
 
 **Failure modes:** image ingest 400 (`invalid_request`) if the function is older
 than this change; `429` on cap breach with honest user copy (no raw backend text).
-
-### Lighthouse Workflow Updates
-- CI optimizations disabled explicit caching directives in `lighthouse.yml` to prevent 400 caching block failures on Node setup.
