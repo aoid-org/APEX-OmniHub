@@ -108,16 +108,24 @@ describe('OmniBoardWizard', () => {
     expect(screen.getByRole('button', { name: 'Start voice input' })).toBeTruthy();
   });
 
-  it('stops voice capture and notifies the host on dismiss', async () => {
+  // PR #1516: the modal chrome (OmniSpatialHost) owns the single Close control,
+  // so the wizard no longer renders its own ✕. Voice capture is released on
+  // unmount instead, so closing via the chrome X / backdrop / Esc still stops it.
+  it('does not render its own close control (chrome owns Close)', async () => {
+    await renderWizard();
+    expect(screen.queryByRole('button', { name: '✕' })).toBeNull();
+  });
+
+  it('stops voice capture on unmount', async () => {
     voiceWindow.SpeechRecognition = FakeSpeechRecognition;
-    const { onDismiss } = await renderWizard();
+    const { unmount } = render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+    await waitFor(() => expect(screen.getByPlaceholderText('Type your response...')).toBeTruthy());
 
     fireEvent.click(screen.getByRole('button', { name: 'Start voice input' }));
     const recognition = FakeSpeechRecognition.instances[0];
-    fireEvent.click(screen.getByRole('button', { name: '✕' }));
 
+    unmount();
     expect(recognition.stop).toHaveBeenCalled();
-    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it('sends a turn and completes when the FSM reaches COMPLETION', async () => {
