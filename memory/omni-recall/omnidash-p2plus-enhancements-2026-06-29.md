@@ -13,8 +13,7 @@ authenticated user-shoes suite (`tests/e2e-playwright/omnidash-real-user.spec.ts
 - **App Gallery:** four **horizontal** "Awaiting" slots (`repeat(4, minmax(0,1fr))`),
   label "App Gallery", no Connect affordance, non-interactive. The Primary Metrics
   / `PrimaryKpiBand` band is **removed**.
-- **System KPIs:** `SidebarKpiBar` in the **left sidebar footer** (full width,
-  matches nav items). Right-rail `SystemHealthRow` removed.
+- **System Health + KPIs:** `SystemHealthRow` remains available as the real system-health surface. `SidebarKpiBar` stays in the left sidebar footer for KPI/status width parity only and is not a System Health replacement.
 - **Wallpaper + wordmark:** both `position:fixed` — static, never scroll.
 - **Footer status bar:** copyright + Guardian only (no version chip, no duplicate
   Edmonton, no redundant Zero Trust). Location joined to sidebar branding.
@@ -50,3 +49,10 @@ authenticated user-shoes suite (`tests/e2e-playwright/omnidash-real-user.spec.ts
   bucket), RLS owner-scoped; caps enforced server-side. Durable, cross-device.
 - **UI prefs:** localStorage, per-device (`apex.sidebar.kpi.collapsed`,
   `apex_locale`, `omnidash_layout_v2:{userId}:{breakpoint}`).
+
+
+## Post-1516 P1 correction — 2026-06-29
+- Observability is footer-only; the old main-canvas M03 row/toggle must not render.
+- Footer observability/status is clipped to footer bounds and immovable/non-draggable.
+- Rail/KPI width parity is required through `--omni-rail-width` plus full-width sidebar KPI styling.
+- OmniSlate input accessibility and OmniMedia tile/state behavior are regression gates.

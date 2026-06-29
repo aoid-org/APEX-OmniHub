@@ -169,3 +169,52 @@ input { font-family:'Space Grotesk',sans-serif; }
   .omni-header-actions { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .omni-header-actions::-webkit-scrollbar { display: none; }
 }
+
+/* P1 post-1516 layout contract: footer observability is a clipped, immovable
+ * footer-only status surface. It is never draggable/reorderable and never
+ * returns to the main canvas. */
+.omnidash-footer-observability {
+  margin-left: auto;
+  min-width: 0;
+  max-width: min(72vw, 980px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  flex: 1 1 auto;
+  pointer-events: auto;
+}
+
+.omnidash-footer-observability__item {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+
+.omni-sidebar-footer,
+.omni-sidebar-footer [data-testid="sidebar-kpi-bar"] {
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .omni-footer-bar { display: none !important; }
+}
+
+/* Enforce exact desktop rail parity in flex layout; width alone can lose to
+ * flex-basis/content sizing when authenticated rail contents hydrate. */
+@media (min-width: 1025px) {
+  .omni-sidebar,
+  .omni-right-panel {
+    flex: 0 0 var(--omni-rail-width, 300px) !important;
+    min-width: var(--omni-rail-width, 300px);
+    max-width: var(--omni-rail-width, 300px);
+  }
+}

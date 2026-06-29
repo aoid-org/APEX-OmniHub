@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
-import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { OmniSentryWidget } from "./components/OmniSentryWidget";
@@ -10,15 +9,6 @@ import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useViewport } from "./hooks/useViewport";
-import {
-  SystemHealthOverview,
-  AgentActivityTimeline,
-  GuardianAlertFeed,
-  ManModeReviewQueue,
-  OmniRouteTraffic,
-  WorkflowStatusBoard,
-  SystemSparklines
-} from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
@@ -37,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { LanguageSelector } from '../src/components/LanguageSelector';
 import { SidebarKpiBar } from './components/SidebarKpiBar';
+import { SystemHealthRow } from './components/SystemHealthRow';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -339,6 +330,10 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
   return (
     <div className="omni-sidebar" style={{
       flexShrink:0,
+      flex: "0 0 var(--omni-rail-width, 300px)",
+      width: "var(--omni-rail-width, 300px)",
+      minWidth: "var(--omni-rail-width, 300px)",
+      maxWidth: "var(--omni-rail-width, 300px)",
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
       display:"flex", flexDirection:"column",
@@ -1366,30 +1361,41 @@ function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: rea
   );
 }
 
-const M03_WIDGET_IDS = ['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const;
-const M03_REGION_ID = 'm03-observability';
 
-function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: readonly string[] }>) {
-  if (!M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id))) {
-    return null;
-  }
+function FooterObservabilityStatus({
+  demoMode,
+  systemHealth,
+  eventsTracked,
+  guardianLoops,
+  staleChecks,
+  isLoading,
+  hasError,
+}: Readonly<{
+  demoMode: boolean;
+  systemHealth: import('./types/dashboard.types').SystemHealthState;
+  eventsTracked: number;
+  guardianLoops: number;
+  staleChecks: number;
+  isLoading: boolean;
+  hasError: boolean;
+}>) {
+  const healthLabel = systemHealth === 'healthy' ? 'Healthy' : systemHealth === 'degraded' ? 'Degraded' : systemHealth === 'incident' ? 'Incident' : 'Unknown';
+  const statusColor = hasError ? T.red : systemHealth === 'healthy' ? T.green : T.warn;
+  const syncLabel = isLoading ? 'Syncing' : hasError ? 'Action Needed' : 'Synced';
+
   return (
-    <div id={M03_REGION_ID} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-      {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
-      {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
-          {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
-        </div>
-      )}
-      {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
-          {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
-        </div>
-      )}
-      {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
-      {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
+    <div
+      data-testid="omnidash-footer-observability"
+      className="omnidash-footer-observability"
+      aria-label="Footer observability and system status"
+    >
+      <span className="omnidash-footer-observability__item"><StatusDot color={statusColor} pulse={isLoading} />System Health: {healthLabel}{demoMode ? ' (Simulated)' : ''}</span>
+      <span className="omnidash-footer-observability__item"><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
+      <span className="omnidash-footer-observability__item">Mode: {demoMode ? 'Demo' : 'Live'}</span>
+      <span className="omnidash-footer-observability__item">Events: {eventsTracked}</span>
+      <span className="omnidash-footer-observability__item">Guardian Loops: {guardianLoops}</span>
+      <span className="omnidash-footer-observability__item">Stale Checks: {staleChecks === 0 ? 'Clean' : staleChecks}</span>
+      <span className="omnidash-footer-observability__item">Data: {syncLabel}</span>
     </div>
   );
 }
@@ -1398,8 +1404,7 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
 export default function OmniDashShell() {
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
-  const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
+  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   // Mobile/tablet surface state — drawerView is the open sheet (if any);
@@ -1509,6 +1514,10 @@ export default function OmniDashShell() {
             className="omni-right-panel"
             style={{
               flexShrink: 0,
+              flex: "0 0 var(--omni-rail-width, 300px)",
+              width: "var(--omni-rail-width, 300px)",
+              minWidth: "var(--omni-rail-width, 300px)",
+              maxWidth: "var(--omni-rail-width, 300px)",
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
@@ -1516,6 +1525,7 @@ export default function OmniDashShell() {
             }}
           >
 
+            <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1564,14 +1574,6 @@ export default function OmniDashShell() {
             {/* App Gallery row — display-only, four horizontal Awaiting slots */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
-            <ObservabilityToggle
-              shown={observabilityShown}
-              panelCount={M03_WIDGET_IDS.length}
-              controlsId={M03_REGION_ID}
-              onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
-            />
-            {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
           </div>
         </div>
 
@@ -1582,6 +1584,10 @@ export default function OmniDashShell() {
             className="omni-right-panel"
             style={{
               flexShrink: 0,
+              flex: "0 0 var(--omni-rail-width, 300px)",
+              width: "var(--omni-rail-width, 300px)",
+              minWidth: "var(--omni-rail-width, 300px)",
+              maxWidth: "var(--omni-rail-width, 300px)",
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
               overflowY: 'auto', padding: '14px 12px',
@@ -1589,6 +1595,7 @@ export default function OmniDashShell() {
             }}
           >
 
+            <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
             <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
@@ -1635,9 +1642,15 @@ export default function OmniDashShell() {
           <StatusDot color={T.green} pulse={false} />
           © 2026 APEX Business Systems Ltd.
         </div>
-        <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
-          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
-        </div>
+        <FooterObservabilityStatus
+          demoMode={isDemoMode}
+          systemHealth={dashData.systemHealth}
+          eventsTracked={isDemoMode ? 0 : (dashData.kpiSummary.flowbills_demos ?? 0)}
+          guardianLoops={isDemoMode ? 1 : (dashData.kpiSummary.flowbills_paid_accounts ?? 0)}
+          staleChecks={isDemoMode ? 0 : (dashData.kpiSummary.ops_sev1_incidents ?? 0)}
+          isLoading={dashData.isLoading}
+          hasError={Boolean(dashData.error)}
+        />
       </div>
 
       {/* Mobile/Tablet — surface drawer: Insights rail, Apps picker, or More */}

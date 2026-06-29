@@ -195,6 +195,16 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 7. **Secrets:** never commit them; rotate the GitHub PAT (it currently sits in the git remote URL), Upstash password, and Temporal key on schedule.
 8. **After every deploy:** run §6 smoke.
 
+
+### 8.1 OmniDash post-1516 layout anti-drift
+
+- System Health remains a real OmniDash surface; `SidebarKpiBar` is not its replacement.
+- Observability is footer-only and must stay out of the main canvas/M03 row.
+- Footer observability/status is fixed to the footer, clipped, and immovable/non-draggable.
+- Rail width parity is encoded through the shared `--omni-rail-width` token, and KPI/status blocks must match sibling rail width/inset.
+- OmniSlate input accessibility is release-critical: prompt input and submit action must remain visible, focusable, typeable, and reachable across desktop/tablet/mobile.
+- OmniMedia must resolve to loaded, empty, or retryable error states, support image/audio/video catalog items, and preserve glass/tile styling.
+
 ### Frontend i18n release gate
 
 The root `npm run i18n:check` command validates OmniHub Site/OmniDash locale resources and hardcoded UI leakage before release. Any change to locale resources, language-switcher behavior, or i18n check scripts must run this command and keep all supported locale JSON files in parity with `en-US`.

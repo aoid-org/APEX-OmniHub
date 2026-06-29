@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createClient, type Session } from '@supabase/supabase-js';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -58,15 +59,33 @@ function resolveE2ECredentials(): { email: string | undefined; password: string 
 }
 
 async function createRealSupabaseSession(config: SupabaseBrowserConfig): Promise<Session> {
+  const { email, password } = resolveE2ECredentials();
+
+  if (email && password) {
+    const raw = execFileSync('curl', [
+      '-sS',
+      '-X', 'POST',
+      `${config.url}/auth/v1/token?grant_type=password`,
+      '-H', `apikey: ${config.key}`,
+      '-H', `Authorization: Bearer ${config.key}`,
+      '-H', 'Content-Type: application/json',
+      '--data-binary', '@-',
+    ], { encoding: 'utf8', input: JSON.stringify({ email, password }) });
+
+    const data = JSON.parse(raw) as Partial<Session> & { msg?: string; error_description?: string };
+    if (!data.access_token || !data.refresh_token || !data.user) {
+      throw new Error(
+        `Unable to create real Supabase E2E session: ${data.msg ?? data.error_description ?? 'missing session'}`,
+      );
+    }
+
+    return data as Session;
+  }
+
   const supabase = createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-
-  const { email, password } = resolveE2ECredentials();
-  const response =
-    email && password
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signInAnonymously();
+  const response = await supabase.auth.signInAnonymously();
 
   if (response.error || !response.data.session) {
     throw new Error(
