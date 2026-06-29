@@ -35,7 +35,13 @@ describe('Integrated Apps Gallery — static regression guard', () => {
     );
   });
 
-  it('gallery heading reads exactly "Integrated Apps Gallery"', () => {
-    expect(content).toMatch(/<SectionLabel>Integrated Apps Gallery<\/SectionLabel>/);
+  // Owner-approved (PR #1516): renamed to "App Gallery" and reshaped to four
+  // horizontal "Awaiting" slots. See APEX_SURFACE_REGISTRY.md Canonical Layout Law.
+  it('gallery heading reads exactly "App Gallery"', () => {
+    expect(content).toMatch(/<SectionLabel>App Gallery<\/SectionLabel>/);
+  });
+
+  it('gallery uses the four-column horizontal Awaiting grid', () => {
+    expect(content).toMatch(/gridTemplateColumns:\s*['"]repeat\(4,\s*minmax\(0,\s*1fr\)\)['"]/);
   });
 });
