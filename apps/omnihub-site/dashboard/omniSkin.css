@@ -163,20 +163,9 @@ input { font-family:'Space Grotesk',sans-serif; }
  * residual fixed width leaks in. */
 @media (max-width: 1024px) {
   :root { --omni-rail-width: 100%; }
-
-  /* Mobile/tablet header must NEVER obfuscate its controls. The desktop header
-   * packs logo + OmniSkills + search + a full action cluster (org · Zero Trust ·
-   * Connect AI · language · theme · notifications · account) which overflows and
-   * clips the right side on narrow viewports. Drop the secondary search field,
-   * shrink the wordmark, and let the action cluster shrink + scroll so every
-   * control stays reachable one-handed. */
-  .omni-header-search { display: none; }
-  [data-testid="top-header-logo"] { width: 132px !important; }
-  .omni-header-actions {
-    flex-shrink: 1;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
+  /* Mobile/tablet header de-clip (search drop, logo shrink, action scroll) is
+   * driven by the Shell's isDesktop branch — inline styles there override CSS,
+   * so the behavior lives in OmniDashHeader, not here. */
+  .omni-header-actions { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .omni-header-actions::-webkit-scrollbar { display: none; }
 }

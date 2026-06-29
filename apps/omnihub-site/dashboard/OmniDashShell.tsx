@@ -116,6 +116,7 @@ interface OmniDashHeaderProps {
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
   userInitials: string;
+  isDesktop: boolean;
 }
 
 export type OmniHealthState = 'green' | 'yellow' | 'red';
@@ -391,7 +392,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
 };
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
-const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHeaderProps) => {
+const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
@@ -492,7 +493,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
           data-testid="top-header-logo"
           src={IMG_WORDMARK}
           alt="APEX-OmniHub"
-          style={{ height:30, width:210, objectFit:"contain", display:"block" }}
+          style={{ height:30, width: isDesktop ? 210 : 132, objectFit:"contain", display:"block" }}
         />
       </div>
 
@@ -509,25 +510,36 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
         OmniSkills
       </button>
 
-      {/* Search — takes all remaining center space, max 360px */}
-      <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-        <div style={{
-          display:"flex", alignItems:"center", gap:9,
-          background:T.card, border:`1px solid ${T.border}`,
-          borderRadius:10, padding:"0 12px",
-          width:"100%", maxWidth:360, height:44,
-          color:T.t2, fontSize:13,
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
-          <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
+      {/* Search — desktop only; on mobile/tablet it is dropped so the action
+          controls are never clipped. A flex spacer keeps actions right-aligned. */}
+      {isDesktop ? (
+        <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
+          <div style={{
+            display:"flex", alignItems:"center", gap:9,
+            background:T.card, border:`1px solid ${T.border}`,
+            borderRadius:10, padding:"0 12px",
+            width:"100%", maxWidth:360, height:44,
+            color:T.t2, fontSize:13,
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
+            <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ flex:1, minWidth:8 }} aria-hidden="true" />
+      )}
 
       {/* Right actions — functional buttons */}
-      <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
+      <div className="omni-header-actions" style={{
+        display:"flex", alignItems:"center", gap:8,
+        // Mobile/tablet: shrink + scroll so no control is ever clipped/obfuscated.
+        flexShrink: isDesktop ? 0 : 1,
+        minWidth: 0,
+        overflowX: isDesktop ? undefined : "auto",
+      }}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
           <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
@@ -1485,6 +1497,7 @@ export default function OmniDashShell() {
         setIsDark={setIsDark}
         invoke={invoke}
         userInitials={userInitials}
+        isDesktop={isDesktop}
       />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
