@@ -37,6 +37,7 @@ import {
   type OmniDashSidebarWidget,
 } from '@/contracts/omnidash-sidebar-widgets';
 import { toast } from 'sonner';
+import { LanguageSelector } from '../src/components/LanguageSelector';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -603,6 +604,9 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials }: OmniDashHea
 
         {/* Divider — separates action buttons from icon tray */}
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
+
+        {/* Language Selector */}
+        <LanguageSelector className="omni-header-lang" />
 
         {/* Theme Toggle — Sun/Moon */}
         <button className="ose-icon-button" aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
