@@ -48,8 +48,8 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
     <div
       data-testid="sidebar-kpi-bar"
       style={{
-        margin: '0 8px 8px',
-        borderRadius: 10,
+        margin: '0 0 8px',
+        borderRadius: 11,
         border: `1px solid ${omniRgba('orange', 0.18)}`,
         background: omniRgba('orange', 0.04),
         overflow: 'hidden',

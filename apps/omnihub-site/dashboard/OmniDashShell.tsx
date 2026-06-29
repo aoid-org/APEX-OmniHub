@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
-import { PrimaryKpiBand } from "./components/PrimaryKpiBand";
 import { ObservabilityToggle } from "./components/ObservabilityToggle";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
@@ -997,7 +996,14 @@ const OmniSlateWidget = () => {
     return () => globalThis.removeEventListener("omnislate-drop", handleWidgetDrop);
   }, [addContextApp]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
+  // Only scroll to the latest message once a conversation exists. Firing this on
+  // mount (empty messages) scrolls the shared canvas container and clips the
+  // canonical top row (Agent/Slate/Ecosystem) under the viewport. block:"nearest"
+  // also prevents scrolling when the anchor is already visible.
+  useEffect(() => {
+    if (messages.length === 0) return;
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages]);
 
   const handleRemoveContextApp = useCallback((appId: string) => {
     setContextApps(prev => prev.filter(a => a.id !== appId));
@@ -1296,26 +1302,40 @@ const EcosystemWidget = () => {
 // connected state, no click-through. (User directive 2026-06-28.)
 const IntegratedAppsGalleryWidget = () => (
   <GlassCard style={{ padding: '16px' }}>
-    <div style={{ marginBottom: 10 }}>
+    <div style={{ marginBottom: 12 }}>
       <SectionLabel>App Gallery</SectionLabel>
     </div>
-    <div data-testid="integrated-apps" className="omni-grid-apps ose-integrated-apps-grid">
+    {/* Four horizontal slots per canonical layout — same card shell as the
+        former metrics band. Honest, non-interactive "Awaiting" empty state. */}
+    <div
+      data-testid="integrated-apps"
+      className="omni-grid-apps"
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}
+    >
       {[1, 2, 3, 4].map(i => (
         <div
           key={`integrated-app-ph-${i}`}
           className="ose-integrated-apps-slot"
-          aria-label={`Integrated app slot ${i} — awaiting connection`}
+          aria-label={`App slot ${i} — awaiting connection`}
+          style={{
+            background: T.card,
+            border: `1px solid ${T.border}`,
+            borderRadius: 12,
+            padding: '16px 14px',
+            display: 'flex', flexDirection: 'column', gap: 10,
+            alignItems: 'flex-start', minWidth: 0,
+          }}
         >
           <span style={{
-            width: 22, height: 22, borderRadius: 6,
+            width: 28, height: 28, borderRadius: 8,
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.14)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(255,255,255,0.20)' }} />
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.20)' }} />
           </span>
-          <span style={{ fontSize: 13, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>Awaiting</span>
+          <span style={{ fontSize: 12, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700 }}>Awaiting</span>
         </div>
       ))}
     </div>
@@ -1513,23 +1533,25 @@ export default function OmniDashShell() {
                  linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 55%, rgba(30,80,180,0.06) 100%)`,
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
+          {/* APEX-OmniHub wordmark — fixed watermark layer; shifts only with the
+              wallpaper, never scrolls into the content flow. */}
+          <div style={{
+            position:"fixed", inset:0, zIndex:0, pointerEvents:"none", userSelect:"none",
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+            <img src={IMG_APEX_WM} alt="" style={{
+              width:"42%", maxWidth:520, objectFit:"contain",
+              opacity: isDark ? 0.07 : 0.06,
+              filter: isDark ? "brightness(1.6) saturate(0.4)" : "brightness(0.4) saturate(0.3)",
+            }} />
+          </div>
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
             {/* Primary 3-column grid — above the fold per canonical layout */}
             <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
 
-            {/* Integrated Apps Gallery row — display-only */}
+            {/* App Gallery row — display-only, four horizontal Awaiting slots */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
-
-            {/* Primary business KPI band — below gallery, above observability */}
-            <PrimaryKpiBand
-              kpi={dashData.kpiSummary}
-              hasData={dashData.kpiHistory.length > 0}
-              isLoading={dashData.isLoading}
-              error={dashData.error}
-              demoMode={isDemoMode}
-              onRetry={dashData.refresh}
-            />
 
             {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
             <ObservabilityToggle
@@ -1539,26 +1561,6 @@ export default function OmniDashShell() {
               onToggle={() => setGroupHidden(M03_WIDGET_IDS, observabilityShown)}
             />
             {observabilityShown && <M03ObservabilityPanels hiddenWidgets={hiddenWidgets} />}
-
-            {/* APEX-OmniHub wordmark watermark — above grid, below content */}
-            <div style={{
-              flex:1, display:"flex", alignItems:"center", justifyContent:"center",
-              pointerEvents:"none", userSelect:"none", minHeight:80,
-              position:"relative", zIndex:1,
-            }}>
-              <img
-                src={IMG_APEX_WM}
-                alt=""
-                style={{
-                  width:"55%", maxWidth:380,
-                  objectFit:"contain",
-                  opacity: isDark ? 0.23 : 0.15,
-                  filter: isDark
-                    ? "brightness(1.6) saturate(0.4)"
-                    : "brightness(0.4) saturate(0.3)",
-                }}
-              />
-            </div>
           </div>
         </div>
 
