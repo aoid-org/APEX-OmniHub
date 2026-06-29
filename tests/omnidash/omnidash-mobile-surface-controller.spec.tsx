@@ -157,13 +157,14 @@ describe('OmniDashShell — mobile/tablet surface controller (P0)', () => {
     expect(screen.queryByText('Audits')).toBeNull();
   });
 
-  // Owner-approved (PR #1516): SystemHealthRow removed from the rail/drawer —
-  // KPIs now live in the SidebarKpiBar. The Insights drawer carries the
-  // remaining four rail widgets. See APEX_SURFACE_REGISTRY.md Canonical Layout Law.
-  it('Insights drawer carries the rail widgets, including OmniSentryWidget and OmniMediaLaunchWidget', () => {
+  // Owner P1 contract (supersedes #1516): System Health must remain a real
+  // surface — it is NOT removed as a substitute for SidebarKpiBar. On
+  // mobile/tablet it is retained in the Insights drawer alongside the rail
+  // widgets. See APEX_SURFACE_REGISTRY.md Canonical Layout Law.
+  it('Insights drawer carries the rail widgets, including SystemHealthRow, OmniSentryWidget and OmniMediaLaunchWidget', () => {
     render(<OmniDashShell />);
     fireEvent.click(screen.getByRole('tab', { name: /^insights$/i }));
-    expect(screen.queryByTestId('system-health-row')).toBeNull();
+    expect(screen.getByTestId('system-health-row')).toBeTruthy();
     expect(screen.getByTestId('omni-trace-feed')).toBeTruthy();
     expect(screen.getByTestId('sentinel-panel')).toBeTruthy();
     expect(screen.getByTestId('omni-sentry-widget')).toBeTruthy();

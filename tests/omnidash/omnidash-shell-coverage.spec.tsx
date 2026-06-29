@@ -186,6 +186,23 @@ describe('OmniDashShell', () => {
     expect(screen.getByText('APEX Ecosystem')).toBeTruthy();
   });
 
+  // Owner P1 contract: System Health surface restored in the rail, Observability
+  // removed from the main canvas, and a footer-only observability/status strip.
+  it('restores the System Health surface in the right rail', () => {
+    render(<OmniDashShell />);
+    expect(screen.getByTestId('system-health-row')).toBeTruthy();
+  });
+
+  it('does NOT render the Observability toggle/panels in the main canvas', () => {
+    render(<OmniDashShell />);
+    expect(screen.queryByTestId('observability-toggle')).toBeNull();
+  });
+
+  it('renders the footer-only observability/status strip', () => {
+    render(<OmniDashShell />);
+    expect(screen.getByTestId('footer-observability')).toBeTruthy();
+  });
+
   it('renders mobile drawer button when not on desktop', () => {
     vi.mocked(useViewport).mockReturnValueOnce({
       isMobile: true, isTablet: false, isDesktop: false, width: 375,

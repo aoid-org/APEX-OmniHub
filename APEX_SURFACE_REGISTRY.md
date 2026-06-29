@@ -89,11 +89,10 @@ Registered sidebar entries: `omniboard`, `physiomni`, `audits`, `links`, `automa
 **FORBIDDEN sidebar labels** (must never appear in sidebar): `OmniSkills`, `Orchestrator`,
 `Fortress`, `OmniPort`, `Maestro`, `BYOM`
 
-### 🔒 Canonical Layout Law (owner-approved, PR #1516 — enforced by CI)
+### 🔒 Canonical Layout Law (owner P1 regression repair — supersedes PR #1516, enforced by CI)
 
 Static guard: `scripts/ci/check-omnidash-integrity.mjs` (`npm run check:omnidash`).
-Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. RFC:
-`memory/omni-recall/rfc/2026-06-29-omnidash-p2plus-omnimedia.md`. Do **not** regress:
+Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** regress:
 
 - **Top row above the fold:** APEX Agent · OmniSlate · APEX Ecosystem must be fully
   visible on load. OmniSlate's `scrollIntoView` is guarded (`messages.length === 0
@@ -101,11 +100,35 @@ Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. RFC:
 - **App Gallery:** four **horizontal** "Awaiting" slots (`repeat(4, minmax(0,1fr))`),
   label "App Gallery", **no Connect affordance**, non-interactive. The Primary
   Metrics / `PrimaryKpiBand` band is **removed** — do not reintroduce it.
-- **System KPIs:** `SidebarKpiBar` lives in the **left sidebar footer block**
-  (full width, matches nav items). The right-rail `SystemHealthRow` is removed.
-- **Wallpaper + wordmark:** both `position:fixed` — static, never scroll.
-- **Footer status bar:** copyright + Guardian only (no version chip, no duplicate
-  Edmonton, no redundant Zero Trust). Location joins the sidebar branding.
+- **System Health is retained (owner P1):** `SystemHealthRow` (System Health
+  surface, `data-testid="rt_analytics"`) remains a real surface in the **right
+  rail** (and in the mobile/tablet Insights drawer). It must **not** be removed as
+  a substitute for `SidebarKpiBar`. `SidebarKpiBar` (System KPIs) additionally
+  lives in the **left sidebar footer block**. Both coexist.
+- **Observability is footer-only (owner P1):** the M-03 observability toggle/panels
+  are **removed from the main dashboard canvas**. A `FooterObservabilityRow`
+  renders the observability/status strip inside the static `.omni-footer-bar` —
+  **fixed, clipped (`overflow:hidden`), and immovable** (never a `DraggableWidget`).
+  It is fed by **real shell state**: system health, events tracked, Guardian loops,
+  open incidents (queue), and live/demo/sync state — no decorative-only data.
+- **Rail + KPI width parity (owner P1):** the left and right rails share one width
+  token (`--omni-rail-width`, `.omni-sidebar` + `.omni-right-panel` in
+  `omniSkin.css`) so they are equal at every breakpoint. `SystemHealthRow` is a
+  full-rail-width sibling, so the KPI/status block matches the rail widgets above it.
+- **OmniSlate accessibility (owner P1):** the prompt input
+  (`data-testid="omnislate-prompt-input"`) and submit (`data-testid="submit-prompt"`)
+  must be visible, focusable, and usable. The input row is `flexShrink:0`; the
+  message canvas (`flex:1, overflowY:auto`) absorbs height so the input is never
+  compressed or clipped.
+- **Glass/tile generation (owner P1):** `tailwind.config.ts` content globs **must
+  include** `./apps/omnihub-site/dashboard/**/*.{ts,tsx}`. The production entry is
+  the ROOT app (`src/main.tsx`); without this glob the dashboard-only Tailwind
+  utilities (e.g. OmniMedia gallery tiles `bg-muted/5`, `border-border/20`) are
+  never generated and the right-rail/OmniMedia surfaces collapse into plain text.
+- **Wallpaper + wordmark:** both `position:fixed` — static, never scroll. The
+  wordmark watermark is a non-interactive background (`pointerEvents:none`,
+  `zIndex:0`) below content (`zIndex:1`); the product logo lives in the header. No
+  logo obstructs the App Gallery, rails, OmniSlate, footer, or mobile drawers.
 - **Language switcher:** surfaced in the OmniDash header (`.omni-header-lang`).
 
 ---

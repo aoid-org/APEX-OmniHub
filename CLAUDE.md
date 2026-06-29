@@ -22,23 +22,34 @@ status: verified
 
 All three skills are in `.claude/skills/`. Invoke via the `Skill` tool with the exact skill name above.
 
-## OmniDash Canonical Layout Law (owner-approved 2026-06-29, PR #1516 — DO NOT REGRESS)
+## OmniDash Canonical Layout Law (owner P1 regression repair — supersedes PR #1516, DO NOT REGRESS)
 
 The approved OmniDash shell layout is locked and CI-enforced. Before changing
 `apps/omnihub-site/dashboard/OmniDashShell.tsx`, read the full record in
-`APEX_SURFACE_REGISTRY.md` ("Canonical Layout Law") and
-`memory/omni-recall/rfc/2026-06-29-omnidash-p2plus-omnimedia.md`.
+`APEX_SURFACE_REGISTRY.md` ("Canonical Layout Law").
 
 - **Static guard:** `npm run check:omnidash` (`scripts/ci/check-omnidash-integrity.mjs`).
 - **Runtime shield:** `tests/e2e-playwright/omnidash-real-user.spec.ts`.
 
 Locked invariants: top row (Agent/Slate/Ecosystem) above the fold (OmniSlate
 `scrollIntoView` guarded on mount); App Gallery = four horizontal "Awaiting" slots,
-no Connect, no Primary Metrics band; `SidebarKpiBar` in the left sidebar footer
-(no right-rail `SystemHealthRow`); wallpaper grid + wordmark `position:fixed`;
-footer = copyright + Guardian only; language switcher in the header. OmniMedia
-`kind ∈ {video,audio,image}`, Files-fed, with **server-side** upload caps (5/24h,
-25 MB total). Breaking any invariant fails CI — fix the change, not the guard.
+no Connect, no Primary Metrics band. **System Health is retained** —
+`SystemHealthRow` (`rt_analytics`) stays a real surface in the right rail (and the
+mobile Insights drawer); it is **not** removed as a substitute for `SidebarKpiBar`
+(System KPIs in the left sidebar footer) — both coexist. **Observability is
+footer-only** — the M-03 toggle/panels are removed from the main canvas;
+`FooterObservabilityRow` renders inside the static `.omni-footer-bar`, fixed,
+clipped (`overflow:hidden`), immovable (never a `DraggableWidget`), fed by real
+shell state (health, events, Guardian loops, open incidents, sync/mode). Left and
+right rails share one width token (`--omni-rail-width`); the KPI/status block is a
+full-rail-width sibling. OmniSlate prompt input/submit must stay visible, focusable,
+and uncompressed. `tailwind.config.ts` content **must** scan
+`apps/omnihub-site/dashboard/**` so dashboard tile/glass utilities are generated
+(else OmniMedia/right rail collapse to plain text). Wallpaper grid + wordmark
+`position:fixed` (wordmark is a non-interactive `pointerEvents:none` background
+below content); language switcher in the header. OmniMedia `kind ∈
+{video,audio,image}`, Files-fed, with **server-side** upload caps (5/24h, 25 MB
+total). Breaking any invariant fails CI — fix the change, not the guard.
 
 ### Canonical dev/debug workflow alias
 

@@ -9,6 +9,13 @@ export default {
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
     "./apps/omnihub-site/src/**/*.{ts,tsx}",
+    // The live OmniDash surface renders from apps/omnihub-site/dashboard/** (AGENTS
+    // Tree Law). The production entry is the ROOT app (src/main.tsx), so Tailwind
+    // utilities used only in dashboard files — e.g. OmniMediaGallery's tile classes
+    // (bg-muted/5, border-border/20) — are ONLY generated if this glob is scanned.
+    // Omitting it makes those right-rail/OmniMedia surfaces collapse into unstyled
+    // plain text (owner P1 regression items 8 & 9). Do not remove.
+    "./apps/omnihub-site/dashboard/**/*.{ts,tsx}",
     "./apps/omnihub-site/index.html",
   ],
   prefix: "",
