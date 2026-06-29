@@ -775,9 +775,9 @@ const AgentWidget = (_props: AgentWidgetProps) => {
             <svg width="108" height="108" viewBox="0 0 108 108" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="cometGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%"   stopColor={T.orange} stopOpacity="0"/>
-                  <stop offset="60%"  stopColor={T.orange} stopOpacity="0.6"/>
-                  <stop offset="100%" stopColor={T.orange} stopOpacity="1"/>
+                  <stop offset="0%"   stopColor="#f97316" stopOpacity="0"/>
+                  <stop offset="60%"  stopColor="#f97316" stopOpacity="0.6"/>
+                  <stop offset="100%" stopColor="#f97316" stopOpacity="1"/>
                 </linearGradient>
               </defs>
               {/* Arc using strokeDasharray — shows ~35% of circumference as the comet tail */}
@@ -804,9 +804,9 @@ const AgentWidget = (_props: AgentWidgetProps) => {
             <svg width="92" height="92" viewBox="0 0 92 92" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="cometGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%"   stopColor={T.cyan} stopOpacity="0"/>
-                  <stop offset="70%"  stopColor={T.cyan} stopOpacity="0.35"/>
-                  <stop offset="100%" stopColor={T.cyan} stopOpacity="0.7"/>
+                  <stop offset="0%"   stopColor="#06b6d4" stopOpacity="0"/>
+                  <stop offset="70%"  stopColor="#06b6d4" stopOpacity="0.35"/>
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.7"/>
                 </linearGradient>
               </defs>
               <circle
@@ -1288,7 +1288,7 @@ const EcosystemWidget = () => {
 const IntegratedAppsGalleryWidget = () => (
   <GlassCard style={{ padding: '16px' }}>
     <div style={{ marginBottom: 10 }}>
-      <SectionLabel>Integrated Apps Gallery</SectionLabel>
+      <SectionLabel>App Gallery</SectionLabel>
     </div>
     <div data-testid="integrated-apps" className="omni-grid-apps ose-integrated-apps-grid">
       {[1, 2, 3, 4].map(i => (
@@ -1359,7 +1359,7 @@ function M03ObservabilityPanels({ hiddenWidgets }: Readonly<{ hiddenWidgets: rea
 export default function OmniDashShell() {
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
+  const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, setGroupHidden, resetWidgetPositions } = useLayoutPersistence(userId);
   const observabilityShown = M03_WIDGET_IDS.some(id => !hiddenWidgets.includes(id));
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
@@ -1389,7 +1389,7 @@ export default function OmniDashShell() {
     invokeSidebarModule(widget, setActiveNav);
   }, [setActiveNav]);
   const { demoMode } = useDemoMode();
-  const isDemoMode = ops.demo;
+  const isDemoMode = demoMode;
 
   const userInitials = useMemo(() => {
     const user = session?.user;
@@ -1494,7 +1494,7 @@ export default function OmniDashShell() {
         }}>
           {/* Blueprint grid background — bottom layer, theme-aware */}
           <div style={{
-            position:"absolute", inset:0, zIndex:0, pointerEvents:"none",
+            position:"fixed", inset:0, zIndex:0, pointerEvents:"none",
             backgroundImage: isDark
               ? `linear-gradient(rgba(30,80,140,0.18) 1px, transparent 1px),
                  linear-gradient(90deg, rgba(30,80,140,0.18) 1px, transparent 1px),
@@ -1506,7 +1506,13 @@ export default function OmniDashShell() {
           }} />
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-            {/* Zone 2 — Primary business KPI band (above the fold, honest states) */}
+            {/* Primary 3-column grid — above the fold per canonical layout */}
+            <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
+
+            {/* Integrated Apps Gallery row — display-only */}
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
+
+            {/* Primary business KPI band — below gallery, above observability */}
             <PrimaryKpiBand
               kpi={dashData.kpiSummary}
               hasData={dashData.kpiHistory.length > 0}
@@ -1515,12 +1521,6 @@ export default function OmniDashShell() {
               demoMode={isDemoMode}
               onRetry={dashData.refresh}
             />
-
-            {/* Primary 3-column grid */}
-            <OmniGridTop hiddenWidgets={hiddenWidgets} isDesktop={isDesktop} />
-
-            {/* Integrated Apps Gallery row — display-only, owns no connection flow */}
-            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
             {/* M-03 Observability Panels — collapsed by default, revealed on demand */}
             <ObservabilityToggle
