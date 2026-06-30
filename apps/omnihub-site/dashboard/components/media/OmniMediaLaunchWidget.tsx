@@ -35,7 +35,8 @@ export function OmniMediaLaunchWidget() {
       style={{
         borderRadius: 10,
         border: '1px solid rgba(249,115,22,0.25)',
-        background: 'rgba(249,115,22,0.04)',
+        // +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
+        background: 'rgba(249,115,22,0.05)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',

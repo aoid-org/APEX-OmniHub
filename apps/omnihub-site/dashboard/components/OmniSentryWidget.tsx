@@ -147,7 +147,8 @@ export function OmniSentryWidget() {
       style={{
         borderRadius: 10,
         border: `1px solid ${enabled ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.08)'}`,
-        background: enabled ? 'rgba(52,211,153,0.04)' : 'rgba(255,255,255,0.02)',
+        // +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
+        background: enabled ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.03)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',
