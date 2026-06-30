@@ -113,8 +113,16 @@ Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** re
   open incidents (queue), and live/demo/sync state — no decorative-only data.
 - **Rail + KPI width parity (owner P1):** the left and right rails share one width
   token (`--omni-rail-width`, `.omni-sidebar` + `.omni-right-panel` in
-  `omniSkin.css`) so they are equal at every breakpoint. `SystemHealthRow` is a
-  full-rail-width sibling, so the KPI/status block matches the rail widgets above it.
+  `omniSkin.css`) so they are equal at every breakpoint. They also share one
+  horizontal-inset token (`--omni-rail-pad-x`), and the left `.omni-sidebar-footer`
+  adds **no** horizontal padding, so the left System KPIs block (`SidebarKpiBar`)
+  and the right System Health/status block (`SystemHealthRow`) have **EXACTLY equal
+  inner content width** (rail − 2·`--omni-rail-pad-x`) at every breakpoint.
+- **Footer is viewport-fixed (owner P1):** the shell root is a clipped,
+  full-viewport-height flex column (`height:100dvh`, `overflow:hidden`) and the
+  `.omni-footer-bar` never compresses (`flexShrink:0`), so the footer (copyright +
+  observability strip + Guardian) is permanently pinned to the bottom of the
+  viewport and does not move when the canvas scrolls.
 - **OmniSlate accessibility (owner P1):** the prompt input
   (`data-testid="omnislate-prompt-input"`) and submit (`data-testid="submit-prompt"`)
   must be visible, focusable, and usable. The input row is `flexShrink:0`; the
@@ -127,8 +135,13 @@ Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** re
   never generated and the right-rail/OmniMedia surfaces collapse into plain text.
 - **Wallpaper + wordmark:** both `position:fixed` — static, never scroll. The
   wordmark watermark is a non-interactive background (`pointerEvents:none`,
-  `zIndex:0`) below content (`zIndex:1`); the product logo lives in the header. No
-  logo obstructs the App Gallery, rails, OmniSlate, footer, or mobile drawers.
+  `zIndex:0`) below content (`zIndex:1`); the labelled product logo lives in the
+  header.
+- **Canvas brand logo below the App Gallery (owner P1):** a decorative
+  (`aria-hidden`) APEX-OmniHub brand mark (`data-testid="omnidash-canvas-logo"`)
+  renders **in the content flow directly below the App Gallery** — in-flow and
+  non-interactive (`pointerEvents:none`, never a `DraggableWidget`), so it never
+  obstructs the App Gallery, rails, OmniSlate, footer, or mobile drawers.
 - **Language switcher:** surfaced in the OmniDash header (`.omni-header-lang`).
 
 ---

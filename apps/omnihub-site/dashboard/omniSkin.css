@@ -145,6 +145,14 @@ input { font-family:'Space Grotesk',sans-serif; }
 .omni-sidebar,
 .omni-right-panel { width: var(--omni-rail-width, 300px); }
 
+/* Shared horizontal inset for BOTH rails. The left System KPIs block
+ * (SidebarKpiBar) and the right System Health/status block (SystemHealthRow)
+ * are each inset by exactly this token, so — combined with the equal
+ * --omni-rail-width — their inner content boxes have EXACTLY equal width at
+ * every breakpoint (owner P1 KPI/status width parity). Consumed inline by the
+ * rail containers in OmniDashShell.tsx. */
+:root { --omni-rail-pad-x: 12px; }
+
 /* Header + canvas children must be allowed to shrink (prevent overflow/clipping). */
 .omni-shell-main { min-width: 0; }
 .omni-header-search { min-width: 0; }

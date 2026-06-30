@@ -459,12 +459,14 @@ jobs:
 
       - name: Run K6 Performance Tests (SOFT gate / p99<800ms)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        # ci-integrity-allow: intentional SOFT gate — K6 perf smoke is advisory (p99<800ms target). A perf-smoke blip must not block the release; regressions are reviewed from the uploaded performance-summary evidence, not by failing the gate.
         continue-on-error: true
         run: npm run perf:k6:smoke
 
       - name: Upload performance evidence
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # ci-integrity-allow: non-blocking evidence upload — paired with the SOFT K6 gate above. A transient artifact-upload failure (or absent summary; if-no-files-found:ignore) must not fail the required gate after tests have already passed.
         continue-on-error: true
         with:
           name: performance-summary
