@@ -30,6 +30,12 @@ The approved OmniDash shell layout is locked and CI-enforced. Before changing
 
 - **Static guard:** `npm run check:omnidash` (`scripts/ci/check-omnidash-integrity.mjs`).
 - **Runtime shield:** `tests/e2e-playwright/omnidash-real-user.spec.ts`.
+- **OSE/root-entry warning:** do **not** assume `apps/omnihub-site/src/main.tsx` is
+  the production entry. `index.html` loads the production root `src/main.tsx`.
+  `npm run check:omnidash` owns runtime layout-token proof, including the
+  `src/main.tsx` import of `apps/omnihub-site/src/styles/omnidash-layout.css`;
+  `npm run check:omni-skin` owns static OmniSkin token hygiene only and does not
+  prove `omniSkin.css` reaches production.
 
 Locked invariants: top row (Agent/Slate/Ecosystem) above the fold (OmniSlate
 `scrollIntoView` guarded on mount); App Gallery = four horizontal "Awaiting" slots,

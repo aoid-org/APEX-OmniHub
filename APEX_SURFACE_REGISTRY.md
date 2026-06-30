@@ -38,9 +38,11 @@ This rule is enforced by `AGENTS.md §4 Tree Law`. Violation = automatic NO-GO.
 |---|---|
 | Framework | React 18 + Vite (SPA) |
 | Router | react-router-dom `BrowserRouter` |
-| Main entry | `src/App.tsx` re-exports `apps/omnihub-site/src/App.tsx` |
+| HTML entry | `index.html` loads `/src/main.tsx` |
+| Production root | `src/main.tsx` mounts `src/App.tsx`, which re-exports `apps/omnihub-site/src/App.tsx` |
 | Live app root | `apps/omnihub-site/` |
-| Live OmniDash | `apps/omnihub-site/dashboard/` |
+| Live OmniDash app | `apps/omnihub-site/dashboard/` |
+| Runtime OmniDash CSS | `apps/omnihub-site/src/styles/omnidash-layout.css` (imported by production root `src/main.tsx`) |
 | Auth guard | `apps/omnihub-site/src/components/ProtectedRoute.tsx` |
 | Modal system | `apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx` (sole chrome owner) |
 | Module renderer | `apps/omnihub-site/dashboard/components/ModuleRenderer.tsx` |
@@ -92,6 +94,10 @@ Registered sidebar entries: `omniboard`, `physiomni`, `audits`, `links`, `automa
 ### 🔒 Canonical Layout Law (owner P1 regression repair — supersedes PR #1516, enforced by CI)
 
 Static guard: `scripts/ci/check-omnidash-integrity.mjs` (`npm run check:omnidash`).
+OSE guard: `scripts/ci/check-omni-skin.mjs` (`npm run check:omni-skin`) is a
+static token-hygiene guard only; it is **not** proof that `omniSkin.css` reaches
+production. Runtime layout-token proof belongs to `check:omnidash`, which verifies
+`src/main.tsx` imports `apps/omnihub-site/src/styles/omnidash-layout.css`.
 Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** regress:
 
 - **Top row above the fold:** APEX Agent · OmniSlate · APEX Ecosystem must be fully
@@ -112,8 +118,9 @@ Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** re
   It is fed by **real shell state**: system health, events tracked, Guardian loops,
   open incidents (queue), and live/demo/sync state — no decorative-only data.
 - **Rail + KPI width parity (owner P1):** the left and right rails share one width
-  token (`--omni-rail-width`, `.omni-sidebar` + `.omni-right-panel` in
-  `omniSkin.css`) so they are equal at every breakpoint. They also share one
+  token (`--omni-rail-width`, `.omni-sidebar` + `.omni-right-panel` in the
+  runtime-loaded `apps/omnihub-site/src/styles/omnidash-layout.css`) so they are
+  equal at every breakpoint. They also share one
   horizontal-inset token (`--omni-rail-pad-x`), and the left `.omni-sidebar-footer`
   adds **no** horizontal padding, so the left System KPIs block (`SidebarKpiBar`)
   and the right System Health/status block (`SystemHealthRow`) have **EXACTLY equal
