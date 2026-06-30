@@ -1019,10 +1019,13 @@ Engine (token forge `omniSkinTokens.ts` + static CSS `omniSkin.css`, see
 is reintroduced into `apps/omnihub-site/dashboard/`; the invalid CSS `var()`+hex-alpha
 pattern (e.g. `` ${T.x}22 ``, which silently drops the declaration) reappears in
 dashboard module files or `OmniDashShell.tsx`; `var(--od-*)` reappears in the
-Shell/token-forge files this contract owns; `omniSkin.css` is not imported exactly once
-in `apps/omnihub-site/src/main.tsx`; or the `src/components/dashboard/` ghost path
-gains an unexpected file. This is a linting/governance check — it does not affect
-deployed services, start commands, or runtime contracts.
+Shell/token-forge files this contract owns; the static `omniSkin.css` token-hygiene
+asset is missing; or the `src/components/dashboard/` ghost path gains an unexpected
+file. The old `omniSkin.css` import target (`apps/omnihub-site/src/main.tsx`) was
+historical and app-local, not proof that OSE CSS reached the production bundle. This
+is a static linting/governance check — it does not prove runtime rail/layout-token
+ownership and it does not affect deployed services, start commands, or runtime
+contracts.
 
 **Script location:** `scripts/ci/check-omni-skin.mjs`
 
@@ -1082,8 +1085,11 @@ Corrected canonical invariants (CI-enforced — `npm run check:omnidash`):
   `.omni-footer-bar` — **fixed, clipped (`overflow:hidden`), immovable** (never a
   `DraggableWidget`) — fed by **real** shell state (system health, events tracked,
   Guardian loops, open incidents/queue, live/demo/sync). No decorative-only data.
-- **Rail + KPI width parity.** Left/right rails share one width token
-  (`--omni-rail-width`); `SystemHealthRow` is a full-rail-width sibling.
+- **Rail + KPI width parity.** Runtime rail/layout tokens live in
+  `apps/omnihub-site/src/styles/omnidash-layout.css`, which the production root
+  entry (`src/main.tsx`) imports and `check:omnidash` guards. Left/right rails
+  share one width token (`--omni-rail-width`); `SystemHealthRow` is a
+  full-rail-width sibling.
 - **OmniSlate accessibility.** Prompt input (`omnislate-prompt-input`) + submit
   (`submit-prompt`) stay visible/focusable/usable; the input row is `flexShrink:0`
   so the message canvas absorbs height and the input is never compressed/clipped.
@@ -1101,5 +1107,7 @@ Corrected canonical invariants (CI-enforced — `npm run check:omnidash`):
 `tailwind.config.ts`, `scripts/ci/check-omnidash-integrity.mjs`, plus realigned
 tests under `tests/omnidash/` and `tests/e2e-playwright/`.
 
-**No service/schema change** — pure shell layout, CSS-token, and build-config repair
-(no migration/RFC required).
+**Service/schema scope:** the P1 layout repair itself was shell layout, CSS-token,
+and build-config work with no migration requirement. PR #1525 also carried
+workflow/Supabase repair scope, so do not summarize the whole PR as
+"No service/schema change" without separating those concerns.

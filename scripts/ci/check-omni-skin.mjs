@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const DASHBOARD_DIR = resolve(ROOT, 'apps/omnihub-site/dashboard');
 const SHELL = resolve(DASHBOARD_DIR, 'OmniDashShell.tsx');
-const MAIN_TSX = resolve(ROOT, 'apps/omnihub-site/src/main.tsx');
+const OMNI_SKIN_CSS = resolve(DASHBOARD_DIR, 'omniSkin.css');
 const GHOST_PATH = resolve(ROOT, 'src/components/dashboard');
 const GHOST_ALLOWLIST = new Set(['OmniTracePanel.tsx']);
 
@@ -78,14 +78,12 @@ if (existsSync(SHELL)) {
   check('OmniDashShell.tsx exists', false, 'shell file missing');
 }
 
-// Rule 5 — omniSkin.css must be imported exactly once, in main.tsx
-if (existsSync(MAIN_TSX)) {
-  const mainSrc = readFileSync(MAIN_TSX, 'utf8');
-  check('omniSkin.css imported in src/main.tsx', /['"].*omniSkin\.css['"]/.test(mainSrc),
-    "add: import '../dashboard/omniSkin.css';");
-} else {
-  check('src/main.tsx exists', false, 'main.tsx missing');
-}
+// Rule 5 — static OSE token-hygiene asset exists; runtime layout-token loading is
+// owned by check:omnidash (it proves root src/main.tsx imports omnidash-layout.css).
+// Do not require omniSkin.css in apps/omnihub-site/src/main.tsx: that entry is
+// historical/app-local and is not the production root mounted by index.html.
+check('omniSkin.css static token-hygiene asset exists (runtime layout proof is check:omnidash)', existsSync(OMNI_SKIN_CSS),
+  'apps/omnihub-site/dashboard/omniSkin.css missing');
 
 // Rule 6 — ghost path src/components/dashboard/ holds only the allowlisted file
 if (existsSync(GHOST_PATH)) {

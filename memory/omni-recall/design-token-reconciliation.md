@@ -38,18 +38,22 @@ The dual-`T`-definition and invalid-CSS hazards are resolved via a 4-layer engin
   `@keyframes` (`apexPulse`, `apexShimmer`, `apexFadeIn`, `navGlow`, `ringRotate`,
   `ringBreath`, `ringBreath2`, `scanLine`) and shell-scoped resets that previously lived
   in a JSX `<style>` tag inside `OmniDashShell.tsx` (re-injected into the DOM on every
-  render). Imported exactly once, in `apps/omnihub-site/src/main.tsx`. Deliberately
-  excludes the Google Fonts `@import` that was also in the old `<style>` tag — that load
-  is already covered by `omnidash-layout.css` and `index.html`'s preconnect/preload
-  links, so re-adding it here would just restore a third redundant render-blocking fetch.
+  render). Its old import target, `apps/omnihub-site/src/main.tsx`, is historical
+  and app-local; it is not proof that CSS reaches the production bundle. Runtime
+  rail/layout tokens live in `apps/omnihub-site/src/styles/omnidash-layout.css`,
+  which the production root `src/main.tsx` imports and `check:omnidash` guards.
+  `omniSkin.css` deliberately excludes the Google Fonts `@import` that was also in
+  the old `<style>` tag — that load is already covered by `omnidash-layout.css`
+  and `index.html`'s preconnect/preload links, so re-adding it here would just
+  restore a third redundant render-blocking fetch.
 - **Layer 3 — OSE Guard** (`scripts/ci/check-omni-skin.mjs`, NEW; wired into
   `.github/workflows/apex-governance.yml` as the `ose-token-contract` job, which feeds
   `governance-gate`'s `needs:` aggregation): a 6-rule CI gate run via
   `npm run check:omni-skin`. Enforces: no `<style>` tags in dashboard TSX; no invalid
   `var()`+hex-alpha pattern in dashboard module files or in `OmniDashShell.tsx`; no
   `var(--od-*)` references in the Shell/token-forge files this contract owns (NOT a
-  repo-wide ban — see Canon §2 below); `omniSkin.css` imported exactly once in
-  `src/main.tsx`; the `src/components/dashboard/` ghost path holds only the allowlisted
+  repo-wide ban — see Canon §2 below); the static `omniSkin.css` token-hygiene
+  asset exists; the `src/components/dashboard/` ghost path holds only the allowlisted
   `OmniTracePanel.tsx`.
 - **Layer 4 — Surface Snapshot Registry**: out of scope, tracked as a future contract.
 
