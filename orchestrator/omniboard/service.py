@@ -5,10 +5,11 @@ import uuid
 from typing import Any
 
 import httpx
-import redis.asyncio as redis
 from authlib.integrations.httpx_client import AsyncOAuth2Client  # type: ignore
 
 from providers.database.factory import get_database_provider
+
+from ._redis import get_omniboard_redis
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class OmniBoardService:
         Query Supabase provider_registry table and cache in Redis.
         """
         cache_key = "omni:cache:providers"
-        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        redis_client = get_omniboard_redis()
         try:
             cached = await redis_client.get(cache_key)
             if cached:
@@ -287,7 +288,7 @@ class OmniBoardService:
         token_ref = f"omni:vault:creds:{provider}:{tenant_id}"
         logger.info(f"Storing credentials for {provider} in {token_ref}")
 
-        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        redis_client = get_omniboard_redis()
         try:
             await redis_client.setex(token_ref, 3600, json.dumps(credentials))
         finally:
@@ -302,7 +303,7 @@ class OmniBoardService:
         """
         logger.info(f"Verifying connection to {provider} using {token_ref}")
 
-        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        redis_client = get_omniboard_redis()
         try:
             creds_json = await redis_client.get(token_ref)
             if not creds_json:
@@ -373,7 +374,7 @@ class OmniBoardService:
         )
 
         token_ref = f"omni:vault:creds:{provider}:{tenant_id}"
-        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        redis_client = get_omniboard_redis()
         try:
             await redis_client.delete(token_ref)
         finally:
@@ -423,7 +424,7 @@ class OmniBoardService:
             new_token_data = response.json()
 
         token_ref = f"omni:vault:creds:{provider}:{tenant_id}"
-        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        redis_client = get_omniboard_redis()
         try:
             await redis_client.setex(token_ref, 3600, json.dumps(new_token_data))
         finally:

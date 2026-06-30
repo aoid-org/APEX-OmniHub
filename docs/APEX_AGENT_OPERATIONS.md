@@ -54,6 +54,8 @@ Gateway poll reads terminal row → SSE completed/failed → UI renders reply
 | Edge `apex-agent` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy` |
 | Edge `omnilink-port` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi` |
 | Edge `create-billing-portal` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi` |
+| Edge `create-checkout` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy create-checkout --project-ref rtopreovkywofgwgmozi` |
+| Edge `stripe-webhook` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy stripe-webhook --project-ref rtopreovkywofgwgmozi` |
 | Edge `identity-webauthn` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi` |
 | Orchestrator **API** | Render Web Service | `apex-orchestrator-api` · `srv-d8qpsi7avr4c73dmb4ig` · `https://apex-orchestrator-api.onrender.com` | `python main.py api` | `main` (auto-deploy) |
 | Orchestrator **Worker** | Render Background Worker | `apex-orchestrator-worker` | `python main.py worker` | `main` (auto-deploy) |
@@ -145,6 +147,8 @@ Normal `create_record` / `send_email` / `call_webhook` have no policy → defaul
 | Edge `apex-agent` | secrets apply at runtime (no redeploy); code: `supabase functions deploy apex-agent --project-ref rtopreovkywofgwgmozi` |
 | Edge `omnilink-port` | code deploy: `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi`; production deploy workflow publishes it before live OmniBoard route smoke |
 | Edge `create-billing-portal` | code deploy: `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` at runtime |
+| Edge `create-checkout` | code deploy: `supabase functions deploy create-checkout --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUS`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` at runtime |
+| Edge `stripe-webhook` | code deploy: `supabase functions deploy stripe-webhook --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` at runtime |
 | Orchestrator API / Worker | push to `main` under `orchestrator/` → Render auto-deploys; or service → Manual Deploy → Deploy latest commit; env change → Save Changes redeploys |
 
 ---
@@ -1117,3 +1121,67 @@ tests under `tests/omnidash/` and `tests/e2e-playwright/`.
 
 **No service/schema change** — pure shell layout, CSS-token, and build-config repair
 (no migration/RFC required).
+
+---
+
+## 9.23 Billing — `create-checkout` / `stripe-webhook` wired into production deploy, auth fix ported (2026-06-30)
+
+**Root cause:** every row in production `subscriptions` had `stripe_customer_id =
+NULL`, so `create-billing-portal` correctly returned `BILLING_CUSTOMER_NOT_FOUND`
+for 100% of users regardless of its own auth logic. `create-checkout` (mints/looks
+up the Stripe customer and starts Checkout) and `stripe-webhook`
+(`checkout.session.completed` → `activate_client_subscription` RPC, which persists
+`stripe_customer_id`) were present in source but **absent from every deploy
+workflow** — neither function had ever reached production.
+
+**Deploy ordering (`.github/workflows/deploy-production-cf-direct.yml`):** the
+"Deploy OmniBoard and Billing Edge Functions" step now also deploys
+`create-checkout` and `stripe-webhook`, in addition to the existing
+`omnilink-port` and `create-billing-portal`, before the deployed-bundle smoke
+test runs.
+
+**Auth fix ported to `create-checkout` (`supabase/functions/create-checkout/index.ts`):**
+applied the same fix already live in `create-billing-portal` — `client.auth.getUser()`
+(no-arg) does not validate the global `Authorization` header on this supabase-js
+version and rejects valid users; the bearer token is now passed explicitly as
+`client.auth.getUser(token)`.
+
+**Operational impact:** two previously-undeployed Edge Functions
+(`create-checkout`, `stripe-webhook`) are now part of the governed production
+deploy. Both already existed in the Supabase secrets/service inventory tables in
+§2 and §5 (updated above) — no new secrets are required, only the missing
+`supabase functions deploy` calls.
+
+---
+
+## 9.24 Orchestrator — OmniBoard Redis env-var hardened to fail closed (2026-06-30)
+
+**Root cause:** `orchestrator/omniboard/router.py` and `service.py` read
+`os.environ["UPSTASH_REDIS_URL"]` as a hard dict subscript. A missing env var
+throws an unhandled `KeyError`; Starlette's default handler surfaces this as a
+plaintext `"Internal Server Error"` 500 with no error code — the exact opaque
+failure observed live when the Render service wasn't yet configured.
+
+**Fix:** New `orchestrator/omniboard/_redis.py` module with a single
+`get_omniboard_redis()` helper that uses `os.environ.get(...)` and raises
+`HTTPException(503, {"code": "omniboard_redis_unconfigured", ...})` if the
+var is absent. Applied to all 8 call sites (3 in `router.py`, 5 in
+`service.py`); unused `import redis.asyncio` and `import os` removed from
+the affected scopes. Test patches in
+`tests/omniboard/test_router_contract.py` updated from
+`omniboard.router.redis.from_url` → `omniboard.router.get_omniboard_redis`.
+
+**Operational impact:** Render service must have `UPSTASH_REDIS_URL` set
+(raw `rediss://` connection string, **not** the REST-style
+`UPSTASH_REDIS_REST_URL`). With it set, OmniBoard FSM sessions now persist
+correctly. Without it, routes return a typed JSON 503 instead of an opaque
+plaintext crash.
+
+**Out of scope / known follow-up (not fixed in this change):** `activate-client/index.ts`
+(the free/BASIC-tier activation path) uses the same no-arg `client.auth.getUser()`
+pattern; left unmodified here because it doesn't touch a Stripe customer ID and
+is outside the Billing/Stripe-checkout surface this change targets. Also,
+`orchestrator/omniboard/router.py` and `service.py` read `os.environ["UPSTASH_REDIS_URL"]`
+as a hard subscript — if that var is unset on the Render service, `/omniboard/start`
+throws an unhandled `KeyError` (Starlette default plaintext 500). This is a Render
+service env-var/runtime issue outside this repo's deploy pipeline, not yet fixed.

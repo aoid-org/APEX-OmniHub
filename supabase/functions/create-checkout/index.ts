@@ -49,7 +49,10 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await client.auth.getUser();
+    // Pass the JWT explicitly to getUser(token) — see create-billing-portal
+    // for the verified explanation of why the no-arg form rejects valid users.
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const { data: { user }, error: authError } = await client.auth.getUser(token);
 
     if (authError || !user) {
       return errResponse('UNAUTHORIZED', 'Invalid authentication token', 401, origin);
