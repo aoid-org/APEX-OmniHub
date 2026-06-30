@@ -7,6 +7,22 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISSED_KEY = 'apex_pwa_banner_dismissed';
 
+interface PWAInstallWindow extends Window {
+  __deferredPWAEvent?: BeforeInstallPromptEvent;
+}
+
+function isStandaloneDisplayMode(): boolean {
+  try {
+    return globalThis.matchMedia('(display-mode: standalone)').matches;
+  } catch {
+    return false;
+  }
+}
+
+function getDeferredPWAEvent(): BeforeInstallPromptEvent | null {
+  return (globalThis as unknown as PWAInstallWindow).__deferredPWAEvent ?? null;
+}
+
 export interface UsePWAInstallReturn {
   isInstallable: boolean;
   isAlreadyInstalled: boolean;
@@ -16,27 +32,16 @@ export interface UsePWAInstallReturn {
 }
 
 export function usePWAInstall(): UsePWAInstallReturn {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(getDeferredPWAEvent);
+  const [isInstallable, setIsInstallable] = useState(() => !isStandaloneDisplayMode() && getDeferredPWAEvent() !== null);
+  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(isStandaloneDisplayMode);
   const [isDismissed, setIsDismissed] = useState(() => {
     try { return localStorage.getItem(DISMISSED_KEY) === '1'; } catch { return false; }
   });
 
   useEffect(() => {
-    // Already installed as standalone — never show banner
-    if (globalThis.matchMedia('(display-mode: standalone)').matches) {
-      setIsAlreadyInstalled(true);
-      return;
-    }
-
-    // If the event fired before React mounted, grab it now!
-    // @ts-expect-error - Custom global property
-    if (globalThis.__deferredPWAEvent) {
-      // @ts-expect-error - Custom global property
-      setDeferredPrompt(globalThis.__deferredPWAEvent as BeforeInstallPromptEvent);
-      setIsInstallable(true);
-    }
+    // Already installed as standalone — never show banner.
+    if (isStandaloneDisplayMode()) return;
 
     const handler = (e: Event) => {
       e.preventDefault();

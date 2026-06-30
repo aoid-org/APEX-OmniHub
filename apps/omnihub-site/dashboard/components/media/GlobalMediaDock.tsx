@@ -116,7 +116,7 @@ export function GlobalMediaDock() {
 
   const sharedInfoRowProps = {
     title: currentMedia.title,
-    provider: currentMedia.provider,
+    provider: currentMedia.provider ?? 'OmniMedia',
     mediaType: currentMedia.type,
     isPlaying,
     onTogglePlay: togglePlay,

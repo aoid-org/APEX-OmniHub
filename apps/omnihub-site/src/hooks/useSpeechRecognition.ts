@@ -72,7 +72,9 @@ export function useSpeechRecognition(
 
   // Keep latest callbacks without re-binding recognition handlers each render.
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop();
