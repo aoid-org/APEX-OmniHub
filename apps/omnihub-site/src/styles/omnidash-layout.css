@@ -46,6 +46,8 @@
   --od-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --od-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --bg-primary: #060a13;
+  --omni-rail-width: 300px;
+  --omni-rail-pad-x: 12px;
 }
 
 
@@ -2235,11 +2237,11 @@
  * content-sizing (unequal) and the inline var(--omni-rail-pad-x) paddings
  * collapsed to 0. This file IS imported by the root entry, so the rules apply.
  *
- * Both rails read one width token AND one horizontal-inset token, and the left
- * .omni-sidebar-footer adds no horizontal padding, so SidebarKpiBar (left) and
- * SystemHealthRow (right) have EXACTLY equal inner content width
- * (rail − 2·--omni-rail-pad-x) at every breakpoint. */
-:root { --omni-rail-pad-x: 12px; }
+ * Both rails read one width token AND one horizontal-inset token, defined in the
+ * existing top-level token block, and the left .omni-sidebar-footer adds no
+ * horizontal padding, so SidebarKpiBar (left) and SystemHealthRow (right) have
+ * EXACTLY equal inner content width (rail − 2·--omni-rail-pad-x) at every
+ * breakpoint. */
 
 .omni-sidebar,
 .omni-right-panel { width: var(--omni-rail-width, 300px); flex-shrink: 0; }
@@ -2254,11 +2256,11 @@
 /* Narrow desktop (1025–1365px): still isDesktop in JS, so both rails render —
  * shrink them so the center canvas keeps usable width (prevents overflow). */
 @media (min-width: 1025px) and (max-width: 1365px) {
-  :root { --omni-rail-width: 240px; }
+  .omnidash-shell { --omni-rail-width: 240px; }
 }
 
 /* At/below the JS desktop threshold (<=1024px) the rails fold into the drawer;
  * ensure no residual fixed rail width leaks in. */
 @media (max-width: 1024px) {
-  :root { --omni-rail-width: 100%; }
+  .omnidash-shell { --omni-rail-width: 100%; }
 }
