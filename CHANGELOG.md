@@ -1,6 +1,10 @@
 ---
 
-## 1.8.2
+## 1.8.3
+### Patch Changes
+
+- fix(omnidash): OmniDash surface alignment + glassmorphism repair pass (PR #1529). App Gallery in-flow mark now renders the APEX-OmniHub wordmark (`IMG_APEX_WM`), enlarged and faded (opacity 0.16) so it reads as a quiet background mark, not a visual anchor; the OmniDash hexagon stays the labelled header logo. Glass translucency fixed so the blueprint grid no longer bleeds through tiles: Awaiting-tile element `opacity` hack removed, `GlassCard` gains `blur(20px) saturate(150%)` + `WebkitBackdropFilter`, and the `--omni-card` theme tokens are translucent. All left/right rail + sidebar glassmorph tiles unified — OmniTrace, OmniSentry, Ops Controls, OmniMedia, System Status (newly wrapped) and the sidebar System KPIs share one orange border (`rgba(249,115,22,0.25)`), one fill opacity (0.06), and the same backdrop blur; Ecosystem/Agent/OmniSlate hero-row headers aligned flush at 44px. Magnetic widget alignment added: pure `resolveAlignment()` (per-axis edge/center snap within 10px) runs before `resolveCollisions` so a snap can never overlap a neighbor, with a live orange guide line during drag; the long-press engine, collision-avoidance, persistence and flick-to-set are untouched. OmniMedia VALIDATED_FUNCTIONING — player proven end-to-end (real media decoded + time-advancing) and the production backend confirmed deployed (`omnilink-port` edge function, `omnimedia_assets` table with RLS + 4 policies; catalog empty pending owner upload). No API, schema, env, or start-command change.
+
 ### Minor Changes
 
 - fix(omnidash): production-mode flip + honest surfaces. Demo mode now defaults off and is hard-disabled in production builds (`import.meta.env.PROD`); the Demo ops toggle is hidden in prod; three hardcoded "(Simulated)" status labels are gated on demo state; the fabricated `syncedMinutesAgo` metric is replaced with an honest value. OmniBoard connect wizard maps opaque Supabase transport errors ("non-2xx status code", relay/fetch) to honest user copy instead of leaking them. Links staging persists to `omnilink_links` and refreshes in place via `useOmniModuleState().refetch()` (no full-page reload). No visual/layout drift.
