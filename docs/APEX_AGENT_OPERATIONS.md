@@ -1152,6 +1152,31 @@ deploy. Both already existed in the Supabase secrets/service inventory tables in
 §2 and §5 (updated above) — no new secrets are required, only the missing
 `supabase functions deploy` calls.
 
+---
+
+## 9.24 Orchestrator — OmniBoard Redis env-var hardened to fail closed (2026-06-30)
+
+**Root cause:** `orchestrator/omniboard/router.py` and `service.py` read
+`os.environ["UPSTASH_REDIS_URL"]` as a hard dict subscript. A missing env var
+throws an unhandled `KeyError`; Starlette's default handler surfaces this as a
+plaintext `"Internal Server Error"` 500 with no error code — the exact opaque
+failure observed live when the Render service wasn't yet configured.
+
+**Fix:** New `orchestrator/omniboard/_redis.py` module with a single
+`get_omniboard_redis()` helper that uses `os.environ.get(...)` and raises
+`HTTPException(503, {"code": "omniboard_redis_unconfigured", ...})` if the
+var is absent. Applied to all 8 call sites (3 in `router.py`, 5 in
+`service.py`); unused `import redis.asyncio` and `import os` removed from
+the affected scopes. Test patches in
+`tests/omniboard/test_router_contract.py` updated from
+`omniboard.router.redis.from_url` → `omniboard.router.get_omniboard_redis`.
+
+**Operational impact:** Render service must have `UPSTASH_REDIS_URL` set
+(raw `rediss://` connection string, **not** the REST-style
+`UPSTASH_REDIS_REST_URL`). With it set, OmniBoard FSM sessions now persist
+correctly. Without it, routes return a typed JSON 503 instead of an opaque
+plaintext crash.
+
 **Out of scope / known follow-up (not fixed in this change):** `activate-client/index.ts`
 (the free/BASIC-tier activation path) uses the same no-arg `client.auth.getUser()`
 pattern; left unmodified here because it doesn't touch a Stripe customer ID and

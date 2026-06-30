@@ -1,10 +1,9 @@
-import os
 from typing import Any
 
-import redis.asyncio as redis
 from fastapi import APIRouter, HTTPException
 
 from .fsm import OmniBoardFSM
+from ._redis import get_omniboard_redis
 from .schema import FSMContext, FSMEvent
 
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
@@ -15,7 +14,7 @@ async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
     """Start a new OmniBoard onboarding session."""
     context = OmniBoardFSM.start_session(tenant_id, trace_id)
 
-    redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+    redis_client = get_omniboard_redis()
     try:
         await redis_client.setex(
             f"omni:session:fsm:{context.session_id}", 1800, context.model_dump_json()
@@ -43,7 +42,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     `data.connection_spec` to call onComplete(); without this field the wizard
     would silently ignore the completed connection.
     """
-    redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+    redis_client = get_omniboard_redis()
     try:
         context_json = await redis_client.get(f"omni:session:fsm:{session_id}")
         if not context_json:
@@ -74,7 +73,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
 @router.get("/{session_id}", responses=_404_RESPONSE)
 async def get_status(session_id: str) -> FSMContext:
     """Get current session status."""
-    redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+    redis_client = get_omniboard_redis()
     try:
         context_json = await redis_client.get(f"omni:session:fsm:{session_id}")
         if not context_json:
