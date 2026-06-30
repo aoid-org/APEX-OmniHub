@@ -1,13 +1,17 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
-const { mockInvoke, mockState } = vi.hoisted(() => ({
+const { mockInvoke, mockState, mockGetSession } = vi.hoisted(() => ({
   mockInvoke: vi.fn(),
   mockState: vi.fn(),
+  mockGetSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { functions: { invoke: mockInvoke } },
+  supabase: {
+    functions: { invoke: mockInvoke },
+    auth: { getSession: mockGetSession },
+  },
   hasSupabaseConfig: true,
 }));
 
@@ -33,9 +37,23 @@ function baseState(moduleKey: string) {
   };
 }
 
+// FunctionsHttpError shape: supabase-js stashes the original Response on `.context`.
+function httpError(code: string, status: number) {
+  return {
+    data: null,
+    error: {
+      name: 'FunctionsHttpError',
+      message: 'Edge Function returned a non-2xx status code',
+      context: new Response(JSON.stringify({ ok: false, error: { code, message: code } }), { status }),
+    },
+  };
+}
+
 describe('production module actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: a signed-in session is present.
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'tok' } }, error: null });
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { origin: 'https://apexomnihub.icu', assign: vi.fn() },
@@ -104,6 +122,88 @@ describe('production module actions', () => {
 
     render(<BillingModule onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /billing portal/i }));
+
+    expect(await screen.findByText(/valid stripe url/i)).toBeInTheDocument();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule shows a sign-in prompt and does not invoke when no session', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/sign in to manage billing/i)).toBeInTheDocument();
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule maps a 401 to a sign-in prompt and never leaks the raw non-2xx string', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue(httpError('UNAUTHORIZED', 401));
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/sign in to manage billing/i)).toBeInTheDocument();
+    expect(screen.queryByText(/non-2xx status code/i)).not.toBeInTheDocument();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule renders the setup path on BILLING_CUSTOMER_NOT_FOUND', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue(httpError('BILLING_CUSTOMER_NOT_FOUND', 404));
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/no stripe billing profile is linked/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start pro/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start business/i })).toBeInTheDocument();
+    expect(screen.queryByText(/non-2xx status code/i)).not.toBeInTheDocument();
+  });
+
+  it('BillingModule setup path starts checkout and redirects only to a Stripe checkout URL', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke
+      .mockResolvedValueOnce(httpError('BILLING_CUSTOMER_NOT_FOUND', 404))
+      .mockResolvedValueOnce({ data: { url: 'https://checkout.stripe.com/c/pay/test_123' }, error: null });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /start pro/i }));
+
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('create-checkout', {
+      body: { tier: 'PRO', skills: [], returnUrl: 'https://apexomnihub.icu' },
+    }));
+    expect(window.location.assign).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/test_123');
+  });
+
+  it('BillingModule setup path refuses a non-Stripe checkout URL', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke
+      .mockResolvedValueOnce(httpError('BILLING_CUSTOMER_NOT_FOUND', 404))
+      .mockResolvedValueOnce({ data: { url: 'https://evil.example.com/pay' }, error: null });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /start business/i }));
 
     expect(await screen.findByText(/valid stripe url/i)).toBeInTheDocument();
     expect(window.location.assign).not.toHaveBeenCalled();

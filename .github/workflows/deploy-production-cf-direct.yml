@@ -154,14 +154,22 @@ jobs:
       - name: PWA source + dist integrity guard
         run: npm run check:pwa
 
-      - name: Deploy OmniBoard and Billing Edge Functions
+      - name: Deploy OmniBoard, Billing, and onboarding Edge Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           set -euo pipefail
+          # omnilink-port also carries the OmniBoard + OmniMedia routes.
           supabase functions deploy omnilink-port --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy create-billing-portal --project-ref "$SUPABASE_PROJECT_REF"
+          # Billing setup path + onboarding/identity functions the frontend invokes
+          # but that were never covered by deploy automation (root cause of their
+          # production 404s). verify_jwt is pinned per-function in supabase/config.toml.
+          supabase functions deploy create-checkout --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy generate-business-skills --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy activate-client --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy identity-webauthn --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Deploy to Cloudflare Pages (production)
         id: cf_deploy

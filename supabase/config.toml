@@ -39,6 +39,20 @@ verify_jwt = true
 [functions.create-billing-portal]
 verify_jwt = true
 
+[functions.create-checkout]
+verify_jwt = true  # Requires an authenticated user; validates the JWT internally.
+
+[functions.activate-client]
+verify_jwt = true  # Requires an authenticated user; validates the JWT internally.
+
+[functions.generate-business-skills]
+# verify_jwt = false: the public OnboardingWizard path (description+goal) must run
+# pre-auth; the authenticated Skill Forge path validates the JWT internally.
+verify_jwt = false
+
+[functions.identity-webauthn]
+verify_jwt = true  # All WebAuthn actions bind to an already-authenticated user.
+
 [functions.byom-proxy]
 verify_jwt = true
 

@@ -22,7 +22,10 @@ describe('production hardening source gates', () => {
   it('create-billing-portal requires auth, customer id, Stripe server session, and typed fail-closed errors', () => {
     const source = read('supabase/functions/create-billing-portal/index.ts');
     expect(source).toContain("req.headers.get('Authorization')");
-    expect(source).toContain('userClient.auth.getUser()');
+    // The JWT must be passed explicitly: a no-arg getUser() on supabase-js 2.39.x
+    // does not validate the global Authorization header and rejected valid tokens.
+    expect(source).toContain('userClient.auth.getUser(token)');
+    expect(source).not.toContain('userClient.auth.getUser()');
     expect(source).toContain(".from('subscriptions')");
     expect(source).toContain(".eq('user_id', user.id)");
     expect(source).toContain('stripe_customer_id');
@@ -48,7 +51,13 @@ describe('production hardening source gates', () => {
     const workflow = read('.github/workflows/deploy-production-cf-direct.yml');
     expect(workflow).toContain('supabase functions deploy omnilink-port');
     expect(workflow).toContain('supabase functions deploy create-billing-portal');
-    expect(workflow.indexOf('Deploy OmniBoard and Billing Edge Functions')).toBeLessThan(
+    // Billing setup path + onboarding/identity functions must also be deployed
+    // (they were invoked by the frontend but missing from deploy automation).
+    expect(workflow).toContain('supabase functions deploy create-checkout');
+    expect(workflow).toContain('supabase functions deploy generate-business-skills');
+    expect(workflow).toContain('supabase functions deploy activate-client');
+    expect(workflow).toContain('supabase functions deploy identity-webauthn');
+    expect(workflow.indexOf('Deploy OmniBoard, Billing, and onboarding Edge Functions')).toBeLessThan(
       workflow.indexOf('Real smoke test (assert deployed bundle config)')
     );
   });

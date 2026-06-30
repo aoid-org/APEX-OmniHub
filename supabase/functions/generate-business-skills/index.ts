@@ -93,10 +93,13 @@ async function authenticateRequest(
     { global: { headers: { Authorization: authHeader } } }
   );
 
+  // Pass the JWT explicitly: a no-arg getUser() on supabase-js 2.39.x does not
+  // validate the global Authorization header, rejecting valid user tokens.
+  const token = authHeader.replace(/^Bearer\s+/i, "");
   const {
     data: { user },
     error: authError,
-  } = await client.auth.getUser();
+  } = await client.auth.getUser(token);
 
   if (authError || !user) {
     return corsErrorResponse(
