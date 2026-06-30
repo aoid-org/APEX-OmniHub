@@ -221,20 +221,17 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     // invalid CSS and silently paints a transparent, borderless tile.
     const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
-    // Background alphas carry a uniform +25% opacity bump (rail-widget
-    // transparency-reduction parity, owner P1) — each value is the prior
-    // alpha × 1.25.
-    const resolveTileBackground = (active: boolean, hover: boolean) => {
-      if (active) return `linear-gradient(135deg, rgba(${ORANGE},0.28) 0%, rgba(${ORANGE},0.08) 100%)`;
-      if (hover)  return `linear-gradient(135deg, rgba(${ORANGE},0.20) 0%, rgba(${ORANGE},0.06) 100%)`;
-      return `linear-gradient(135deg, rgba(${ORANGE},0.13) 0%, rgba(${ORANGE},0.04) 100%)`;
-    };
+    // Left rail widget chrome matches the right rail widgets exactly:
+    // 0.06 fill alpha and 0.25 orange border alpha. Active/hover affordance stays
+    // in text, icon, glow, and the active status dot instead of changing opacity.
+    const RAIL_WIDGET_FILL_ALPHA = 0.06;
+    const RAIL_WIDGET_BORDER_ALPHA = 0.25;
 
-    const resolveTileBorder = (active: boolean, hover: boolean) => {
-      if (active) return `1px solid rgba(${ORANGE},0.60)`;
-      if (hover)  return `1px solid rgba(${ORANGE},0.40)`;
-      return `1px solid rgba(${ORANGE},0.22)`;
-    };
+    const resolveTileBackground = () =>
+      `linear-gradient(135deg, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 0%, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 100%)`;
+
+    const resolveTileBorder = () =>
+      `1px solid rgba(${ORANGE},${RAIL_WIDGET_BORDER_ALPHA})`;
 
     const resolveTileShadow = (active: boolean, hover: boolean) => {
       if (active) return `0 0 18px rgba(${ORANGE},0.30), 0 2px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)`;
@@ -272,8 +269,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        border: resolveTileBorder(isActive, hov),
-        background: resolveTileBackground(isActive, hov),
+        border: resolveTileBorder(),
+        background: resolveTileBackground(),
         backdropFilter: "blur(10px) saturate(140%)",
         WebkitBackdropFilter: "blur(10px) saturate(140%)",
         color: isActive ? T.t1 : T.t2,
@@ -1521,18 +1518,6 @@ export default function OmniDashShell() {
                  linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 55%, rgba(30,80,180,0.06) 100%)`,
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
-          {/* APEX-OmniHub wordmark — fixed watermark layer; shifts only with the
-              wallpaper, never scrolls into the content flow. */}
-          <div style={{
-            position:"fixed", inset:0, zIndex:0, pointerEvents:"none", userSelect:"none",
-            display:"flex", alignItems:"center", justifyContent:"center",
-          }}>
-            <img src={IMG_APEX_WM} alt="" style={{
-              width:"42%", maxWidth:520, objectFit:"contain",
-              opacity: isDark ? 0.07 : 0.06,
-              filter: isDark ? "brightness(1.6) saturate(0.4)" : "brightness(0.4) saturate(0.3)",
-            }} />
-          </div>
           {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
             {/* Primary 3-column grid — above the fold per canonical layout */}
