@@ -44,7 +44,7 @@ jobs:
       # restore-keys provides a warm fallback when the version advances (rare).
       # On cache-hit the browser install step below is skipped entirely.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
