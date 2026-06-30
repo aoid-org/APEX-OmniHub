@@ -48,9 +48,21 @@ describe('production hardening source gates', () => {
     const workflow = read('.github/workflows/deploy-production-cf-direct.yml');
     expect(workflow).toContain('supabase functions deploy omnilink-port');
     expect(workflow).toContain('supabase functions deploy create-billing-portal');
+    // create-checkout and stripe-webhook are what actually link a paying user's
+    // stripe_customer_id — without them every subscriptions row is permanently
+    // unlinked and create-billing-portal returns BILLING_CUSTOMER_NOT_FOUND for
+    // everyone, no matter how correct its own auth check is.
+    expect(workflow).toContain('supabase functions deploy create-checkout');
+    expect(workflow).toContain('supabase functions deploy stripe-webhook');
     expect(workflow.indexOf('Deploy OmniBoard and Billing Edge Functions')).toBeLessThan(
       workflow.indexOf('Real smoke test (assert deployed bundle config)')
     );
+  });
+
+  it('create-checkout validates the bearer token explicitly (same getUser(token) fix as create-billing-portal)', () => {
+    const source = read('supabase/functions/create-checkout/index.ts');
+    expect(source).toContain('client.auth.getUser(token)');
+    expect(source).not.toContain('client.auth.getUser()');
   });
 
   it('deployed bundle smoke has a curl fallback for proxy-constrained Node fetch', () => {
