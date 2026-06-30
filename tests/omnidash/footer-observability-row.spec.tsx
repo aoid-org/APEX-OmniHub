@@ -33,7 +33,7 @@ describe('FooterObservabilityRow', () => {
     expect(row.style.overflow).toBe('hidden');
   });
 
-  it('surfaces real live system state — health, events, loops', () => {
+  it('surfaces only honest system signals — health, SEV-1, incidents, sync', () => {
     render(
       <FooterObservabilityRow
         demoMode={false}
@@ -44,10 +44,14 @@ describe('FooterObservabilityRow', () => {
     );
     const row = screen.getByTestId('footer-observability');
     expect(row.textContent).toContain('Degraded');
-    expect(row.textContent).toContain('42');   // events tracked
+    expect(row.textContent).toContain('SEV-1'); // real ops signal (ops_sev1_incidents)
     expect(row.textContent).toContain('Incidents');
-    expect(row.textContent).toContain('2');    // open incidents (queue)
-    expect(row.textContent).toContain('Live'); // sync state
+    expect(row.textContent).toContain('2');     // open incidents (queue)
+    expect(row.textContent).toContain('Live');  // sync state
+    // Reviewer item 4: FlowBills business KPIs must NOT be mislabelled as telemetry.
+    expect(row.textContent).not.toContain('Events');
+    expect(row.textContent).not.toContain('Loops');
+    expect(row.textContent).not.toContain('42'); // flowbills_demos must not surface
   });
 
   it('reflects an honest sync-error state when the data bridge fails', () => {

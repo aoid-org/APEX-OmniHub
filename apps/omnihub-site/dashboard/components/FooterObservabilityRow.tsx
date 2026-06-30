@@ -6,9 +6,10 @@
  * and immovable inside the static `.omni-footer-bar`. It is NOT a DraggableWidget
  * and carries no reorder affordance.
  *
- * The row shows real system/user state already resolved by the shell
- * (useDashboardData): system health, events tracked, Guardian loops, open
- * incidents (queue), and live/demo/sync state. No decorative-only data.
+ * The row shows real system/observability state already resolved by the shell
+ * (useDashboardData): system health, SEV-1 incidents, open incidents (queue),
+ * and live/demo/sync state. No decorative-only data, and NO business KPIs
+ * (FlowBills demos/paid accounts) mislabelled as system telemetry.
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
@@ -57,8 +58,10 @@ export const FooterObservabilityRow = memo(function FooterObservabilityRow({
   demoMode, kpi, systemHealth, openIncidentsCount, isLoading, error,
 }: FooterObservabilityRowProps) {
   const health = resolveHealth(demoMode, systemHealth);
-  const events = demoMode ? 0 : (kpi?.flowbills_demos ?? 0);
-  const loops = demoMode ? 1 : (kpi?.flowbills_paid_accounts ?? 0);
+  // Honest observability only — ops_sev1_incidents is a real system signal.
+  // FlowBills demos/paid accounts are BUSINESS KPIs, not telemetry, so they are
+  // deliberately NOT shown here as "Events"/"Loops" (reviewer item 4).
+  const sev1 = demoMode ? 0 : (kpi?.ops_sev1_incidents ?? 0);
   const incidents = openIncidentsCount;
 
   let syncLabel: string = demoMode ? 'Demo' : 'Live';
@@ -77,8 +80,7 @@ export const FooterObservabilityRow = memo(function FooterObservabilityRow({
       }}
     >
       <Chip label="Health" value={health.label} color={health.color} />
-      <Chip label="Events" value={events} color={T.t2} />
-      <Chip label="Loops" value={loops} color={T.orange} />
+      <Chip label="SEV-1" value={sev1} color={sev1 === 0 ? T.green : T.warn} />
       <Chip label="Incidents" value={incidents} color={incidents === 0 ? T.green : T.warn} />
       <Chip label="Sync" value={syncLabel} color={syncColor} />
     </div>
