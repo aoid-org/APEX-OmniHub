@@ -1005,6 +1005,20 @@ The production-safe Playwright suite is read-only by default. It captures saniti
 
 ## 9.21 OmniSkin Engine (OSE v1.0) — OSE Guard CI gate (2026-06-28, CCEX-OSE-001)
 
+> **⚠️ Production-reach correction (PR #1525, 2026-06-30):** this contract governs
+> `apps/omnihub-site/dashboard/omniSkin.css` being imported by
+> `apps/omnihub-site/src/main.tsx` — but that file is **not** the Vite production
+> entry. Per `index.html` (`<script type="module" src="/src/main.tsx">`), the real
+> production entry is the **root** `src/main.tsx`, which never imports
+> `omniSkin.css`. PR #1525 found this the hard way: rail-width/pad-x tokens added
+> to `omniSkin.css` resolved to nothing at runtime in a live authenticated test.
+> **Any CSS rule that must reach the production bundle belongs in a stylesheet the
+> root `src/main.tsx` actually imports** (currently `apps/omnihub-site/src/styles/
+> {globals,theme,components,omnidash-layout}.css`) — not in `omniSkin.css`. The OSE
+> Guard below still runs and is harmless (it's a JSX-style/token-hygiene lint on
+> dashboard source, independent of bundle reach), but do not treat "OSE Guard
+> passed" as proof a CSS rule is live in production.
+
 **Changed files:** `package.json`, `.github/workflows/apex-governance.yml`, `scripts/ci/check-omni-skin.mjs` (new), `apps/omnihub-site/dashboard/omniSkinTokens.ts` (new), `apps/omnihub-site/dashboard/omniSkin.css` (new).
 
 ### New CI Script: `check:omni-skin`
@@ -1019,13 +1033,10 @@ Engine (token forge `omniSkinTokens.ts` + static CSS `omniSkin.css`, see
 is reintroduced into `apps/omnihub-site/dashboard/`; the invalid CSS `var()`+hex-alpha
 pattern (e.g. `` ${T.x}22 ``, which silently drops the declaration) reappears in
 dashboard module files or `OmniDashShell.tsx`; `var(--od-*)` reappears in the
-Shell/token-forge files this contract owns; the static `omniSkin.css` token-hygiene
-asset is missing; or the `src/components/dashboard/` ghost path gains an unexpected
-file. The old `omniSkin.css` import target (`apps/omnihub-site/src/main.tsx`) was
-historical and app-local, not proof that OSE CSS reached the production bundle. This
-is a static linting/governance check — it does not prove runtime rail/layout-token
-ownership and it does not affect deployed services, start commands, or runtime
-contracts.
+Shell/token-forge files this contract owns; `omniSkin.css` is not imported exactly once
+in `apps/omnihub-site/src/main.tsx`; or the `src/components/dashboard/` ghost path
+gains an unexpected file. This is a linting/governance check — it does not affect
+deployed services, start commands, or runtime contracts.
 
 **Script location:** `scripts/ci/check-omni-skin.mjs`
 
@@ -1085,11 +1096,8 @@ Corrected canonical invariants (CI-enforced — `npm run check:omnidash`):
   `.omni-footer-bar` — **fixed, clipped (`overflow:hidden`), immovable** (never a
   `DraggableWidget`) — fed by **real** shell state (system health, events tracked,
   Guardian loops, open incidents/queue, live/demo/sync). No decorative-only data.
-- **Rail + KPI width parity.** Runtime rail/layout tokens live in
-  `apps/omnihub-site/src/styles/omnidash-layout.css`, which the production root
-  entry (`src/main.tsx`) imports and `check:omnidash` guards. Left/right rails
-  share one width token (`--omni-rail-width`); `SystemHealthRow` is a
-  full-rail-width sibling.
+- **Rail + KPI width parity.** Left/right rails share one width token
+  (`--omni-rail-width`); `SystemHealthRow` is a full-rail-width sibling.
 - **OmniSlate accessibility.** Prompt input (`omnislate-prompt-input`) + submit
   (`submit-prompt`) stay visible/focusable/usable; the input row is `flexShrink:0`
   so the message canvas absorbs height and the input is never compressed/clipped.
@@ -1107,7 +1115,5 @@ Corrected canonical invariants (CI-enforced — `npm run check:omnidash`):
 `tailwind.config.ts`, `scripts/ci/check-omnidash-integrity.mjs`, plus realigned
 tests under `tests/omnidash/` and `tests/e2e-playwright/`.
 
-**Service/schema scope:** the P1 layout repair itself was shell layout, CSS-token,
-and build-config work with no migration requirement. PR #1525 also carried
-workflow/Supabase repair scope, so do not summarize the whole PR as
-"No service/schema change" without separating those concerns.
+**No service/schema change** — pure shell layout, CSS-token, and build-config repair
+(no migration/RFC required).
