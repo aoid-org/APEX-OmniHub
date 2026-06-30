@@ -22,7 +22,7 @@ describe('production hardening source gates', () => {
   it('create-billing-portal requires auth, customer id, Stripe server session, and typed fail-closed errors', () => {
     const source = read('supabase/functions/create-billing-portal/index.ts');
     expect(source).toContain("req.headers.get('Authorization')");
-    expect(source).toContain('userClient.auth.getUser()');
+    expect(source).toContain('userClient.auth.getUser(token)');
     expect(source).toContain(".from('subscriptions')");
     expect(source).toContain(".eq('user_id', user.id)");
     expect(source).toContain('stripe_customer_id');

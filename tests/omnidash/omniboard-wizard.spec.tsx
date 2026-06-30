@@ -180,4 +180,17 @@ describe('OmniBoardWizard', () => {
       expect(screen.getByText('Network failure')).toBeTruthy(),
     );
   });
+
+  it('never leaks the raw Supabase non-2xx SDK string (e.g. a typed 503 connect_unavailable)', async () => {
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: new Error('Edge Function returned a non-2xx status code'),
+    });
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    expect(
+      await screen.findByText(/integration gateway is unavailable right now/i),
+    ).toBeTruthy();
+    expect(screen.queryByText(/non-2xx/i)).toBeNull();
+  });
 });
