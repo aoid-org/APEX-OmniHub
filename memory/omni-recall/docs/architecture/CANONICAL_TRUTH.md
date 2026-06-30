@@ -1,15 +1,15 @@
 ---
 version: 1.3.2
-last_audited: 2026-06-25
+last_audited: 2026-06-30
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.8.2
-**Last Updated:** 2026-06-25
+**Version:** 1.8.3
+**Last Updated:** 2026-06-30
 
-**Latest verified branch/head:** `main` @ `4c0d481` (`chore(cert): Production Hardening Sprint & Codebase Determinism`, #1488). Active dev branch (2026-06-30): `claude/omnidash-surface-alignment-fsrs31` (PR #1529, OmniDash surface fix pass — RELEASE-READY, version bumped `1.8.2`→`1.8.3`). Release line `1.8.3` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing). Current authoritative OmniDash-surface snapshot: `memory/omni-recall/omnidash-surface-1.8.3-baseline-2026-06-30.md`. (Prior platform snapshot: `docs/CURRENT_PLATFORM_STATE_2026_06_25.md`; `main` head facts above are last-known — verify with `git log` in a multi-agent repo.)
+**Latest verified branch/head:** local `work` @ `7f498b6` after `git fetch --all --prune` (`fix(omnidash): surface alignment + glassmorphism repair pass (#1529)`). Release line `1.8.3`; app package `1.3.10`; current authoritative platform snapshot: `docs/CURRENT_PLATFORM_STATE_2026_06_30.md`. This is repo-state evidence, not live-production certification. Releases remain manual/owner-driven (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence only after a tag already exists.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -77,7 +77,7 @@ status: verified
 
 ## Conflict Resolution Rule
 
-If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (latest snapshot) before dated audit reports.
+If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_30.md` (latest snapshot) before dated audit reports.
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 
@@ -105,7 +105,7 @@ If any other document conflicts with this file, this file wins unless explicitly
 - 18-test smoke suite at `tests/omnidash/omni-sentry-widget.spec.tsx` covers all 5 wired capabilities.
 - Release gate `tests/release/omni-sentry-surface.spec.ts` — all 4 assertions pass.
 
-**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` (latest snapshot) before prior dated snapshots.
+**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_30.md` (latest snapshot) before prior dated snapshots.
 
 ## Source-of-Truth Statement 23 (2026-06-23)
 
@@ -129,7 +129,7 @@ If any other document conflicts with this file, this file wins unless explicitly
 - `src/lib/omni-sentry.ts` stores all state in `sessionStorage` — enforced by security rule NS-M-008 (no cross-tab persistence of error/circuit state).
 - `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_30.md` for the current canonical snapshot.
 
 ## Source-of-Truth Statement 24 (2026-06-23)
 
@@ -194,7 +194,7 @@ branch `claude/kind-feynman-h5gcbs`):
 - `security-guards.yml` (consolidated into `security-regression-guard.yml`)
 The broken `production-readiness.yml` badge was removed from `README.md`.
 
-**Edge function directory count is now 33** (32 function dirs + `_shared`). Previously
+**Edge function directory count is now 34** (33 function dirs + `_shared`). Previously
 documented as 36 — count corrected from live tree verification. `lovable-healthcheck`
 directory is no longer present.
 
@@ -202,6 +202,6 @@ directory is no longer present.
 skill routing updated: `apex-dev` is superseded by `apex-boost-claude`,
 `apex-master-debug-claude`, and `omnidev-apex-pro-1.0.0` (all in `.claude/skills/`).
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_30.md` for the current canonical snapshot.
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` for the current canonical snapshot. If that file is absent, fall back to `2026_06_23`.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_06_30.md` for the current canonical snapshot.

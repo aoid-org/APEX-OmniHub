@@ -4,6 +4,9 @@ last_audited: 2026-06-21
 status: verified
 ---
 
+> **Current-state note (2026-06-30):** Current repo scan at `7f498b6` reports ~130 tracked orchestrator files (excluding `__pycache__`). Runtime health on Render/Temporal was not live-verified by the documentation sync.
+
+
 # APEX Orchestrator
 
 Production-grade AI Agent Orchestration Platform with Temporal.io, Event Sourcing, and Saga Patterns.

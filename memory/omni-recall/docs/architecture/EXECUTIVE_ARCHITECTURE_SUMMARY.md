@@ -4,6 +4,9 @@ last_audited: 2026-06-12
 status: verified
 ---
 
+> **Current-state note (2026-06-30):** For branch/head/package/count facts, defer to `../CURRENT_PLATFORM_STATE_2026_06_30.md`. This executive summary is architecture context, not live-production certification.
+
+
 <!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 # APEX-OmniHub Technical Architecture Specification
 

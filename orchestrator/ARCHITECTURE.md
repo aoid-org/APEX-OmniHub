@@ -4,6 +4,9 @@ last_audited: 2026-06-12
 status: verified
 ---
 
+> **Current-state note (2026-06-30):** Current repo scan at `7f498b6` reports ~130 tracked orchestrator files; Render/Temporal live health is not certified by this doc sync.
+
+
 # APEX Orchestrator - Architecture Deep Dive
 
 **Last Updated**: 2026-03-16

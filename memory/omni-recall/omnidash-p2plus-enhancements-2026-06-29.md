@@ -1,3 +1,5 @@
+> **Current-state note (2026-06-30):** Later OmniDash surface repair commits through `7f498b6` are captured in `docs/CURRENT_PLATFORM_STATE_2026_06_30.md`; this PR #1516 record remains the canonical layout-law baseline for that enhancement set.
+
 # OmniDash P2+ Enhancements — PR #1516 (2026-06-29)
 
 Canonical record of the owner-driven OmniDash + OmniMedia enhancement pass.

@@ -4,6 +4,9 @@ last_audited: 2026-06-12
 status: verified
 ---
 
+> **Current-state note (2026-06-30):** Current branch/head/package facts defer to `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md`; MAN Mode live behavior still requires environment-specific validation.
+
+
 # MAN Mode: Manual Approval Node
 
 ## Overview
