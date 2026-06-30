@@ -220,6 +220,87 @@ test.describe('OmniDash — authenticated desktop (1440×900)', () => {
     assertNoFatal(ev);
   });
 
+  test('1c. brand logo renders in the canvas directly below the App Gallery', async ({ page }) => {
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
+    const ev = attachEvidence(page);
+    await signInWithSupabaseSession(page);
+
+    const gallery = page.getByTestId('integrated-apps');
+    const logo = page.getByTestId('omnidash-canvas-logo');
+    await expect(gallery).toBeVisible({ timeout: 15_000 });
+    await expect(logo, 'owner P1: brand logo must render in the canvas').toBeVisible();
+
+    const g = await gallery.boundingBox();
+    const l = await logo.boundingBox();
+    expect(g, 'gallery has no box').not.toBeNull();
+    expect(l, 'logo has no box').not.toBeNull();
+    // The logo sits BELOW the App Gallery: its top is at/below the gallery bottom.
+    expect(l!.y, `brand logo top (${l!.y?.toFixed(0)}) must be below gallery bottom (${(g!.y + g!.height).toFixed(0)})`)
+      .toBeGreaterThanOrEqual((g!.y + g!.height) - 4);
+    await shot(page, 'logo-below-app-gallery.png');
+    assertNoFatal(ev);
+  });
+
+  test('7c. KPI (left) and System Health/status (right) share EXACT inner width', async ({ page }) => {
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
+    const ev = attachEvidence(page);
+    await signInWithSupabaseSession(page);
+    await expect(page.locator('.omni-sidebar')).toBeVisible({ timeout: 15_000 });
+
+    const kpi = page.getByTestId('sidebar-kpi-bar');
+    const status = page.getByTestId('rt_analytics');
+    await expect(kpi).toBeVisible();
+    await expect(status).toBeVisible();
+
+    const k = await kpi.boundingBox();
+    const s = await status.boundingBox();
+    expect(k, 'KPI block has no box').not.toBeNull();
+    expect(s, 'status block has no box').not.toBeNull();
+    // Owner P1 KPI/status width parity — equal inner width (≤1px subpixel tolerance).
+    expect(Math.abs(k!.width - s!.width), `KPI width ${k!.width?.toFixed(2)} vs status width ${s!.width?.toFixed(2)} must match`)
+      .toBeLessThanOrEqual(1);
+    await shot(page, 'kpi-status-width-parity.png');
+    assertNoFatal(ev);
+  });
+
+  test('9. footer is viewport-fixed — pinned to the bottom, immovable on canvas scroll', async ({ page }) => {
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
+    const ev = attachEvidence(page);
+    await signInWithSupabaseSession(page);
+    const footer = page.locator('.omni-footer-bar');
+    await expect(footer).toBeVisible({ timeout: 15_000 });
+
+    const vh = page.viewportSize()!.height;
+    const before = await footer.boundingBox();
+    expect(before, 'footer has no box').not.toBeNull();
+    // Footer bottom sits at the viewport bottom.
+    expect(Math.abs((before!.y + before!.height) - vh), `footer bottom ${(before!.y + before!.height).toFixed(0)} must equal viewport ${vh}`)
+      .toBeLessThanOrEqual(2);
+    // Scroll the canvas to the end; the footer must not move (it is viewport-fixed,
+    // not part of the scrolling canvas flow).
+    await page.locator('.omni-canvas-container').evaluate((el) => { el.scrollTop = el.scrollHeight; });
+    await page.waitForTimeout(300);
+    const after = await footer.boundingBox();
+    expect(after, 'footer has no box after scroll').not.toBeNull();
+    expect(Math.abs(after!.y - before!.y), 'footer moved on canvas scroll — not viewport-fixed').toBeLessThanOrEqual(1);
+    await shot(page, 'footer-viewport-fixed.png');
+    assertNoFatal(ev);
+  });
+
+  test('9b. OmniMedia widget renders with generated tile styling (Tailwind glob proof)', async ({ page }) => {
+    test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
+    const ev = attachEvidence(page);
+    await signInWithSupabaseSession(page);
+    // The OmniMedia launch widget lives in the right rail. A resolved, visible
+    // open control proves the dashboard Tailwind utilities were generated (owner
+    // items 8/9 — the tailwind.config.ts dashboard glob is in effect) and the
+    // surface did not collapse into plain text.
+    const openBtn = page.getByTestId('omnimedia-open-button');
+    await expect(openBtn, 'OmniMedia open control must render — surface not collapsed to plain text').toBeVisible({ timeout: 15_000 });
+    await shot(page, 'omnimedia-widget-rendered.png');
+    assertNoFatal(ev);
+  });
+
   test('7b. SidebarKpiBar present; System Health surface restored; observability is footer-only', async ({ page }) => {
     test.skip(!isBackendRequired(), 'BLOCKED(APEX-1207): requires live Supabase session');
     const ev = attachEvidence(page);

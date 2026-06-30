@@ -41,13 +41,21 @@ footer-only** — the M-03 toggle/panels are removed from the main canvas;
 `FooterObservabilityRow` renders inside the static `.omni-footer-bar`, fixed,
 clipped (`overflow:hidden`), immovable (never a `DraggableWidget`), fed by real
 shell state (health, events, Guardian loops, open incidents, sync/mode). Left and
-right rails share one width token (`--omni-rail-width`); the KPI/status block is a
-full-rail-width sibling. OmniSlate prompt input/submit must stay visible, focusable,
-and uncompressed. `tailwind.config.ts` content **must** scan
+right rails share one width token (`--omni-rail-width`) **and** one horizontal-inset
+token (`--omni-rail-pad-x`), and `.omni-sidebar-footer` adds no horizontal padding,
+so `SidebarKpiBar` (left) and `SystemHealthRow` (right) have **exactly equal inner
+content width** (rail − 2·`--omni-rail-pad-x`) at every breakpoint. The **footer is
+viewport-fixed**: the shell root is a clipped `100dvh` flex column and
+`.omni-footer-bar` is `flexShrink:0`, so the footer is pinned to the viewport bottom
+and never moves on canvas scroll. OmniSlate prompt input/submit must stay visible,
+focusable, and uncompressed. `tailwind.config.ts` content **must** scan
 `apps/omnihub-site/dashboard/**` so dashboard tile/glass utilities are generated
 (else OmniMedia/right rail collapse to plain text). Wallpaper grid + wordmark
 `position:fixed` (wordmark is a non-interactive `pointerEvents:none` background
-below content); language switcher in the header. OmniMedia `kind ∈
+below content); a decorative `aria-hidden` brand logo
+(`data-testid="omnidash-canvas-logo"`) renders **in-flow directly below the App
+Gallery** (never a `DraggableWidget`, never obstructs other surfaces); language
+switcher in the header. OmniMedia `kind ∈
 {video,audio,image}`, Files-fed, with **server-side** upload caps (5/24h, 25 MB
 total). Breaking any invariant fails CI — fix the change, not the guard.
 

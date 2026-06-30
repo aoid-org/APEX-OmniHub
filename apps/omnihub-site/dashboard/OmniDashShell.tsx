@@ -334,7 +334,10 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
       display:"flex", flexDirection:"column",
-      padding:"10px 10px 0",
+      // Horizontal inset is the shared rail token so the System KPIs block (left)
+      // and the System Health/status block (right rail) get EXACTLY equal inner
+      // content width at every breakpoint (owner P1 KPI/status width parity).
+      padding:"10px var(--omni-rail-pad-x) 0",
       gap:3,
       overflowY:"auto",
     }}>
@@ -347,8 +350,11 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
         />
       ))}
 
-      {/* Status Footer — System KPIs clipped to the footer block */}
-      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"12px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+      {/* Status Footer — System KPIs clipped to the footer block. Horizontal
+          padding is 0 so SidebarKpiBar spans the sidebar's inner content box
+          (rail − 2·--omni-rail-pad-x), giving it EXACT inner-width parity with
+          the right-rail SystemHealthRow status block (owner P1). */}
+      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"12px 0 20px", borderTop:`1px solid ${T.border}` }}>
         <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
@@ -1476,7 +1482,7 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px 12px',
+              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x)',
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
@@ -1532,6 +1538,24 @@ export default function OmniDashShell() {
             {/* App Gallery row — display-only, four horizontal Awaiting slots */}
             {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsGalleryWidget /></DraggableWidget>}
 
+            {/* APEX-OmniHub brand mark — sits in the content flow directly BELOW
+                the App Gallery (owner P1). In-flow + non-interactive, so it never
+                obstructs the gallery, rails, OmniSlate, footer, or drawers
+                (registry Canonical Layout Law). Decorative (header carries the
+                labelled product logo), so it is aria-hidden. */}
+            <div
+              data-testid="omnidash-canvas-logo"
+              aria-hidden="true"
+              style={{ display:"flex", justifyContent:"center", padding:"4px 0 10px", flexShrink:0 }}
+            >
+              <img
+                src={IMG_WORDMARK}
+                alt=""
+                draggable={false}
+                style={{ height:34, width:"auto", maxWidth:"60%", objectFit:"contain", opacity:0.85, pointerEvents:"none", userSelect:"none" }}
+              />
+            </div>
+
             {/* Observability is no longer rendered in the main canvas (owner P1
                 contract). It is footer-only — see FooterObservabilityRow in the
                 static footer bar below. System Health remains a real surface in
@@ -1548,7 +1572,7 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px 12px',
+              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x)',
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >

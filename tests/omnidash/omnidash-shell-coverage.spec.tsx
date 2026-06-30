@@ -203,6 +203,37 @@ describe('OmniDashShell', () => {
     expect(screen.getByTestId('footer-observability')).toBeTruthy();
   });
 
+  // Owner P1 follow-up: brand logo sits in the content flow directly BELOW the
+  // App Gallery. DOM order == flow order, so the logo must follow the gallery.
+  it('renders the brand logo in the content flow below the App Gallery', () => {
+    render(<OmniDashShell />);
+    const gallery = screen.getByTestId('widget_apps');
+    const logo = screen.getByTestId('omnidash-canvas-logo');
+    expect(logo).toBeTruthy();
+    // Decorative (header carries the labelled product logo).
+    expect(logo.getAttribute('aria-hidden')).toBe('true');
+    // eslint-disable-next-line no-bitwise
+    expect(gallery.compareDocumentPosition(logo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // Owner P1 follow-up: footer is truly viewport-fixed — the shell root is a
+  // clipped, full-viewport-height flex column and the footer never compresses,
+  // so it stays pinned to the bottom of the viewport.
+  it('pins the footer: shell root is a clipped 100dvh flex column', () => {
+    const { container } = render(<OmniDashShell />);
+    const root = container.firstChild as HTMLElement;
+    expect(root.style.height).toBe('100dvh');
+    expect(root.style.flexDirection).toBe('column');
+    expect(root.style.overflow).toBe('hidden');
+  });
+
+  it('footer bar never compresses (flexShrink:0)', () => {
+    const { container } = render(<OmniDashShell />);
+    const footer = container.querySelector('.omni-footer-bar') as HTMLElement;
+    expect(footer).toBeTruthy();
+    expect(footer.style.flexShrink).toBe('0');
+  });
+
   it('renders mobile drawer button when not on desktop', () => {
     vi.mocked(useViewport).mockReturnValueOnce({
       isMobile: true, isTablet: false, isDesktop: false, width: 375,

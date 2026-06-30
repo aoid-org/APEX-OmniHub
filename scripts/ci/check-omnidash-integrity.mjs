@@ -93,6 +93,43 @@ if (existsSync(SHELL)) {
   check('OmniSlate prompt input test id present',
     /data-testid="omnislate-prompt-input"/.test(src),
     'OmniSlate prompt input (data-testid="omnislate-prompt-input") must remain');
+
+  // ── Owner P1 follow-up invariants (logo placement, width parity, footer-fixed) ─
+  // 6) Brand logo sits in the canvas content flow BELOW the App Gallery. Source
+  //    order == flow order, so the canvas logo must appear after the App Gallery
+  //    render. It must not be a DraggableWidget (in-flow, non-interactive).
+  const galleryIdx = src.indexOf('id="widget_apps"');
+  const canvasLogoIdx = src.indexOf('data-testid="omnidash-canvas-logo"');
+  check('canvas brand logo present and rendered below the App Gallery',
+    canvasLogoIdx !== -1 && galleryIdx !== -1 && canvasLogoIdx > galleryIdx,
+    'add the canvas brand logo (data-testid="omnidash-canvas-logo") in the content flow AFTER the App Gallery');
+  check('canvas brand logo is in-flow, not a DraggableWidget',
+    !/<DraggableWidget[^>]*>\s*<div[^>]*data-testid="omnidash-canvas-logo"/.test(src),
+    'canvas brand logo must be an in-flow element, never wrapped in a DraggableWidget');
+
+  // 7) KPI/status EXACT inner-width parity: both rails inset their KPI/status
+  //    block by the shared --omni-rail-pad-x token, and the sidebar footer adds
+  //    no extra horizontal padding — so SidebarKpiBar and SystemHealthRow share
+  //    one inner content width (rail − 2·pad-x) at every breakpoint.
+  check('left rail insets by the shared --omni-rail-pad-x token',
+    /padding:\s*["']10px var\(--omni-rail-pad-x\) 0["']/.test(src),
+    'left sidebar horizontal padding must read var(--omni-rail-pad-x)');
+  check('right rail insets by the shared --omni-rail-pad-x token',
+    /padding:\s*["']14px var\(--omni-rail-pad-x\)["']/.test(src),
+    'right panel horizontal padding must read var(--omni-rail-pad-x)');
+  check('sidebar footer adds no horizontal padding (System KPIs spans rail inner box)',
+    /omni-sidebar-footer[\s\S]{0,140}padding:\s*["']12px 0 20px["']/.test(src),
+    'omni-sidebar-footer horizontal padding must be 0 so SidebarKpiBar matches SystemHealthRow width');
+
+  // 8) Footer is truly viewport-fixed: the shell root is a full-viewport-height
+  //    flex column that clips, and the footer bar never compresses (flexShrink:0)
+  //    — so it is permanently pinned to the bottom of the viewport.
+  check('shell root is a clipped full-viewport-height flex column',
+    /height:\s*["']100dvh["']/.test(src) && /flexDirection:\s*["']column["']/.test(src) && /overflow:\s*["']hidden["']/.test(src),
+    'shell root must set height:"100dvh", flexDirection:"column", overflow:"hidden" to pin the footer');
+  check('footer bar never compresses (flexShrink:0) — pinned to viewport bottom',
+    /className="omni-footer-bar"[\s\S]{0,160}flexShrink:\s*0/.test(src),
+    '.omni-footer-bar must set flexShrink:0 so it stays pinned at the viewport bottom');
 }
 
 // ── Rail-width parity: left and right rails MUST share one width token ───────
@@ -102,6 +139,10 @@ if (existsSync(SKIN)) {
   check('left/right rails share a single width token (--omni-rail-width)',
     /\.omni-sidebar\s*,\s*\.omni-right-panel\s*\{[^}]*var\(--omni-rail-width/.test(css),
     '.omni-sidebar and .omni-right-panel must both read width: var(--omni-rail-width)');
+  // Shared horizontal inset token backs the KPI/status width parity above.
+  check('shared rail horizontal-inset token defined (--omni-rail-pad-x)',
+    /--omni-rail-pad-x\s*:/.test(css),
+    'define --omni-rail-pad-x in omniSkin.css so both rails inset their KPI/status block equally');
 }
 
 // ── Glass/tile integrity: dashboard Tailwind utilities MUST be generated ─────

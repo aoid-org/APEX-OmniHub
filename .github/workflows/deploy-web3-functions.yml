@@ -35,10 +35,18 @@ jobs:
         # The migration was renamed from 20260109 to 20260109120000 to avoid version collision
         # Fix: 20260226000001 exists in remote schema_migrations but db push re-attempts INSERT
         # (duplicate key). Revert clears the stale entry; db push re-inserts cleanly via empty file.
+        # Fix (OmniMedia): 20260628005132 / 20260629010526 were applied to remote under dev-time
+        # timestamps, then committed under the canonical names 20260628000000_omnimedia_pipeline.sql
+        # and 20260629120000_omnimedia_images_and_caps.sql. The stale remote rows have no local
+        # files, so `db push --include-all` aborts ("remote migration versions not found in local
+        # migrations directory"). Reverting clears the stale bookkeeping; the canonical files are
+        # additive + idempotent ("safe to run multiple times"), so db push re-applies them cleanly.
         run: |
           supabase migration repair --status reverted 20260109 || echo "Migration 20260109 already handled or does not exist"
           supabase migration repair --status reverted 20260226000001 || echo "Migration 20260226000001 already handled or does not exist"
           supabase migration repair --status reverted 20260623074530 || echo "Migration 20260623074530 already handled or does not exist"
+          supabase migration repair --status reverted 20260628005132 || echo "Migration 20260628005132 already handled or does not exist"
+          supabase migration repair --status reverted 20260629010526 || echo "Migration 20260629010526 already handled or does not exist"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
