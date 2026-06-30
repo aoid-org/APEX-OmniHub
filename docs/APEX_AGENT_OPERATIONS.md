@@ -54,6 +54,9 @@ Gateway poll reads terminal row → SSE completed/failed → UI renders reply
 | Edge `apex-agent` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy` |
 | Edge `omnilink-port` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi` |
 | Edge `create-billing-portal` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi` |
+| Edge `create-checkout` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy create-checkout --project-ref rtopreovkywofgwgmozi` |
+| Edge `generate-business-skills` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy generate-business-skills --project-ref rtopreovkywofgwgmozi` |
+| Edge `activate-client` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy activate-client --project-ref rtopreovkywofgwgmozi` |
 | Edge `identity-webauthn` | Supabase | project `rtopreovkywofgwgmozi` | — (Deno) | `supabase functions deploy identity-webauthn --project-ref rtopreovkywofgwgmozi` |
 | Orchestrator **API** | Render Web Service | `apex-orchestrator-api` · `srv-d8qpsi7avr4c73dmb4ig` · `https://apex-orchestrator-api.onrender.com` | `python main.py api` | `main` (auto-deploy) |
 | Orchestrator **Worker** | Render Background Worker | `apex-orchestrator-worker` | `python main.py worker` | `main` (auto-deploy) |
@@ -1117,3 +1120,64 @@ tests under `tests/omnidash/` and `tests/e2e-playwright/`.
 
 **No service/schema change** — pure shell layout, CSS-token, and build-config repair
 (no migration/RFC required).
+
+---
+
+## 9.19 OmniBoard + Billing widget recovery — edge JWT auth + deploy-gap closure (2026-06-30)
+
+**Billing 401 root cause (FIXED).** `create-billing-portal`, `create-checkout`,
+`generate-business-skills`, and `activate-client` validated the caller with a
+no-argument `supabase.auth.getUser()` on **supabase-js 2.39.x**. That form does
+not validate the request's `Authorization` header, so legitimately-issued user
+JWTs were rejected with `401 UNAUTHORIZED "Invalid authentication token"`. All
+four now pass the bearer token explicitly: `auth.getUser(token)` (token parsed
+from the `Authorization` header). Verified live against project
+`rtopreovkywofgwgmozi`: `create-billing-portal` (v2) now returns
+`404 BILLING_CUSTOMER_NOT_FOUND` with a valid JWT for an account with no
+`stripe_customer_id`, instead of the spurious 401. `omnilink-port` continues to
+authenticate the same token correctly because its `_shared/supabaseClient.ts`
+is on supabase-js 2.58.0.
+
+**OmniBoard (no code change required).** `omnilink-port/omniboard-start` is
+deployed (v32) and healthy; with a valid JWT + allowed Origin it returns a typed
+`502 connect_unavailable` because the upstream orchestrator (`ORCHESTRATOR_URL`)
+is unreachable. `OmniBoardWizard` already maps any non-2xx to an honest
+"integration gateway is unavailable" message. Remaining action is **owner-gated
+infra**: orchestrator availability / `ORCHESTRATOR_URL`.
+
+**Deploy-automation gap (root cause of production 404s, FIXED).**
+`create-checkout`, `generate-business-skills`, `activate-client`, and
+`identity-webauthn` are invoked by the frontend but were never in deploy
+automation (all returned platform `404 NOT_FOUND`). They are now deployed by
+`.github/workflows/deploy-production-cf-direct.yml` and have pinned
+`verify_jwt` in `supabase/config.toml`:
+`generate-business-skills = false` (its public OnboardingWizard path runs
+pre-auth; the Skill Forge path self-authenticates); `create-checkout`,
+`activate-client`, `identity-webauthn` = `true`. `omnilink-port` (already in the
+workflow) carries the OmniMedia routes, so a gated redeploy also clears the
+`omnimedia-*` 404s.
+
+**Frontend (`BillingModule.tsx`).** Gates the invoke on a confirmed
+`supabase.auth.getSession()` token; parses the typed edge error envelope from
+`FunctionsHttpError.context` and branches on the real code
+(`UNAUTHORIZED` → "Sign in to manage billing"; `BILLING_CUSTOMER_NOT_FOUND` →
+honest setup path that drives `create-checkout` and redirects only to a
+validated `https://checkout.stripe.com` URL; `BILLING_PORTAL_*` → temporary
+unavailable). Portal redirects stay limited to validated
+`https://billing.stripe.com` URLs. No raw "non-2xx status code" string is ever
+shown; no subscription state is faked.
+
+**Files:** `supabase/functions/create-billing-portal/index.ts`,
+`supabase/functions/create-checkout/index.ts`,
+`supabase/functions/generate-business-skills/index.ts`,
+`supabase/functions/activate-client/index.ts`, `supabase/config.toml`,
+`.github/workflows/deploy-production-cf-direct.yml`,
+`apps/omnihub-site/dashboard/components/modules/BillingModule.tsx`,
+`tests/omnidash/automation-billing-production-actions.spec.tsx`,
+`tests/runtime-production-hardening.spec.ts`.
+
+**Owner-gated follow-ups:** (1) run the gated production deploy workflow to
+publish `create-checkout`, `generate-business-skills`, `activate-client`,
+`identity-webauthn` and redeploy `omnilink-port` (clears `omnimedia-*` 404s);
+(2) restore orchestrator availability / `ORCHESTRATOR_URL` so OmniBoard
+`omniboard-start` returns 200 sessions instead of 502.
