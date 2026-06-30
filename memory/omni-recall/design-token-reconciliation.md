@@ -109,3 +109,12 @@ The dual-`T`-definition and invalid-CSS hazards are resolved via a 4-layer engin
 - `designSystem.tsx`'s `StatusDot`/`GlassCard`/`SectionLabel` dead-code exports — flagged,
   not removed (contract instructed leaving these untouched).
 - Layer 4 (Surface Snapshot Registry) — future contract.
+
+## Update — OSE governance drift follow-up (2026-06-30)
+
+- `apps/omnihub-site/src/styles/omnidash-layout.css` now keeps the default
+  runtime rail variables (`--omni-rail-width`, `--omni-rail-pad-x`) inside the
+  existing top-level token `:root` block and uses `.omnidash-shell` for responsive
+  rail-width overrides. This preserves runtime inheritance while eliminating the
+  duplicate top-level `:root` selector code smell reported against the former
+  owner-P1 rail-parity block.
