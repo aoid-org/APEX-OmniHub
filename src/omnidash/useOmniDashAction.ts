@@ -35,10 +35,10 @@
  */
 
 import { useCallback } from 'react';
-import { useOmniModal } from '@/stores/omniModalStore';
-import type { OmniModalConfig, ModalType, RenderMode } from '@/stores/omniModalStore';
-import { useOmniBoard } from '@/stores/omniBoardStore';
-import type { OmniBoardConnectorRecord } from '@/stores/omniBoardStore';
+import { useOmniModal } from '@omnihub/stores/omniModalStore';
+import type { OmniModalConfig, ModalType, RenderMode } from '@omnihub/stores/omniModalStore';
+import { useOmniBoard } from '@omnihub/stores/omniBoardStore';
+import type { OmniBoardConnectorRecord } from '@omnihub/stores/omniBoardStore';
 import { supabase } from '../integrations/supabase/client';
 import type { AppRegistryCategory } from '../../packages/core/src/registry';
 
