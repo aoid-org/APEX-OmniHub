@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { omniRgba } from '../omniSkinTokens';
 import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
 
 interface MetricCardProps {
@@ -40,7 +41,32 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   const healthIsGreen = demoMode || systemHealth === 'healthy';
 
   return (
-    <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12 }}>
+    // Wrapped in the same card tile as the left-sidebar System KPIs widget
+    // (SidebarKpiBar) for left/right-rail uniformity (owner request). No explicit
+    // width — the rail's flex column stretches it to full rail width like its
+    // siblings (OmniSentry / Ops Controls / OmniMedia).
+    <div
+      style={{
+        borderRadius: 11,
+        // Uniform rail/sidebar glassmorph tile — same orange border, fill opacity,
+        // and blur as OmniTrace / OmniSentry / Ops Controls / OmniMedia (owner request).
+        border: `1px solid ${omniRgba('orange', 0.25)}`,
+        background: omniRgba('orange', 0.06),
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '6px 10px',
+          color: 'var(--od-text-tertiary)', fontSize: 10, fontWeight: 700,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+        }}
+      >
+        System Status
+      </div>
+    <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
       {/* Row 1 — Events + Health */}
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard
@@ -67,6 +93,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
           valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>
+    </div>
     </div>
   );
 });

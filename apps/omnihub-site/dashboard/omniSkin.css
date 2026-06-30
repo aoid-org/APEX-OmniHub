@@ -124,7 +124,6 @@ input { font-family:'Space Grotesk',sans-serif; }
   min-height: 72px;
   background: var(--omni-surface);
   border: 1px dashed var(--omni-border);
-  opacity: 0.6;
   cursor: default;
 }
 

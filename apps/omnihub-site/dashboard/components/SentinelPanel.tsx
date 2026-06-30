@@ -40,6 +40,18 @@ export const SentinelPanel = memo(function SentinelPanel() {
   } = useDemoMode();
 
   return (
+    <div
+      style={{
+        borderRadius: 10,
+        // Orange rail-card border — right-rail uniformity with OmniSentry/OmniMedia (owner request).
+        border: '1px solid rgba(249,115,22,0.25)',
+        // Uniform rail/sidebar glassmorph tile fill opacity (owner request).
+        background: 'rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        padding: '10px 12px',
+      }}
+    >
     <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 16 }}>
       <div className="sentinel-section-title">Ops Controls</div>
 
@@ -67,6 +79,7 @@ export const SentinelPanel = memo(function SentinelPanel() {
         onToggle={() => setGuardianMode(!guardianMode)}
         ariaLabel="Toggle guardian mode"
       />
+    </div>
     </div>
   );
 });

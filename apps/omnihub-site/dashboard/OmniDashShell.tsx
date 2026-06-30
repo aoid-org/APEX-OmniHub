@@ -1270,7 +1270,7 @@ const EcosystemWidget = () => {
 
   return (
   <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
-    <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
+    <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center" }}>
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
     <div style={{ padding:"14px", flex:1 }}>
@@ -1490,7 +1490,7 @@ export default function OmniDashShell() {
             }}
           >
 
-            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
@@ -1552,10 +1552,10 @@ export default function OmniDashShell() {
               style={{ display:"flex", justifyContent:"center", padding:"4px 0 10px", flexShrink:0 }}
             >
               <img
-                src={IMG_WORDMARK}
+                src={IMG_APEX_WM}
                 alt=""
                 draggable={false}
-                style={{ height:34, width:"auto", maxWidth:"60%", objectFit:"contain", opacity:0.85, pointerEvents:"none", userSelect:"none" }}
+                style={{ height:92, width:"auto", maxWidth:"55%", objectFit:"contain", opacity:0.16, pointerEvents:"none", userSelect:"none" }}
               />
             </div>
 
@@ -1580,7 +1580,7 @@ export default function OmniDashShell() {
             }}
           >
 
-            <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+            <div data-testid="rt_trace"><OmniTraceFeed /></div>
             <OmniSentryWidget />
             <SentinelPanel />
             <OmniMediaLaunchWidget />
@@ -1672,7 +1672,7 @@ export default function OmniDashShell() {
           {drawerView === 'insights' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
   
-              <div data-testid="rt_trace" style={{ maxHeight: 220, overflowY: 'auto' }}><OmniTraceFeed /></div>
+              <div data-testid="rt_trace"><OmniTraceFeed /></div>
               <OmniSentryWidget />
               <SentinelPanel />
               <OmniMediaLaunchWidget />

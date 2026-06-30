@@ -9,7 +9,7 @@ status: verified
 **Version:** 1.8.2
 **Last Updated:** 2026-06-25
 
-**Latest verified branch/head:** `main` @ `4c0d481` (`chore(cert): Production Hardening Sprint & Codebase Determinism`, #1488). Active dev branch: `claude/kind-feynman-h5gcbs` @ `6074e0c` (fix(ci): integration-harness playwright install hang resolved). Release line `1.8.2` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing). See `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` for the current authoritative snapshot.
+**Latest verified branch/head:** `main` @ `4c0d481` (`chore(cert): Production Hardening Sprint & Codebase Determinism`, #1488). Active dev branch (2026-06-30): `claude/omnidash-surface-alignment-fsrs31` (PR #1529, OmniDash surface fix pass — RELEASE-READY, version bumped `1.8.2`→`1.8.3`). Release line `1.8.3` — releases are cut **manually by the owner** (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing). Current authoritative OmniDash-surface snapshot: `memory/omni-recall/omnidash-surface-1.8.3-baseline-2026-06-30.md`. (Prior platform snapshot: `docs/CURRENT_PLATFORM_STATE_2026_06_25.md`; `main` head facts above are last-known — verify with `git log` in a multi-agent repo.)
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements

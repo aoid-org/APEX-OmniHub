@@ -150,6 +150,37 @@ Runtime shield: `tests/e2e-playwright/omnidash-real-user.spec.ts`. Do **not** re
   renders **in the content flow directly below the App Gallery** — in-flow and
   non-interactive (`pointerEvents:none`, never a `DraggableWidget`), so it never
   obstructs the App Gallery, rails, OmniSlate, footer, or mobile drawers.
+  **Asset (locked, PR #1529):** this mark uses `IMG_APEX_WM`
+  (`src/assets/omnidash/apex_omnihub_wordmark.png` — the APEX-OmniHub wordmark),
+  the **same** asset as the full-canvas watermark. It is **not** `IMG_WORDMARK`
+  (`omnidash-logo.png`, the OmniDash hexagon), which is reserved for the labelled
+  **header** product logo (`data-testid="top-header-logo"`). Do not swap them.
+- **Glass translucency / no grid bleed (PR #1529):** primary widget cards
+  (`GlassCard`, `dashboard/components/designComponents.tsx`) use
+  `backdrop-filter: blur(20px) saturate(150%)` (+ `WebkitBackdropFilter`) over the
+  **translucent** `--omni-card` / `--omni-card-hover` theme tokens (`theme.css`:
+  light `rgba(255,255,255,0.80)`/`(241,245,249,0.84)`, dark
+  `rgba(14,22,40,0.78)`/`(17,29,51,0.82)`). App Gallery "Awaiting" tiles
+  (`.ose-integrated-apps-slot`, `omniSkin.css`) carry **no element-level
+  `opacity`** — the muted/awaiting feel comes from the dashed border + tertiary
+  label only, so the blueprint grid never bleeds through a tile. Keep card alpha
+  in 0.72–0.88; never opaque (blur needs a translucent surface).
+- **Right-rail card uniformity (PR #1529):** the three right-rail widgets —
+  `OmniSentryWidget`, **Ops Controls (`SentinelPanel`)**, and
+  `OmniMediaLaunchWidget` — share the same glass card chrome
+  (`borderRadius:10`, `1px` hairline border, low-alpha fill,
+  `backdrop-filter: blur(16px) saturate(140%)`). `SentinelPanel` is wrapped in
+  that outer card (its inner `data-testid="rt_ops"` section and `OpsToggle`
+  children are unchanged); it must **not** set an explicit width — the rail
+  column stretches it to match its siblings.
+- **Magnetic widget alignment (PR #1529):** canvas `DraggableWidget`s gain an
+  **additive** magnetic-snap layer — `resolveAlignment()` (`lib/widgetLayout.ts`,
+  pure, per-axis edge/center snap within `ALIGN_THRESHOLD_PX = 10`) runs in
+  `handlePointerUp` **before** `resolveCollisions`, so collision-avoidance keeps
+  final say and a snap can never overlap a neighbor. A live orange guide line
+  (`rgba(249,115,22,0.45)`, reused singleton overlay) shows during drag and hides
+  on release. The long-press state machine, pointer-capture, `resolveCollisions`,
+  `persistPosition`, `SNAP_GRID`, and flick-to-set logic are **unchanged**.
 - **Language switcher:** surfaced in the OmniDash header (`.omni-header-lang`).
 
 ---
@@ -546,5 +577,15 @@ Source: `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts`
 ---
 
 *Last generated: 2026-06-28 from live codebase inspection.*  
+*Updated 2026-06-30 → release `1.8.3` (PR #1529 — OmniDash surface fix pass): canvas-logo asset*
+*locked + enlarged/faded (`height:92, opacity:0.16`); glass-translucency / no-grid-bleed contract*
+*(`--omni-card` tokens +20% translucent: light 0.96, dark 0.936); ALL rail + sidebar glassmorph*
+*tiles unified — OmniTrace, OmniSentry, Ops Controls, OmniMedia, System Status (newly wrapped), and*
+*sidebar System KPIs share one orange border `rgba(249,115,22,0.25)` + one fill opacity `0.06` + blur;*
+*additive magnetic widget alignment (`resolveAlignment` before `resolveCollisions`). OmniMedia*
+*VALIDATED_FUNCTIONING — player proven; production backend confirmed (omnilink-port deployed,*
+*`omnimedia_assets` RLS + 4 policies, catalog empty pending owner upload).*
+*Frozen baseline + reproduction: `memory/omni-recall/omnidash-surface-1.8.3-baseline-2026-06-30.md`.*
+*Evidence: `docs/audits/omnidash-surface-alignment-glass-2026-06-30.md`.*  
 *Update this file whenever surface ownership, module keys, paths, or DB tables change.*  
 *Canonical source files: `AGENTS.md`, `apps/omnihub-site/src/App.tsx`, `dashboard/contracts/omniSurfaceOwnership.ts`, `src/contracts/omnidash-sidebar-widgets.ts`, `dashboard/components/ModuleRenderer.tsx`*

@@ -17,7 +17,8 @@ export const GlassCard = ({ children, style={}, glow = true, onClick }: GlassCar
     boxShadow: glow
       ? `var(--omni-card-drop-shadow)`
       : `0 4px 24px rgba(0,0,0,.4)`,
-    backdropFilter: "blur(12px)",
+    backdropFilter: "blur(20px) saturate(150%)",
+    WebkitBackdropFilter: "blur(20px) saturate(150%)",
     transition: "all .2s ease",
     ...style,
   };
