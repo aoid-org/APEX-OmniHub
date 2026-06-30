@@ -105,14 +105,12 @@ function ReplayPanel({ logs, onClose }: ReplayPanelProps) {
       data-testid="replay-panel"
       style={{
         marginTop: 10,
-        borderRadius: 10,
-        // Glassmorph rail tile — uniform orange border + bumped opacity + blur,
-        // matching OmniSentry / Ops Controls / OmniMedia (owner request).
-        border: '1px solid rgba(249,115,22,0.25)',
-        background: 'rgba(249,115,22,0.06)',
-        backdropFilter: 'blur(16px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-        padding: '10px 12px',
+        borderRadius: 9,
+        // Subtle inner replay sub-panel (the OmniTrace tile chrome lives on the
+        // feed root below). Nested, so it stays lighter than the outer tile.
+        border: '1px solid rgba(249,115,22,0.22)',
+        background: 'rgba(249,115,22,0.05)',
+        padding: '10px 10px 12px',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -336,7 +334,21 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
   }
 
   return (
-    <div data-testid="omni-trace-feed" className="sentinel-section" style={{ paddingBottom: 8 }}>
+    <div
+      data-testid="omni-trace-feed"
+      className="sentinel-section"
+      style={{
+        // Unified glassmorph rail tile — same orange border, fill opacity, and
+        // blur as OmniSentry / Ops Controls / OmniMedia / System Status (owner
+        // request). Overrides the bare sentinel-section padding + border-bottom.
+        borderRadius: 10,
+        border: '1px solid rgba(249,115,22,0.25)',
+        background: 'rgba(249,115,22,0.06)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        padding: '10px 12px',
+      }}
+    >
       <div className="sentinel-section-title" style={{ marginBottom: 8 }}>
         OmniTrace{' '}
         <span style={{
@@ -355,7 +367,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 190, overflowY: 'auto' }}>
         {displayLogs.map(log => (
           <div key={log.id} className="sentinel-trace-item">
             <div style={{
