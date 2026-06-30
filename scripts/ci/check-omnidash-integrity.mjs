@@ -167,6 +167,19 @@ if (existsSync(TAILWIND)) {
     /apps\/omnihub-site\/dashboard\/\*\*/.test(tw),
     'add "./apps/omnihub-site/dashboard/**/*.{ts,tsx}" to tailwind.config.ts content globs');
 }
+
+// ── Footer data honesty (reviewer item 4) ───────────────────────────────────
+// The footer observability strip must show only genuine system/observability
+// signals. FlowBills business KPIs (flowbills_demos / flowbills_paid_accounts)
+// must NOT be mislabelled as telemetry ("Events"/"Loops").
+const FOOTER = resolve(ROOT, 'apps/omnihub-site/dashboard/components/FooterObservabilityRow.tsx');
+check('FooterObservabilityRow exists', existsSync(FOOTER));
+if (existsSync(FOOTER)) {
+  const f = readFileSync(FOOTER, 'utf8');
+  check('footer shows no FlowBills business KPI as telemetry (honest data)',
+    !/label="Events"/.test(f) && !/label="Loops"/.test(f) && !/flowbills_/.test(f),
+    'footer must not render flowbills_* as "Events"/"Loops" — use real signals only');
+}
 console.log(`\n  ${passed} passed, ${failed} failed\n`);
 if (failed > 0) { console.error('[APEX OmniDash] INTEGRITY FAILURE\n'); process.exit(1); }
 console.log('[APEX OmniDash] All invariants satisfied.\n');
