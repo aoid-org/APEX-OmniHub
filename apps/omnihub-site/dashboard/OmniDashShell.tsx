@@ -337,7 +337,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
       // Horizontal inset is the shared rail token so the System KPIs block (left)
       // and the System Health/status block (right rail) get EXACTLY equal inner
       // content width at every breakpoint (owner P1 KPI/status width parity).
-      padding:"10px var(--omni-rail-pad-x) 0",
+      padding:"10px var(--omni-rail-pad-x, 12px) 0",
       gap:3,
       overflowY:"auto",
     }}>
@@ -1482,7 +1482,7 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x)',
+              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x, 12px)',
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
@@ -1572,7 +1572,7 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x)',
+              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x, 12px)',
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >

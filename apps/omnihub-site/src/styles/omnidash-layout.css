@@ -2225,3 +2225,40 @@
   box-shadow: 0 0 16px rgba(168, 85, 247, 0.12);
   transform: translateY(-1px);
 }
+
+/* ─── Rail width + KPI/status width parity (owner P1) ───────────────────────
+ * AUTHORITATIVE, RUNTIME-LOADED home for the flanking-rail layout tokens.
+ * These rules previously lived only in dashboard/omniSkin.css, which is imported
+ * by apps/omnihub-site/src/main.tsx — NOT by the production entry (root
+ * src/main.tsx, per index.html). As a result the rail-width rule and
+ * --omni-rail-pad-x never reached the bundle: the rails fell back to
+ * content-sizing (unequal) and the inline var(--omni-rail-pad-x) paddings
+ * collapsed to 0. This file IS imported by the root entry, so the rules apply.
+ *
+ * Both rails read one width token AND one horizontal-inset token, and the left
+ * .omni-sidebar-footer adds no horizontal padding, so SidebarKpiBar (left) and
+ * SystemHealthRow (right) have EXACTLY equal inner content width
+ * (rail − 2·--omni-rail-pad-x) at every breakpoint. */
+:root { --omni-rail-pad-x: 12px; }
+
+.omni-sidebar,
+.omni-right-panel { width: var(--omni-rail-width, 300px); flex-shrink: 0; }
+
+/* Shell/canvas children must be allowed to shrink so the wider rails never force
+ * horizontal overflow on the center canvas. */
+.omni-shell-main,
+.omni-header-search,
+.omni-header-actions,
+.omni-canvas-container { min-width: 0; }
+
+/* Narrow desktop (1025–1365px): still isDesktop in JS, so both rails render —
+ * shrink them so the center canvas keeps usable width (prevents overflow). */
+@media (min-width: 1025px) and (max-width: 1365px) {
+  :root { --omni-rail-width: 240px; }
+}
+
+/* At/below the JS desktop threshold (<=1024px) the rails fold into the drawer;
+ * ensure no residual fixed rail width leaks in. */
+@media (max-width: 1024px) {
+  :root { --omni-rail-width: 100%; }
+}

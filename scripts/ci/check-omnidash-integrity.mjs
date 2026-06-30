@@ -112,11 +112,11 @@ if (existsSync(SHELL)) {
   //    no extra horizontal padding — so SidebarKpiBar and SystemHealthRow share
   //    one inner content width (rail − 2·pad-x) at every breakpoint.
   check('left rail insets by the shared --omni-rail-pad-x token',
-    /padding:\s*["']10px var\(--omni-rail-pad-x\) 0["']/.test(src),
-    'left sidebar horizontal padding must read var(--omni-rail-pad-x)');
+    /padding:\s*["']10px var\(--omni-rail-pad-x(?:,\s*12px)?\) 0["']/.test(src),
+    'left sidebar horizontal padding must read var(--omni-rail-pad-x, 12px)');
   check('right rail insets by the shared --omni-rail-pad-x token',
-    /padding:\s*["']14px var\(--omni-rail-pad-x\)["']/.test(src),
-    'right panel horizontal padding must read var(--omni-rail-pad-x)');
+    /padding:\s*["']14px var\(--omni-rail-pad-x(?:,\s*12px)?\)["']/.test(src),
+    'right panel horizontal padding must read var(--omni-rail-pad-x, 12px)');
   check('sidebar footer adds no horizontal padding (System KPIs spans rail inner box)',
     /omni-sidebar-footer[\s\S]{0,140}padding:\s*["']12px 0 20px["']/.test(src),
     'omni-sidebar-footer horizontal padding must be 0 so SidebarKpiBar matches SystemHealthRow width');
@@ -133,16 +133,27 @@ if (existsSync(SHELL)) {
 }
 
 // ── Rail-width parity: left and right rails MUST share one width token ───────
-check('omniSkin.css exists', existsSync(SKIN));
-if (existsSync(SKIN)) {
-  const css = readFileSync(SKIN, 'utf8');
-  check('left/right rails share a single width token (--omni-rail-width)',
+// CRITICAL: the rules must live in a stylesheet that the PRODUCTION entry
+// (root src/main.tsx, per index.html) actually imports. omniSkin.css is imported
+// only by the orphaned apps/omnihub-site/src/main.tsx, so its rules never reach
+// the bundle — the authoritative, runtime-loaded home is omnidash-layout.css.
+const LAYOUT_CSS = resolve(ROOT, 'apps/omnihub-site/src/styles/omnidash-layout.css');
+const ROOT_MAIN = resolve(ROOT, 'src/main.tsx');
+check('runtime-loaded layout stylesheet exists (omnidash-layout.css)', existsSync(LAYOUT_CSS));
+if (existsSync(LAYOUT_CSS)) {
+  const css = readFileSync(LAYOUT_CSS, 'utf8');
+  check('left/right rails share a single width token (--omni-rail-width) in the LOADED stylesheet',
     /\.omni-sidebar\s*,\s*\.omni-right-panel\s*\{[^}]*var\(--omni-rail-width/.test(css),
-    '.omni-sidebar and .omni-right-panel must both read width: var(--omni-rail-width)');
-  // Shared horizontal inset token backs the KPI/status width parity above.
-  check('shared rail horizontal-inset token defined (--omni-rail-pad-x)',
+    '.omni-sidebar and .omni-right-panel must read width: var(--omni-rail-width) in omnidash-layout.css (the loaded stylesheet)');
+  check('shared rail horizontal-inset token defined (--omni-rail-pad-x) in the LOADED stylesheet',
     /--omni-rail-pad-x\s*:/.test(css),
-    'define --omni-rail-pad-x in omniSkin.css so both rails inset their KPI/status block equally');
+    'define --omni-rail-pad-x in omnidash-layout.css so both rails inset their KPI/status block equally at runtime');
+}
+// And that stylesheet must actually be imported by the production root entry.
+if (existsSync(ROOT_MAIN)) {
+  check('omnidash-layout.css is imported by the production root entry (src/main.tsx)',
+    /omnidash-layout\.css/.test(readFileSync(ROOT_MAIN, 'utf8')),
+    'root src/main.tsx must import omnidash-layout.css so the rail-parity rules reach the production bundle');
 }
 
 // ── Glass/tile integrity: dashboard Tailwind utilities MUST be generated ─────
