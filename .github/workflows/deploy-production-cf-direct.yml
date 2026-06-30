@@ -162,6 +162,13 @@ jobs:
           set -euo pipefail
           supabase functions deploy omnilink-port --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy create-billing-portal --project-ref "$SUPABASE_PROJECT_REF"
+          # create-checkout and stripe-webhook were never wired into any deploy
+          # workflow — every subscriptions row in production has a null
+          # stripe_customer_id because no user has ever been able to complete a
+          # Stripe checkout or have it confirmed, regardless of auth fixes to
+          # create-billing-portal. Deploying them is required for Billing to work.
+          supabase functions deploy create-checkout --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy stripe-webhook --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Deploy to Cloudflare Pages (production)
         id: cf_deploy

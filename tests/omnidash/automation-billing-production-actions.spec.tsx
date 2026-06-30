@@ -1,15 +1,21 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
-const { mockInvoke, mockState } = vi.hoisted(() => ({
+const { mockInvoke, mockState, mockGetSession } = vi.hoisted(() => ({
   mockInvoke: vi.fn(),
   mockState: vi.fn(),
+  mockGetSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { functions: { invoke: mockInvoke } },
+  supabase: { functions: { invoke: mockInvoke }, auth: { getSession: mockGetSession } },
   hasSupabaseConfig: true,
 }));
+
+function mockFunctionsHttpError(status: number, body: { code: string; message: string }) {
+  const context = new Response(JSON.stringify({ ok: false, error: body }), { status });
+  return { data: null, error: { message: 'Edge Function returned a non-2xx status code', context } };
+}
 
 vi.mock('@/hooks/useOmniModuleState', () => ({
   useOmniModuleState: mockState,
@@ -36,6 +42,7 @@ function baseState(moduleKey: string) {
 describe('production module actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { origin: 'https://apexomnihub.icu', assign: vi.fn() },
@@ -107,5 +114,63 @@ describe('production module actions', () => {
 
     expect(await screen.findByText(/valid stripe url/i)).toBeInTheDocument();
     expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule shows a sign-in prompt with no live session and never calls invoke', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/sign in to manage billing/i)).toBeInTheDocument();
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule shows a sign-in prompt on a 401 response without leaking raw SDK text', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue(mockFunctionsHttpError(401, { code: 'UNAUTHORIZED', message: 'Invalid authentication token' }));
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/sign in to manage billing/i)).toBeInTheDocument();
+    expect(screen.queryByText(/non-2xx/i)).not.toBeInTheDocument();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule offers setup via the checkout flow on BILLING_CUSTOMER_NOT_FOUND', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'billing-portal', label: 'Billing Portal', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue(mockFunctionsHttpError(404, { code: 'BILLING_CUSTOMER_NOT_FOUND', message: 'No Stripe customer is linked to this account yet.' }));
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /billing portal/i }));
+
+    expect(await screen.findByText(/no stripe billing profile is linked/i)).toBeInTheDocument();
+    expect(window.location.assign).toHaveBeenCalledWith('/launch');
+  });
+
+  it('BillingModule never leaks the raw non-2xx SDK string for an opaque/unmapped failure', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue({ data: null, error: { message: 'Edge Function returned a non-2xx status code', context: undefined } });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/billing portal is unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/non-2xx/i)).not.toBeInTheDocument();
   });
 });

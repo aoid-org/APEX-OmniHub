@@ -27,6 +27,41 @@ function extractPortalUrl(data: unknown): string | null {
   return typeof url === 'string' && /^https:\/\/billing\.stripe\.com\//.test(url) ? url : null;
 }
 
+const SIGN_IN_MESSAGE = 'Sign in to manage billing.';
+const NO_CUSTOMER_MESSAGE = 'No Stripe billing profile is linked to this account yet. Opening plan setup…';
+const GENERIC_UNAVAILABLE_MESSAGE = 'Billing portal is unavailable. No billing page was opened.';
+
+/**
+ * create-billing-portal returns a typed { ok:false, error:{ code, message } } envelope.
+ * supabase-js surfaces non-2xx as a FunctionsHttpError whose .message is the opaque
+ * "Edge Function returned a non-2xx status code" — that string must never reach the UI,
+ * so every failure is classified from the response status/body into safe, honest copy.
+ */
+async function describeBillingError(
+  error: { context?: Response; message?: string } | null,
+): Promise<{ code: string | null; message: string }> {
+  const status = typeof error?.context?.status === 'number' ? error.context.status : undefined;
+  let bodyCode: string | undefined;
+  let bodyMessage: string | undefined;
+  if (error?.context && typeof error.context.json === 'function') {
+    try {
+      const body = (await error.context.clone().json()) as { error?: { code?: string; message?: string } };
+      bodyCode = body?.error?.code;
+      bodyMessage = body?.error?.message;
+    } catch {
+      // Non-JSON or already-consumed body — fall through to status-based classification.
+    }
+  }
+  if (status === 401 || bodyCode === 'UNAUTHORIZED') {
+    return { code: 'UNAUTHORIZED', message: SIGN_IN_MESSAGE };
+  }
+  if (status === 404 || bodyCode === 'BILLING_CUSTOMER_NOT_FOUND') {
+    return { code: 'BILLING_CUSTOMER_NOT_FOUND', message: NO_CUSTOMER_MESSAGE };
+  }
+  if (bodyMessage) return { code: bodyCode ?? null, message: bodyMessage };
+  return { code: bodyCode ?? null, message: GENERIC_UNAVAILABLE_MESSAGE };
+}
+
 export default function BillingModule({ onClose }: Props) {
   const state = useOmniModuleState('billing');
 
@@ -43,11 +78,22 @@ export default function BillingModule({ onClose }: Props) {
       return false;
     }
 
+    // Guard the invoke behind a confirmed session so an unauthenticated click never
+    // round-trips to the edge function only to render a raw 401.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      return SIGN_IN_MESSAGE;
+    }
+
     const { data, error } = await supabase.functions.invoke('create-billing-portal', {
       body: { returnUrl: window.location.origin },
     });
     if (error) {
-      return error.message || 'Billing portal is unavailable. No billing page was opened.';
+      const described = await describeBillingError(error as { context?: Response; message?: string });
+      if (described.code === 'BILLING_CUSTOMER_NOT_FOUND') {
+        window.location.assign('/launch');
+      }
+      return described.message;
     }
     const url = extractPortalUrl(data);
     if (!url) {
