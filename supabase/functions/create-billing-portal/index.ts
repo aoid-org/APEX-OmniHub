@@ -42,10 +42,16 @@ serve(async (req) => {
     return errResponse('UNAUTHORIZED', 'Missing authorization header', 401, origin);
   }
 
+  // Pass the JWT explicitly to getUser(token). On supabase-js 2.39.x a no-arg
+  // getUser() does NOT validate the global Authorization header (it reads the
+  // non-existent stored session and fails), so a valid user token was rejected
+  // as "Invalid authentication token". Passing the bearer token validates that
+  // exact JWT regardless of session/SDK version.
+  const token = authHeader.replace(/^Bearer\s+/i, '');
   const userClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
-  const { data: { user }, error: authError } = await userClient.auth.getUser();
+  const { data: { user }, error: authError } = await userClient.auth.getUser(token);
   if (authError || !user) {
     return errResponse('UNAUTHORIZED', 'Invalid authentication token', 401, origin);
   }

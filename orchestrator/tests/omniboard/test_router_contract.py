@@ -77,7 +77,7 @@ class TestFSMProgressionUserInput:
         ctx = _make_context(OmniBoardState.IDLE_LISTEN)
         session_id = ctx.session_id
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_mock(ctx)):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_mock(ctx)):
             resp = client.post(
                 f"/omniboard/{session_id}/next",
                 json={
@@ -152,7 +152,7 @@ class TestProviderNotFound:
         """Router returns 200 with honest message when provider is not found."""
         ctx = _make_context(OmniBoardState.APP_IDENTIFICATION)
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_mock(ctx)):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_mock(ctx)):
             resp = client.post(
                 f"/omniboard/{ctx.session_id}/next",
                 json={
@@ -183,7 +183,7 @@ class TestMissingConfig:
         """
         fake_session_id = str(uuid.uuid4())
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_not_found()):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_not_found()):
             resp = client.post(
                 f"/omniboard/{fake_session_id}/next",
                 json={"event_type": "USER_INPUT", "payload": {"user_input": "test"}},
@@ -194,7 +194,7 @@ class TestMissingConfig:
 
     def test_get_status_session_not_found(self):
         """GET /omniboard/{id} also returns 404 for missing session."""
-        with patch("omniboard.router.redis.from_url", return_value=_redis_not_found()):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_not_found()):
             resp = client.get(f"/omniboard/{uuid.uuid4()}")
         assert resp.status_code == 404
 
@@ -229,7 +229,7 @@ class TestVerificationFailure:
         ctx = _make_context(OmniBoardState.VERIFY_CONNECTION)
         ctx.provider_name = "Slack"
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_mock(ctx)):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_mock(ctx)):
             resp = client.post(
                 f"/omniboard/{ctx.session_id}/next",
                 json={
@@ -275,7 +275,7 @@ class TestSuccessfulCompletion:
         ctx.provider_hint = "GitHub"
         conn_id = f"conn_{uuid.uuid4()}"
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_mock(ctx)):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_mock(ctx)):
             resp = client.post(
                 f"/omniboard/{ctx.session_id}/next",
                 json={
@@ -310,7 +310,7 @@ class TestSuccessfulCompletion:
         """connection_spec must NOT appear before FSM reaches COMPLETION."""
         ctx = _make_context(OmniBoardState.IDLE_LISTEN)
 
-        with patch("omniboard.router.redis.from_url", return_value=_redis_mock(ctx)):
+        with patch("omniboard.router.get_omniboard_redis", return_value=_redis_mock(ctx)):
             resp = client.post(
                 f"/omniboard/{ctx.session_id}/next",
                 json={"event_type": "USER_INPUT", "payload": {"user_input": "Slack"}},
