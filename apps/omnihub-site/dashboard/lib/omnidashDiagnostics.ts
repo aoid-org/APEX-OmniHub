@@ -39,7 +39,7 @@ export function collectDiagnostics(overrides?: {
       breakpoint: bp,
     },
     deferrals: [
-      { ticket: 'APEX-1202', summary: 'k6 perf p99<800ms — SOFT/main-only' },
+      { ticket: 'APEX-1202', summary: 'Performance threshold deferred — SOFT/main-only' },
       { ticket: 'APEX-2011', summary: 'Links module sync — honest unavailable state' },
     ],
     media: {
