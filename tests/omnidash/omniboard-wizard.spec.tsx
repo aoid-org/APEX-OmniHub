@@ -154,6 +154,30 @@ describe('OmniBoardWizard', () => {
     );
   });
 
+
+
+  it('renders typed connect_unavailable as an honest OmniBoard gateway message', async () => {
+    const error = Object.assign(new Error('Edge Function returned a non-2xx status code'), {
+      context: new Response(JSON.stringify({ error: 'connect_unavailable', message: 'App connection is temporarily unavailable.', route: 'omniboard' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    });
+    mockInvoke.mockResolvedValue({ data: null, error });
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    expect(await screen.findByText(/App connection is temporarily unavailable/)).toBeTruthy();
+    expect(screen.queryByText(/Edge Function returned a non-2xx status code/i)).toBeNull();
+  });
+
+  it('does not leak opaque Supabase non-2xx transport text', async () => {
+    mockInvoke.mockResolvedValue({ data: null, error: new Error('Edge Function returned a non-2xx status code') });
+    render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);
+
+    expect(await screen.findByText(/integration gateway is unavailable right now/)).toBeTruthy();
+    expect(screen.queryByText(/Edge Function returned a non-2xx status code/i)).toBeNull();
+  });
+
   it('surfaces an error when the session start fails', async () => {
     mockInvoke.mockResolvedValue({ data: null, error: new Error('Gateway unavailable') });
     render(<OmniBoardWizard onComplete={vi.fn()} onDismiss={vi.fn()} />);

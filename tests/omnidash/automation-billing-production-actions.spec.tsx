@@ -95,6 +95,63 @@ describe('production module actions', () => {
     expect(window.location.assign).toHaveBeenCalledWith('https://billing.stripe.com/session/test_123');
   });
 
+
+
+  it('BillingModule renders setup copy/action when no Stripe billing profile is linked', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      stats: [{ label: 'Stripe Profile', value: 'Not linked' }],
+      actions: [{ id: 'manage-plan', label: 'Manage Plan', variant: 'primary' }],
+    });
+    const error = Object.assign(new Error('Edge Function returned a non-2xx status code'), {
+      context: new Response(JSON.stringify({ ok: false, error: { code: 'BILLING_CUSTOMER_NOT_FOUND' } }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    });
+    mockInvoke.mockResolvedValue({ data: null, error });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    expect(screen.getByText('No Stripe billing profile is linked to this account yet.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /manage plan/i }));
+
+    expect(await screen.findByText(/choose pro or business setup below/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Edge Function returned a non-2xx status code/i)).not.toBeInTheDocument();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('BillingModule checkout setup redirects only to a validated Stripe Checkout URL', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      stats: [{ label: 'Stripe Profile', value: 'Not linked' }],
+      actions: [],
+    });
+    mockInvoke.mockResolvedValue({ data: { url: 'https://checkout.stripe.com/c/session/test_123' }, error: null });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /set up pro/i }));
+
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('create-checkout', {
+      body: { tier: 'PRO', skills: [], returnUrl: 'https://apexomnihub.icu' },
+    }));
+    expect(window.location.assign).toHaveBeenCalledWith('https://checkout.stripe.com/c/session/test_123');
+  });
+
+  it('BillingModule setup refuses a non-Stripe Checkout URL', async () => {
+    mockState.mockReturnValue({
+      ...baseState('billing'),
+      stats: [{ label: 'Stripe Profile', value: 'Not linked' }],
+      actions: [],
+    });
+    mockInvoke.mockResolvedValue({ data: { url: 'https://example.com/checkout' }, error: null });
+
+    render(<BillingModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /set up business/i }));
+
+    expect(await screen.findByText(/valid Stripe URL/i)).toBeInTheDocument();
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
   it('BillingModule refuses non-Stripe or missing portal URLs', async () => {
     mockState.mockReturnValue({
       ...baseState('billing'),

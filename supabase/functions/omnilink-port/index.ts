@@ -433,10 +433,14 @@ async function resolveBilling(
 
   return {
     State: sub ? 'Online' : 'NoSubscription',
+    stats: [
+      { label: 'Plan', value: sub?.tier ?? 'Not linked' },
+      { label: 'Stripe Profile', value: sub?.stripe_customer_id ? 'Linked' : 'Not linked' },
+    ],
     items: normalizeModuleItems(items),
-    actions: ['manage-plan', 'billing-portal'],
+    actions: sub?.stripe_customer_id ? ['manage-plan', 'billing-portal'] : [],
     count: items.length,
-  };
+  } as ModuleStateResponse & { stats: Array<{ label: string; value: string }> };
 }
 
 async function resolveSettings(

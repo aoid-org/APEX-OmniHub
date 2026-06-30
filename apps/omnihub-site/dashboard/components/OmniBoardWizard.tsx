@@ -42,11 +42,32 @@ async function invokeWithTimeout<T>(
   ]);
 }
 
-function describeConnectionError(err: unknown, fallback: string): string {
+async function describeConnectionError(err: unknown, fallback: string): Promise<string> {
   if (err instanceof Error && err.message === 'omniboard_timeout') {
     return 'Connection service timed out. The OmniBoard integration gateway did not respond.';
   }
+  const context = err && typeof err === 'object' && 'context' in err
+    ? (err as { context?: unknown }).context
+    : null;
+  if (context instanceof Response) {
+    try {
+      const payload = await context.clone().json() as { error?: unknown; message?: unknown };
+      if (payload.error === 'connect_unavailable') {
+        return typeof payload.message === 'string'
+          ? `${payload.message} No app was connected.`
+          : 'OmniBoard integration gateway is unavailable right now. No app was connected.';
+      }
+      if (payload.error === 'connect_timeout') {
+        return 'Connection service timed out. The OmniBoard integration gateway did not respond.';
+      }
+    } catch {
+      // Fall through to sanitized transport handling below.
+    }
+  }
   const raw = err instanceof Error ? err.message : '';
+  if (raw === 'connect_unavailable') {
+    return 'OmniBoard integration gateway is unavailable right now. No app was connected.';
+  }
   // supabase-js surfaces opaque transport strings for Edge Function failures
   // (e.g. "Edge Function returned a non-2xx status code"). These are not user
   // copy — map them to an honest message instead of leaking transport detail.
@@ -105,7 +126,7 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
       setContext(data);
       setMessage('Tell OmniBoard what app or provider you want to connect.');
     } catch (err) {
-      setError(describeConnectionError(err, 'Failed to start session'));
+      setError(await describeConnectionError(err, 'Failed to start session'));
     } finally {
       setLoading(false);
     }
@@ -131,7 +152,7 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
         onComplete(data.connection_spec);
       }
     } catch (err) {
-      setError(describeConnectionError(err, 'Failed to process turn'));
+      setError(await describeConnectionError(err, 'Failed to process turn'));
     } finally {
       setLoading(false);
     }

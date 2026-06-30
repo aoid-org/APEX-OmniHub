@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
@@ -18,6 +18,30 @@ function parseUsagePct(detail: string | undefined): number | null {
   return Math.min(100, Math.round((used / cap) * 1000) / 10);
 }
 
+
+async function readFunctionErrorCode(error: unknown): Promise<string | null> {
+  const context = error && typeof error === 'object' && 'context' in error
+    ? (error as { context?: unknown }).context
+    : null;
+  if (!(context instanceof Response)) return null;
+  try {
+    const payload = await context.clone().json() as { error?: { code?: unknown }; code?: unknown };
+    const code = payload.error?.code ?? payload.code;
+    return typeof code === 'string' ? code : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractCheckoutUrl(data: unknown): string | null {
+  const payload = data && typeof data === 'object' && 'data' in data
+    ? (data as { data?: unknown }).data
+    : data;
+  if (!payload || typeof payload !== 'object') return null;
+  const url = (payload as { url?: unknown }).url;
+  return typeof url === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(url) ? url : null;
+}
+
 function extractPortalUrl(data: unknown): string | null {
   const payload = data && typeof data === 'object' && 'data' in data
     ? (data as { data?: unknown }).data
@@ -29,6 +53,8 @@ function extractPortalUrl(data: unknown): string | null {
 
 export default function BillingModule({ onClose }: Props) {
   const state = useOmniModuleState('billing');
+  const [setupStatus, setSetupStatus] = useState<string | null>(null);
+  const [setupLoading, setSetupLoading] = useState<string | null>(null);
 
   const planStat        = state.stats.find((s) => s.label === 'Plan');
   const nextInvoiceStat = state.stats.find((s) => s.label === 'Next Invoice');
@@ -37,6 +63,31 @@ export default function BillingModule({ onClose }: Props) {
 
   const usageItem = state.items.find((i) => i.id === 'usage-api');
   const usagePct  = parseUsagePct(usageItem?.detail);
+  const hasStripeCustomer = state.items.some((item) => /cus_/i.test(`${item.detail ?? ''} ${item.label ?? ''}`)) ||
+    state.stats.some((stat) => stat.label === 'Stripe Profile' && String(stat.value).toLowerCase() === 'linked');
+  const showSetupPath = !hasStripeCustomer;
+
+  const startCheckout = useCallback(async (tier: 'PRO' | 'BUS') => {
+    setSetupLoading(tier);
+    setSetupStatus(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { tier, skills: [], returnUrl: window.location.origin },
+      });
+      if (error) {
+        setSetupStatus('Stripe checkout is unavailable right now. No billing profile was created.');
+        return;
+      }
+      const url = extractCheckoutUrl(data);
+      if (!url) {
+        setSetupStatus('Checkout did not return a valid Stripe URL. No billing profile was created.');
+        return;
+      }
+      window.location.assign(url);
+    } finally {
+      setSetupLoading(null);
+    }
+  }, []);
 
   const handleAction = useCallback(async (actionId: string): Promise<boolean | string> => {
     if (actionId !== 'manage-plan' && actionId !== 'billing-portal' && actionId !== 'download-invoices') {
@@ -47,7 +98,13 @@ export default function BillingModule({ onClose }: Props) {
       body: { returnUrl: window.location.origin },
     });
     if (error) {
-      return error.message || 'Billing portal is unavailable. No billing page was opened.';
+      const code = await readFunctionErrorCode(error);
+      if (code === 'BILLING_CUSTOMER_NOT_FOUND') {
+        return 'No Stripe billing profile is linked to this account yet. Choose Pro or Business setup below to create one through Stripe checkout.';
+      }
+      return /non-2xx status code/i.test(error.message)
+        ? 'Billing portal is unavailable. No billing page was opened.'
+        : error.message || 'Billing portal is unavailable. No billing page was opened.';
     }
     const url = extractPortalUrl(data);
     if (!url) {
@@ -87,6 +144,33 @@ export default function BillingModule({ onClose }: Props) {
           {usageItem?.detail && (
             <div className="text-[10px] text-muted-foreground mt-1">{usageItem.detail}</div>
           )}
+        </div>
+      )}
+      {!state.loading && showSetupPath && (
+        <div className="rounded-lg border border-amber-400/30 px-3 py-2 bg-amber-500/10">
+          <p className="text-xs font-semibold text-foreground">No Stripe billing profile is linked to this account yet.</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Use Stripe checkout to set up a supported paid tier before opening Manage Plan or the Billing Portal.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void startCheckout('PRO')}
+              disabled={setupLoading !== null}
+              className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
+            >
+              {setupLoading === 'PRO' ? 'Opening…' : 'Set Up Pro'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void startCheckout('BUS')}
+              disabled={setupLoading !== null}
+              className="rounded-md border border-border/40 px-3 py-2 text-xs font-bold text-foreground disabled:opacity-50"
+            >
+              {setupLoading === 'BUS' ? 'Opening…' : 'Set Up Business'}
+            </button>
+          </div>
+          {setupStatus && <p className="mt-2 text-xs text-muted-foreground">{setupStatus}</p>}
         </div>
       )}
     </ModuleShell>
