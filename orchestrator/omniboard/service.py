@@ -8,6 +8,7 @@ import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client  # type: ignore
 
 from providers.database.factory import get_database_provider
+
 from ._redis import get_omniboard_redis
 
 logger = logging.getLogger(__name__)

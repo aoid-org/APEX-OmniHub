@@ -2,8 +2,8 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from .fsm import OmniBoardFSM
 from ._redis import get_omniboard_redis
+from .fsm import OmniBoardFSM
 from .schema import FSMContext, FSMEvent
 
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
