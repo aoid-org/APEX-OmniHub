@@ -133,8 +133,8 @@
   /* === OmniDash Tokens (Light) === */
   --omni-bg: #f8fafc;
   --omni-surface: #ffffff;
-  --omni-card: #ffffff;
-  --omni-card-hover: #f1f5f9;
+  --omni-card: rgba(255,255,255,0.80);
+  --omni-card-hover: rgba(241,245,249,0.84);
   --omni-border: rgba(15, 23, 41, 0.1);
   --omni-border-glow: rgba(249, 115, 22, 0.75);
   --omni-orange: #f97316;
@@ -184,8 +184,8 @@
   /* === OmniDash Tokens (Dark) === */
   --omni-bg: #070B14;
   --omni-surface: #0B1120;
-  --omni-card: #0E1628;
-  --omni-card-hover: #111d33;
+  --omni-card: rgba(14,22,40,0.78);
+  --omni-card-hover: rgba(17,29,51,0.82);
   --omni-border: rgba(255,255,255,0.07);
   --omni-border-glow: rgba(249,115,22,0.3);
   --omni-orange: #f97316;

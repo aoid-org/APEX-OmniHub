@@ -149,6 +149,8 @@ export function OmniSentryWidget() {
         border: `1px solid ${enabled ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.08)'}`,
         // +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
         background: enabled ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.03)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',

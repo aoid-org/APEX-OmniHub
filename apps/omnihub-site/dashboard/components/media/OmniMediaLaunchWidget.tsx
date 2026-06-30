@@ -37,6 +37,8 @@ export function OmniMediaLaunchWidget() {
         border: '1px solid rgba(249,115,22,0.25)',
         // +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
         background: 'rgba(249,115,22,0.05)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',

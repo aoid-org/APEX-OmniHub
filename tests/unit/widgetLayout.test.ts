@@ -7,6 +7,8 @@ import {
   rectsOverlap,
   clampToCanvas,
   resolveCollisions,
+  resolveAlignment,
+  ALIGN_THRESHOLD_PX,
   SNAP_GRID,
 } from '../../apps/omnihub-site/dashboard/lib/widgetLayout';
 
@@ -150,6 +152,59 @@ describe('widgetLayout', () => {
         bottom: result.top + 80,
       };
       expect(rectsOverlap(resultRect, siblings[0])).toBe(false);
+    });
+  });
+
+  describe('resolveAlignment', () => {
+    it('exports a 10px threshold', () => {
+      expect(ALIGN_THRESHOLD_PX).toBe(10);
+    });
+
+    it('returns proposed unchanged when no siblings are in range', () => {
+      const proposed = { left: 100, top: 100, width: 50, height: 50 };
+      const siblings = [{ left: 400, top: 400, right: 450, bottom: 450 }];
+      expect(resolveAlignment(proposed, siblings)).toEqual({ left: 100, top: 100 });
+    });
+
+    it('returns proposed unchanged with no siblings', () => {
+      const proposed = { left: 7, top: 13, width: 50, height: 50 };
+      expect(resolveAlignment(proposed, [])).toEqual({ left: 7, top: 13 });
+    });
+
+    it('snaps left edge flush to a sibling left within threshold', () => {
+      // proposed left=104 is 4px from sibling left=100 → snaps to 100.
+      const proposed = { left: 104, top: 500, width: 50, height: 50 };
+      const siblings = [{ left: 100, top: 0, right: 200, bottom: 80 }];
+      expect(resolveAlignment(proposed, siblings).left).toBe(100);
+    });
+
+    it('snaps right edge flush to a sibling left within threshold', () => {
+      // proposed right = 150 + 50 = 200, sibling left = 205 (5px) → left shifts +5 to 155.
+      const proposed = { left: 150, top: 500, width: 50, height: 50 };
+      const siblings = [{ left: 205, top: 0, right: 305, bottom: 80 }];
+      expect(resolveAlignment(proposed, siblings).left).toBe(155);
+    });
+
+    it('does not snap when just outside the threshold', () => {
+      // 11px gap > 10px threshold → unchanged.
+      const proposed = { left: 111, top: 500, width: 50, height: 50 };
+      const siblings = [{ left: 100, top: 0, right: 200, bottom: 80 }];
+      expect(resolveAlignment(proposed, siblings).left).toBe(111);
+    });
+
+    it('snaps x and y independently', () => {
+      // x left (103→100, in range), y top (500, far from sibling top 0 → no snap).
+      const proposed = { left: 103, top: 500, width: 50, height: 50 };
+      const siblings = [{ left: 100, top: 0, right: 200, bottom: 80 }];
+      const result = resolveAlignment(proposed, siblings);
+      expect(result.left).toBe(100);
+      expect(result.top).toBe(500);
+    });
+
+    it('snaps top edge flush to a sibling top within threshold', () => {
+      const proposed = { left: 500, top: 96, width: 50, height: 50 };
+      const siblings = [{ left: 0, top: 100, right: 80, bottom: 200 }];
+      expect(resolveAlignment(proposed, siblings).top).toBe(100);
     });
   });
 });

@@ -125,7 +125,7 @@ export function migrateFromLegacy(userId: string, breakpoint: string): void {
 
 // ── Collision Resolution ────────────────────────────────────────────────────
 
-interface Rect {
+export interface Rect {
   left: number;
   top: number;
   right: number;
@@ -188,4 +188,79 @@ export function resolveCollisions(
   }
 
   return { left: snapLeft, top: snapTop };
+}
+
+// ── Magnetic Alignment ──────────────────────────────────────────────────────
+
+export const ALIGN_THRESHOLD_PX = 10;
+
+/**
+ * Given a proposed rect and sibling rects, returns a snapped {left, top}
+ * if any sibling edge (left/right/top/bottom) or center axis is within
+ * ALIGN_THRESHOLD_PX. Returns the original proposed left/top unchanged
+ * if nothing is in range. Magnetic, not forced — small threshold only.
+ *
+ * The x and y axes are resolved independently: an axis snaps only when it has
+ * a match in range, otherwise it keeps its proposed value. Pure function — no
+ * DOM access — so it is unit-testable in isolation.
+ */
+export function resolveAlignment(
+  proposed: { left: number; top: number; width: number; height: number },
+  siblingRects: Rect[],
+): { left: number; top: number } {
+  const pLeft = proposed.left;
+  const pRight = proposed.left + proposed.width;
+  const pCenterX = proposed.left + proposed.width / 2;
+  const pTop = proposed.top;
+  const pBottom = proposed.top + proposed.height;
+  const pCenterY = proposed.top + proposed.height / 2;
+
+  // Best deltas (added to left/top) for the closest in-range match per axis.
+  let bestDx: number | null = null;
+  let bestDxDist = Infinity;
+  let bestDy: number | null = null;
+  let bestDyDist = Infinity;
+
+  const consider = (
+    from: number,
+    to: number,
+    setter: (delta: number, dist: number) => void,
+  ) => {
+    const dist = Math.abs(from - to);
+    if (dist <= ALIGN_THRESHOLD_PX) setter(to - from, dist);
+  };
+
+  for (const s of siblingRects) {
+    const sCenterX = (s.left + s.right) / 2;
+    const sCenterY = (s.top + s.bottom) / 2;
+
+    // x-axis: proposed left/right/center against sibling left/right/center.
+    const xPairs: Array<[number, number]> = [
+      [pLeft, s.left], [pLeft, s.right],
+      [pRight, s.left], [pRight, s.right],
+      [pCenterX, sCenterX],
+    ];
+    for (const [from, to] of xPairs) {
+      consider(from, to, (delta, dist) => {
+        if (dist < bestDxDist) { bestDxDist = dist; bestDx = delta; }
+      });
+    }
+
+    // y-axis: proposed top/bottom/center against sibling top/bottom/center.
+    const yPairs: Array<[number, number]> = [
+      [pTop, s.top], [pTop, s.bottom],
+      [pBottom, s.top], [pBottom, s.bottom],
+      [pCenterY, sCenterY],
+    ];
+    for (const [from, to] of yPairs) {
+      consider(from, to, (delta, dist) => {
+        if (dist < bestDyDist) { bestDyDist = dist; bestDy = delta; }
+      });
+    }
+  }
+
+  return {
+    left: bestDx !== null ? proposed.left + bestDx : proposed.left,
+    top: bestDy !== null ? proposed.top + bestDy : proposed.top,
+  };
 }
