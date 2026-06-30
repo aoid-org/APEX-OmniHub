@@ -4,6 +4,9 @@ last_audited: 2026-06-12
 status: verified
 ---
 
+> **Current-state note (2026-06-30):** Current repo scan shows 102 SQL migration files (98 forward + 4 rollback) and 34 Supabase function directories (33 + `_shared`). Live Supabase project health/RLS must be re-verified with owner credentials before production certification.
+
+
 # SUPABASE_SETUP.md
 
 # Supabase Configuration Guide for APEX-OmniHub

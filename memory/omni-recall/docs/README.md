@@ -2,11 +2,11 @@
 
 ---
 version: 1.3.3
-last_audited: 2026-06-26
+last_audited: 2026-06-30
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.9-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-26 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.9-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-30 -->
 
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
@@ -15,11 +15,11 @@ status: verified
 **Enterprise AI Orchestration Platform**
 
 - **Document Version:** 2.10.3
-- **Platform Version:** 1.8.2
-- **Last Updated:** 2026-06-26
+- **Platform Version:** 1.8.3
+- **Last Updated:** 2026-06-30
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Boundary:** [`docs/release/release-validation-matrix.json`](../../../docs/release/release-validation-matrix.json) records repo-verified remediations; items labeled `BLOCKED` / `REQUIRES_MANUAL_VALIDATION` still require owner/live evidence. CI is validation evidence only ([CI Status Policy](project-status/CI_STATUS_POLICY.md)).
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-26](CURRENT_PLATFORM_STATE_2026_06_26.md) (release remediation gates, local-launch truthfulness, fail-closed release envs; live production checks not re-verified by the doc sync)
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-30](CURRENT_PLATFORM_STATE_2026_06_30.md) (release remediation gates, local-launch truthfulness, fail-closed release envs; live production checks not re-verified by the doc sync)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -91,7 +91,7 @@ Current deployment state and ecosystem overview:
 
 | Document                                                    | Description              |
 | ----------------------------------------------------------- | ------------------------ |
-| [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation and certification authority _(release-validation-summary.json is CI-generated)_ |
+| [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation; production certification still defers to release-validation-matrix plus owner/live evidence |
 | [Release Readiness v1.6.1 (archived)](../archive/docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md) | Historical release readiness report — 2026-05-20 |
 
 ---
@@ -305,11 +305,11 @@ docs/
 ---
 
 **Last Updated:** June 24, 2026
-**Release:** v1.8.2 (HEAD `8bfb1a6`)
+**Release:** v1.8.3 (HEAD `8bfb1a6`)
 
 ## Documentation Governance
 
-- All strategic status changes must be reflected in `docs/project-status/release-validation-summary.json`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
+- All strategic status changes must be reflected in `docs/release/release-validation-matrix.json`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
 - Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
 
