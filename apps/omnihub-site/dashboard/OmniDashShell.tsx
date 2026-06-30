@@ -221,10 +221,13 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     // invalid CSS and silently paints a transparent, borderless tile.
     const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
+    // Background alphas carry a uniform +25% opacity bump (rail-widget
+    // transparency-reduction parity, owner P1) — each value is the prior
+    // alpha × 1.25.
     const resolveTileBackground = (active: boolean, hover: boolean) => {
-      if (active) return `linear-gradient(135deg, rgba(${ORANGE},0.22) 0%, rgba(${ORANGE},0.06) 100%)`;
-      if (hover)  return `linear-gradient(135deg, rgba(${ORANGE},0.16) 0%, rgba(${ORANGE},0.05) 100%)`;
-      return `linear-gradient(135deg, rgba(${ORANGE},0.10) 0%, rgba(${ORANGE},0.03) 100%)`;
+      if (active) return `linear-gradient(135deg, rgba(${ORANGE},0.28) 0%, rgba(${ORANGE},0.08) 100%)`;
+      if (hover)  return `linear-gradient(135deg, rgba(${ORANGE},0.20) 0%, rgba(${ORANGE},0.06) 100%)`;
+      return `linear-gradient(135deg, rgba(${ORANGE},0.13) 0%, rgba(${ORANGE},0.04) 100%)`;
     };
 
     const resolveTileBorder = (active: boolean, hover: boolean) => {

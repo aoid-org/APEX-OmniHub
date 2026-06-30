@@ -529,7 +529,10 @@
   width: calc(50% - 3px);
   padding: 10px;
   border-radius: var(--od-radius-sm);
-  background: var(--od-bg-elevated);
+  /* +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
+     Literal value (not --od-bg-elevated) to keep the change scoped to this
+     widget only — the token is shared by unrelated, non-rail selectors. */
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--od-border-subtle);
   text-align: center;
   transition: border-color 0.2s;
