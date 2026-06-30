@@ -105,10 +105,14 @@ function ReplayPanel({ logs, onClose }: ReplayPanelProps) {
       data-testid="replay-panel"
       style={{
         marginTop: 10,
-        borderRadius: 9,
-        border: '1px solid rgba(249,115,22,0.22)',
-        background: 'rgba(249,115,22,0.05)',
-        padding: '10px 10px 12px',
+        borderRadius: 10,
+        // Glassmorph rail tile — uniform orange border + bumped opacity + blur,
+        // matching OmniSentry / Ops Controls / OmniMedia (owner request).
+        border: '1px solid rgba(249,115,22,0.25)',
+        background: 'rgba(249,115,22,0.06)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        padding: '10px 12px',
         display: 'flex',
         flexDirection: 'column',
         gap: 8,

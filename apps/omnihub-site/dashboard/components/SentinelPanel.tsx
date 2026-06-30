@@ -43,8 +43,10 @@ export const SentinelPanel = memo(function SentinelPanel() {
     <div
       style={{
         borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(255,255,255,0.03)',
+        // Orange rail-card border — right-rail uniformity with OmniSentry/OmniMedia (owner request).
+        border: '1px solid rgba(249,115,22,0.25)',
+        // Uniform rail/sidebar glassmorph tile fill opacity (owner request).
+        background: 'rgba(255,255,255,0.06)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         padding: '10px 12px',

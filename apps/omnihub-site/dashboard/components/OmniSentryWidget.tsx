@@ -146,9 +146,10 @@ export function OmniSentryWidget() {
       data-testid="omni-sentry-widget"
       style={{
         borderRadius: 10,
-        border: `1px solid ${enabled ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.08)'}`,
-        // +25% opacity bump (rail-widget transparency-reduction parity, owner P1).
-        background: enabled ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.03)',
+        // Orange rail-card border — right-rail uniformity with OmniMedia/Ops Controls (owner request).
+        border: `1px solid rgba(249,115,22,0.25)`,
+        // Uniform rail/sidebar glassmorph tile fill opacity (owner request).
+        background: enabled ? 'rgba(52,211,153,0.06)' : 'rgba(255,255,255,0.06)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         padding: '10px 12px',

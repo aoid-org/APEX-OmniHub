@@ -50,8 +50,10 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       style={{
         margin: '0 0 8px',
         borderRadius: 11,
-        border: `1px solid ${omniRgba('orange', 0.18)}`,
-        background: omniRgba('orange', 0.04),
+        // Uniform rail/sidebar glassmorph tile — same orange border + fill opacity
+        // as the right-rail tiles and System Status (owner request).
+        border: `1px solid ${omniRgba('orange', 0.25)}`,
+        background: omniRgba('orange', 0.06),
         overflow: 'hidden',
       }}
     >
@@ -86,7 +88,7 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
               title={tile.label}
               aria-label={`${tile.label}: ${tile.value}`}
               style={{
-                background: omniRgba('orange', 0.06),
+                background: omniRgba('orange', 0.072),
                 border: `1px solid ${omniRgba('orange', 0.12)}`,
                 borderRadius: 7,
                 padding: '5px 7px',
