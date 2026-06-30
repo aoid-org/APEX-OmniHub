@@ -88,7 +88,7 @@ const PROBE_LABEL: Readonly<Record<ProbeResult, string>> = {
 };
 
 export function OmniSentryPanel() {
-  const [enabled, setEnabled]           = useState(false);
+  const [enabled, setEnabled]           = useState(readEnabled);
   const [health, setHealth]             = useState<HealthStatus | null>(null);
   const [offlineCount, setOfflineCount] = useState(0);
   const [flushState, setFlushState]     = useState<'idle' | 'flushing' | 'done'>('idle');
@@ -102,20 +102,20 @@ export function OmniSentryPanel() {
 
   // Hydrate from stored preference and activate the monitor if enabled.
   useEffect(() => {
-    const stored = readEnabled();
-    setEnabled(stored);
-    if (stored) {
-      initializeOmniSentry();
-      refresh();
-    }
-  }, [refresh]);
+    if (!enabled) return;
+    initializeOmniSentry();
+  }, [enabled]);
 
-  // Live polling while active.
+  // Live polling while active. Initial refresh is deferred out of the effect body
+  // to satisfy React's no synchronous setState-in-effect rule.
   useEffect(() => {
     if (!enabled) return;
-    refresh();
+    const initial = globalThis.setTimeout(refresh, 0);
     const id = globalThis.setInterval(refresh, 5000);
-    return () => globalThis.clearInterval(id);
+    return () => {
+      globalThis.clearTimeout(initial);
+      globalThis.clearInterval(id);
+    };
   }, [enabled, refresh]);
 
   const handleToggle = useCallback(() => {

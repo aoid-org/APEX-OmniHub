@@ -1,3 +1,4 @@
+import "./ssg-websocket";
 import { ViteReactSSG } from "vite-react-ssg";
 import type { RouteObject } from "react-router-dom";
 import { HomePage } from "./pages/Home";
