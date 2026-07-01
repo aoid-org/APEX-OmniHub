@@ -1525,3 +1525,97 @@ correctly left as an honest "not connected" state pending a scoping
 decision, not swapped for a fake pass/fail. Automations execution remains
 user-initiated (click Execute) — no autonomous/event-driven triggers exist
 yet.
+
+---
+
+## 9.30 Workflows — real create/execute path wired; `workflows`/`workflow_runs` tables recovered in production (2026-07-01)
+
+**Root cause (frontend):** `WorkflowsModule.tsx` had no `onAction` handler at
+all — same class of gap as §9.29's Automations/Audits fix. `create_workflow`
+and `trigger_run` were already present in `resolveWorkflows()`'s live
+`actions` list, but always fell through to the generic "not connected"
+capability message.
+
+**Root cause (backend — new finding this pass):** `execute-workflow` did not
+exist as a standalone edge function (only the generic Temporal-oriented
+`trigger-workflow` did, and the orchestrator has **zero** `module.*` intents
+registered — only `system.health_check`/`echo`/`list_intents` — so routing
+`trigger_run` through it would have produced a genuine "Intent not
+registered" error every time). More significantly: **the `workflows` and
+`workflow_runs` tables did not exist anywhere in the production Postgres
+catalog**, despite `supabase_migrations.schema_migrations` recording BOTH
+`20260220000003_workflow_studio` and a second, schema-conflicting migration
+`20260223061443_init_omnidash_workflows` as already applied. Confirmed via
+direct `pg_tables` query (Management API `/database/query`) — the tables
+were marked-applied but never actually materialized; `resolveWorkflows()`
+had therefore always failed live (`Promise.allSettled` rejection → `State:
+'Error'`) regardless of any frontend wiring.
+
+**Fix:**
+- New `supabase/functions/_shared/action-executor.ts` — extracted the four
+  action executors (`send_email` via Resend, `create_record` with a table
+  allowlist, `webhook` with SSRF protection, `notification`) out of
+  `execute-automation/index.ts` into a shared module. `execute-automation`
+  now imports `executeAction(...)` instead of duplicating ~250 lines;
+  behavior is unchanged (verified — see below).
+- New `supabase/functions/execute-workflow/index.ts` — runs a saved
+  workflow's `definition.steps` (array of `{ action_type, config }`, each
+  shaped exactly like an Automation action) through the same shared
+  executor, fail-fast on the first failing step, and persists a real
+  `workflow_runs` row (`status`, `logs`, `error_message`). No Temporal/
+  orchestrator involvement — stays entirely within Supabase edge functions,
+  same trust boundary as `execute-automation`. Registered in
+  `supabase/config.toml` (`verify_jwt = true`) and rate-limited
+  (`executeWorkflow: 20/min`, added to `_shared/rate-limit.ts`).
+- `supabase/functions/omnilink-port/index.ts`, `resolveWorkflows()`: now
+  selects `definition` too and adds a real `detail` string (`"<N> steps |
+  Last: <status>"`) so real workflow rows display correctly instead of the
+  frontend's default-4-steps fallback.
+- `WorkflowsModule.tsx`: added a real inline "Create Workflow" form
+  (multi-step builder, up to 10 steps, same four action types as
+  Automations) that inserts into `workflows` via the authenticated client,
+  and wired `trigger_run` to invoke `execute-workflow` for a selected real
+  (UUID) workflow row.
+- **Applied the missing `workflows`/`workflow_runs` DDL directly** (exact
+  `CREATE TABLE IF NOT EXISTS` / `ENABLE ROW LEVEL SECURITY` / `CREATE
+  POLICY` statements from `20260220000003_workflow_studio.sql`, idempotent,
+  purely additive) via the Management API against the live project, since
+  the migration was already marked applied and re-running it through the
+  normal migration pipeline would have been a no-op. Verified both tables
+  and all 7 RLS policies (4 on `workflows`, 3 on `workflow_runs`) now exist
+  via direct `pg_tables`/`pg_policies` queries.
+
+**Operational impact:** two new deployed functions
+(`execute-workflow`, and the refactored `execute-automation`) plus the
+already-deployed `omnilink-port` update. `execute-workflow` was deployed
+manually via `supabase functions deploy execute-workflow` — like
+`execute-automation`, it is **not yet** in
+`.github/workflows/deploy-production-cf-direct.yml`'s explicit deploy list,
+so a future CI-driven redeploy of `omnilink-port`/Cloudflare will not
+automatically pick up further `execute-workflow` changes. This existing gap
+(pre-dating this change, shared with `execute-automation`) is flagged here,
+not fixed — expanding that workflow's scope was judged out of bounds for
+this pass.
+
+**Verified live** against the deployed functions and the real Supabase
+project: confirmed `execute-automation` behavior is unchanged after the
+shared-executor refactor (created + executed + deleted a real automation,
+identical result shape to before); created a real 2-step workflow
+(notification × 2), confirmed it appeared via `module-state` with
+`trigger_run` available and a real `"2 steps"` detail string, triggered it
+and got both steps' real results back, confirmed the persisted
+`workflow_runs` row matched; separately created and triggered a workflow
+with a webhook step pointed at a loopback address to prove the **honest
+failure path** — SSRF protection correctly blocked it and the run recorded
+`status: "failed"` with a real error message, not a faked success. All test
+rows deleted after verification.
+
+**Out of scope (not fixed in this change):** registering real Temporal
+intents in the orchestrator for `module.workflows.*` — deliberately not
+pursued this pass in favor of the edge-function step-executor approach
+(see decision record: user chose "new step-executor edge function" over
+"register a real Temporal intent" when presented with both options).
+`WorkflowsModule.tsx` still renders its SVG pipeline visualization *and*
+`ModuleShell`'s default clickable item-selection list for the same items
+(pre-existing double-rendering, now load-bearing since selection is needed
+for `trigger_run` — not fixed, out of scope for this pass).
