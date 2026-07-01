@@ -111,7 +111,8 @@
     "test:e2e:production-safe": "APEX_RUN_PRODUCTION_SAFE=true playwright test -c playwright.production-safe.config.ts",
     "perf:k6:smoke": "node scripts/ci/perf-k6-smoke.mjs",
     "arise:scan": "cd apps/apex-arise && bun run arise:scan",
-    "arise:install": "cd apps/apex-arise && bun install"
+    "arise:install": "cd apps/apex-arise && bun install",
+    "arise:diagnose": "cd apps/apex-arise && bun run src/diagnosis/index.ts"
   },
   "size-limit": [
     {
