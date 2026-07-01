@@ -83,3 +83,50 @@ Six directories are scanned: root `src/`, plus every `apps/*/src` and
 built (`apps/omnihub-proof/src`, `apps/omnihub-site/src`,
 `packages/apex-sales/src`, `packages/core/src`, `packages/infrastructure/src`).
 See `src/paths.ts` for the exact list.
+
+## Phase 1a — Diagnosis Engine
+
+`bun run src/diagnosis/index.ts` (root: `bun run arise:diagnose`) re-runs the
+same five signals, ranks them worst-first, and writes a dated diagnosis
+report naming the specific hotspot artifact (file + metric) for the
+lowest-scoring signals. Read-only: it proposes no fixes and never touches
+code. See `src/diagnosis/`.
+
+## Phase 1b — Propose Engine (`src/propose/`)
+
+The propose engine takes the diagnosis a step further: for the redundancy
+signal's largest duplicate block (re-detected via `jscpd`, since the
+diagnosis report only carries the aggregate percentage, not concrete clone
+locations), it asks a Claude model (`@ai-sdk/anthropic`) to propose a
+minimal, behavior-preserving diff that removes the duplication.
+
+Every proposed diff passes through the same gate before anything happens:
+
+1. **`envelope.ts`** — the single source of truth for "is this patch
+   allowed." Rejects anything over `tier_1_propose`'s bounds (150 lines / 5
+   files, from `policy/arise-policy.yaml`) or touching any
+   `hard_blocked_always` path — including `policy/arise-policy.yaml` itself.
+2. **`sandbox.ts`** — applies the diff in an isolated `git worktree`, runs
+   the repo's own `typecheck`/`lint`/`test`, and tears the worktree down.
+   Nothing is ever validated against the main checkout.
+3. **`pr.ts`** — only if both gates pass, and only in a separate CI job that
+   never ran the model call or the sandbox, opens a pull request titled
+   *"A.R.I.S.E. Phase 1b — automated proposal, requires human review"*.
+   Never merges, never force-pushes, never auto-merges — `auto_merge: false`
+   is enforced by policy, not just convention.
+
+Every run — proposed, rejected, or failed — writes a dated report to
+`memory/omni-recall/docs/CURRENT_ARISE_PROPOSE_REPORT_<date>.md` via
+`reporter.ts`. A run with no qualifying model response, no target, or a
+sandbox failure is a normal, informative outcome, not an error to route
+around.
+
+**Trigger:** `workflow_dispatch` only (`.github/workflows/arise-propose.yml`)
+— human-initiated, no push/PR/schedule trigger. Run locally with
+`bun run arise:propose` (requires `ANTHROPIC_API_KEY`; fails closed and logs
+a report if absent, exit code always `0`).
+
+**Model call contract** (`model.ts`) mirrors `tools/rsi/model_gateway.py`:
+fail-closed on every error path (timeout, auth, malformed response), 30s
+timeout, never throws past its own boundary — always returns a typed
+`{ available: false, error: string }` on failure instead.

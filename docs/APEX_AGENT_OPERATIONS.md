@@ -1394,3 +1394,82 @@ gap where Phase 1a was writing a path its own policy file didn't declare.
 gated on explicit owner sign-off of the Pre-Flight Gate (dependency
 sign-off, `ANTHROPIC_API_KEY` secret presence, Tier 1 envelope
 confirmation, pilot target approval) per the Phase 1b execution contract.
+
+## 9.28 A.R.I.S.E. Phase 1b WP-2 — Propose Engine (2026-07-01)
+
+**Scope:** `apps/apex-arise/src/propose/`, `apps/apex-arise/tests/propose/`,
+`.github/workflows/arise-propose.yml`, root `package.json` scripts
+(`arise:propose`, `arise:open-pr`). Pre-Flight Gate cleared by owner: Phase 0
+dependency sign-off approved, `ANTHROPIC_API_KEY` confirmed present as a repo
+secret, Tier 1 envelope confirmed as specified, pilot target = redundancy
+findings. Zero new entries in `apps/apex-arise/package.json`
+`devDependencies` — `@ai-sdk/anthropic`, `ai`, and `zod` are resolved from
+the root `node_modules` via Bun's ancestor lookup (verified empirically),
+not added as a new dependency anywhere.
+
+### What Phase 1b is
+
+A bounded, PR-only, human-merge-required patch proposal pipeline. Given the
+redundancy signal's largest concrete duplicate block (re-detected via
+`jscpd` with `--absolute`, since the diagnosis report only carries the
+aggregate percentage, not clone locations — `src/propose/target.ts`), it
+asks a Claude model for a minimal diff that removes the duplication
+(`src/propose/model.ts`), validates it against `policy/arise-policy.yaml`'s
+`tier_1_propose`/`hard_blocked_always` (`src/propose/envelope.ts` — the
+single source of truth for "is this patch allowed," zero I/O, fully pure),
+verifies it in an isolated `git worktree` by running the repo's own
+`typecheck`/`lint`/`test` (`src/propose/sandbox.ts`, node_modules symlinked
+from the main checkout rather than reinstalled), and — only if every gate
+passes — opens a PR from a separate, minimally-privileged CI job
+(`src/propose/pr.ts`, `src/propose/open-pr-cli.ts`). Every outcome, including
+every rejection, is logged to a dated report
+(`memory/omni-recall/docs/CURRENT_ARISE_PROPOSE_REPORT_<date>.md`,
+`src/propose/reporter.ts`) — never a silent no-op.
+
+### Model call fail-closed contract
+
+`src/propose/model.ts` mirrors `tools/rsi/model_gateway.py`'s shape: 30s
+timeout (`AbortSignal.timeout`), strict schema validation on the response via
+a Zod schema passed to `generateObject` (`proposed_diff`, `confidence`,
+`rationale`, `files_touched`), and every error path (missing credential,
+timeout, auth failure, endpoint error, malformed response) returns a typed
+`{ available: false, error: <code> }` instead of throwing past the
+function's own boundary.
+
+### CI wiring: `.github/workflows/arise-propose.yml`
+
+Deliberately a separate workflow file from `arise.yml`, keeping the
+always-safe observatory workflow untouched by a heavier, credentialed job.
+
+| Job | Trigger | Permissions | What it does |
+|---|---|---|---|
+| `propose` | `workflow_dispatch` only | `contents: read` | Installs deps (root `npm ci` for `ai`/`@ai-sdk/anthropic`/`zod`, then `apps/apex-arise` `bun install`), runs `arise:propose`, uploads the propose report and — if produced — the validated candidate diff as artifacts. Never holds write access. |
+| `open-pr` | `needs: propose`, `if: needs.propose.outputs.patch_ready == 'true'` | `contents: write`, `pull-requests: write` | Downloads the candidate diff artifact, runs `arise:open-pr` to create the branch, commit, push, and open the PR via the GitHub REST API. Never runs the model call or the sandbox. |
+
+No push, pull_request, or schedule trigger exists on this workflow — human
+`workflow_dispatch` only, per the execution contract's Day-1 gating.
+
+### Package boundary note (monorepo, no workspaces)
+
+`apps/apex-arise` has no `workspaces` entry linking it to the root
+`package.json`; it is verified empirically that Bun's module resolution
+still walks up ancestor `node_modules` directories, so `import { ... } from
+"ai"` resolves against the root install without adding a redundant
+dependency entry to `apps/apex-arise/package.json`. This is why the
+`propose` CI job runs a root `npm ci --ignore-scripts` step before `bun run
+arise:propose` — omit it and the import fails to resolve in a clean
+checkout. The `open-pr` job does not need this step: `pr.ts` and
+`open-pr-cli.ts` depend only on Node built-ins and local modules.
+
+### Definition of Done status
+
+- [x] `bun run typecheck && bun run lint && bun run test` green inside
+  `apps/apex-arise`; `src/propose/**` coverage 98.62% statements / 99.51%
+  lines (190 tests total across the package)
+- [x] Zero new entries in `apps/apex-arise/package.json` `devDependencies`
+- [x] `arise-propose.yml`: `workflow_dispatch`-only trigger confirmed
+- [ ] One manual `workflow_dispatch` run against the real redundancy pilot
+  target — intentionally **not** run as part of this change; opening a real
+  PR (or spending real model credit) is a separate, explicit action for the
+  owner to trigger or authorize, not something to do unprompted from a
+  code-authoring session.

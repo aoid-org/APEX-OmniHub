@@ -112,7 +112,9 @@
     "perf:k6:smoke": "node scripts/ci/perf-k6-smoke.mjs",
     "arise:scan": "cd apps/apex-arise && bun run arise:scan",
     "arise:install": "cd apps/apex-arise && bun install",
-    "arise:diagnose": "cd apps/apex-arise && bun run src/diagnosis/index.ts"
+    "arise:diagnose": "cd apps/apex-arise && bun run src/diagnosis/index.ts",
+    "arise:propose": "cd apps/apex-arise && bun run src/propose/index.ts",
+    "arise:open-pr": "cd apps/apex-arise && bun run src/propose/open-pr-cli.ts"
   },
   "size-limit": [
     {
