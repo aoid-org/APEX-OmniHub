@@ -28,27 +28,25 @@ function collectPhase0Signals(): Phase0Collection {
   const signals: SignalScore[] = [];
   const failures: { name: string; error: string }[] = [];
 
-  const singleCollectors: { name: string; run: () => SignalScore }[] = [
-    { name: "acyclicity", run: () => collectAcyclicity(SCAN_TARGETS, REPO_ROOT) },
-    { name: "modularity", run: () => collectModularity(SCAN_TARGETS, REPO_ROOT) },
-    { name: "redundancy", run: () => collectRedundancy(SCAN_TARGETS, REPO_ROOT) },
-  ];
-
-  for (const collector of singleCollectors) {
+  const record = (name: SignalScore["name"], collect: () => SignalScore): void => {
     try {
-      signals.push(collector.run());
+      signals.push(collect());
     } catch (err) {
-      failures.push({ name: collector.name, error: toMessage(err) });
-      console.error(`[arise-diagnosis] signal "${collector.name}" failed: ${toMessage(err)}`);
+      failures.push({ name, error: toMessage(err) });
+      console.error(`[arise-diagnosis] signal "${name}" failed: ${toMessage(err)}`);
     }
-  }
+  };
+
+  record("acyclicity", () => collectAcyclicity(SCAN_TARGETS, REPO_ROOT));
+  record("modularity", () => collectModularity(SCAN_TARGETS, REPO_ROOT));
+  record("redundancy", () => collectRedundancy(SCAN_TARGETS, REPO_ROOT));
 
   try {
-    const [depth, equality] = collectStructural(SCAN_TARGETS, REPO_ROOT);
-    signals.push(depth, equality);
+    signals.push(...collectStructural(SCAN_TARGETS, REPO_ROOT));
   } catch (err) {
-    failures.push({ name: "depth", error: toMessage(err) });
-    failures.push({ name: "equality", error: toMessage(err) });
+    for (const name of ["depth", "equality"] as const) {
+      failures.push({ name, error: toMessage(err) });
+    }
     console.error(`[arise-diagnosis] structural signals (depth, equality) failed: ${toMessage(err)}`);
   }
 
@@ -56,11 +54,9 @@ function collectPhase0Signals(): Phase0Collection {
 }
 
 function writeDiagnosisReport(content: string, timestamp: string): string {
-  const isoDate = timestamp.slice(0, 10);
-  const fileDate = isoDate.replace(/-/g, "_");
-  const outDir = path.join(REPO_ROOT, "memory/omni-recall/docs");
-  mkdirSync(outDir, { recursive: true });
-  const outPath = path.join(outDir, `CURRENT_ARISE_DIAGNOSIS_REPORT_${fileDate}.md`);
+  const fileDate = timestamp.slice(0, 10).replaceAll("-", "_");
+  const outPath = path.join(REPO_ROOT, "memory/omni-recall/docs", `CURRENT_ARISE_DIAGNOSIS_REPORT_${fileDate}.md`);
+  mkdirSync(path.dirname(outPath), { recursive: true });
   writeFileSync(outPath, content, "utf-8");
   return outPath;
 }
