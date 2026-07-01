@@ -27,6 +27,7 @@ import type { ReactNode, CSSProperties } from 'react';
 import {
   resolveCollisions,
   resolveAlignment,
+  clampToCanvas,
   loadLayout,
   saveLayout,
   detectBreakpoint,
@@ -336,8 +337,32 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
           siblings,
         );
 
-        const deltaX = free.left - myRect.left;
-        const deltaY = free.top - myRect.top;
+        // Clamp to the visible canvas area last — collision resolution can
+        // walk a widget's snap search outward past the container edge, which
+        // `overflow:auto` cannot recover from in the negative direction (no
+        // negative scroll), silently making the widget unreachable.
+        let resolvedLeft = free.left;
+        let resolvedTop = free.top;
+        const canvasEl = el.closest('.omni-canvas-container');
+        if (canvasEl instanceof HTMLElement) {
+          const cRect = canvasEl.getBoundingClientRect();
+          const canvasRelative = {
+            x: free.left - cRect.left + canvasEl.scrollLeft,
+            y: free.top - cRect.top + canvasEl.scrollTop,
+          };
+          const clamped = clampToCanvas(
+            canvasRelative,
+            myRect.width,
+            myRect.height,
+            canvasEl.clientWidth,
+            canvasEl.clientHeight,
+          );
+          resolvedLeft = free.left + (clamped.x - canvasRelative.x);
+          resolvedTop = free.top + (clamped.y - canvasRelative.y);
+        }
+
+        const deltaX = resolvedLeft - myRect.left;
+        const deltaY = resolvedTop - myRect.top;
         const finalX = posRef.current.x + deltaX;
         const finalY = posRef.current.y + deltaY;
 
