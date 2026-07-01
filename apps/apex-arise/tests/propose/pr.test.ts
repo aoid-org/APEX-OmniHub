@@ -11,6 +11,9 @@ vi.mock("node:child_process", () => ({
 vi.mock("node:fs", () => ({
   writeFileSync: (...args: unknown[]) => mockWriteFileSync(...args),
   rmSync: (...args: unknown[]) => mockRmSync(...args),
+  // No real binary on disk in tests: resolveGitPath falls back to the bare
+  // "git" name, keeping existing assertions on the literal command valid.
+  existsSync: () => false,
 }));
 
 const DIFF: CandidateDiff = { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff --git a/src/a.ts" };

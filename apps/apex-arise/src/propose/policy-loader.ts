@@ -32,7 +32,7 @@ function extractNumberField(source: string, blockKey: string, fieldKey: string):
 
   for (const line of lines.slice(startIndex + 1)) {
     if (/^\S/.test(line)) break; // next top-level key ends the block
-    const match = new RegExp(`^\\s*${fieldKey}:\\s*(\\d+)`).exec(line);
+    const match = new RegExp(String.raw`^\s*${fieldKey}:\s*(\d+)`).exec(line);
     if (match) return Number(match[1]);
   }
   return null;

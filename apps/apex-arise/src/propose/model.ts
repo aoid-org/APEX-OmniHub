@@ -1,5 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { APICallError, generateObject, NoObjectGeneratedError } from "ai";
+import { APICallError, generateText, NoOutputGeneratedError, Output } from "ai";
 import { z } from "zod";
 import type { ModelErrorCode, ModelResult, ProposeTarget } from "./types.js";
 
@@ -48,7 +48,7 @@ function classifyError(err: unknown): ModelErrorCode {
   if (APICallError.isInstance(err)) {
     return err.statusCode === 401 || err.statusCode === 403 ? "AUTH_FAILURE" : "ENDPOINT_ERROR";
   }
-  if (NoObjectGeneratedError.isInstance(err)) {
+  if (NoOutputGeneratedError.isInstance(err)) {
     return "SCHEMA_INVALID";
   }
   return "UNKNOWN_ERROR";
@@ -70,9 +70,9 @@ export async function proposeFix(target: ProposeTarget): Promise<ModelResult> {
     const anthropic = createAnthropic({ apiKey });
     const modelId = process.env.ARISE_MODEL_NAME || DEFAULT_MODEL_ID;
 
-    const { object } = await generateObject({
+    const { output } = await generateText({
       model: anthropic(modelId),
-      schema: ProposalSchema,
+      output: Output.object({ schema: ProposalSchema }),
       system: SYSTEM_PROMPT,
       prompt: buildPrompt(target),
       abortSignal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
@@ -81,10 +81,10 @@ export async function proposeFix(target: ProposeTarget): Promise<ModelResult> {
     return {
       available: true,
       error: null,
-      proposedDiff: object.proposed_diff,
-      confidence: object.confidence,
-      rationale: object.rationale.slice(0, MAX_RATIONALE_CHARS),
-      filesTouched: object.files_touched,
+      proposedDiff: output.proposed_diff,
+      confidence: output.confidence,
+      rationale: output.rationale.slice(0, MAX_RATIONALE_CHARS),
+      filesTouched: output.files_touched,
     };
   } catch (err) {
     return { available: false, error: classifyError(err) };

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { rmSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { REPO_ROOT } from "../paths.js";
@@ -37,8 +38,25 @@ ${proposal.rationale}
 `;
 }
 
+let resolvedGitPath: string | undefined;
+
+/**
+ * Resolves `git` to an absolute path once, from the current process's own
+ * PATH, instead of letting execFileSync re-resolve a bare command name via
+ * PATH search on every call (S4036: OS commands should not rely on PATH
+ * resolution). Falls back to the bare name if not found on PATH, so
+ * behavior is unchanged in that edge case.
+ */
+function resolveGitPath(): string {
+  if (resolvedGitPath) return resolvedGitPath;
+  const dirs = (process.env.PATH ?? "").split(path.delimiter);
+  const found = dirs.map((dir) => path.join(dir, "git")).find((candidate) => existsSync(candidate));
+  resolvedGitPath = found ?? "git";
+  return resolvedGitPath;
+}
+
 function runGit(args: string[], cwd: string): void {
-  execFileSync("git", args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(resolveGitPath(), args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
 }
 
 /**
@@ -55,7 +73,7 @@ export async function openProposalPr(params: OpenPrParams): Promise<OpenPrResult
   }
 
   const baseBranch = params.baseBranch ?? "main";
-  const patchFile = path.join(tmpdir(), `arise-pr-${Date.now()}-${Math.random().toString(36).slice(2)}.patch`);
+  const patchFile = path.join(tmpdir(), `arise-pr-${randomUUID()}.patch`);
 
   try {
     runGit(["config", "user.name", "github-actions[bot]"], REPO_ROOT);
