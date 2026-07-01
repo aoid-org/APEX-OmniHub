@@ -1280,3 +1280,15 @@ Phase 1 work in this PR is strictly forbidden. No autonomous code changes, no PR
 `policy/arise-policy.yaml` declares Phase 0 scope, permitted file writes
 (`memory/omni-recall/docs/`), and hard-blocked paths (Supabase functions,
 migrations, `memory/omni-recall/wiki/_core_directives/`, production OmniDash shell).
+
+---
+
+## 9.22 SonarQube Grade A quality remediation & edge function sync (2026-07-01)
+
+**Changed critical runtime path:** `functions/api/mcp/invoke.ts`.
+
+### Operational change summary
+- **`functions/api/mcp/invoke.ts`**: Refactored internal utility function `buildReplyFromAgentResponse` into discrete helper functions to reduce cognitive complexity below SonarQube quality gate thresholds. Replaced unoptimized RegExp stack trace sanitization with non-backtracking patterns and modernized nullish coalescing checks (`??`).
+- **Edge Function synchronization (`omnilink-port`)**: Verified and documented live production runtime state of `omnilink-port` v36 (`ezbr_sha256: 40566870db3288b1ed7893c57faef7adbb319144ec022849e5de2c022dc417ba`) against live project `rtopreovkywofgwgmozi`. Confirmed `ORCHESTRATOR_URL` secret presence and route dispatch for `/omnimedia-catalog`.
+
+**Operational impact:** None to deployed topology, start commands, secrets, database tables, or environment variables. This update records internal refactoring of the MCP invoke handler and live edge synchronization to satisfy the Ops Doc Drift Guard.
