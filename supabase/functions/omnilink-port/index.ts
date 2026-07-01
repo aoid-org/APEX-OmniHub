@@ -304,8 +304,9 @@ async function resolveAutomations(
       action: a.action_type,
       active: a.is_active,
       created_at: a.created_at,
+      detail: `Trigger: ${a.trigger_type} | Action: ${a.action_type}`,
     }))),
-    actions: ['create-automation', 'view-logs'],
+    actions: ['create-automation', 'view-logs', 'execute-automation'],
     count: autos.length,
   };
 }
