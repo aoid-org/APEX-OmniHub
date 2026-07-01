@@ -300,8 +300,17 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
   OmniMedia are not certified fixed by this containment patch. Live route
   behavior must still be probed in the owner-controlled environment before
   functional claims.
-- UI-006 remains open as P2. This patch is containment/a11y/test hardening only;
-  it does not implement a real drag/snap/collision-safe layout solution.
+- UI-006 — RESOLVED 2026-07-01 (PR #1549). Re-audit found `resolveCollisions`/
+  `resolveAlignment` were already real and already wired into
+  `DraggableWidget.tsx`'s `handlePointerUp` (this note above was stale relative
+  to the Phase 10 rewrite). The one actual gap: `clampToCanvas` was implemented
+  and unit-tested in `widgetLayout.ts` but never called anywhere — a widget
+  could resolve to a position outside the canvas (collision-avoidance's
+  outward search, or a fast drag) and become unreachable, since the canvas
+  uses `overflow:auto` with no negative scroll. Fixed by wiring
+  `clampToCanvas` into `handlePointerUp` after collision resolution,
+  converting the resolved rect to canvas-relative coordinates first. Tests:
+  2 new cases in `tests/omnidash/draggable-widget.spec.tsx`.
 
 ## PR #1515 bottom-nav P0 API alignment — 2026-06-28
 
