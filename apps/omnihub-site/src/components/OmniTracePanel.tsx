@@ -80,7 +80,8 @@ export function OmniTracePanel() {
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) return;
-    void load();
+    const id = globalThis.setTimeout(() => void load(), 0);
+    return () => globalThis.clearTimeout(id);
   }, [authLoading, isAuthenticated, load]);
 
   if (authLoading) {

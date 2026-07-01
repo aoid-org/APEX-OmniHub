@@ -19,19 +19,17 @@ import { useAuth } from '../../lib/useAuth';
  */
 export function PasskeySection() {
   const { session, isAuthenticated } = useAuth();
-  const [supported, setSupported] = useState(false);
+  const [supported] = useState(isWebAuthnSupported);
   const [platformAvailable, setPlatformAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const ok = isWebAuthnSupported();
-    setSupported(ok);
-    if (ok) {
+    if (supported) {
       void isPlatformAuthenticatorAvailable().then(setPlatformAvailable);
     }
-  }, []);
+  }, [supported]);
 
   if (!supported) {
     // Honest unsupported state — no fake button.

@@ -62,6 +62,12 @@ describe('production hardening source gates', () => {
     );
   });
 
+  it('create-checkout validates the bearer token explicitly (same getUser(token) fix as create-billing-portal)', () => {
+    const source = read('supabase/functions/create-checkout/index.ts');
+    expect(source).toContain('client.auth.getUser(token)');
+    expect(source).not.toContain('client.auth.getUser()');
+  });
+
   it('deployed bundle smoke has a curl fallback for proxy-constrained Node fetch', () => {
     const source = read('scripts/ci/verify-deployed-bundle.mjs');
     expect(source).toContain("execFileSync('curl'");

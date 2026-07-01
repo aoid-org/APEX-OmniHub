@@ -15,6 +15,11 @@ vi.mock('@/lib/supabase', () => ({
   hasSupabaseConfig: true,
 }));
 
+function mockFunctionsHttpError(status: number, body: { code: string; message: string }) {
+  const context = new Response(JSON.stringify({ ok: false, error: body }), { status });
+  return { data: null, error: { message: 'Edge Function returned a non-2xx status code', context } };
+}
+
 vi.mock('@/hooks/useOmniModuleState', () => ({
   useOmniModuleState: mockState,
   triggerModuleAction: vi.fn(),

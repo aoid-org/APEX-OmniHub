@@ -148,6 +148,8 @@ Normal `create_record` / `send_email` / `call_webhook` have no policy → defaul
 | Edge `apex-agent` | secrets apply at runtime (no redeploy); code: `supabase functions deploy apex-agent --project-ref rtopreovkywofgwgmozi` |
 | Edge `omnilink-port` | code deploy: `supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi`; production deploy workflow publishes it before live OmniBoard route smoke |
 | Edge `create-billing-portal` | code deploy: `supabase functions deploy create-billing-portal --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` at runtime |
+| Edge `create-checkout` | code deploy: `supabase functions deploy create-checkout --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUS`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` at runtime |
+| Edge `stripe-webhook` | code deploy: `supabase functions deploy stripe-webhook --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` at runtime |
 | Orchestrator API / Worker | push to `main` under `orchestrator/` → Render auto-deploys; or service → Manual Deploy → Deploy latest commit; env change → Save Changes redeploys |
 
 ---
