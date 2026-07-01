@@ -21,7 +21,7 @@ status: verified
 | Audited remediation baseline | `7f498b6` — OmniDash surface alignment + glassmorphism repair pass (#1529), after PR #1516 and follow-up governance/claim-hygiene repairs |
 | Local audit branch | `work`; live production/branch protection not verified by this documentation pass |
 | Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
-| GitHub workflow files | **20** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`) |
+| GitHub workflow files | **22** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`; `arise-propose.yml` added in PR #1546 — A.R.I.S.E. Phase 1b propose engine, `workflow_dispatch` only) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_30.md`. |
 | SQL migrations | **102** `.sql` files = **98 forward** + **4 rollback** (`migrations/rollback/`) |
