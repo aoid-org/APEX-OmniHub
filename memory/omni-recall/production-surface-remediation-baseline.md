@@ -125,6 +125,16 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   (mobile vs desktop). `OmniMobileBottomNav.tsx` renders iOS-style bottom nav at mobile viewport.
   Multi-viewport E2E added: `omnidash-responsive.spec.ts` tests desktop (1440px) and mobile
   (393px) — shell rendering, nav presence, touch target enforcement, no chunk-load errors.
+- UI-015 (top nav clipped tablet/mobile) — RESOLVED 2026-07-01 (PR #1549). Re-audit found
+  `OmniDashHeader` (inside `OmniDashShell.tsx`) already drops the search bar and switches
+  `.omni-header-actions` to `overflowX:auto`/`flexShrink:1` for non-desktop viewports (tablet
+  and mobile share the `!isDesktop` branch) — this predates the current pass and the original
+  audit's cited line numbers were stale. The actual gap was test coverage: the only header test
+  file (`tests/omnidash/top-header.spec.tsx`) exercises an orphaned, never-imported
+  `TopHeader.tsx`/`OmniDashTopHeader` component, not the real production header, so the real
+  responsive behavior had zero regression lock. Added 3 tests to
+  `tests/omnidash/responsive-layout-guardrail.spec.tsx` rendering the real `OmniDashShell` at
+  tablet/mobile/desktop and asserting the search-bar/scroll-strategy split.
 
 ## Current E2E auth / session setup
 

@@ -181,4 +181,54 @@ describe('OmniDash responsive-layout guardrail', () => {
     expect(grid).not.toBeNull();
     expect(grid!.style.gridTemplateColumns).toBe('1fr');
   });
+
+  // UI-015 — top nav clipping on tablet/mobile. `isDesktop` folds tablet in with
+  // mobile (useViewport: tablet = 641-1024px, desktop = >1024px), so both share
+  // the same non-desktop header strategy: drop the search bar and let the action
+  // row scroll horizontally instead of clipping/hiding controls.
+  it('tablet viewport drops the search bar and makes header actions scrollable, not clipped', () => {
+    vi.mocked(useViewport).mockReturnValue({
+      isMobile: false, isTablet: true, isDesktop: false, width: 800,
+    } as ReturnType<typeof useViewport>);
+    const { container } = render(<OmniDashShell />);
+
+    expect(screen.queryByText(/Search OmniHub/i)).toBeNull();
+
+    const actions = container.querySelector('.omni-header-actions') as HTMLElement | null;
+    expect(actions).not.toBeNull();
+    expect(actions!.style.overflowX).toBe('auto');
+    expect(actions!.style.flexShrink).toBe('1');
+
+    // Controls are still reachable (scrollable), never silently dropped.
+    expect(screen.getByText('Connect AI')).toBeTruthy();
+    expect(screen.getByText(/Zero Trust Active/)).toBeTruthy();
+  });
+
+  it('mobile viewport drops the search bar and makes header actions scrollable, not clipped', () => {
+    vi.mocked(useViewport).mockReturnValue({
+      isMobile: true, isTablet: false, isDesktop: false, width: 393,
+    } as ReturnType<typeof useViewport>);
+    const { container } = render(<OmniDashShell />);
+
+    expect(screen.queryByText(/Search OmniHub/i)).toBeNull();
+
+    const actions = container.querySelector('.omni-header-actions') as HTMLElement | null;
+    expect(actions).not.toBeNull();
+    expect(actions!.style.overflowX).toBe('auto');
+    expect(actions!.style.flexShrink).toBe('1');
+  });
+
+  it('desktop viewport keeps the search bar and a non-scrolling header actions row', () => {
+    vi.mocked(useViewport).mockReturnValue({
+      isMobile: false, isTablet: false, isDesktop: true, width: 1440,
+    } as ReturnType<typeof useViewport>);
+    const { container } = render(<OmniDashShell />);
+
+    expect(screen.getByText(/Search OmniHub/i)).toBeTruthy();
+
+    const actions = container.querySelector('.omni-header-actions') as HTMLElement | null;
+    expect(actions).not.toBeNull();
+    expect(actions!.style.overflowX).toBe('');
+    expect(actions!.style.flexShrink).toBe('0');
+  });
 });
