@@ -36,18 +36,18 @@ interface ExtractedArtifact {
 }
 
 function extractEqualityArtifact(raw: string): ExtractedArtifact {
-  const fileMatch = raw.match(/largest file (\S+) \((\d+) LOC\)/);
+  const fileMatch = /largest file (\S+) \((\d+) LOC\)/.exec(raw);
   if (!fileMatch) {
     return { file: null, metric: raw };
   }
-  const avgMatch = raw.match(/avg (\d+) LOC/);
+  const avgMatch = /avg (\d+) LOC/.exec(raw);
   const loc = fileMatch[2];
   const metric = avgMatch ? `${loc} LOC (avg ${avgMatch[1]})` : `${loc} LOC`;
   return { file: fileMatch[1]!, metric };
 }
 
 function extractDepthArtifact(raw: string): ExtractedArtifact {
-  const match = raw.match(/max nesting depth (\d+) in ([^;]+);/);
+  const match = /max nesting depth (\d+) in ([^;]+);/.exec(raw);
   if (!match) {
     return { file: null, metric: raw };
   }
