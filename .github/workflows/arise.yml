@@ -1,4 +1,4 @@
-name: "A.R.I.S.E. Structural Observatory (Phase 0)"
+name: "A.R.I.S.E. Structural Observatory (Phase 0/1a)"
 
 on:
   push:
@@ -52,9 +52,45 @@ jobs:
           if-no-files-found: ignore
           retention-days: 90
 
+  diagnosis-observatory:
+    name: "A.R.I.S.E. Diagnosis Observatory"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install A.R.I.S.E. dependencies
+        run: cd apps/apex-arise && bun install
+        continue-on-error: true
+
+      - name: Run diagnosis scan
+        run: cd apps/apex-arise && bun run arise:diagnose
+        continue-on-error: true
+
+      # Same rationale as structural-observatory above: hand the dated
+      # report to the publish job via an artifact rather than exposing a
+      # write-scoped token to the job that runs the diagnosis tooling.
+      - name: Upload diagnosis report artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: arise-diagnosis-report
+          path: memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_*.md
+          if-no-files-found: ignore
+          retention-days: 90
+
   publish-snapshot:
     name: "Publish dated snapshot"
-    needs: structural-observatory
+    needs: [structural-observatory, diagnosis-observatory]
     # Only commit back on a push to a protected branch. PRs (including
     # same-repo PRs, which run third-party scan tooling in the job above)
     # never get a write-scoped token for this workflow.
@@ -74,22 +110,39 @@ jobs:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
 
+      # Each artifact is downloaded independently, and a missing artifact
+      # (e.g. its producing job failed before writing a report) must not
+      # block publishing whichever artifact did succeed.
       - name: Download snapshot artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
         with:
           name: arise-structural-baseline
           path: memory/omni-recall/docs
 
-      - name: Commit dated snapshot
+      - name: Download diagnosis report artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
+        with:
+          name: arise-diagnosis-report
+          path: memory/omni-recall/docs
+
+      - name: Commit dated snapshot and diagnosis report
         run: |
           set -euo pipefail
-          if [ -z "$(git status --porcelain -- memory/omni-recall/docs)" ]; then
-            echo "No snapshot changes to publish."
+          shopt -s nullglob
+          files=(memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_*.md memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_*.md)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No snapshot or diagnosis files found on disk to publish."
+            exit 0
+          fi
+          if [ -z "$(git status --porcelain -- "${files[@]}")" ]; then
+            echo "No snapshot or diagnosis changes to publish."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_*.md
-          git commit -m "chore(arise): publish structural baseline snapshot [skip ci]"
+          git add "${files[@]}"
+          git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report [skip ci]"
           git pull --rebase origin "${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"

@@ -1,13 +1,23 @@
-policy_version: 0.1.0
+policy_version: 0.2.0
 policy_last_updated_utc: 2026-07-01
 system: A.R.I.S.E.
-phase: 0
+phase: 1
 mode: shadow-observation-only
 autonomy: none
 writes_permitted:
   - apps/apex-arise/**
-  - policy/arise-policy.yaml
   - memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_*.md
+  - memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_*.md
+tier_1_propose:
+  max_lines_changed: 150
+  max_files_changed: 5
+  output: pull_request_only
+  auto_merge: false
+  merge_requires: human_review
+  gated_by: policy/rsi-policy.yaml   # existing RSI gate; A.R.I.S.E. does not bypass it
+# hard_blocked_always is the Tier 2 list: diagnosis + PR comment only. The
+# Phase 1b propose engine must never attempt a patch against any of these
+# paths — not "small patch," not "if confident," never.
 hard_blocked_always:
   - supabase/functions/physiomni-action/**
   - supabase/functions/omnibridge-control/**
@@ -17,7 +27,9 @@ hard_blocked_always:
   - tools/rsi/**
   - apps/omnihub-site/dashboard/OmniDashShell.tsx
   - memory/omni-recall/wiki/_core_directives/**
+  - policy/arise-policy.yaml
 note: >
-  This file intentionally does not define Phase 1 tiers or an expanded
-  allowlist. That is a separate, future, explicitly-scoped contract.
-  Adding Phase 1 logic here now would be scope creep on a Phase 0 change.
+  policy/arise-policy.yaml is in hard_blocked_always, not writes_permitted:
+  no automated process this repo builds — including the Phase 1b propose
+  engine — may ever hold write access to its own permission envelope. Only a
+  human, via a normal reviewed PR, edits this file from here forward.
