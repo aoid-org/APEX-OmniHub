@@ -1293,3 +1293,53 @@ Phase 1 work in this PR is strictly forbidden. No autonomous code changes, no PR
 `policy/arise-policy.yaml` declares Phase 0 scope, permitted file writes
 (`memory/omni-recall/docs/`), and hard-blocked paths (Supabase functions,
 migrations, `memory/omni-recall/wiki/_core_directives/`, production OmniDash shell).
+
+## 9.26 A.R.I.S.E. Phase 1a Diagnosis Engine — 2026-07-01 (PR #1544)
+
+**Scope:** `apps/apex-arise/src/diagnosis/`, `apps/apex-arise/tests/diagnosis.test.ts`, root `package.json` scripts.
+
+### What Phase 1a is
+
+Phase 1a is a **read-only diagnosis engine** layered on top of the Phase 0
+signal collectors. It re-invokes the same five Phase 0 signals, ranks them
+worst-first, extracts the named hotspot artifact (specific file + metric) for
+the equality and depth signals, and writes a dated markdown diagnosis report
+to `memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_YYYY_MM_DD.md`.
+
+**Phase 1a never modifies code, never opens PRs, and never proposes fixes.**
+It only names artifacts and states their metric — no remediation logic exists
+in this layer. Like Phase 0, it always exits 0, degrading to a "Degraded Run"
+report section rather than failing the build if a signal collector errors.
+
+### Deployed runtime contracts affected
+
+None. Phase 1a touches no deployed service, no environment variable, no
+database table or migration, and no start command. It is a local/CI-optional
+diagnosis tool that reuses Phase 0's existing collectors and aggregate logic
+without modifying them.
+
+### Root `package.json` scripts
+
+One additional convenience script was added to the root workspace:
+
+```json
+"arise:diagnose": "cd apps/apex-arise && bun run src/diagnosis/index.ts"
+```
+
+This is a **developer convenience shortcut only** — it is not invoked from any
+CI workflow or deployed build pipeline. Invoking it requires Bun to be
+installed locally (see the Phase 0 operator runbook above for `bun install`).
+
+### Operator runbook
+
+**Run Phase 1a locally (after a Phase 0 install):**
+```bash
+cd apps/apex-arise
+bun run src/diagnosis/index.ts   # writes report to memory/omni-recall/docs/
+```
+
+**Interpret the report:** find the dated file at
+`memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_YYYY_MM_DD.md`. Signals
+are ranked worst-first (rank 1 = lowest score); any signal scoring below 0.5 is
+flagged `HOTSPOT`. The report's "Priority Targets for Phase 1b" table lists the
+top two hotspots for scoping purposes only — Phase 1a proposes no fixes.
