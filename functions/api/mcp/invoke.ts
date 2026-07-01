@@ -367,31 +367,37 @@ async function pollAgentRuns(
 
 // ── Exported helpers (also used in tests) ────────────────────────────────────
 
+function extractReplyFromRecord(obj: Record<string, unknown>): string | null {
+  if (typeof obj.reply === "string" && obj.reply) return obj.reply;
+  if (typeof obj.message === "string" && obj.message) return obj.message;
+  if (typeof obj.result === "string" && obj.result) return obj.result;
+  if (typeof obj.goal === "string" && obj.goal) {
+    return `APEX Agent completed the workflow for: "${obj.goal}".`;
+  }
+  return null;
+}
+
+function parseStringAgentResponse(agentResponse: string): string | null {
+  if (agentResponse.length === 0) return null;
+  try {
+    const parsed = JSON.parse(agentResponse) as Record<string, unknown>;
+    return extractReplyFromRecord(parsed);
+  } catch {
+    return agentResponse.length <= 500 ? agentResponse : null;
+  }
+}
+
 /**
  * Build a human-readable reply string from an agent_response column value.
  * agent_response may be a JSON string, a plain string, or an object.
  */
 export function buildReplyFromAgentResponse(agentResponse: unknown, prompt: string): string {
-  if (typeof agentResponse === "string" && agentResponse.length > 0) {
-    try {
-      const parsed = JSON.parse(agentResponse) as Record<string, unknown>;
-      if (typeof parsed.reply === "string" && parsed.reply) return parsed.reply;
-      if (typeof parsed.message === "string" && parsed.message) return parsed.message;
-      if (typeof parsed.result === "string" && parsed.result) return parsed.result;
-      if (typeof parsed.goal === "string" && parsed.goal) {
-        return `APEX Agent completed the workflow for: "${parsed.goal}".`;
-      }
-    } catch {
-      // Not JSON — return as-is if short enough
-      if (agentResponse.length <= 500) return agentResponse;
-    }
-  }
-  if (typeof agentResponse === "object" && agentResponse !== null) {
-    const obj = agentResponse as Record<string, unknown>;
-    if (typeof obj.reply === "string" && obj.reply) return obj.reply;
-    if (typeof obj.goal === "string" && obj.goal) {
-      return `APEX Agent completed the workflow for: "${obj.goal}".`;
-    }
+  if (typeof agentResponse === "string") {
+    const strReply = parseStringAgentResponse(agentResponse);
+    if (strReply !== null) return strReply;
+  } else if (typeof agentResponse === "object" && agentResponse !== null) {
+    const objReply = extractReplyFromRecord(agentResponse as Record<string, unknown>);
+    if (objReply !== null) return objReply;
   }
   return `APEX Agent completed the workflow for: "${prompt}".`;
 }
@@ -410,7 +416,7 @@ function parseAgentResult(agentResponse: unknown): unknown {
       return agentResponse;
     }
   }
-  return agentResponse != null ? agentResponse : {};
+  return agentResponse ?? {};
 }
 
 function isValidUUID(s: string): boolean {
@@ -419,7 +425,7 @@ function isValidUUID(s: string): boolean {
 
 function sanitizeError(err: unknown): string {
   if (typeof err === "string") {
-    return err.replace(/^\s*at\s+.*$/gm, "").substring(0, 200).trim();
+    return err.replace(/^[ \t]*at[ \t]+[^\r\n]*/gm, "").substring(0, 200).trim();
   }
   return "agent_execution_failed";
 }

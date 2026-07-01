@@ -12,7 +12,7 @@ export default defineConfig({
     // zip extraction on GitHub-hosted runners after download completes).
     // Mirrors the strategy already in ci-runtime-gates.yml.
     // Local dev fallback: set PLAYWRIGHT_CHANNEL='' to use bundled chromium.
-    channel: process.env.PLAYWRIGHT_CHANNEL !== '' ? 'chrome' : undefined,
+    channel: process.env.PLAYWRIGHT_CHANNEL === '' ? undefined : 'chrome',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     video: 'retain-on-failure',

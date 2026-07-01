@@ -87,7 +87,7 @@ export async function persistEvent(
   env?: EventStoreEnv,
 ): Promise<PersistOutcome> {
   const cfg = readSupabaseConfig(env);
-  if (!cfg) {
+  if (cfg === null) {
     return { ok: false, reason: 'config_missing', detail: 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set' };
   }
 
@@ -120,7 +120,7 @@ export async function persistEvent(
       signal: controller.signal,
     });
 
-    if (!res.ok) {
+    if (res.ok === false) {
       const text = await res.text().catch(() => '');
       return { ok: false, reason: 'upstream_error', detail: `${res.status} ${text.slice(0, 200)}` };
     }
@@ -133,11 +133,11 @@ export async function persistEvent(
         `${cfg.url}/rest/v1/omnibridge_events?source_id=eq.${encodeURIComponent(input.source_id)}&event_id=eq.${encodeURIComponent(input.event_id)}&select=id`,
         { headers: { 'apikey': cfg.serviceKey, 'Authorization': `Bearer ${cfg.serviceKey}` } },
       );
-      if (!lookup.ok) {
+      if (lookup.ok === false) {
         return { ok: false, reason: 'upstream_error', detail: `duplicate lookup failed: ${lookup.status}` };
       }
       const existing = await lookup.json() as Array<{ id: string }>;
-      if (!existing[0]) {
+      if (existing[0] === undefined) {
         return { ok: false, reason: 'conflict', detail: 'duplicate with no persisted row' };
       }
       return { ok: true, event_uuid: existing[0].id, duplicate: true };
@@ -168,7 +168,7 @@ export async function recordDispatchFailure(
   env?: EventStoreEnv,
 ): Promise<void> {
   const cfg = readSupabaseConfig(env);
-  if (!cfg) return;
+  if (cfg === null) return;
 
   const retryCount = input.retry_count ?? 0;
   const backoffIdx = Math.min(retryCount, BACKOFF_MINUTES.length - 1);
@@ -211,7 +211,7 @@ export async function updateDispatchState(
   env?: EventStoreEnv,
 ): Promise<void> {
   const cfg = readSupabaseConfig(env);
-  if (!cfg) return;
+  if (cfg === null) return;
 
   const nowIso = new Date().toISOString();
   const patch: Record<string, unknown> = { dispatch_state: input.state };

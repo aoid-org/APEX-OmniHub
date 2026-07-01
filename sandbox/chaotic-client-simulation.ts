@@ -533,7 +533,7 @@ Which of these would you like to tackle first?`;
     }
 
     console.log('\n💬 Agent Response:');
-    console.log('   ' + result.agentResponse.split('\n').join('\n   '));
+    console.log('   ' + result.agentResponse.replaceAll('\n', '\n   '));
   }
 
   /**

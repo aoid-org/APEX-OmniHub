@@ -19,9 +19,8 @@ export interface BaselineMetrics {
 export function computeBaseline(logs: ActivityLog[]): BaselineMetrics[] {
   const buckets = new Map<string, ActivityLog[]>();
 
-  // Use a fast for loop instead of .forEach
-  for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
+  // Use a fast for-of loop instead of .forEach
+  for (const log of logs) {
     const key = `${log.userId}:${log.deviceId}`;
     let bucket = buckets.get(key);
     if (!bucket) {
@@ -41,8 +40,7 @@ export function computeBaseline(logs: ActivityLog[]): BaselineMetrics[] {
     let lastSeen = -Infinity;
     const uniqueActionsSet = new Set<string>();
 
-    for (let i = 0; i < totalSessions; i++) {
-      const e = entries[i];
+    for (const e of entries) {
       totalDuration += (e.durationMs ?? 0);
       uniqueActionsSet.add(e.action);
       if (e.timestamp > lastSeen) {

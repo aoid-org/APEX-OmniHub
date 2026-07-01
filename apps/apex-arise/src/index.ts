@@ -34,8 +34,10 @@ function main(): void {
     const [depth, equality] = collectStructural(SCAN_TARGETS, REPO_ROOT);
     signals.push(depth, equality);
   } catch (err) {
-    failures.push({ name: "depth", error: toMessage(err) });
-    failures.push({ name: "equality", error: toMessage(err) });
+    failures.push(
+      { name: "depth", error: toMessage(err) },
+      { name: "equality", error: toMessage(err) }
+    );
     console.error(`[arise] structural signals (depth, equality) failed: ${toMessage(err)}`);
   }
 
@@ -66,7 +68,7 @@ function main(): void {
   });
 
   console.error(`[arise] snapshot written to ${outPath}`);
-  console.error(composite !== null ? `[arise] composite score: ${composite.toFixed(2)}` : `[arise] degraded run: ${compositeError}`);
+  console.error(composite === null ? `[arise] degraded run: ${compositeError}` : `[arise] composite score: ${composite.toFixed(2)}`);
 
   // Phase 0 is measurement-only: never fail the build, regardless of scan outcome.
   process.exit(0);

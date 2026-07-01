@@ -103,7 +103,7 @@ const STRATEGY_PROFILES: Readonly<Record<RouteStrategy, StrategyProfile>> = {
 };
 
 // Scoring weights (must sum to 1)
-const SCORE_WEIGHTS = { speed: 0.25, correctness: 0.50, profitability: 0.25 } as const;
+const SCORE_WEIGHTS = { speed: 0.25, correctness: 0.5, profitability: 0.25 } as const;
 
 // ⚡ Bolt: pre-compute normalization denominators once
 const MAX_LATENCY = Math.max(...Object.values(STRATEGY_PROFILES).map((p) => p.latencyMs));
