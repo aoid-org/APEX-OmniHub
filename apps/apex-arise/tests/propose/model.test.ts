@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProposeTarget } from "../../src/propose/types.js";
 
-const mockGenerateObject = vi.fn();
+const mockGenerateText = vi.fn();
 const mockCreateAnthropic = vi.fn();
+const mockOutputObject = vi.fn((...args: unknown[]) => ({ kind: "object", opts: args[0] }));
 
 class MockAPICallError extends Error {
   statusCode?: number;
@@ -15,9 +16,9 @@ class MockAPICallError extends Error {
   }
 }
 
-class MockNoObjectGeneratedError extends Error {
-  static isInstance(err: unknown): err is MockNoObjectGeneratedError {
-    return err instanceof MockNoObjectGeneratedError;
+class MockNoOutputGeneratedError extends Error {
+  static isInstance(err: unknown): err is MockNoOutputGeneratedError {
+    return err instanceof MockNoOutputGeneratedError;
   }
 }
 
@@ -26,9 +27,10 @@ vi.mock("@ai-sdk/anthropic", () => ({
 }));
 
 vi.mock("ai", () => ({
-  generateObject: (...args: unknown[]) => mockGenerateObject(...args),
+  generateText: (...args: unknown[]) => mockGenerateText(...args),
+  Output: { object: (...args: unknown[]) => mockOutputObject(...args) },
   APICallError: MockAPICallError,
-  NoObjectGeneratedError: MockNoObjectGeneratedError,
+  NoOutputGeneratedError: MockNoOutputGeneratedError,
 }));
 
 const TARGET: ProposeTarget = {
@@ -64,13 +66,13 @@ describe("proposeFix", () => {
 
     const result = await proposeFix(TARGET);
     expect(result).toEqual({ available: false, error: "NOT_CONFIGURED" });
-    expect(mockGenerateObject).not.toHaveBeenCalled();
+    expect(mockGenerateText).not.toHaveBeenCalled();
   });
 
   it("returns a valid proposal on a well-formed model response", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockResolvedValue({
-      object: {
+    mockGenerateText.mockResolvedValue({
+      output: {
         proposed_diff: "diff --git a/src/a.ts b/src/a.ts",
         confidence: "high",
         rationale: "extracted a helper",
@@ -88,10 +90,21 @@ describe("proposeFix", () => {
     }
   });
 
+  it("passes the Zod schema through Output.object", async () => {
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    mockGenerateText.mockResolvedValue({
+      output: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] },
+    });
+    const { proposeFix } = await import("../../src/propose/model.js");
+
+    await proposeFix(TARGET);
+    expect(mockOutputObject).toHaveBeenCalledWith(expect.objectContaining({ schema: expect.anything() }));
+  });
+
   it("truncates an overlong rationale to 1000 chars", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockResolvedValue({
-      object: { proposed_diff: "diff", confidence: "low", rationale: "x".repeat(2000), files_touched: [] },
+    mockGenerateText.mockResolvedValue({
+      output: { proposed_diff: "diff", confidence: "low", rationale: "x".repeat(2000), files_touched: [] },
     });
     const { proposeFix } = await import("../../src/propose/model.js");
 
@@ -103,7 +116,7 @@ describe("proposeFix", () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
     const abortError = new Error("The operation timed out");
     abortError.name = "TimeoutError";
-    mockGenerateObject.mockRejectedValue(abortError);
+    mockGenerateText.mockRejectedValue(abortError);
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "TIMEOUT" });
@@ -113,7 +126,7 @@ describe("proposeFix", () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
     const abortError = new Error("aborted");
     abortError.name = "AbortError";
-    mockGenerateObject.mockRejectedValue(abortError);
+    mockGenerateText.mockRejectedValue(abortError);
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "TIMEOUT" });
@@ -121,7 +134,7 @@ describe("proposeFix", () => {
 
   it("classifies a 401 APICallError as AUTH_FAILURE", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue(new MockAPICallError("unauthorized", 401));
+    mockGenerateText.mockRejectedValue(new MockAPICallError("unauthorized", 401));
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "AUTH_FAILURE" });
@@ -129,7 +142,7 @@ describe("proposeFix", () => {
 
   it("classifies a 403 APICallError as AUTH_FAILURE", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue(new MockAPICallError("forbidden", 403));
+    mockGenerateText.mockRejectedValue(new MockAPICallError("forbidden", 403));
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "AUTH_FAILURE" });
@@ -137,15 +150,15 @@ describe("proposeFix", () => {
 
   it("classifies a non-auth APICallError as ENDPOINT_ERROR", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue(new MockAPICallError("server error", 500));
+    mockGenerateText.mockRejectedValue(new MockAPICallError("server error", 500));
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "ENDPOINT_ERROR" });
   });
 
-  it("classifies a NoObjectGeneratedError as SCHEMA_INVALID", async () => {
+  it("classifies a NoOutputGeneratedError as SCHEMA_INVALID", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue(new MockNoObjectGeneratedError("bad shape"));
+    mockGenerateText.mockRejectedValue(new MockNoOutputGeneratedError("bad shape"));
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "SCHEMA_INVALID" });
@@ -153,7 +166,7 @@ describe("proposeFix", () => {
 
   it("classifies an unrecognized error as UNKNOWN_ERROR, never throwing past the boundary", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue(new Error("something weird"));
+    mockGenerateText.mockRejectedValue(new Error("something weird"));
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "UNKNOWN_ERROR" });
@@ -161,7 +174,7 @@ describe("proposeFix", () => {
 
   it("classifies a non-Error throw as UNKNOWN_ERROR", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
-    mockGenerateObject.mockRejectedValue("raw string failure");
+    mockGenerateText.mockRejectedValue("raw string failure");
     const { proposeFix } = await import("../../src/propose/model.js");
 
     expect(await proposeFix(TARGET)).toEqual({ available: false, error: "UNKNOWN_ERROR" });
@@ -171,9 +184,9 @@ describe("proposeFix", () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
     process.env.ARISE_MODEL_NAME = "claude-custom-model";
     let capturedModel: unknown;
-    mockGenerateObject.mockImplementation(async (opts: { model: unknown }) => {
+    mockGenerateText.mockImplementation(async (opts: { model: unknown }) => {
       capturedModel = opts.model;
-      return { object: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
+      return { output: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
     });
     const { proposeFix } = await import("../../src/propose/model.js");
 
@@ -184,9 +197,9 @@ describe("proposeFix", () => {
   it("falls back to the default model id when ARISE_MODEL_NAME is unset", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
     let capturedModel: unknown;
-    mockGenerateObject.mockImplementation(async (opts: { model: unknown }) => {
+    mockGenerateText.mockImplementation(async (opts: { model: unknown }) => {
       capturedModel = opts.model;
-      return { object: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
+      return { output: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
     });
     const { proposeFix } = await import("../../src/propose/model.js");
 
@@ -197,9 +210,9 @@ describe("proposeFix", () => {
   it("includes both fragments and file paths in the prompt sent to the model", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key";
     let capturedPrompt = "";
-    mockGenerateObject.mockImplementation(async (opts: { prompt: string }) => {
+    mockGenerateText.mockImplementation(async (opts: { prompt: string }) => {
       capturedPrompt = opts.prompt;
-      return { object: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
+      return { output: { proposed_diff: "d", confidence: "low", rationale: "r", files_touched: [] } };
     });
     const { proposeFix } = await import("../../src/propose/model.js");
 

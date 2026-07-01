@@ -76,8 +76,10 @@ export function selectRedundancyTarget(): ProposeTarget | null {
     const duplicates = report.duplicates ?? [];
     if (duplicates.length === 0) return null;
 
-    const largest = duplicates.reduce((best, current) =>
-      current.lines > best.lines || (current.lines === best.lines && current.tokens > best.tokens) ? current : best,
+    const largest = duplicates.reduce(
+      (best, current) =>
+        current.lines > best.lines || (current.lines === best.lines && current.tokens > best.tokens) ? current : best,
+      duplicates[0]!,
     );
 
     const clone = toClone(largest);

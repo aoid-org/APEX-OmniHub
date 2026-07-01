@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,6 +9,14 @@ import type { CandidateDiff, SandboxResult } from "./types.js";
 interface RunResult {
   ok: boolean;
   output: string;
+}
+
+function describeExecError(err: unknown): string {
+  const asExecError = err as { stdout?: string; stderr?: string };
+  if (asExecError.stdout !== undefined || asExecError.stderr !== undefined) {
+    return `${asExecError.stdout ?? ""}${asExecError.stderr ?? ""}`;
+  }
+  return err instanceof Error ? err.message : String(err);
 }
 
 function run(cmd: string, args: string[], cwd: string): RunResult {
@@ -20,14 +29,7 @@ function run(cmd: string, args: string[], cwd: string): RunResult {
     });
     return { ok: true, output };
   } catch (err) {
-    const asExecError = err as { stdout?: string; stderr?: string };
-    const output =
-      asExecError.stdout !== undefined || asExecError.stderr !== undefined
-        ? `${asExecError.stdout ?? ""}${asExecError.stderr ?? ""}`
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, output };
+    return { ok: false, output: describeExecError(err) };
   }
 }
 
@@ -59,7 +61,7 @@ export async function runSandboxCheck(diff: CandidateDiff): Promise<SandboxResul
     }
 
     try {
-      const patchFile = path.join(tmpdir(), `arise-propose-${Date.now()}-${Math.random().toString(36).slice(2)}.patch`);
+      const patchFile = path.join(tmpdir(), `arise-propose-${randomUUID()}.patch`);
       writeFileSync(patchFile, diff.patch, "utf-8");
       try {
         const applyResult = run("git", ["apply", "--whitespace=nowarn", patchFile], worktreePath);
