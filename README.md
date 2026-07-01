@@ -1,6 +1,6 @@
 ---
-version: 1.3.4
-last_audited: 2026-06-30
+version: 1.3.5
+last_audited: 2026-07-01
 status: verified
 ---
 
@@ -18,7 +18,7 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-06-30
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-01
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
@@ -35,6 +35,7 @@ status: verified
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/release/release-validation-matrix.json)** (Current Release Evidence Boundary)
+- **[Release Gate Audit 2026-07-01](./docs/audits/release-gate-audit-2026-07-01.md)** — full-build GATE audit at `845fced`: **GATE PASS** (28 gates + 31/31 CI checks on PR #1550)
 - [CI Status Policy](./memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md)
 - **[OmniDash Canonical Layout Law + P2+ Enhancements (PR #1516)](./memory/omni-recall/omnidash-p2plus-enhancements-2026-06-29.md)** — locked OmniDash layout, mobile/tablet one-handed UX (flick-to-set, header de-clip), and OmniMedia images + Files pipeline + server-side upload caps. Enforced by `npm run check:omnidash`.
 
