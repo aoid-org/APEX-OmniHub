@@ -264,3 +264,39 @@ export function resolveAlignment(
     top: bestDy !== null ? proposed.top + bestDy : proposed.top,
   };
 }
+
+/**
+ * Clamps a resolved (post collision/alignment) viewport rect to the visible
+ * bounds of its scroll-container, expressed back in viewport coordinates.
+ * Collision resolution's outward snap search can walk a widget past the
+ * container edge; `overflow:auto` cannot recover from that in the negative
+ * direction (no negative scroll), so without this the widget becomes
+ * silently unreachable. No-op when the rect is already in bounds.
+ */
+export function clampResolvedRect(
+  resolved: { left: number; top: number; width: number; height: number },
+  canvas: {
+    left: number;
+    top: number;
+    scrollLeft: number;
+    scrollTop: number;
+    clientWidth: number;
+    clientHeight: number;
+  },
+): { left: number; top: number } {
+  const canvasRelative = {
+    x: resolved.left - canvas.left + canvas.scrollLeft,
+    y: resolved.top - canvas.top + canvas.scrollTop,
+  };
+  const clamped = clampToCanvas(
+    canvasRelative,
+    resolved.width,
+    resolved.height,
+    canvas.clientWidth,
+    canvas.clientHeight,
+  );
+  return {
+    left: resolved.left + (clamped.x - canvasRelative.x),
+    top: resolved.top + (clamped.y - canvasRelative.y),
+  };
+}

@@ -10,6 +10,27 @@ terraform {
   }
 }
 
+# Zone-level settings
+#
+# rocket_loader = "off": Rocket Loader rewrites every <script> tag on the
+# page (including ones with a `src`) and injects its own inline bootstrap
+# script to defer/reorder loading. That inline script has no nonce/hash
+# matching this zone's CSP (`script-src 'self' https://static.cloudflareinsights.com
+# https://cdnjs.cloudflare.com`, no 'unsafe-inline'), so the browser blocks
+# it — this is a known, documented Cloudflare/CSP incompatibility, not an
+# app bug (see docs/audits/omnidash-systemic-error-catalog-2026-06-28.md
+# UI-019/E16, and the earlier "banner not shown" beforeinstallprompt failure
+# it causes as a side effect). Only Rocket Loader is touched here — every
+# other zone setting stays whatever it already is; Terraform only manages
+# settings explicitly listed in this block.
+resource "cloudflare_zone_settings_override" "omnihub" {
+  zone_id = var.zone_id
+
+  settings {
+    rocket_loader = "off"
+  }
+}
+
 # DNS Records
 resource "cloudflare_record" "root" {
   zone_id = var.zone_id

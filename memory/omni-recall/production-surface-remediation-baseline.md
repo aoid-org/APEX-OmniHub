@@ -125,6 +125,16 @@ OmniHub user-shoes certification until all active blockers below are fixed, vali
   (mobile vs desktop). `OmniMobileBottomNav.tsx` renders iOS-style bottom nav at mobile viewport.
   Multi-viewport E2E added: `omnidash-responsive.spec.ts` tests desktop (1440px) and mobile
   (393px) — shell rendering, nav presence, touch target enforcement, no chunk-load errors.
+- UI-015 (top nav clipped tablet/mobile) — RESOLVED 2026-07-01 (PR #1549). Re-audit found
+  `OmniDashHeader` (inside `OmniDashShell.tsx`) already drops the search bar and switches
+  `.omni-header-actions` to `overflowX:auto`/`flexShrink:1` for non-desktop viewports (tablet
+  and mobile share the `!isDesktop` branch) — this predates the current pass and the original
+  audit's cited line numbers were stale. The actual gap was test coverage: the only header test
+  file (`tests/omnidash/top-header.spec.tsx`) exercises an orphaned, never-imported
+  `TopHeader.tsx`/`OmniDashTopHeader` component, not the real production header, so the real
+  responsive behavior had zero regression lock. Added 3 tests to
+  `tests/omnidash/responsive-layout-guardrail.spec.tsx` rendering the real `OmniDashShell` at
+  tablet/mobile/desktop and asserting the search-bar/scroll-strategy split.
 
 ## Current E2E auth / session setup
 
@@ -300,8 +310,17 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
   OmniMedia are not certified fixed by this containment patch. Live route
   behavior must still be probed in the owner-controlled environment before
   functional claims.
-- UI-006 remains open as P2. This patch is containment/a11y/test hardening only;
-  it does not implement a real drag/snap/collision-safe layout solution.
+- UI-006 — RESOLVED 2026-07-01 (PR #1549). Re-audit found `resolveCollisions`/
+  `resolveAlignment` were already real and already wired into
+  `DraggableWidget.tsx`'s `handlePointerUp` (this note above was stale relative
+  to the Phase 10 rewrite). The one actual gap: `clampToCanvas` was implemented
+  and unit-tested in `widgetLayout.ts` but never called anywhere — a widget
+  could resolve to a position outside the canvas (collision-avoidance's
+  outward search, or a fast drag) and become unreachable, since the canvas
+  uses `overflow:auto` with no negative scroll. Fixed by wiring
+  `clampToCanvas` into `handlePointerUp` after collision resolution,
+  converting the resolved rect to canvas-relative coordinates first. Tests:
+  2 new cases in `tests/omnidash/draggable-widget.spec.tsx`.
 
 ## PR #1515 bottom-nav P0 API alignment — 2026-06-28
 

@@ -57,7 +57,7 @@ describe("runtime remediation source gates", () => {
     expect(onboarding).not.toContain("using fallback generation");
   });
 
-  it("execute-automation scopes reads and timestamp updates to authenticated user and blocks unsafe tables", () => {
+  it("execute-automation scopes reads and timestamp updates to authenticated user", () => {
     const source = readFileSync(
       "supabase/functions/execute-automation/index.ts",
       "utf8"
@@ -69,6 +69,13 @@ describe("runtime remediation source gates", () => {
     // Note: The file has it twice, so checking once is fine, or we can check match count, but previous test checked toContain twice which is redundant.
     const matchCount = (normalizedSource.match(/\.eq\("id", automationId\)\n {6}\.eq\("user_id", user\.id\)/g) || []).length;
     expect(matchCount).toBe(2);
+  });
+
+  it("shared action executor (used by execute-automation and execute-workflow) blocks unsafe tables and enforces record ownership", () => {
+    const source = readFileSync(
+      "supabase/functions/_shared/action-executor.ts",
+      "utf8"
+    );
     expect(source).not.toContain("'users',");
     expect(source).not.toContain("'audit_logs',");
     expect(source).toContain("Record owner mismatch");

@@ -24,6 +24,7 @@ vi.mock('@/hooks/useOmniModuleState', () => ({
 
 import AutomationsModule from '../../apps/omnihub-site/dashboard/components/modules/AutomationsModule';
 import BillingModule from '../../apps/omnihub-site/dashboard/components/modules/BillingModule';
+import WorkflowsModule from '../../apps/omnihub-site/dashboard/components/modules/WorkflowsModule';
 
 function baseState(moduleKey: string) {
   return {
@@ -172,5 +173,56 @@ describe('production module actions', () => {
 
     expect(await screen.findByText(/billing portal is unavailable/i)).toBeInTheDocument();
     expect(screen.queryByText(/non-2xx/i)).not.toBeInTheDocument();
+  });
+
+  it('WorkflowsModule renders each item exactly once (SVG pipeline lane only, no duplicate default list row)', () => {
+    mockState.mockReturnValue({
+      ...baseState('workflows'),
+      items: [{ id: '223e4567-e89b-12d3-a456-426614174000', label: 'Onboarding Flow', status: 'active', detail: '2 steps' }],
+      actions: [{ id: 'trigger_run', label: 'Trigger Run', variant: 'primary' }],
+    });
+
+    render(<WorkflowsModule onClose={vi.fn()} />);
+
+    expect(screen.getAllByRole('button', { name: /onboarding flow/i })).toHaveLength(1);
+  });
+
+  it('WorkflowsModule selects a workflow via its pipeline lane and runs it through execute-workflow', async () => {
+    const refetch = vi.fn();
+    mockState.mockReturnValue({
+      ...baseState('workflows'),
+      refetch,
+      items: [{ id: '223e4567-e89b-12d3-a456-426614174000', label: 'Onboarding Flow', status: 'active', detail: '2 steps' }],
+      actions: [{ id: 'trigger_run', label: 'Trigger Run', variant: 'primary' }],
+    });
+    mockInvoke.mockResolvedValue({
+      data: { success: true, status: 'success', steps_total: 2, steps_completed: 2 },
+      error: null,
+    });
+
+    render(<WorkflowsModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /select workflow onboarding flow/i }));
+    fireEvent.click(screen.getByRole('button', { name: /trigger run/i }));
+
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('execute-workflow', {
+      body: { workflowId: '223e4567-e89b-12d3-a456-426614174000' },
+    }));
+    expect(refetch).toHaveBeenCalled();
+    expect(await screen.findByText(/run success: 2\/2 steps completed/i)).toBeInTheDocument();
+  });
+
+  it('WorkflowsModule refuses demo/non-UUID item IDs for trigger_run', async () => {
+    mockState.mockReturnValue({
+      ...baseState('workflows'),
+      items: [{ id: 'demo-workflow', label: 'Demo Flow', status: 'active', detail: '3 steps' }],
+      actions: [{ id: 'trigger_run', label: 'Trigger Run', variant: 'primary' }],
+    });
+
+    render(<WorkflowsModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /select workflow demo flow/i }));
+    fireEvent.click(screen.getByRole('button', { name: /trigger run/i }));
+
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(await screen.findByText(/only saved live workflows/i)).toBeInTheDocument();
   });
 });

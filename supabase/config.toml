@@ -36,6 +36,13 @@ verify_jwt = false
 [functions.execute-automation]
 verify_jwt = true
 
+[functions.execute-workflow]
+# Own internal auth (JWT for the "Trigger Run" button, shared secret for the
+# pg_cron scheduler — see the function's own header comment) — same pattern
+# as omnilink-port. Platform-level verify_jwt would reject the cron caller
+# before that code runs, since it has no user JWT to present.
+verify_jwt = false
+
 [functions.create-billing-portal]
 verify_jwt = true
 

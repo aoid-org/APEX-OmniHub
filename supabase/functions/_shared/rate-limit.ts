@@ -67,6 +67,7 @@ export const RATE_LIMIT_CONFIGS = {
   apexVoice: { maxRequests: 30, windowMs: 60000, keyPrefix: "apex-voice" },
   createCheckout: { maxRequests: 5, windowMs: 60000, keyPrefix: "create-checkout" },
   executeAutomation: { maxRequests: 60, windowMs: 60000, keyPrefix: "execute-automation" },
+  executeWorkflow: { maxRequests: 20, windowMs: 60000, keyPrefix: "execute-workflow" },
   omniRuns: { maxRequests: 30, windowMs: 60000, keyPrefix: "omni-runs" },
   omnibridgeControl: { maxRequests: 20, windowMs: 60000, keyPrefix: "omnibridge-control" },
   omnilinkEval: { maxRequests: 10, windowMs: 60000, keyPrefix: "omnilink-eval" },

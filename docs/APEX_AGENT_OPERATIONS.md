@@ -1211,15 +1211,28 @@ configuration. It is a CI observability tool only.
 
 ### Workflow: `.github/workflows/arise.yml`
 
+The workflow is split into two jobs so a write-scoped token is never present
+while third-party scan tooling (madge, dependency-cruiser, jscpd, ts-morph)
+executes:
+
+| Job | Trigger | Permissions | What it does |
+|---|---|---|---|
+| `structural-observatory` | push/PR to `main`/`master`; `workflow_dispatch` | `contents: read` | Installs deps, runs `arise:scan`, uploads the dated snapshot as a build artifact (`arise-structural-baseline`, 90-day retention). |
+| `publish-snapshot` | push to `main`/`master` only (never on `pull_request`) | `contents: write` | Downloads the artifact and, if it differs from what's committed, commits and pushes it back with `[skip ci]`. |
+
 | Property | Value |
 |---|---|
-| Trigger | push/PR to `main`/`master`; `workflow_dispatch` |
 | Runner | `ubuntu-22.04` |
-| Job timeout | 25 minutes |
-| Build status | **always exits 0** (`continue-on-error: true` on job and all steps) |
+| Job timeout | 25 minutes (scan), 5 minutes (publish) |
+| Build status | **always exits 0** (`continue-on-error: true` on both jobs and all steps) |
 | Required check? | **No** — informational only; never blocks merge |
-| Artifact written | `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md` |
-| Permissions | `contents: read` only |
+| Artifact committed | `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md`, committed by `publish-snapshot` on every push to `main`/`master` |
+
+Before this two-job split, the scan ran and wrote the snapshot to the
+ephemeral runner filesystem only — nothing committed it back, so the "dated
+snapshot" never accumulated history beyond whatever was checked in manually.
+`publish-snapshot` is what makes this an ongoing observatory rather than a
+one-time baseline.
 
 ### Root `package.json` scripts
 

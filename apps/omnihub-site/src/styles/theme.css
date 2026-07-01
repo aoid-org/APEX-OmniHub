@@ -48,8 +48,8 @@
   --color-info: #0ea5e9;
 
   /* Typography */
-  --font-family-sans: 'Space Grotesk', sans-serif;
-  --font-family-mono: 'Space Grotesk', monospace;
+  --font-family-sans: 'Space Grotesk', 'Space Grotesk Fallback', sans-serif;
+  --font-family-mono: 'Space Grotesk', 'Space Grotesk Fallback', monospace;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
