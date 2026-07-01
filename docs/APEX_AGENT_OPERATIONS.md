@@ -1343,3 +1343,54 @@ bun run src/diagnosis/index.ts   # writes report to memory/omni-recall/docs/
 are ranked worst-first (rank 1 = lowest score); any signal scoring below 0.5 is
 flagged `HOTSPOT`. The report's "Priority Targets for Phase 1b" table lists the
 top two hotspots for scoping purposes only — Phase 1a proposes no fixes.
+
+## 9.27 A.R.I.S.E. Phase 1b WP-0/WP-1 — diagnosis CI wiring + policy contract for Phase 1 (2026-07-01)
+
+**Scope:** `.github/workflows/arise.yml`, `policy/arise-policy.yaml`,
+`apps/apex-arise/tests/policy.test.ts`. No new dependencies, no new CI
+secrets, no autonomy change (`autonomy: none` unchanged).
+
+### WP-0 — `diagnosis-observatory` CI job
+
+`arise.yml` gains a `diagnosis-observatory` job, structurally identical to
+`structural-observatory`: read-only `contents: read` token, runs
+`arise:diagnose`, uploads the dated diagnosis report as a build artifact
+(`arise-diagnosis-report`, 90-day retention), `continue-on-error: true` at
+job and step level. It never gets a write-scoped token.
+
+`publish-snapshot` now depends on both observatory jobs and downloads both
+artifacts independently (each download step is `continue-on-error: true`,
+so a missing artifact from one job never blocks publishing the other). The
+commit step uses `shopt -s nullglob` to build the list of files that
+actually exist on disk before running `git status`/`git add`, so a missing
+snapshot or report is a clean no-op rather than a failed `git add` on a
+non-matching pathspec. Same bot identity, same push-to-`main`/`master`-only
+gate, same `git pull --rebase` → `git push` sequence as Phase 0.
+
+`policy/arise-policy.yaml`'s `writes_permitted` gained one entry,
+`memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_*.md`, closing the
+gap where Phase 1a was writing a path its own policy file didn't declare.
+
+### WP-1 — policy contract for Phase 1 (self-edit hazard fix)
+
+`policy/arise-policy.yaml`:
+- **`policy/arise-policy.yaml` moved from `writes_permitted` to
+  `hard_blocked_always`.** No automated process this repo builds —
+  including the Phase 1b propose engine — may ever hold write access to
+  its own permission envelope. Only a human, via a normal reviewed PR,
+  edits this file from here forward. `apps/apex-arise/tests/policy.test.ts`
+  is the permanent regression guard for this invariant.
+- Added a `tier_1_propose` block (`max_lines_changed: 150`,
+  `max_files_changed: 5`, `output: pull_request_only`, `auto_merge: false`,
+  `merge_requires: human_review`, `gated_by: policy/rsi-policy.yaml`) —
+  values carried forward from RFC-004 §7.2, not renegotiated here.
+- `hard_blocked_always` is now the Tier 2 list: diagnosis + PR-comment
+  only, never a patch attempt, no exceptions.
+- `phase: 0` → `phase: 1`. `mode` (`shadow-observation-only`) and
+  `autonomy` (`none`) are unchanged — Phase 1b is PR-only, human-merge-
+  required, not autonomous merge.
+
+**This PR does not build the propose engine itself (WP-2).** That is
+gated on explicit owner sign-off of the Pre-Flight Gate (dependency
+sign-off, `ANTHROPIC_API_KEY` secret presence, Tier 1 envelope
+confirmation, pilot target approval) per the Phase 1b execution contract.
