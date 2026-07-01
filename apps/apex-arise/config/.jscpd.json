@@ -1,0 +1,6 @@
+{
+  "minTokens": 50,
+  "minLines": 5,
+  "gitignore": true,
+  "ignore": ["**/node_modules/**", "**/dist/**", "**/*.test.*", "**/*.spec.*"]
+}
