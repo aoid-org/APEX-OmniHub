@@ -1751,3 +1751,57 @@ expressions per workflow — a genuinely flexible per-workflow schedule
 evaluator in SQL or one `cron.schedule()` call per workflow (dynamic job
 management), neither of which was necessary to prove real autonomous
 execution works end-to-end.
+
+---
+
+## 9.33 CSP inline-script violation (UI-019/E16) — root-caused to Rocket Loader, IaC fix committed (2026-07-01)
+
+**Root cause, confirmed:** the zone's `script-src 'self' https://static.cloudflareinsights.com
+https://cdnjs.cloudflare.com` CSP (no `'unsafe-inline'`, no nonce) already
+allowlists `static.cloudflareinsights.com` by host — a normal `<script
+src="https://static.cloudflareinsights.com/beacon.min.js">` tag (the
+standard Cloudflare Web Analytics snippet) would pass that check without
+any violation. The observed failure is specifically an **inline** script
+with no `src`, which only one Cloudflare feature injects at the edge:
+**Rocket Loader**, which rewrites every `<script>` tag on the page
+(including ones that already have a `src`) into its own inline bootstrap
+loader. That injected script has no nonce/hash this CSP can recognize, so
+the browser correctly blocks it — a documented, known Cloudflare/CSP
+incompatibility, not an application bug. (This also explains the
+`beforeinstallprompt` banner-suppression side effect logged alongside it —
+Rocket Loader's rewrite interferes with the PWA install-prompt script's
+normal execution timing.)
+
+**Why this wasn't fixed directly:** disabling Rocket Loader requires a
+Cloudflare zone-settings write, and this sandbox has no
+`CLOUDFLARE_API_TOKEN` (confirmed absent from the environment — only
+`CLOUDFLARE_ACCOUNT_ID` exists, as a Supabase secret name, not a usable
+credential here).
+
+**Fix committed as infrastructure-as-code instead:** `terraform/modules/cloudflare/main.tf`
+gains `resource "cloudflare_zone_settings_override" "omnihub"` setting only
+`rocket_loader = "off"` — every other zone setting is left untouched
+(Terraform's `cloudflare_zone_settings_override` only manages settings
+explicitly listed in its `settings` block). This is not applied
+immediately: `terraform/environments/production`'s `terraform apply` only
+runs from `.github/workflows/release.yml`, gated behind an actual release
+cut (`ENABLE_SHADOW_DEPLOYMENT`/`ENABLE_ATOMIC_ROUTING_FLIP`) — owner-driven,
+same as every other release in this repo. It will take effect on the next
+release cut without further action, or an owner can `terraform apply`
+`terraform/environments/production` manually sooner.
+
+**Verification performed:** confirmed no `cloudflare_zone_settings_override`
+resource existed anywhere in the Terraform tree before this change (so
+Rocket Loader was never Terraform-managed — likely toggled on directly in
+the dashboard at some point). Confirmed `terraform validate`-equivalent
+sanity via the existing `tests/infrastructure/production-domain-alignment.test.ts`
+suite (still passes — it doesn't cover this specific resource, but confirms
+no syntax-level regression to the Terraform tree this test does parse).
+No live `terraform plan`/`apply` was run — no Terraform CLI available in
+this sandbox and no Cloudflare credentials to authenticate a plan against
+the real zone even if there were.
+
+**Out of scope:** actually running `terraform apply` (owner-gated, requires
+`TF_TOKEN_app_terraform_io` / a real release cut) — not something to do
+unprompted from a code-authoring session, consistent with how every other
+production-release action in this repo is handled.
