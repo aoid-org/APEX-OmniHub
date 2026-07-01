@@ -169,7 +169,7 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 /supabase/functions  - Edge functions (33 function directories + _shared = 34 total)
 /orchestrator        - Temporal workers and orchestration services (~130 tracked files)
 /tests               - Automated test suite
-/.github/workflows   - CI/CD workflows (20 workflow files)
+/.github/workflows   - CI/CD workflows (22 workflow files)
 ```
 
 ---
