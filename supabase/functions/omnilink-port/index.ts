@@ -320,7 +320,7 @@ async function resolveWorkflows(
   const [wfRes, runRes] = await Promise.allSettled([
     anonClient
       .from('workflows')
-      .select('id, name, is_active, definition, created_at')
+      .select('id, name, is_active, definition, schedule, created_at')
       .order('created_at', { ascending: false })
       .limit(20),
     anonClient
@@ -339,6 +339,7 @@ async function resolveWorkflows(
     name: string;
     is_active: boolean;
     definition: { steps?: unknown[] } | null;
+    schedule: string | null;
     created_at: string;
   }>;
 
@@ -354,10 +355,11 @@ async function resolveWorkflows(
     items: normalizeModuleItems(defs.map((w) => {
       const recentRun = runs.find((r) => r.workflow_id === w.id) ?? null;
       const stepCount = Array.isArray(w.definition?.steps) ? w.definition.steps.length : 0;
+      const scheduleLabel = w.schedule ? ` | Schedule: ${w.schedule}` : '';
       return {
         ...w,
         recentRun,
-        detail: `${stepCount} step${stepCount === 1 ? '' : 's'}${recentRun ? ` | Last: ${recentRun.status}` : ''}`,
+        detail: `${stepCount} step${stepCount === 1 ? '' : 's'}${recentRun ? ` | Last: ${recentRun.status}` : ''}${scheduleLabel}`,
       };
     })),
     actions: ['create_workflow', 'trigger_run'],

@@ -1688,3 +1688,66 @@ this diff were not individually re-verified row-by-row against
 `schema_migrations` beyond the table-existence check — this audit proves
 table-level drift, not full column/constraint/function-level drift for
 every migration.
+
+---
+
+## 9.32 Workflows — real pg_cron autonomous scheduling (2026-07-01)
+
+**Context:** §9.30 shipped manual-only workflow execution (click "Trigger
+Run") and explicitly deferred autonomous/event-driven triggers pending a
+scoping decision between (a) a new edge-function step-executor or (b)
+registering real Temporal intents in the orchestrator. This pass confirmed
+`pg_cron` (1.6.4) and `pg_net` (0.19.5) are both enabled on the production
+project, making a third option — real cron-driven scheduling entirely
+within Supabase, no orchestrator involvement — concretely available, so it
+was built.
+
+**Design:** `workflows.schedule` (previously an unused free-text column)
+now accepts one of `'every_5_min' | 'hourly' | 'daily'` (CHECK constraint
+`workflows_schedule_preset_check`, NULL/manual unaffected). A pg_cron job
+(`workflow-scheduler`, `*/5 * * * *`) calls
+`public.dispatch_scheduled_workflows()`, a `SECURITY DEFINER` function
+that finds active, scheduled, due workflows (due = no run yet, or last
+`workflow_runs.created_at` older than the preset's interval) and fires an
+async `net.http_post` to `execute-workflow` per workflow — the same edge
+function the manual button already calls.
+
+**Auth for the system caller:** `execute-workflow` previously only accepted
+a user JWT. It now also accepts `X-Cron-Secret` matching `CRON_SHARED_SECRET`
+(a new Function secret) as an alternate path — `verify_jwt` flipped to
+`false` in `supabase/config.toml` for this function (platform-level JWT
+enforcement would otherwise reject the cron caller before that check ever
+runs; same pattern `omnilink-port` already uses). On the cron path the
+function looks up the workflow **by id only** (no user to scope by yet)
+and then uses that row's own `user_id` for every subsequent operation — the
+scheduler can only ever act as the workflow's actual owner, never as an
+arbitrary user. The secret itself lives in Supabase Vault
+(`vault.decrypted_secrets`, name `cron_shared_secret`) rather than in the
+migration file or `cron.job` body in plaintext, and mirrors the same value
+set as the `CRON_SHARED_SECRET` Function secret.
+
+**Frontend:** `WorkflowsModule`'s create form gets a schedule dropdown
+(Manual / Every 5 minutes / Hourly / Daily); `resolveWorkflows()` now
+selects and displays `schedule` in each row's detail line.
+
+**Operational impact:** one new Function secret (`CRON_SHARED_SECRET`), one
+new Vault secret (`cron_shared_secret`, same value), one new pg_cron job
+(`workflow-scheduler`, id 2). `execute-workflow`'s `verify_jwt` changed
+`true` → `false`. Redeployed `execute-workflow` and `omnilink-port`.
+
+**Verified live, full chain, no shortcuts:** created a real workflow with
+`schedule: 'every_5_min'`, called `dispatch_scheduled_workflows()` directly
+(rather than waiting for the real 5-minute tick), confirmed via
+`net._http_response` that the async POST reached `execute-workflow` and
+returned `200`, confirmed a genuine `workflow_runs` row was created with
+`status: "success"` and real step output — the cron path authenticated with
+only the shared secret, no JWT, and correctly resolved to the workflow's
+actual owner. Test workflow deleted afterward so the live recurring cron
+job has nothing scheduled to keep re-triggering.
+
+**Out of scope:** only 3 fixed intervals are supported, not arbitrary cron
+expressions per workflow — a genuinely flexible per-workflow schedule
+(e.g. "every Tuesday at 3pm") would need either a real cron-expression
+evaluator in SQL or one `cron.schedule()` call per workflow (dynamic job
+management), neither of which was necessary to prove real autonomous
+execution works end-to-end.

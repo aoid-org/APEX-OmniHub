@@ -16,7 +16,18 @@
  * Security:
  * - UUID validation for workflowId
  * - Table allowlist + SSRF protection inherited from the shared executor
- * - workflow_runs row is owned by the authenticated user (RLS-enforced)
+ * - workflow_runs row is scoped to the workflow's owning user
+ *
+ * Two callers:
+ * 1. Authenticated user (normal "Trigger Run" button) — Bearer JWT, scoped to
+ *    that user's own workflowId via .eq("user_id", user.id).
+ * 2. The pg_cron scheduler (see supabase/migrations/*_workflow_scheduler.sql)
+ *    — no user is logged in, so it authenticates with a shared secret
+ *    (X-Cron-Secret header, checked against CRON_SHARED_SECRET) instead of a
+ *    JWT. On that path the workflow is looked up by id only (no user to
+ *    scope by yet) and its own row-level user_id is then used for every
+ *    subsequent scoped operation — the cron job can only ever act as the
+ *    workflow's actual owner, never as an arbitrary user.
  */
 
 // @ts-ignore: Deno imports are not recognized by standard TS
@@ -105,15 +116,25 @@ serve(async (req: Request) => {
   try {
     const supabase = createSupabaseClient();
 
-    const authHeader = req.headers.get("Authorization");
-    const { success, user, error: authError } = await authenticateUser(authHeader, supabase);
-    if (!success || !user) {
-      return corsJsonResponse({ error: "unauthorized", message: authError || "Authentication failed" }, 401);
-    }
+    // Cron path: a shared secret stands in for a user JWT. Only a caller that
+    // already knows CRON_SHARED_SECRET (the pg_cron job body — see the
+    // workflow_scheduler migration) can reach this branch.
+    const cronSecretHeader = req.headers.get("X-Cron-Secret");
+    const cronSecret = Deno.env.get("CRON_SHARED_SECRET");
+    const isCronCall = Boolean(cronSecretHeader && cronSecret && cronSecretHeader === cronSecret);
 
-    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.executeWorkflow);
-    if (!rl.allowed) {
-      return rateLimitExceededResponse(req.headers.get("origin"), rl);
+    let ownerUserId: string | null = null;
+    if (!isCronCall) {
+      const authHeader = req.headers.get("Authorization");
+      const { success, user, error: authError } = await authenticateUser(authHeader, supabase);
+      if (!success || !user) {
+        return corsJsonResponse({ error: "unauthorized", message: authError || "Authentication failed" }, 401);
+      }
+      const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.executeWorkflow);
+      if (!rl.allowed) {
+        return rateLimitExceededResponse(req.headers.get("origin"), rl);
+      }
+      ownerUserId = user.id;
     }
 
     const body = await req.json();
@@ -126,12 +147,16 @@ serve(async (req: Request) => {
       );
     }
 
-    const { data: workflow, error: fetchError } = await supabase
+    // Cron calls don't know the owner yet — look up by id only, then trust
+    // the row's own user_id for every subsequent scoped operation below.
+    let workflowQuery = supabase
       .from("workflows")
-      .select("id, name, definition, is_active")
-      .eq("id", workflowId)
-      .eq("user_id", user.id)
-      .single();
+      .select("id, name, definition, is_active, user_id")
+      .eq("id", workflowId);
+    if (!isCronCall && ownerUserId) {
+      workflowQuery = workflowQuery.eq("user_id", ownerUserId);
+    }
+    const { data: workflow, error: fetchError } = await workflowQuery.single();
 
     if (fetchError) {
       if (fetchError.code === "PGRST116") {
@@ -140,7 +165,8 @@ serve(async (req: Request) => {
       throw fetchError;
     }
 
-    const typedWorkflow = workflow as Workflow;
+    const typedWorkflow = workflow as Workflow & { user_id: string };
+    const userId = ownerUserId ?? typedWorkflow.user_id;
     if (!typedWorkflow.is_active) {
       return corsJsonResponse({ error: "inactive", message: "Workflow is not active" }, 400);
     }
@@ -158,20 +184,20 @@ serve(async (req: Request) => {
 
     const { data: run, error: runInsertError } = await supabase
       .from("workflow_runs")
-      .insert({ workflow_id: typedWorkflow.id, user_id: user.id, status: "running", logs: [] })
+      .insert({ workflow_id: typedWorkflow.id, user_id: userId, status: "running", logs: [] })
       .select("id")
       .single();
     if (runInsertError || !run) {
       throw runInsertError ?? new Error("Failed to create workflow_runs row");
     }
 
-    const { logs, status, errorMessage } = await runSteps(steps, supabase, user.id);
+    const { logs, status, errorMessage } = await runSteps(steps, supabase, userId);
 
     await supabase
       .from("workflow_runs")
       .update({ status, logs, error_message: errorMessage })
       .eq("id", run.id)
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     return corsJsonResponse({
       success: status === "success",

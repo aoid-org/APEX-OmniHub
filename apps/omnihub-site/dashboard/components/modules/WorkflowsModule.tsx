@@ -125,6 +125,13 @@ const STEP_TYPE_LABELS: Readonly<Record<StepActionType, string>> = {
 
 const CREATE_RECORD_TABLES = ['invoices', 'logs', 'tasks', 'notifications'] as const;
 
+const SCHEDULE_LABELS: Readonly<Record<'manual' | 'every_5_min' | 'hourly' | 'daily', string>> = {
+  manual: 'Manual only (click Trigger Run)',
+  every_5_min: 'Every 5 minutes',
+  hourly: 'Hourly',
+  daily: 'Daily',
+};
+
 const fieldClass =
   'w-full rounded-lg border border-border/30 bg-muted/10 px-3 py-2 text-xs text-foreground ' +
   'placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40';
@@ -244,6 +251,7 @@ function CreateWorkflowForm({
   onCreated: (message: string) => void;
 }) {
   const [name, setName] = useState('');
+  const [schedule, setSchedule] = useState<'manual' | 'every_5_min' | 'hourly' | 'daily'>('manual');
   const [steps, setSteps] = useState<DraftStep[]>([{ actionType: 'notification', fields: {} }]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -289,16 +297,20 @@ function CreateWorkflowForm({
           name: name.trim(),
           definition: { steps: definitionSteps },
           is_active: true,
+          schedule: schedule === 'manual' ? null : schedule,
         });
       if (insertError) {
         setError(insertError.message);
         return;
       }
-      onCreated(`"${name.trim()}" created with ${steps.length} step${steps.length === 1 ? '' : 's'}. Select it below and click Trigger Run to run it for real.`);
+      const scheduleNote = schedule === 'manual'
+        ? 'Select it below and click Trigger Run to run it for real.'
+        : `It will also run automatically on the "${SCHEDULE_LABELS[schedule]}" schedule (pg_cron), or select it below to run it manually now.`;
+      onCreated(`"${name.trim()}" created with ${steps.length} step${steps.length === 1 ? '' : 's'}. ${scheduleNote}`);
     } finally {
       setSubmitting(false);
     }
-  }, [name, steps, onCreated]);
+  }, [name, schedule, steps, onCreated]);
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
@@ -309,6 +321,15 @@ function CreateWorkflowForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
+      <select
+        className={fieldClass}
+        value={schedule}
+        onChange={(e) => setSchedule(e.target.value as typeof schedule)}
+      >
+        {Object.entries(SCHEDULE_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>{label}</option>
+        ))}
+      </select>
 
       {steps.map((step, i) => (
         <StepEditor
