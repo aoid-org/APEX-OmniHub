@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.9.0
-last_audited: 2026-06-30
+version: 1.9.1
+last_audited: 2026-07-01
 status: verified
 ---
 
@@ -10,17 +10,17 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-06-30** (README-cited documentation sync to HEAD `7f498b6`, package `1.8.3`, OmniDash surface repair baseline, and current repo counts). Previous refresh: 2026-06-25 (integration harness CI fix; PRs #1487/#1488 incorporated). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_30.md`.
+> Current repo-truth index refreshed **2026-07-01** (release gate audit pass at HEAD `845fced`: full `verify:release` matrix + PR-blocking guards executed non-fail-fast, **GATE: PASS** — see `docs/audits/release-gate-audit-2026-07-01.md`; audit-document inventory corrected to reflect the `memory/omni-recall/archive/docs/audits/` relocation; source-file counts re-verified). Previous refresh: 2026-06-30 (README-cited documentation sync to HEAD `7f498b6`, package `1.8.3`, OmniDash surface repair baseline). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_06_30.md`.
 
-## Current Repo Facts Verified in This Pass (2026-06-30)
+## Current Repo Facts Verified in This Pass (2026-07-01)
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `7f498b6` — OmniDash surface alignment + glassmorphism repair pass (#1529), after PR #1516 and follow-up governance/claim-hygiene repairs |
+| Audited remediation baseline | `845fced` — orphaned static `/launch` page removal, after A.R.I.S.E. Phase 1b (#1546 propose engine) and SonarCloud reliability/security repairs; full release gate audit **GATE: PASS** at this commit (`docs/audits/release-gate-audit-2026-07-01.md`, PR #1550, 31/31 CI checks green) |
 | Local audit branch | `work`; live production/branch protection not verified by this documentation pass |
-| Source files under `src/` | **328** TypeScript/TSX (234 `.ts` + 94 `.tsx`) |
+| Source files under `src/` | **322** TypeScript/TSX (230 `.ts` + 92 `.tsx`) |
 | GitHub workflow files | **22** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`; `arise-propose.yml` added in PR #1546 — A.R.I.S.E. Phase 1b propose engine, `workflow_dispatch` only) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_06_30.md`. |
@@ -121,23 +121,18 @@ status: verified
 
 ## Audit documents
 
-- `docs/audits/ANNOTATED_PR_TRIAGE_2026_05_06.md`
-- `docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md`
-- `docs/audits/APEX_RELEASE_READINESS_REPORT.md`
-- `docs/audits/ARMAGEDDON_TEST_SUITE_REPORT.md`
-- `docs/audits/DOCUMENTATION_AUDIT_2026-05-15.md`
-- `docs/audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`
-- `docs/audits/M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`
-- `docs/audits/OMNIDASH_BUILD_AUDIT_2026_03_21.md`
-- `docs/audits/PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`
-- `docs/audits/PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`
-- `docs/audits/RUNTIME_REMEDIATION_CALL_GRAPH.md`
-- `docs/audits/RUNTIME_REMEDIATION_RESULTS.md`
-- `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md`
-- `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md`
-- `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md`
-- `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md`
-- `docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md`
+Current audits (in `docs/audits/`):
+
+- `docs/audits/release-gate-audit-2026-07-01.md` — **full-build release GATE audit at `845fced`: GATE PASS** (28 gates locally + 31/31 CI checks on PR #1550; environmental-failure triage; tech-debt register)
+- `docs/audits/omnidash-surface-alignment-glass-2026-06-30.md`
+- `docs/audits/omnidash-p0-remediation-2026-06-28.md`
+- `docs/audits/omnidash-systemic-error-catalog-2026-06-28.md`
+- `docs/audits/documentation-drift-assessment-2026-06-26.md`
+- `docs/audits/production-audit-2026-06-26.md`
+
+Legacy audits (17 files, relocated to `memory/omni-recall/archive/docs/audits/` — historical evidence only):
+
+- `ANNOTATED_PR_TRIAGE_2026_05_06.md`, `AOID_RELEASE_READINESS_REPORT_4-4-2026.md`, `APEX_RELEASE_READINESS_REPORT.md`, `ARMAGEDDON_TEST_SUITE_REPORT.md`, `DOCUMENTATION_AUDIT_2026-05-15.md`, `FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`, `M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`, `OMNIDASH_BUILD_AUDIT_2026_03_21.md`, `PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`, `PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`, `RUNTIME_REMEDIATION_CALL_GRAPH.md`, `RUNTIME_REMEDIATION_RESULTS.md`, `SUPABASE_SECURITY_AUDIT_2026_05_04.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_07.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_08.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_09.md`, `VOICE_FORTRESS_TELEMETRY_AUDIT.md`
 - `docs/DRIFT_AUDIT_2026_05_12.md`
 - `docs/DRIFT_REMEDIATION_REPORT_2026_05_12.md`
 - `DRIFT_MATRIX.md`
@@ -170,7 +165,7 @@ status: verified
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
-- `docs/audits/` — 17 Markdown file(s): `ANNOTATED_PR_TRIAGE_2026_05_06.md`, `AOID_RELEASE_READINESS_REPORT_4-4-2026.md`, `APEX_RELEASE_READINESS_REPORT.md`, `ARMAGEDDON_TEST_SUITE_REPORT.md`, `DOCUMENTATION_AUDIT_2026-05-15.md`, `FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`, `M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`, `OMNIDASH_BUILD_AUDIT_2026_03_21.md`, `PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`, `PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`, `RUNTIME_REMEDIATION_CALL_GRAPH.md`, `RUNTIME_REMEDIATION_RESULTS.md`, `SUPABASE_SECURITY_AUDIT_2026_05_04.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_07.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_08.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_09.md`, `VOICE_FORTRESS_TELEMETRY_AUDIT.md`
+- `docs/audits/` — 6 Markdown file(s): `release-gate-audit-2026-07-01.md`, `omnidash-surface-alignment-glass-2026-06-30.md`, `omnidash-p0-remediation-2026-06-28.md`, `omnidash-systemic-error-catalog-2026-06-28.md`, `documentation-drift-assessment-2026-06-26.md`, `production-audit-2026-06-26.md` (17 legacy audits relocated to `memory/omni-recall/archive/docs/audits/`)
 - `docs/capabilities/` — 6 Markdown file(s): `fortress-protocol.md`, `maestro.md`, `man-mode.md`, `omniport.md`, `orchestrator.md`, `tri-force-protocol.md`
 - `docs/ci/` — 1 Markdown file(s): `CHAOS_CI_FIX.md`
 - `docs/compliance/` — 9 Markdown file(s): `DATA_RETENTION_POLICY.md`, `EVIDENCE_CHECKLIST.md`, `GDPR_COMPLIANCE.md`, `GDPR_WORKFLOWS.md`, `OMNILINK_HYBRID_CERTIFICATION.md`, `PRIVACY_POLICY.md`, `SOC2_READINESS.md`, `TERMS_OF_SERVICE.md`, `THIRD_PARTY_NOTICES.md`
