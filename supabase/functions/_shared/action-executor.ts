@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // deno-lint-ignore-file no-import-prefix require-await
 /**
  * Shared action executor — runs a single typed action (send_email, create_record,
