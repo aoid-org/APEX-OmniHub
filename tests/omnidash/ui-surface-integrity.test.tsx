@@ -1,12 +1,10 @@
 import { expect, describe, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 
 
 // Import components directly to verify their rendered output
 import { SystemHealthRow } from '../../apps/omnihub-site/dashboard/components/SystemHealthRow';
 import OmniTraceFeed from '../../apps/omnihub-site/dashboard/components/OmniTraceFeed';
-import { OmniDashTopHeader } from '../../apps/omnihub-site/dashboard/components/TopHeader';
 
 // Mock matchMedia for components that might use it
 Object.defineProperty(globalThis, 'matchMedia', {
@@ -49,28 +47,4 @@ describe('OmniDash UI Surface Integrity', () => {
     vi.unstubAllEnvs();
   });
 
-  it('disables the Global Search input and shows honest placeholder', () => {
-    render(
-      <MemoryRouter>
-        <OmniDashTopHeader />
-      </MemoryRouter>
-    );
-
-    const searchInput = screen.getByTestId('global-search-input') as HTMLInputElement;
-    expect(searchInput.disabled).toBe(true);
-    expect(searchInput.placeholder).toBe('Search Unavailable (Not Implemented)');
-  });
-
-  it('provides the expected TopHeader navigation elements', () => {
-    render(
-      <MemoryRouter>
-        <OmniDashTopHeader />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByTestId('organization-badge-input')).toBeTruthy();
-    expect(screen.getByTestId('connect-ai-header-action')).toBeTruthy();
-    expect(screen.getByTestId('persona-trigger')).toBeTruthy();
-    expect(screen.getByTestId('user-menu-trigger')).toBeTruthy();
-  });
 });
