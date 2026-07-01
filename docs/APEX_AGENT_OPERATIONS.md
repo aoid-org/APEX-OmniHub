@@ -1619,3 +1619,72 @@ pursued this pass in favor of the edge-function step-executor approach
 `ModuleShell`'s default clickable item-selection list for the same items
 (pre-existing double-rendering, now load-bearing since selection is needed
 for `trigger_run` — not fixed, out of scope for this pass).
+
+---
+
+## 9.31 Migration-tracking drift audit — 9 more silently-missing tables recovered (2026-07-01)
+
+**Context:** §9.30 found `workflows`/`workflow_runs` marked "applied" in
+`supabase_migrations.schema_migrations` while genuinely absent from the live
+Postgres catalog. That looked like it could be an isolated incident, so this
+pass audited for the same pattern more broadly before assuming it was.
+
+**Method:** diffed every `CREATE TABLE` statement across all ~98 committed
+migration files against the live project's `pg_tables` (Management API
+`/database/query`, read-only). 24 tables came back as "referenced in a
+migration, absent live." Cross-referenced each against non-migration code
+(`grep` across `apps/`, `supabase/functions/`, `orchestrator/`, `src/`) to
+separate **load-bearing** gaps (a real resolver/edge function queries the
+table right now) from **dormant** ones (defined in a migration, never
+queried by any live code path — abandoned/not-yet-built features, not
+active bugs).
+
+**Load-bearing gaps found and fixed (9 tables, 2 migrations, both already
+recorded as "applied"):**
+- `20260312090000_omnidash_runtime_tables.sql` → `user_dashboard_layouts`,
+  `user_ops_controls`, `omnihub_analytics`, `omnitrace_events`,
+  `security_audit_log`, `agent_sessions`, `telemetry_audit_log`. Notably
+  `user_ops_controls` is very likely the real root cause of the earlier-
+  catalogued UI-014 "(Simulated)" metrics bleed — `OmniDashShell.tsx`'s
+  `ops.demo` (`DEFAULT_OPS_STATE`, defaults `true`) had nowhere to persist a
+  per-user override without this table exising, so every session silently
+  fell back to the simulated default. Not independently re-verified in this
+  pass (out of scope — flagging for the next OmniDash session to confirm).
+  `omnitrace_events` explains the "OMNITRACE — LIVE — No events yet" seen in
+  this session's very first screenshot: confirmed live before/after —
+  `module-state` for `omnitrace` went from a query failure to a genuine
+  `State: "Online"`, 0 items (empty because no events exist yet, not because
+  the query is broken).
+- `20260125000000_omnitrace_replay.sql` → `omni_runs`, `omni_run_events`
+  (plus 3 idempotent `SECURITY DEFINER` helper functions, `search_path`
+  pinned). Backs the dedicated `supabase/functions/omni-runs/index.ts` edge
+  function.
+
+Applied both migrations' exact DDL directly (idempotent
+`CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` /
+`CREATE OR REPLACE FUNCTION`, same rationale as §9.30 — already marked
+applied, so the normal migration pipeline would no-op on them). Verified
+all 9 tables and their RLS policies exist via direct `pg_tables`/
+`pg_policies` queries.
+
+**Confirmed dormant, NOT fixed (no live code references anywhere —
+correctly left alone rather than resurrecting speculatively):**
+`security_incidents`, `leads`, `lead_events`, `apex_compensation_catalog`,
+`apex_idempotency_ledger`, `apex_performance_budgets`,
+`apex_policy_decisions`, `circuit_breaker_state`, `enterprise_tenants`,
+`physical_devices`, `tenant_embedding_budget`, `tenant_memberships`.
+`agent_events`/`agent_memories` are referenced only from the orphaned root
+`src/` shim tree (`src/hooks/useOmniStream.ts` — see tree_law in
+`omnidev-apex-pro-v2`), not from `apps/omnihub-site`, so also left alone.
+`security_incidents` is the one worth flagging specifically: its own
+migration's header cites PIPEDA 24-month breach-retention requirements, so
+its absence is a compliance-relevant gap, not just an unused feature — but
+since zero code anywhere writes to or reads from it, recreating the table
+alone wouldn't make anything real. Needs a real writer wired up first, not
+just the schema.
+
+**Out of scope:** the remaining ~74 migrations that did *not* show up in
+this diff were not individually re-verified row-by-row against
+`schema_migrations` beyond the table-existence check — this audit proves
+table-level drift, not full column/constraint/function-level drift for
+every migration.
