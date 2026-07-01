@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Shield, Database, Lock, Key, CheckCircle, Clock } from 'lucide-react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { exportAuditLogCSV } from '@/dashboard/utils/exportAuditLog';
 import type { ModuleListItem } from '@/dashboard/components/ModuleRegistry';
 
 interface Props {
@@ -81,8 +82,14 @@ export default function AuditsModule({ onClose }: Props) {
   // fall back to static category baseline when state is unavailable.
   const shellState = useMemo(() => ({ ...state, items: [] as readonly ModuleListItem[] }), [state]);
 
+  const handleAction = useCallback(async (actionId: string): Promise<boolean | string> => {
+    if (actionId !== 'export-audit') return false;
+    const result = await exportAuditLogCSV();
+    return result.message;
+  }, []);
+
   return (
-    <ModuleShell state={shellState} onClose={onClose}>
+    <ModuleShell state={shellState} onClose={onClose} onAction={handleAction}>
       {/* Compliance summary — visible whenever we have any data */}
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
