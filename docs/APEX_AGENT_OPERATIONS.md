@@ -1185,3 +1185,98 @@ is outside the Billing/Stripe-checkout surface this change targets. Also,
 as a hard subscript — if that var is unset on the Render service, `/omniboard/start`
 throws an unhandled `KeyError` (Starlette default plaintext 500). This is a Render
 service env-var/runtime issue outside this repo's deploy pipeline, not yet fixed.
+
+---
+
+## 9.25 A.R.I.S.E. Phase 0 Structural Observatory — 2026-07-01 (PR #1540)
+
+**Scope:** `apps/apex-arise/`, `.github/workflows/arise.yml`, root `package.json` scripts.
+
+### What A.R.I.S.E. Phase 0 is
+
+A.R.I.S.E. (Adaptive Repo Intelligence for Structural Evolution) Phase 0 is a
+**shadow-mode, measurement-only** structural quality observatory. It runs five
+static-analysis signals (acyclicity, modularity, redundancy, control-flow depth,
+and file-size equality) across six scan targets, computes a geometric-mean
+composite score, and writes a dated markdown snapshot.
+
+**Phase 0 never modifies code, never fails the build, and never opens PRs.**
+All CI steps use `continue-on-error: true`. The scan exits 0 regardless of findings.
+
+### Deployed runtime contracts affected
+
+None. A.R.I.S.E. Phase 0 touches no deployed service, no environment variable, no
+database table or migration, no start command, and no Cloudflare/Render/Supabase
+configuration. It is a CI observability tool only.
+
+### Workflow: `.github/workflows/arise.yml`
+
+| Property | Value |
+|---|---|
+| Trigger | push/PR to `main`/`master`; `workflow_dispatch` |
+| Runner | `ubuntu-22.04` |
+| Job timeout | 25 minutes |
+| Build status | **always exits 0** (`continue-on-error: true` on job and all steps) |
+| Required check? | **No** — informational only; never blocks merge |
+| Artifact written | `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md` |
+| Permissions | `contents: read` only |
+
+### Root `package.json` scripts
+
+Two convenience scripts were added to the root workspace:
+
+```json
+"arise:scan":    "cd apps/apex-arise && bun run arise:scan"
+"arise:install": "cd apps/apex-arise && bun install"
+```
+
+These are **developer convenience shortcuts only** — they are not used in any
+deployed build pipeline. Invoking them requires Bun to be installed locally.
+
+### Coverage integration
+
+`apps/apex-arise` runs its own Vitest test suite with `@vitest/coverage-v8` and
+outputs an LCOV report to `apps/apex-arise/coverage/lcov.info`. The
+`ci-runtime-gates.yml` workflow generates this report before the SonarCloud scan
+via the `Run A.R.I.S.E. coverage` step (`continue-on-error: true`). Sonar ingests
+it from `sonar-project.properties`:
+
+```
+sonar.javascript.lcov.reportPaths=coverage/lcov.info,apps/apex-arise/coverage/lcov.info
+```
+
+This ensures Sonar's "Coverage on New Code" gate has real data for `apps/apex-arise/src/**`.
+
+### Operator runbook
+
+**Run Phase 0 locally:**
+```bash
+cd apps/apex-arise
+bun install          # first time only — installs madge, depcruiser, jscpd, ts-morph
+bun run arise:scan   # writes snapshot to memory/omni-recall/docs/
+```
+
+**Run tests with coverage:**
+```bash
+cd apps/apex-arise
+bun run test:coverage  # generates apps/apex-arise/coverage/lcov.info
+```
+
+**Interpret the snapshot:** find the dated file in `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md`. Composite score is geometric mean of five signals; any 0-scoring signal collapses the composite to 0.
+
+**Degraded runs:** if any signal collector fails (binary not found, JSON parse error, etc.), the snapshot records a `FAILED` row for that signal and the composite is `N/A — degraded run`. The workflow still exits 0. Check the CI log for `[arise] signal "…" failed:` messages.
+
+### Phase 1 gating
+
+Phase 0 establishes the measurement baseline. Phase 1a (first improvement targets) must not be implemented without:
+- At least one full Phase 0 snapshot on the main branch showing stable signals.
+- Explicit APEX leadership approval of the Phase 1a scope.
+- A separate PR with full ops-doc and test coverage for any new automation logic.
+
+Phase 1 work in this PR is strictly forbidden. No autonomous code changes, no PR creation, no build-breaking logic.
+
+### Policy document
+
+`policy/arise-policy.yaml` declares Phase 0 scope, permitted file writes
+(`memory/omni-recall/docs/`), and hard-blocked paths (Supabase functions,
+migrations, `memory/omni-recall/wiki/_core_directives/`, production OmniDash shell).

@@ -1,0 +1,23 @@
+policy_version: 0.1.0
+policy_last_updated_utc: 2026-07-01
+system: A.R.I.S.E.
+phase: 0
+mode: shadow-observation-only
+autonomy: none
+writes_permitted:
+  - apps/apex-arise/**
+  - policy/arise-policy.yaml
+  - memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_*.md
+hard_blocked_always:
+  - supabase/functions/physiomni-action/**
+  - supabase/functions/omnibridge-control/**
+  - supabase/migrations/**
+  - .github/workflows/**            # except its own arise.yml, added at creation time only
+  - policy/rsi-policy.yaml
+  - tools/rsi/**
+  - apps/omnihub-site/dashboard/OmniDashShell.tsx
+  - memory/omni-recall/wiki/_core_directives/**
+note: >
+  This file intentionally does not define Phase 1 tiers or an expanded
+  allowlist. That is a separate, future, explicitly-scoped contract.
+  Adding Phase 1 logic here now would be scope creep on a Phase 0 change.

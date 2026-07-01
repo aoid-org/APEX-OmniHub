@@ -1,0 +1,25 @@
+{
+  "name": "@apex-omnihub/apex-arise",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A.R.I.S.E. Phase 0. Structural Observatory. Shadow-mode measurement only. No autonomous code changes.",
+  "type": "module",
+  "scripts": {
+    "arise:scan": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@vitest/coverage-v8": "4.1.9",
+    "dependency-cruiser": "^18.0.0",
+    "jscpd": "^5.0.11",
+    "madge": "^8.0.0",
+    "ts-morph": "^28.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}
