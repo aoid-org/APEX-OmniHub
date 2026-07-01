@@ -23,7 +23,17 @@ function parseSteps(detail: string | undefined): number {
   return m ? Math.min(Number(m[1]), 12) : 4;
 }
 
-function WorkflowLane({ item, y }: { item: ModuleListItem; y: number }) {
+function WorkflowLane({
+  item,
+  y,
+  selected,
+  onToggle,
+}: {
+  item: ModuleListItem;
+  y: number;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const steps      = parseSteps(item.detail);
   const color      = STATUS_COLOR[item.status] ?? '#6b7280';
   const rowH       = 44;
@@ -36,10 +46,26 @@ function WorkflowLane({ item, y }: { item: ModuleListItem; y: number }) {
   const isDraft = item.status === 'pending';
 
   return (
-    <g key={item.id}>
+    <g
+      key={item.id}
+      onClick={onToggle}
+      style={{ cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`${selected ? 'Deselect' : 'Select'} workflow ${item.label}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+    >
       {/* Row background */}
       <rect x={0} y={y + 3} width={428} height={rowH - 6} rx={6}
-        fill={`${color}08`} stroke={`${color}20`} strokeWidth={1} />
+        fill={selected ? `${color}18` : `${color}08`}
+        stroke={selected ? color : `${color}20`}
+        strokeWidth={selected ? 1.5 : 1} />
 
       {/* Status dot */}
       <circle cx={startX + 8} cy={midY} r={5} fill={color} />
@@ -359,6 +385,11 @@ export default function WorkflowsModule({ onClose }: Props) {
 
   const svgHeight = useMemo(() => state.items.length * 44 + 8, [state.items.length]);
 
+  // The SVG pipeline view below is the selection UI for this module (clicking
+  // a lane selects it for trigger_run) — suppress ModuleShell's own default
+  // clickable item list so the same items aren't rendered twice.
+  const shellState = useMemo(() => ({ ...state, items: [] as typeof state.items }), [state]);
+
   const handleAction = useCallback(async (actionId: string, selectedItems: string[]): Promise<boolean | string> => {
     if (actionId === 'trigger_run') {
       const disabledReason = actionDisabledReason(actionId, selectedItems);
@@ -379,12 +410,12 @@ export default function WorkflowsModule({ onClose }: Props) {
 
   return (
     <ModuleShell
-      state={state}
+      state={shellState}
       onClose={onClose}
       onAction={handleAction}
       getActionDisabledReason={actionDisabledReason}
     >
-      {!state.loading && (
+      {({ selectedItems, toggle }) => !state.loading && (
         <div className="space-y-3">
           {/* Summary legend */}
           <div className="flex items-center gap-3 text-xs px-1">
@@ -401,7 +432,7 @@ export default function WorkflowsModule({ onClose }: Props) {
             )}
           </div>
 
-          {/* Visual canvas */}
+          {/* Visual canvas — also the selection UI: click a lane to select it for Trigger Run */}
           <div className="rounded-lg border border-border/30 bg-[rgba(11,18,32,0.6)] overflow-hidden">
             <div className="px-2 pt-1.5 pb-0.5 text-[9px] uppercase tracking-widest text-muted-foreground/50 font-bold">
               Workflow Pipeline View
@@ -414,7 +445,13 @@ export default function WorkflowsModule({ onClose }: Props) {
               style={{ display: 'block' }}
             >
               {state.items.map((item, idx) => (
-                <WorkflowLane key={item.id} item={item} y={idx * 44 + 4} />
+                <WorkflowLane
+                  key={item.id}
+                  item={item}
+                  y={idx * 44 + 4}
+                  selected={selectedItems.has(item.id)}
+                  onToggle={() => toggle(item.id)}
+                />
               ))}
             </svg>
           </div>

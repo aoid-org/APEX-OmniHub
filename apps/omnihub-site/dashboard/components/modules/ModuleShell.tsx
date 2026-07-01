@@ -62,10 +62,18 @@ const DEFAULT_STATE_STYLE: StateStyle = {
   border: '1px solid rgba(161,161,170,0.3)',
 };
 
+/** Passed to function-form `children` so custom module content (e.g. a
+ *  visualization that replaces the default item list) can drive the same
+ *  selection state the default list and action buttons use. */
+export interface ModuleShellSelectionContext {
+  readonly selectedItems: ReadonlySet<string>;
+  readonly toggle: (id: string) => void;
+}
+
 interface ModuleShellProps {
   readonly state: OmniModuleState;
   readonly onClose: () => void;
-  readonly children?: React.ReactNode;
+  readonly children?: React.ReactNode | ((ctx: ModuleShellSelectionContext) => React.ReactNode);
   readonly onAction?: (actionId: string, selectedItems: string[]) => Promise<boolean | string | void> | boolean | string | void;
   readonly getActionDisabledReason?: (actionId: string, selectedItems: readonly string[]) => string | null;
   readonly renderItem?: (item: OmniModuleState['items'][number], selected: boolean, toggle: () => void) => React.ReactNode;
@@ -183,7 +191,7 @@ export const ModuleShell = memo(function ModuleShell({
       </div>
 
       {/* Custom module content (injected by each module) */}
-      {children}
+      {typeof children === 'function' ? children({ selectedItems, toggle: handleToggle }) : children}
 
       {/* Items list */}
       <div className="flex flex-col gap-1.5 max-h-[240px] overflow-y-auto">
