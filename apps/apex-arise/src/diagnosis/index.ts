@@ -28,27 +28,20 @@ function collectPhase0Signals(): Phase0Collection {
   const signals: SignalScore[] = [];
   const failures: { name: string; error: string }[] = [];
 
-  const record = (name: SignalScore["name"], collect: () => SignalScore): void => {
+  const record = (names: readonly SignalScore["name"][], collect: () => SignalScore[]): void => {
     try {
-      signals.push(collect());
+      signals.push(...collect());
     } catch (err) {
-      failures.push({ name, error: toMessage(err) });
-      console.error(`[arise-diagnosis] signal "${name}" failed: ${toMessage(err)}`);
+      const message = toMessage(err);
+      failures.push(...names.map((name) => ({ name, error: message })));
+      console.error(`[arise-diagnosis] signal(s) "${names.join(", ")}" failed: ${message}`);
     }
   };
 
-  record("acyclicity", () => collectAcyclicity(SCAN_TARGETS, REPO_ROOT));
-  record("modularity", () => collectModularity(SCAN_TARGETS, REPO_ROOT));
-  record("redundancy", () => collectRedundancy(SCAN_TARGETS, REPO_ROOT));
-
-  try {
-    signals.push(...collectStructural(SCAN_TARGETS, REPO_ROOT));
-  } catch (err) {
-    for (const name of ["depth", "equality"] as const) {
-      failures.push({ name, error: toMessage(err) });
-    }
-    console.error(`[arise-diagnosis] structural signals (depth, equality) failed: ${toMessage(err)}`);
-  }
+  record(["acyclicity"], () => [collectAcyclicity(SCAN_TARGETS, REPO_ROOT)]);
+  record(["modularity"], () => [collectModularity(SCAN_TARGETS, REPO_ROOT)]);
+  record(["redundancy"], () => [collectRedundancy(SCAN_TARGETS, REPO_ROOT)]);
+  record(["depth", "equality"], () => collectStructural(SCAN_TARGETS, REPO_ROOT));
 
   return { signals, failures };
 }
