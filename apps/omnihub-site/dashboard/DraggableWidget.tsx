@@ -27,16 +27,16 @@ import type { ReactNode, CSSProperties } from 'react';
 import {
   resolveCollisions,
   resolveAlignment,
-  clampToCanvas,
+  clampResolvedRect,
   loadLayout,
   saveLayout,
   detectBreakpoint,
   migrateFromLegacy,
   DRAG_THRESHOLD_PX,
-  ALIGN_THRESHOLD_PX,
 } from './lib/widgetLayout';
 import type { WidgetPositionMap, Rect } from './lib/widgetLayout';
 import { LayoutContext } from './contexts/LayoutContext';
+import { hideGuides, updateAlignmentGuides } from './lib/alignmentGuides';
 
 /** Long-press duration before drag mode activates (ms). */
 const LONG_PRESS_MS = 500;
@@ -65,89 +65,6 @@ function registerWidget(id: string, el: HTMLElement) {
 
 function unregisterWidget(id: string) {
   widgetRegistry.delete(id);
-}
-
-// ─── Magnetic Alignment Guide Lines ───────────────────────────────────────────
-// Two singleton overlay lines (vertical = x-axis snap, horizontal = y-axis snap)
-// lazily parented to the canvas and reused — never created/destroyed per move.
-let guideX: HTMLDivElement | null = null;
-let guideY: HTMLDivElement | null = null;
-
-function ensureGuides(canvas: HTMLElement): { gx: HTMLDivElement; gy: HTMLDivElement } {
-  if (!guideX || guideX.parentElement !== canvas) {
-    guideX = document.createElement('div');
-    guideX.dataset.omniAlignGuide = 'x';
-    guideX.style.cssText =
-      'position:absolute;top:0;width:1px;pointer-events:none;background:rgba(249,115,22,0.45);z-index:998;display:none;';
-    canvas.appendChild(guideX);
-  }
-  if (!guideY || guideY.parentElement !== canvas) {
-    guideY = document.createElement('div');
-    guideY.dataset.omniAlignGuide = 'y';
-    guideY.style.cssText =
-      'position:absolute;left:0;height:1px;pointer-events:none;background:rgba(249,115,22,0.45);z-index:998;display:none;';
-    canvas.appendChild(guideY);
-  }
-  return { gx: guideX, gy: guideY };
-}
-
-function hideGuides(): void {
-  if (guideX) guideX.style.display = 'none';
-  if (guideY) guideY.style.display = 'none';
-}
-
-/**
- * Live, read-only alignment feedback while dragging. Finds the nearest sibling
- * edge/center within ALIGN_THRESHOLD_PX per axis and positions the guide line(s)
- * there; hides the line for any axis with no match. No position mutation here —
- * snapping is applied only at drag-end via resolveAlignment.
- */
-function updateAlignmentGuides(canvas: HTMLElement, myRect: DOMRect, siblings: Rect[]): void {
-  const { gx, gy } = ensureGuides(canvas);
-  const cRect = canvas.getBoundingClientRect();
-
-  const mCenterX = (myRect.left + myRect.right) / 2;
-  const mCenterY = (myRect.top + myRect.bottom) / 2;
-
-  let matchX: number | null = null;
-  let bestX = ALIGN_THRESHOLD_PX;
-  let matchY: number | null = null;
-  let bestY = ALIGN_THRESHOLD_PX;
-
-  for (const s of siblings) {
-    const sCenterX = (s.left + s.right) / 2;
-    const sCenterY = (s.top + s.bottom) / 2;
-    for (const from of [myRect.left, myRect.right, mCenterX]) {
-      for (const to of [s.left, s.right, sCenterX]) {
-        const d = Math.abs(from - to);
-        if (d <= bestX) { bestX = d; matchX = to; }
-      }
-    }
-    for (const from of [myRect.top, myRect.bottom, mCenterY]) {
-      for (const to of [s.top, s.bottom, sCenterY]) {
-        const d = Math.abs(from - to);
-        if (d <= bestY) { bestY = d; matchY = to; }
-      }
-    }
-  }
-
-  if (matchX !== null) {
-    gx.style.left = `${matchX - cRect.left + canvas.scrollLeft}px`;
-    gx.style.top = `${canvas.scrollTop}px`;
-    gx.style.height = `${canvas.clientHeight}px`;
-    gx.style.display = 'block';
-  } else {
-    gx.style.display = 'none';
-  }
-
-  if (matchY !== null) {
-    gy.style.top = `${matchY - cRect.top + canvas.scrollTop}px`;
-    gy.style.left = `${canvas.scrollLeft}px`;
-    gy.style.width = `${canvas.clientWidth}px`;
-    gy.style.display = 'block';
-  } else {
-    gy.style.display = 'none';
-  }
 }
 
 // ─── Layout Store ────────────────────────────────────────────────────────────
@@ -337,28 +254,20 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
           siblings,
         );
 
-        // Clamp to the visible canvas area last — collision resolution can
-        // walk a widget's snap search outward past the container edge, which
-        // `overflow:auto` cannot recover from in the negative direction (no
-        // negative scroll), silently making the widget unreachable.
+        // Clamp to the visible canvas area last (see clampResolvedRect doc).
         let resolvedLeft = free.left;
         let resolvedTop = free.top;
         const canvasEl = el.closest('.omni-canvas-container');
         if (canvasEl instanceof HTMLElement) {
           const cRect = canvasEl.getBoundingClientRect();
-          const canvasRelative = {
-            x: free.left - cRect.left + canvasEl.scrollLeft,
-            y: free.top - cRect.top + canvasEl.scrollTop,
-          };
-          const clamped = clampToCanvas(
-            canvasRelative,
-            myRect.width,
-            myRect.height,
-            canvasEl.clientWidth,
-            canvasEl.clientHeight,
-          );
-          resolvedLeft = free.left + (clamped.x - canvasRelative.x);
-          resolvedTop = free.top + (clamped.y - canvasRelative.y);
+          ({ left: resolvedLeft, top: resolvedTop } = clampResolvedRect(
+            { left: free.left, top: free.top, width: myRect.width, height: myRect.height },
+            {
+              left: cRect.left, top: cRect.top,
+              scrollLeft: canvasEl.scrollLeft, scrollTop: canvasEl.scrollTop,
+              clientWidth: canvasEl.clientWidth, clientHeight: canvasEl.clientHeight,
+            },
+          ));
         }
 
         const deltaX = resolvedLeft - myRect.left;
