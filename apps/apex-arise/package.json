@@ -8,10 +8,13 @@
     "arise:scan": "bun run src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
+
   "devDependencies": {
     "@types/node": "^26.0.1",
+    "@vitest/coverage-v8": "4.1.9",
     "dependency-cruiser": "^18.0.0",
     "jscpd": "^5.0.11",
     "madge": "^8.0.0",
