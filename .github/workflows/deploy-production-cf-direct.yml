@@ -169,6 +169,13 @@ jobs:
           # create-billing-portal. Deploying them is required for Billing to work.
           supabase functions deploy create-checkout --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy stripe-webhook --project-ref "$SUPABASE_PROJECT_REF"
+          # execute-automation and execute-workflow were previously deploy-only-
+          # by-hand (never wired into any deploy workflow) — a normal PR merge
+          # touching either would not actually reach production. Both share
+          # _shared/action-executor.ts, so a change to that shared module also
+          # needs both redeployed here.
+          supabase functions deploy execute-automation --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy execute-workflow --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Deploy to Cloudflare Pages (production)
         id: cf_deploy

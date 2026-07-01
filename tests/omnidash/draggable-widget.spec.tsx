@@ -282,4 +282,78 @@ describe('DraggableWidget', () => {
     window.removeEventListener('omnislate-drop', dropHandler);
     document.body.removeChild(slate);
   });
+
+  it('clamps a dropped widget back within the canvas bounds', () => {
+    const canvas = document.createElement('div');
+    canvas.className = 'omni-canvas-container';
+    Object.defineProperty(canvas, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200 }),
+      configurable: true,
+    });
+    Object.defineProperty(canvas, 'clientWidth', { value: 200, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 200, configurable: true });
+    document.body.appendChild(canvas);
+
+    render(
+      <DraggableWidget id="widget_offscreen">
+        <span>offscreen</span>
+      </DraggableWidget>,
+      { container: canvas },
+    );
+
+    const el = screen.getByTestId('widget_offscreen');
+    // Simulate the widget resolving to a position 500px off-canvas
+    // (top-left), as collision-avoidance's outward snap search can produce.
+    Object.defineProperty(el, 'getBoundingClientRect', {
+      value: () => ({ left: -500, top: -500, right: -450, bottom: -450, width: 50, height: 50 }),
+      configurable: true,
+    });
+
+    fireEvent.pointerDown(el, { clientX: 10, clientY: 10, pointerId: 1 });
+    act(() => { vi.advanceTimersByTime(600); });
+    fireEvent.pointerMove(el, { clientX: 30, clientY: 30, pointerId: 1 });
+    fireEvent.pointerUp(el, { clientX: 30, clientY: 30, pointerId: 1 });
+
+    // No saved position (posRef starts at 0,0); myRect.left/top = -500 means
+    // the widget is 500px off-canvas, so the clamp must add a +500px delta
+    // per axis to pull it back to the canvas origin.
+    expect(el.style.transform).toContain('translate(500px, 500px)');
+
+    document.body.removeChild(canvas);
+  });
+
+  it('does not alter position when the widget is already within canvas bounds', () => {
+    const canvas = document.createElement('div');
+    canvas.className = 'omni-canvas-container';
+    Object.defineProperty(canvas, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 800, bottom: 600, width: 800, height: 600 }),
+      configurable: true,
+    });
+    Object.defineProperty(canvas, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 600, configurable: true });
+    document.body.appendChild(canvas);
+
+    render(
+      <DraggableWidget id="widget_inbounds">
+        <span>inbounds</span>
+      </DraggableWidget>,
+      { container: canvas },
+    );
+
+    const el = screen.getByTestId('widget_inbounds');
+    Object.defineProperty(el, 'getBoundingClientRect', {
+      value: () => ({ left: 100, top: 100, right: 150, bottom: 150, width: 50, height: 50 }),
+      configurable: true,
+    });
+
+    fireEvent.pointerDown(el, { clientX: 10, clientY: 10, pointerId: 1 });
+    act(() => { vi.advanceTimersByTime(600); });
+    fireEvent.pointerMove(el, { clientX: 30, clientY: 30, pointerId: 1 });
+    fireEvent.pointerUp(el, { clientX: 30, clientY: 30, pointerId: 1 });
+
+    // Already well within the 800x600 canvas — clamping must be a no-op.
+    expect(el.style.transform).toContain('translate(0px, 0px)');
+
+    document.body.removeChild(canvas);
+  });
 });

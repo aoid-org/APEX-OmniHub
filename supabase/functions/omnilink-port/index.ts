@@ -304,8 +304,9 @@ async function resolveAutomations(
       action: a.action_type,
       active: a.is_active,
       created_at: a.created_at,
+      detail: `Trigger: ${a.trigger_type} | Action: ${a.action_type}`,
     }))),
-    actions: ['create-automation', 'view-logs'],
+    actions: ['create-automation', 'view-logs', 'execute-automation'],
     count: autos.length,
   };
 }
@@ -319,7 +320,7 @@ async function resolveWorkflows(
   const [wfRes, runRes] = await Promise.allSettled([
     anonClient
       .from('workflows')
-      .select('id, name, is_active, created_at')
+      .select('id, name, is_active, definition, schedule, created_at')
       .order('created_at', { ascending: false })
       .limit(20),
     anonClient
@@ -337,6 +338,8 @@ async function resolveWorkflows(
     id: string;
     name: string;
     is_active: boolean;
+    definition: { steps?: unknown[] } | null;
+    schedule: string | null;
     created_at: string;
   }>;
 
@@ -349,10 +352,16 @@ async function resolveWorkflows(
 
   return {
     State: 'Online',
-    items: normalizeModuleItems(defs.map((w) => ({
-      ...w,
-      recentRun: runs.find((r) => r.workflow_id === w.id) ?? null,
-    }))),
+    items: normalizeModuleItems(defs.map((w) => {
+      const recentRun = runs.find((r) => r.workflow_id === w.id) ?? null;
+      const stepCount = Array.isArray(w.definition?.steps) ? w.definition.steps.length : 0;
+      const scheduleLabel = w.schedule ? ` | Schedule: ${w.schedule}` : '';
+      return {
+        ...w,
+        recentRun,
+        detail: `${stepCount} step${stepCount === 1 ? '' : 's'}${recentRun ? ` | Last: ${recentRun.status}` : ''}${scheduleLabel}`,
+      };
+    })),
     actions: ['create_workflow', 'trigger_run'],
     count: defs.length,
   };

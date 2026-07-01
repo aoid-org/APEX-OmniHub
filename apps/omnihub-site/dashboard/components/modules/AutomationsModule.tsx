@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Zap, Receipt, Bell, Database, UserCheck,
   CheckCircle, Clock, ArrowRight,
@@ -7,6 +7,21 @@ import { supabase } from '@/lib/supabase';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import type { ModuleListItem } from '@/dashboard/components/ModuleRegistry';
+
+type AutomationActionType = 'webhook' | 'notification' | 'send_email' | 'create_record';
+
+const ACTION_TYPE_LABELS: Readonly<Record<AutomationActionType, string>> = {
+  webhook: 'Webhook (POST to a URL)',
+  notification: 'Notification',
+  send_email: 'Send Email',
+  create_record: 'Create Record',
+};
+
+const CREATE_RECORD_TABLES = ['invoices', 'logs', 'tasks', 'notifications'] as const;
+
+const fieldClass =
+  'w-full rounded-lg border border-border/30 bg-muted/10 px-3 py-2 text-xs text-foreground ' +
+  'placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40';
 
 interface Props {
   readonly onClose: () => void;
@@ -94,6 +109,178 @@ function AutomationRow({ item, selected, onToggle }: { item: ModuleListItem; sel
   );
 }
 
+interface CreateAutomationFormProps {
+  readonly onCancel: () => void;
+  readonly onCreated: (message: string) => void;
+}
+
+function buildAutomationConfig(
+  actionType: AutomationActionType,
+  fields: Record<string, string>,
+): { config: Record<string, unknown>; error: string | null } {
+  switch (actionType) {
+    case 'webhook': {
+      if (!fields.url?.trim()) return { config: {}, error: 'Webhook URL is required.' };
+      return { config: { url: fields.url.trim(), method: 'POST' }, error: null };
+    }
+    case 'notification': {
+      if (!fields.message?.trim()) return { config: {}, error: 'Notification message is required.' };
+      return {
+        config: { message: fields.message.trim(), channel: fields.channel?.trim() || 'default' },
+        error: null,
+      };
+    }
+    case 'send_email': {
+      if (!fields.to?.trim() || !fields.subject?.trim()) {
+        return { config: {}, error: 'Recipient and subject are required.' };
+      }
+      return {
+        config: { to: fields.to.trim(), subject: fields.subject.trim(), body: fields.body ?? '' },
+        error: null,
+      };
+    }
+    case 'create_record': {
+      if (!fields.table?.trim()) return { config: {}, error: 'Target table is required.' };
+      try {
+        const data = fields.data?.trim() ? JSON.parse(fields.data) : {};
+        return { config: { table: fields.table.trim(), data }, error: null };
+      } catch {
+        return { config: {}, error: 'Record data must be valid JSON.' };
+      }
+    }
+    default:
+      return { config: {}, error: 'Unknown action type.' };
+  }
+}
+
+function CreateAutomationForm({ onCancel, onCreated }: CreateAutomationFormProps) {
+  const [name, setName] = useState('');
+  const [triggerType, setTriggerType] = useState('Manual');
+  const [actionType, setActionType] = useState<AutomationActionType>('notification');
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const setField = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setFields((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const handleSubmit = useCallback(async () => {
+    setError(null);
+    if (!name.trim()) {
+      setError('Automation name is required.');
+      return;
+    }
+    const { config, error: configError } = buildAutomationConfig(actionType, fields);
+    if (configError) {
+      setError(configError);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Sign in required to create an automation.');
+        return;
+      }
+      const { error: insertError } = await supabase
+        .from('automations')
+        .insert({
+          user_id: user.id,
+          name: name.trim(),
+          trigger_type: triggerType.trim() || 'Manual',
+          action_type: actionType,
+          config,
+          is_active: true,
+        });
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+      onCreated(`"${name.trim()}" created. Select it below and click Execute Automation to run it for real.`);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [name, triggerType, actionType, fields, onCreated]);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+      <div className="text-xs font-semibold text-foreground">New Automation</div>
+      <input
+        className={fieldClass}
+        placeholder="Name (e.g. Ping deploy webhook)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        className={fieldClass}
+        placeholder="Trigger (freeform label — execution is manual today)"
+        value={triggerType}
+        onChange={(e) => setTriggerType(e.target.value)}
+      />
+      <select
+        className={fieldClass}
+        value={actionType}
+        onChange={(e) => {
+          setActionType(e.target.value as AutomationActionType);
+          setFields({});
+        }}
+      >
+        {Object.entries(ACTION_TYPE_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>{label}</option>
+        ))}
+      </select>
+
+      {actionType === 'webhook' && (
+        <input className={fieldClass} placeholder="https://example.com/webhook" value={fields.url ?? ''} onChange={setField('url')} />
+      )}
+      {actionType === 'notification' && (
+        <>
+          <input className={fieldClass} placeholder="Message" value={fields.message ?? ''} onChange={setField('message')} />
+          <input className={fieldClass} placeholder="Channel (optional)" value={fields.channel ?? ''} onChange={setField('channel')} />
+        </>
+      )}
+      {actionType === 'send_email' && (
+        <>
+          <input className={fieldClass} placeholder="To (email address)" value={fields.to ?? ''} onChange={setField('to')} />
+          <input className={fieldClass} placeholder="Subject" value={fields.subject ?? ''} onChange={setField('subject')} />
+          <textarea className={fieldClass} placeholder="Body" rows={2} value={fields.body ?? ''} onChange={setField('body')} />
+        </>
+      )}
+      {actionType === 'create_record' && (
+        <>
+          <select className={fieldClass} value={fields.table ?? ''} onChange={setField('table')}>
+            <option value="">Select table…</option>
+            {CREATE_RECORD_TABLES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <textarea className={fieldClass} placeholder='Record data as JSON, e.g. {"note":"hello"}' rows={2} value={fields.data ?? ''} onChange={setField('data')} />
+        </>
+      )}
+
+      {error && <div className="text-[11px] text-red-400">{error}</div>}
+
+      <div className="flex gap-2 pt-1">
+        <button
+          type="button"
+          className="flex-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+          disabled={submitting}
+          onClick={handleSubmit}
+        >
+          {submitting ? 'Creating…' : 'Save Automation'}
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-border/30 px-3 py-1.5 text-xs text-muted-foreground"
+          onClick={onCancel}
+          disabled={submitting}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function actionDisabledReason(actionId: string, selectedItems: readonly string[]): string | null {
   if (actionId !== 'execute-automation') return null;
   if (selectedItems.length !== 1) {
@@ -118,6 +305,8 @@ function formatExecutionResult(data: unknown): string {
 
 export default function AutomationsModule({ onClose }: Props) {
   const state = useOmniModuleState('automations');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createStatus, setCreateStatus] = useState<string | null>(null);
 
   const handleAction = useCallback(async (actionId: string, selectedItems: string[]): Promise<boolean | string> => {
     if (actionId === 'execute-automation') {
@@ -131,7 +320,8 @@ export default function AutomationsModule({ onClose }: Props) {
       return formatExecutionResult(data);
     }
     if (actionId === 'create-automation') {
-      return 'Automation creation is not available from this panel yet. Use the dedicated workflow builder when it is enabled.';
+      setShowCreateForm(true);
+      return true;
     }
     if (actionId === 'view-logs') {
       return 'Automation run logs are not connected to this panel yet. No log viewer URL is configured.';
@@ -148,6 +338,22 @@ export default function AutomationsModule({ onClose }: Props) {
       renderItem={(item, selected, toggle) => (
         <AutomationRow item={item} selected={selected} onToggle={toggle} />
       )}
-    />
+    >
+      {showCreateForm && (
+        <CreateAutomationForm
+          onCancel={() => setShowCreateForm(false)}
+          onCreated={(message) => {
+            setShowCreateForm(false);
+            setCreateStatus(message);
+            state.refetch?.();
+          }}
+        />
+      )}
+      {createStatus && (
+        <div className="text-xs px-3 py-2 rounded-lg bg-muted/30 text-muted-foreground border border-border/30">
+          {createStatus}
+        </div>
+      )}
+    </ModuleShell>
   );
 }
