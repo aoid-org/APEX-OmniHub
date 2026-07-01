@@ -1473,3 +1473,55 @@ checkout. The `open-pr` job does not need this step: `pr.ts` and
   PR (or spending real model credit) is a separate, explicit action for the
   owner to trigger or authorize, not something to do unprompted from a
   code-authoring session.
+
+---
+
+## 9.29 Automations — real create/execute path wired; Audits export wired (2026-07-01)
+
+**Root cause:** two real, already-built backend paths were unreachable from
+the UI, for the same class of reason:
+
+- `omnilink-port`'s `resolveAutomations()` (Automations module-state) never
+  included `execute-automation` in its returned `actions` list, even though
+  `AutomationsModule.tsx`'s `handleAction` and the `execute-automation` edge
+  function were both fully implemented — the button simply never rendered.
+- `AuditsModule.tsx` had no `onAction` handler at all, so `export-audit`
+  always fell through to the generic "not connected" capability message even
+  though `exportAuditLogCSV()` already existed and worked (it just pointed at
+  the wrong table).
+
+**Fix:**
+- `supabase/functions/omnilink-port/index.ts`, `resolveAutomations()`: added
+  `'execute-automation'` to the `actions` array, and added a `detail` string
+  (`Trigger: <trigger_type> | Action: <action_type>`) to each mapped item so
+  real automation rows display the same way demo rows do.
+- `AutomationsModule.tsx`: added a real inline "Create Automation" form
+  (name, trigger label, action-type-specific config for
+  webhook/notification/send_email/create_record) that inserts directly into
+  the `automations` table via the authenticated client (RLS-scoped to
+  `user_id = auth.uid()`), then refetches.
+- `dashboard/utils/exportAuditLog.ts`: `exportAuditLogCSV()` now queries
+  `audit_logs` (matching what `resolveAudits()` and the panel display)
+  instead of the unrelated `omnitrace_events` table, and returns a typed
+  `{ ok, message }` result instead of silently no-op'ing. `AuditsModule.tsx`
+  wires `export-audit` to it.
+
+**Operational impact:** no new service, environment variable, database
+table, or start command — both changes reuse existing tables
+(`automations`, `audit_logs`) and the existing `execute-automation` edge
+function. `omnilink-port` was redeployed (`supabase functions deploy
+omnilink-port`) to ship the actions-list change; no secrets changed.
+
+**Verified live** against the deployed function and the real Supabase
+project: inserted a real `automations` row, confirmed it appeared via
+`module-state` with `execute-automation` now available, executed it through
+`execute-automation` and got a genuine success result, then deleted the
+test row. Confirmed the audit export query returns real `audit_logs` rows
+for an authenticated test account.
+
+**Out of scope (not fixed in this change):** "Run Compliance Check" in
+Audits still has no backend (no rules engine, no compliance table) —
+correctly left as an honest "not connected" state pending a scoping
+decision, not swapped for a fake pass/fail. Automations execution remains
+user-initiated (click Execute) — no autonomous/event-driven triggers exist
+yet.
