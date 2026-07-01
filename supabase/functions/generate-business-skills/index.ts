@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   createClient,
   SupabaseClient,
-} from "https://esm.sh/@supabase/supabase-js@2.39.3";
+} from "https://esm.sh/@supabase/supabase-js@2.58.0";
 import {
   buildCorsHeaders,
   handlePreflight,
@@ -93,10 +93,14 @@ async function authenticateRequest(
     { global: { headers: { Authorization: authHeader } } }
   );
 
+  // PRCC-001 WP-1a: pass the JWT explicitly. The env SUPABASE_ANON_KEY now holds
+  // an sb_publishable_* key; no-arg getUser() relied on legacy-JWT header merging
+  // and returned "Invalid authentication token" (matches _shared/auth.ts pattern).
+  const token = authHeader.replace("Bearer ", "");
   const {
     data: { user },
     error: authError,
-  } = await client.auth.getUser();
+  } = await client.auth.getUser(token);
 
   if (authError || !user) {
     return corsErrorResponse(
