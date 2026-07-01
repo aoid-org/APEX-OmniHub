@@ -23,7 +23,7 @@ const SIGNAL_LABEL: Record<SignalScore["name"], string> = {
 
 export function writeSnapshot(input: SnapshotInput): string {
   const isoDate = input.timestamp.slice(0, 10);
-  const fileDate = isoDate.replace(/-/g, "_");
+  const fileDate = isoDate.replaceAll("-", "_");
   const outDir = path.join(REPO_ROOT, "memory/omni-recall/docs");
   mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, `CURRENT_ARISE_STRUCTURAL_BASELINE_${fileDate}.md`);
@@ -40,9 +40,9 @@ export function writeSnapshot(input: SnapshotInput): string {
   }).join("\n");
 
   const compositeLine =
-    input.composite !== null
-      ? input.composite.toFixed(2)
-      : `N/A — degraded run (${input.compositeError ?? input.failures.map((f) => f.name).join(", ") ?? "unknown"})`;
+    input.composite === null
+      ? `N/A — degraded run (${input.compositeError ?? input.failures.map((f) => f.name).join(", ") ?? "unknown"})`
+      : input.composite.toFixed(2);
 
   const methodology = SIGNAL_ORDER.map((name) => {
     const signal = bySignal.get(name);

@@ -22,7 +22,7 @@ const proofStateStore = new Map<string, { version: number, data: unknown }>();
 const idempotencyStore = new Set<string>();
 
 export class UniversalSyncEngine {
-  constructor(private adapters: Map<string, SyncAdapter> = new Map()) {}
+  constructor(private readonly adapters: Map<string, SyncAdapter> = new Map()) {}
 
   registerAdapter(sourceSystem: string, adapter: SyncAdapter) {
     this.adapters.set(sourceSystem, adapter);

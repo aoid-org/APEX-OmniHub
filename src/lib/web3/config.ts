@@ -30,7 +30,7 @@ const connectors = [
   injected(), // MetaMask, Coinbase Wallet, etc.
   ...(WALLETCONNECT_PROJECT_ID
     ? [
-        walletConnect({
+        walletConnect({ // NOSONAR: @wagmi/connectors marked deprecated due to downstream pino dependency warning
           projectId: WALLETCONNECT_PROJECT_ID,
           metadata: {
             name: 'OmniLink APEX',

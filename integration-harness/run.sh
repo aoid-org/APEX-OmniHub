@@ -14,6 +14,7 @@ HEADLESS="${HEADLESS:-true}"
 SERVICE_BOOT_TIMEOUT="${SERVICE_BOOT_TIMEOUT:-60000}"
 BOOT_TIMEOUT_SEC=$(( SERVICE_BOOT_TIMEOUT / 1000 ))
 OMNIHUB_PID=""; SBBL_PID=""
+DIVIDER="===================================================="
 
 EXTRA_ARGS=(); SPEC_FILTER=""
 while [[ $# -gt 0 ]]; do case $1 in --headed) HEADLESS=false; shift ;; --spec) SPEC_FILTER="$2"; shift 2 ;; *) EXTRA_ARGS+=("$1"); shift ;; esac; done
@@ -75,9 +76,9 @@ wait_for_url() {
     elapsed=$((elapsed+2))
 
     if [[ $elapsed -ge $BOOT_TIMEOUT_SEC ]]; then
-      echo "=============================================="
+      echo "$DIVIDER"
       echo "TIMEOUT: Failed to connect to $url after $elapsed seconds (boot timeout: ${BOOT_TIMEOUT_SEC}s)"
-      echo "=============================================="
+      echo "$DIVIDER"
 
       if [[ -n "$pid" ]]; then
         if kill -0 "$pid" 2>/dev/null; then
@@ -215,12 +216,12 @@ fi
 
 if [[ $missing -ne 0 ]]; then
   echo ""
-  echo "===================================================="
+  echo "$DIVIDER"
   echo "Missing Live-Integration Prerequisites:"
   for reason in "${missing_reasons[@]}"; do
     echo "  - $reason"
   done
-  echo "===================================================="
+  echo "$DIVIDER"
   echo ""
   echo "Falling back to deterministic-only validation (no live infrastructure required)."
   "$NODE_CMD" lib/deterministic-validator.mjs

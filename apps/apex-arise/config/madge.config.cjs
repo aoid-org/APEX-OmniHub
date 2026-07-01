@@ -1,4 +1,4 @@
 module.exports = {
   extensions: "ts,tsx",
-  excludeRegExp: "(node_modules|\\.test\\.|\\.spec\\.|/dist/|\\.d\\.ts$)",
+  excludeRegExp: String.raw`(node_modules|\.test\.|\.spec\.|/dist/|\.d\.ts$)`,
 };
