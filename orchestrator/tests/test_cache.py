@@ -313,7 +313,7 @@ class TestSemanticCacheServiceMocked:
         redis.hincrby = AsyncMock()
         redis.expire = AsyncMock()
         redis.exists = AsyncMock()
-        redis.close = AsyncMock()
+        redis.aclose = AsyncMock()
         return redis
 
     # ------------------------------------------------------------------
@@ -373,10 +373,10 @@ class TestSemanticCacheServiceMocked:
     # ------------------------------------------------------------------
 
     async def test_close_with_redis(self, cache, mock_redis):
-        """close() calls close() on the Redis client."""
+        """close() calls aclose() on the Redis client (redis-py >=5.0.1 API)."""
         cache.redis = mock_redis
         await cache.close()
-        mock_redis.close.assert_called_once()
+        mock_redis.aclose.assert_awaited_once()
 
     async def test_close_without_redis(self, cache):
         """close() is a no-op when redis is None."""
