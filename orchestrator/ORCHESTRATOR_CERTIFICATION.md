@@ -25,6 +25,14 @@ status: evidence-complete — awaiting owner certification act (merge of PR #155
 | Blast radius (`npx tsx scripts/orchestrator-blast-radius.ts`) | every task ≤5 orchestrator files (exit 0) |
 | Full audit trail | `orchestrator/EXECUTION_LOG_2026-07.md` — one line per task, all PASS |
 
+### CI run evidence (actual runs, not narrative — per owner directive 2026-07-02)
+
+| Evidence | Run |
+|---|---|
+| 980-test pass — "Test & Lint" job, green on PR #1558 head `be5de58` | [actions/runs/28566857119/job/84695811342](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/runs/28566857119/job/84695811342) (success, 2026-07-02T05:10Z) |
+| SonarCloud Quality Gate — passed on PR #1558 (0 new blocking issues) | [sonarcloud.io PR #1558 dashboard](https://sonarcloud.io/dashboard?id=apexbusiness-systems_APEX-OmniHub&pullRequest=1558) (success, 2026-07-02T05:17Z) |
+| Full gate suite on the same head (34 checks: ruff-gate, policy, security, governance, ops-doc drift, build-and-test, Docker) | [commit checks for `be5de58`](https://github.com/apexbusiness-systems/APEX-OmniHub/commits/be5de58ae221c87168fc5999a469724417d0c111) — all success/neutral, zero failures |
+
 ## 2. Claim-by-Claim Status
 
 ### C1. "Event-sourced saga orchestration on Temporal.io" — **PROVEN, live**
@@ -111,8 +119,8 @@ BLOCKED-SCOPE(S5) escalation — decision recorded, escalation closed.
 
 ## 4. Open Escalations (formal, per §B6 — not deferred work)
 
-- **BLOCKED-SCOPE(S5):** wire `core/model_registry.py` into a live BYOM enforcement
-  point, or formally quarantine it. Architecture decision — owner call required.
+- **BLOCKED-SCOPE(S5): CLOSED 2026-07-02** — owner ruled *quarantine, do not wire*;
+  implemented and recorded as C9 (PR #1558, `docs/APEX_AGENT_OPERATIONS.md` §9.28).
 - **BLOCKED-SCOPE(S6):** split `workflows/agent_saga.py` (1487 ln) and
   `activities/tools.py` (1148 ln) to the 600-line law. Mechanical but >5-file blast
   radius each; requires its own escalated task authorization per §B3/§B6.
