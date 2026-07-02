@@ -41,6 +41,18 @@ idempotency_misses = Counter(
     ["workflow_type"],
 )
 
+semantic_cache_lookups = Counter(
+    "semantic_cache_lookups_total",
+    "Semantic plan-cache lookups by outcome (hit/miss/disabled/error). "
+    "Hit rate = hit / (hit + miss). FR4: makes prod cache efficacy measurable.",
+    ["result"],
+)
+
+semantic_cache_stores = Counter(
+    "semantic_cache_stores_total",
+    "Plan templates written to the semantic cache",
+)
+
 
 # ── Helper Functions ─────────────────────────────────────────────────
 
@@ -53,6 +65,16 @@ def record_hit(workflow_type: str = "agent_saga") -> None:
 def record_miss(workflow_type: str = "agent_saga") -> None:
     """Increment the idempotency-miss counter."""
     idempotency_misses.labels(workflow_type=workflow_type).inc()
+
+
+def record_cache_lookup(result: str) -> None:
+    """Increment the semantic-cache lookup counter (result: hit|miss|disabled|error)."""
+    semantic_cache_lookups.labels(result=result).inc()
+
+
+def record_cache_store() -> None:
+    """Increment the semantic-cache store counter."""
+    semantic_cache_stores.inc()
 
 
 def get_metrics_app() -> Any:

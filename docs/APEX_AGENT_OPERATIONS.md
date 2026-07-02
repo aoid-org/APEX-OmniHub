@@ -89,7 +89,8 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `ORCHESTRATOR_SHARED_SECRET` | same value as edge secret | |
 | `ORCHESTRATOR_REQUIRE_SIGNATURE` | `true` | config refuses to boot if `false` in prod |
 | `ENVIRONMENT` | `production` | |
-| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker | `true`/unset needs ≥2 GB (PyTorch model) |
+| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker (legacy kill-switch; always wins) | to enable caching on 512 MB, set `true` **and** `SEMANTIC_CACHE_MODE=lite` |
+| `SEMANTIC_CACHE_MODE` | `lite` on 512 MB worker · `full` (default) needs ≥2 GB (PyTorch) · `off` | `lite` = stdlib `LiteEmbedder` (hashed n-gram, measured ~50 MB RSS, no torch); lexical/near-duplicate template hits only; isolated Redis namespace (`plan:lite-v1:*`, `idx:plan_templates:lite-v1`); hit rate = `semantic_cache_lookups_total{result="hit"}` ÷ (hit+miss) on worker `/metrics` |
 | `API_HOST` / `API_PORT` | `0.0.0.0` / `10000` | **API service only** |
 | `CORS_ALLOWED_ORIGINS` | `https://apexomnihub.icu,https://www.apexomnihub.icu` (comma-sep, no spaces) | **API only** — browser origins allowed to call the API cross-origin |
 
