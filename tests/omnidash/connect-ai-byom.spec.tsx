@@ -135,9 +135,11 @@ describe('Connect AI / BYOM Contract', () => {
     expect(screen.getByRole('button', { name: 'Connect AI' })).toBeTruthy();
   });
 
-  it('search interactions do not open or mutate Connect AI state', () => {
+  it('search interactions do not open or mutate Connect AI state', async () => {
     render(<OmniDashShell />);
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search OmniHub' }), { target: { value: 'billing' } });
+    fireEvent.click(screen.getByTestId('omnidash-search-trigger'));
+    const search = await screen.findByRole('searchbox', { name: 'Search OmniHub' });
+    fireEvent.change(search, { target: { value: 'billing' } });
     expect(screen.queryByRole('dialog', { name: 'Connect AI credentials' })).toBeNull();
     expect(sessionStorage.getItem('omni_ai_provider')).toBeNull();
     expect(queryAgentRegistryMock).not.toHaveBeenCalled();
