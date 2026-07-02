@@ -401,6 +401,17 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   // tracked follow-up (needs a demoMode-guarded read; deferred to keep this diff
   // surgical and avoid coupling the header to a backend read on every mount).
   const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return OMNIDASH_SIDEBAR_WIDGETS.filter(widget => {
+      const moduleKey = widget.moduleKey ?? '';
+      return widget.label.toLowerCase().includes(query) || moduleKey.toLowerCase().includes(query);
+    }).slice(0, 6);
+  }, [searchQuery]);
 
   const handleOmniSkills = () => {
     invoke({
@@ -425,6 +436,21 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     setShowConnectAi(false);
     const connected = sessionStorage.getItem('omni_ai_provider');
     if (connected) setAiProvider(connected);
+  };
+
+  const openSearchResult = (widget: OmniDashSidebarWidget) => {
+    const moduleKey = widget.moduleKey ?? widget.id;
+    invoke({
+      id: `omnidash-search-${widget.id}`,
+      provider: 'omnidash',
+      type: 'module',
+      title: widget.label,
+      contextData: { moduleKey },
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+    setSearchOpen(false);
+    setSearchQuery('');
   };
 
   const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
