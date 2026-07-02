@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { I18nextProvider } from 'react-i18next';
+import { Toaster } from 'sonner';
 import i18n from './i18n';
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 // APEX PWA INVARIANT: PWAInstallBanner MUST remain in App.tsx.
@@ -163,6 +164,10 @@ function App() {
         </Routes>
         {/* PWA install banner — renders globally, zero render cost when not installable */}
         <PWAInstallBanner />
+        {/* PRCC-001 WP-1b: global toast renderer. toast.error/success are called
+            across OmniDash modules and the Launch wizards, but no Toaster was mounted,
+            so every notification fired silently. One app-root renderer surfaces them. */}
+        <Toaster position="top-right" richColors theme="dark" closeButton />
       </div>
     </BrowserRouter>
     </ErrorBoundary>
