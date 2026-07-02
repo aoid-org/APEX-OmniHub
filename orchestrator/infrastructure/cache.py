@@ -645,5 +645,6 @@ class SemanticCacheService:
     async def close(self) -> None:
         """Close Redis connection."""
         if self.redis:
-            await self.redis.aclose()
+            # aclose() replaced close() in redis-py 5.0.1; CI's stubs lag the API.
+            await self.redis.aclose()  # type: ignore[attr-defined]
             logger.info("Redis connection closed")

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections.abc import Iterator
 
 import numpy as np
 
@@ -72,7 +73,7 @@ class LiteEmbedder:
         return vec.astype(np.float32)
 
     @staticmethod
-    def _features(text: str):
+    def _features(text: str) -> Iterator[tuple[str, float]]:
         """Yield (feature, weight) pairs: word tokens weighted above char n-grams."""
         lowered = text.lower()
         tokens = _TOKEN_RE.findall(lowered)
