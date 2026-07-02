@@ -395,7 +395,10 @@
       "autoPilot": "Autopilot",
       "autoPilotSub": "Autonome Aufgabenbearbeitung",
       "guardianMode": "Guardian-Modus",
-      "guardianModeSub": "KI-Richtliniendurchsetzung"
+      "guardianModeSub": "KI-Richtliniendurchsetzung",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

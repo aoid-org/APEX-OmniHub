@@ -11,8 +11,8 @@
 
 import { useOmniModal } from '@/stores/omniModalStore';
 import { Video } from 'lucide-react';
+import { useAppTranslation } from '../../../src/i18n/useAppTranslation';
 import { OmniMediaGallery } from './OmniMediaGallery';
-import { useAppTranslation } from '@/i18n/useAppTranslation';
 
 const OMNIMEDIA_MODULE_KEY = 'omnimedia';
 

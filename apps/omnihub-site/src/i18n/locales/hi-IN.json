@@ -395,7 +395,10 @@
       "autoPilot": "ऑटो-पायलट",
       "autoPilotSub": "स्वायत्त कार्य प्रबंधन",
       "guardianMode": "Guardian मोड",
-      "guardianModeSub": "AI नीति प्रवर्तन"
+      "guardianModeSub": "AI नीति प्रवर्तन",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

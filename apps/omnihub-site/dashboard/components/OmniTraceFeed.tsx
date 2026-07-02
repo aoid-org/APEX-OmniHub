@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as supabaseSingleton } from '@/lib/supabase';
-import { useAppTranslation } from '@/i18n/useAppTranslation';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 type SupabaseClient = typeof supabaseSingleton;
 

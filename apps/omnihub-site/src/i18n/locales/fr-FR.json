@@ -395,7 +395,10 @@
       "autoPilot": "Pilote automatique",
       "autoPilotSub": "Traitement autonome des tâches",
       "guardianMode": "Mode Guardian",
-      "guardianModeSub": "Application des politiques IA"
+      "guardianModeSub": "Application des politiques IA",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

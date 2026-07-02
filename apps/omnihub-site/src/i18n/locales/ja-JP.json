@@ -395,7 +395,10 @@
       "autoPilot": "オートパイロット",
       "autoPilotSub": "自律タスク処理",
       "guardianMode": "Guardianモード",
-      "guardianModeSub": "AIポリシー適用"
+      "guardianModeSub": "AIポリシー適用",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

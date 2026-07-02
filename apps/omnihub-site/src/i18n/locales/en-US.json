@@ -313,7 +313,7 @@
     "sidebar": {
       "allSystemsOperational": "All Systems Operational",
       "companyName": "APEX Business Systems Ltd. · Edmonton, AB",
-      "signOut": "Sign Out",
+      "signOut": "Sign out",
       "signingOut": "Signing out…",
       "systemKpis": "System KPIs"
     },
@@ -336,8 +336,8 @@
       "cancel": "Cancel",
       "pause": "Pause",
       "start": "Start",
-      "reset": "RES.",
-      "longPressHint": "Long-press to change avatar"
+      "reset": "RESET",
+      "longPressHint": "Long press to change avatar"
     },
     "slate": {
       "demoSession": "Starting demo session…",
@@ -348,8 +348,8 @@
       "contextSources": "Context Sources",
       "removeContext": "Remove context",
       "fillSuggestion": "Fill suggestion",
-      "viewContext": "View Context",
-      "systemError": "System Error: Failed to contact APEX Agent. Guardian audit logged.",
+      "viewContext": "View context",
+      "systemError": "System Error: Unable to reach APEX Agent. Guardian audit logged.",
       "responseStopped": "Response stopped by user."
     },
     "ecosystem": {
@@ -358,7 +358,7 @@
     "appGallery": {
       "title": "App Gallery",
       "awaiting": "AWAITING",
-      "awaitingSlot": "App slot {{n}} — awaiting connection"
+      "awaitingSlot": "App Slot {{n}} — awaiting connection"
     },
     "trace": {
       "live": "Live",
@@ -395,7 +395,10 @@
       "autoPilot": "Auto-Pilot",
       "autoPilotSub": "Autonomous task handling",
       "guardianMode": "Guardian Mode",
-      "guardianModeSub": "AI policy enforcement"
+      "guardianModeSub": "AI policy enforcement",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",
@@ -415,13 +418,22 @@
       "simulated": "(Simulated)"
     },
     "systemHealth": {
-      "title": "System Status",
+      "title": "System Health Overview",
       "eventsTracked": "Events Tracked",
       "systemHealth": "System Health",
       "guardianLoops": "Guardian Loops",
       "staleChecks": "Stale Checks",
       "clean": "Clean",
       "loop": "{{count}} loop"
+    },
+    "sidebarWidgets": {
+      "audits": "Audits",
+      "links": "Links",
+      "automations": "Automations",
+      "workflows": "Workflows",
+      "files": "Files",
+      "billing": "Billing",
+      "settings": "Settings"
     },
     "media": {
       "open": "Open"
@@ -438,15 +450,6 @@
       "signOut": "Sign out",
       "openInsights": "Open insights panel",
       "dashboardNav": "Dashboard navigation"
-    },
-    "sidebarWidgets": {
-      "audits": "Audits",
-      "links": "Links",
-      "automations": "Automations",
-      "workflows": "Workflows",
-      "files": "Files",
-      "billing": "Billing",
-      "settings": "Settings"
     }
   }
 }

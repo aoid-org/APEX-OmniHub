@@ -395,7 +395,10 @@
       "autoPilot": "القيادة التلقائية",
       "autoPilotSub": "معالجة المهام الذاتية",
       "guardianMode": "وضع Guardian",
-      "guardianModeSub": "تطبيق سياسات الذكاء الاصطناعي"
+      "guardianModeSub": "تطبيق سياسات الذكاء الاصطناعي",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

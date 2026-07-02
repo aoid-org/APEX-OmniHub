@@ -64,7 +64,7 @@ export const SentinelPanel = memo(function SentinelPanel() {
           sublabel={tx('dashboard.ops.demoModeSub')}
           enabled={demoMode}
           onToggle={() => setDemoMode(!demoMode)}
-          ariaLabel={tx('dashboard.ops.demoMode')}
+          ariaLabel={tx('dashboard.ops.toggleDemoMode', { defaultValue: 'Toggle demo mode' })}
         />
       )}
       <OpsToggle
@@ -72,14 +72,14 @@ export const SentinelPanel = memo(function SentinelPanel() {
         sublabel={tx('dashboard.ops.autoPilotSub')}
         enabled={autoPilot}
         onToggle={() => setAutoPilot(!autoPilot)}
-        ariaLabel={tx('dashboard.ops.autoPilot')}
+        ariaLabel={tx('dashboard.ops.toggleAutoPilot', { defaultValue: 'Toggle auto pilot' })}
       />
       <OpsToggle
         label={tx('dashboard.ops.guardianMode')}
         sublabel={tx('dashboard.ops.guardianModeSub')}
         enabled={guardianMode}
         onToggle={() => setGuardianMode(!guardianMode)}
-        ariaLabel={tx('dashboard.ops.guardianMode')}
+        ariaLabel={tx('dashboard.ops.toggleGuardianMode', { defaultValue: 'Toggle guardian mode' })}
       />
     </div>
     </div>

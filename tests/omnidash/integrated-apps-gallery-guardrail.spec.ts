@@ -37,8 +37,8 @@ describe('Integrated Apps Gallery — static regression guard', () => {
 
   // Owner-approved (PR #1516): renamed to "App Gallery" and reshaped to four
   // horizontal "Awaiting" slots. See APEX_SURFACE_REGISTRY.md Canonical Layout Law.
-  it('gallery heading reads exactly "App Gallery"', () => {
-    expect(content).toMatch(/<SectionLabel>App Gallery<\/SectionLabel>/);
+  it('gallery heading reads exactly "App Gallery" or its localized title key', () => {
+    expect(content).toMatch(/<SectionLabel>(App Gallery|\{tx\('dashboard\.appGallery\.title'\)\})<\/SectionLabel>/);
   });
 
   it('gallery uses the four-column horizontal Awaiting grid', () => {

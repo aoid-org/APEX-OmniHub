@@ -395,7 +395,10 @@
       "autoPilot": "自动驾驶",
       "autoPilotSub": "自主任务处理",
       "guardianMode": "Guardian 模式",
-      "guardianModeSub": "AI 策略执行"
+      "guardianModeSub": "AI 策略执行",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

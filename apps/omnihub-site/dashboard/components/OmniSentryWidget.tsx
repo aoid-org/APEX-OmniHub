@@ -22,7 +22,7 @@ import {
   withResilience,
   type HealthStatus,
 } from '@/lib/omni-sentry';
-import { useAppTranslation } from '@/i18n/useAppTranslation';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 const STORAGE_KEY = 'omni_sentry_enabled';
 const OFFLINE_KEY = 'omni_sentry_offline';
