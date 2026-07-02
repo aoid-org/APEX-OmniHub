@@ -328,7 +328,8 @@
       "billingPlans": "الفوترة والخطط",
       "inviteMembers": "دعوة أعضاء",
       "inviteSent": "تم إرسال الدعوة بنجاح إلى {{email}}.",
-      "orgEnterprise": "مؤسسي"
+      "orgEnterprise": "مؤسسي",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "الجلسة",
@@ -337,7 +338,8 @@
       "pause": "إيقاف مؤقت",
       "start": "بدء",
       "reset": "إعادة",
-      "longPressHint": "اضغط مطولاً لتغيير الصورة"
+      "longPressHint": "اضغط مطولاً لتغيير الصورة",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "جارٍ بدء جلسة تجريبية…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "تعبئة الاقتراح",
       "viewContext": "عرض السياق",
       "systemError": "خطأ في النظام: تعذر الاتصال بـ APEX Agent. تم تسجيل تدقيق Guardian.",
-      "responseStopped": "تم إيقاف الاستجابة من قبل المستخدم."
+      "responseStopped": "تم إيقاف الاستجابة من قبل المستخدم.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "إضافة تطبيق APEX"
+      "addApp": "إضافة تطبيق APEX",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "معرض التطبيقات",
@@ -440,7 +445,8 @@
       "switchDark": "التبديل إلى المظهر الداكن",
       "signOut": "تسجيل الخروج",
       "openInsights": "فتح لوحة الرؤى",
-      "dashboardNav": "تنقل لوحة المعلومات"
+      "dashboardNav": "تنقل لوحة المعلومات",
+      "closePanel": "إغلاق اللوحة"
     },
     "sidebarWidgets": {
       "audits": "عمليات التدقيق",
@@ -451,5 +457,12 @@
       "billing": "الفواتير",
       "settings": "الإعدادات"
     }
+  },
+  "translation": {
+    "source_text": "النص المصدر",
+    "target_language": "اللغة الهدف",
+    "translate": "ترجمة",
+    "translated_text": "الناتج المترجم",
+    "copy": "نسخ"
   }
 }

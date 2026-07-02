@@ -328,7 +328,8 @@
       "billingPlans": "Facturation et forfaits",
       "inviteMembers": "Inviter des membres",
       "inviteSent": "Invitation envoyée avec succès à {{email}}.",
-      "orgEnterprise": "Entreprise"
+      "orgEnterprise": "Entreprise",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "SESSION",
@@ -337,7 +338,8 @@
       "pause": "Pause",
       "start": "Démarrer",
       "reset": "RÉI.",
-      "longPressHint": "Appui long pour changer l'avatar"
+      "longPressHint": "Appui long pour changer l'avatar",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "Démarrage de la session démo…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "Remplir la suggestion",
       "viewContext": "Voir le contexte",
       "systemError": "Erreur système : Impossible de contacter APEX Agent. Audit Guardian enregistré.",
-      "responseStopped": "Réponse arrêtée par l'utilisateur."
+      "responseStopped": "Réponse arrêtée par l'utilisateur.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "Ajouter une app APEX"
+      "addApp": "Ajouter une app APEX",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "Galerie d'apps",
@@ -440,7 +445,8 @@
       "switchDark": "Passer au thème sombre",
       "signOut": "Déconnexion",
       "openInsights": "Ouvrir le panneau insights",
-      "dashboardNav": "Navigation du tableau de bord"
+      "dashboardNav": "Navigation du tableau de bord",
+      "closePanel": "Fermer le panneau"
     },
     "sidebarWidgets": {
       "audits": "Audits",
@@ -451,5 +457,12 @@
       "billing": "Facturation",
       "settings": "Paramètres"
     }
+  },
+  "translation": {
+    "source_text": "Texte source",
+    "target_language": "Langue cible",
+    "translate": "Traduire",
+    "translated_text": "Texte traduit",
+    "copy": "Copier"
   }
 }

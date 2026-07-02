@@ -21,7 +21,7 @@ import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLau
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
-import { ConnectAiAuthModal } from '@/components/byom/ConnectAiAuthModal';
+import { ConnectAiAuthModal } from '../src/components/byom/ConnectAiAuthModal';
 import { useAuth } from '@/lib/useAuth';
 import { LayoutContext } from './contexts/LayoutContext';
 import {
@@ -409,6 +409,19 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   // surgical and avoid coupling the header to a backend read on every mount).
   const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
 
+  // ⌘K / Ctrl+K opens search from anywhere on the dashboard (all viewports,
+  // even where the header trigger is hidden).
+  useEffect(() => {
+    const onShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onShortcut);
+    return () => window.removeEventListener('keydown', onShortcut);
+  }, []);
+
   const handleOmniSkills = () => {
     invoke({
       id: 'header-omniskills',
@@ -515,19 +528,25 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
           controls are never clipped. A flex spacer keeps actions right-aligned. */}
       {isDesktop ? (
         <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-          <div style={{
-            display:"flex", alignItems:"center", gap:9,
-            background:T.card, border:`1px solid ${T.border}`,
-            borderRadius:10, padding:"0 12px",
-            width:"100%", maxWidth:360, height:44,
-            color:T.t2, fontSize:13,
-          }}>
+          <button
+            type="button"
+            data-testid="omnidash-search-trigger"
+            aria-haspopup="dialog"
+            onClick={() => setSearchOpen(true)}
+            style={{
+              display:"flex", alignItems:"center", gap:9,
+              background:T.card, border:`1px solid ${T.border}`,
+              borderRadius:10, padding:"0 12px",
+              width:"100%", maxWidth:360, height:44,
+              color:T.t2, fontSize:13, cursor:"pointer",
+              textAlign:"left", fontFamily:"inherit",
+            }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <span style={{color:T.t3, flex:1}}>{tx('dashboard.header.searchPlaceholder')}</span>
             <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
-          </div>
+          </button>
         </div>
       ) : (
         <div style={{ flex:1, minWidth:8 }} aria-hidden="true" />
@@ -963,24 +982,57 @@ const OmniSlateWidget = () => {
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // PRCC-001 WP-2a: hydrate chat history from omnislate_messages on mount so the
+  // conversation survives reloads. Previously messages lived only in useState, so
+  // every reload wiped the thread (audit 2026-07-01 defect #2). RLS scopes reads
+  // to auth.uid(); demo mode stays ephemeral (no hydrate/persist).
+  useEffect(() => {
+    if (demoMode) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('omnislate_messages')
+        .select('role, content, created_at')
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (cancelled || error || !data || data.length === 0) return;
+      setMessages(data.map((m: Record<string, unknown>) => ({ role: String(m.role), text: String(m.content) })));
+    })();
+    return () => { cancelled = true; };
+  }, [demoMode]);
+
   const send = useCallback(async () => {
     if (!input.trim()) return;
     const q = input.trim(); setInput(""); setLoading(true);
     setMessages(m => [...m, {role:"user", text:q}]);
-    
+
     try {
-      const res = await invokeMcpIntent({ 
-        prompt: q, 
-        context: { apps: contextApps.map(a => a.id) } 
+      const res = await invokeMcpIntent({
+        prompt: q,
+        context: { apps: contextApps.map(a => a.id) }
       });
-      setMessages(m => [...m, {role:"assistant", text: res.reply }]);
+      const reply = res.reply;
+      setMessages(m => [...m, {role:"assistant", text: reply }]);
+      // WP-2a: persist both turns (best-effort, non-blocking; RLS WITH CHECK ties
+      // rows to auth.uid()). Never awaited into the UI path — a persist failure
+      // must not affect the live conversation.
+      if (!demoMode) {
+        void supabase.auth.getUser().then(({ data: u }) => {
+          const uid = u?.user?.id;
+          if (!uid) return;
+          void supabase.from('omnislate_messages').insert([
+            { user_id: uid, role: 'user', content: q },
+            { user_id: uid, role: 'assistant', content: reply },
+          ]);
+        });
+      }
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
       setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
     } finally {
       setLoading(false);
     }
-  }, [input, contextApps]);
+  }, [input, contextApps, demoMode]);
 
   const stop = useCallback(() => {
     setLoading(false);
@@ -1062,7 +1114,15 @@ const OmniSlateWidget = () => {
       }}>
         <SectionLabel>{tx('dashboard.slate.title')}</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
-          <button onClick={() => setMessages([])} style={{
+          <button onClick={() => {
+            setMessages([]);
+            if (!demoMode) {
+              void supabase.auth.getUser().then(({ data: u }) => {
+                const uid = u?.user?.id;
+                if (uid) void supabase.from('omnislate_messages').delete().eq('user_id', uid);
+              });
+            }
+          }} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
             background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
@@ -1280,7 +1340,7 @@ const EcosystemWidget = () => {
   return (
   <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
     <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center" }}>
-      <SectionLabel>APEX Ecosystem</SectionLabel>
+      <SectionLabel>{tx('dashboard.ecosystem.title')}</SectionLabel>
     </div>
     <div style={{ padding:"14px", flex:1 }}>
       {/* APEX app tile */}
@@ -1327,7 +1387,8 @@ const IntegratedAppsGalleryWidget = () => {
   return (
   <GlassCard style={{ padding: '16px' }}>
     <div style={{ marginBottom: 12 }}>
-      <SectionLabel>{tx('dashboard.appGallery.title')}</SectionLabel>
+      {/* Canonical Layout Law: gallery label is a locked literal (check-omnidash-integrity) */}
+      <SectionLabel>App Gallery</SectionLabel>
     </div>
     {/* Four horizontal slots per canonical layout — same card shell as the
         former metrics band. Honest, non-interactive "Awaiting" empty state. */}

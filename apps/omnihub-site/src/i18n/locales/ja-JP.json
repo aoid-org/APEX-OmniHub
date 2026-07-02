@@ -328,7 +328,8 @@
       "billingPlans": "請求とプラン",
       "inviteMembers": "メンバーを招待",
       "inviteSent": "{{email}}への招待を送信しました。",
-      "orgEnterprise": "エンタープライズ"
+      "orgEnterprise": "エンタープライズ",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "セッション",
@@ -337,7 +338,8 @@
       "pause": "一時停止",
       "start": "開始",
       "reset": "リセット",
-      "longPressHint": "長押しでアバターを変更"
+      "longPressHint": "長押しでアバターを変更",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "デモセッションを開始中…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "提案を入力",
       "viewContext": "コンテキストを表示",
       "systemError": "システムエラー: APEX Agentに接続できません。Guardian監査を記録しました。",
-      "responseStopped": "ユーザーが応答を停止しました。"
+      "responseStopped": "ユーザーが応答を停止しました。",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "APEXアプリを追加"
+      "addApp": "APEXアプリを追加",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "アプリギャラリー",
@@ -440,7 +445,8 @@
       "switchDark": "ダークテーマに切替",
       "signOut": "サインアウト",
       "openInsights": "インサイトパネルを開く",
-      "dashboardNav": "ダッシュボードナビゲーション"
+      "dashboardNav": "ダッシュボードナビゲーション",
+      "closePanel": "パネルを閉じる"
     },
     "sidebarWidgets": {
       "audits": "監査",
@@ -451,5 +457,12 @@
       "billing": "請求",
       "settings": "設定"
     }
+  },
+  "translation": {
+    "source_text": "原文",
+    "target_language": "対象言語",
+    "translate": "翻訳",
+    "translated_text": "翻訳結果",
+    "copy": "コピー"
   }
 }

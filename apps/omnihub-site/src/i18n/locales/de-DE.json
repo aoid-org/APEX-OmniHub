@@ -328,7 +328,8 @@
       "billingPlans": "Abrechnung & Tarife",
       "inviteMembers": "Mitglieder einladen",
       "inviteSent": "Einladung erfolgreich an {{email}} gesendet.",
-      "orgEnterprise": "Enterprise"
+      "orgEnterprise": "Enterprise",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "SITZUNG",
@@ -337,7 +338,8 @@
       "pause": "Pause",
       "start": "Start",
       "reset": "ZUR.",
-      "longPressHint": "Gedrückt halten um Avatar zu ändern"
+      "longPressHint": "Gedrückt halten um Avatar zu ändern",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "Demo-Sitzung wird gestartet…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "Vorschlag ausfüllen",
       "viewContext": "Kontext anzeigen",
       "systemError": "Systemfehler: APEX Agent nicht erreichbar. Guardian-Audit protokolliert.",
-      "responseStopped": "Antwort vom Benutzer gestoppt."
+      "responseStopped": "Antwort vom Benutzer gestoppt.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "APEX App hinzufügen"
+      "addApp": "APEX App hinzufügen",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "App-Galerie",
@@ -440,7 +445,8 @@
       "switchDark": "Zum dunklen Thema wechseln",
       "signOut": "Abmelden",
       "openInsights": "Insights-Panel öffnen",
-      "dashboardNav": "Dashboard-Navigation"
+      "dashboardNav": "Dashboard-Navigation",
+      "closePanel": "Panel schließen"
     },
     "sidebarWidgets": {
       "audits": "Audits",
@@ -451,5 +457,12 @@
       "billing": "Abrechnung",
       "settings": "Einstellungen"
     }
+  },
+  "translation": {
+    "source_text": "Quelltext",
+    "target_language": "Zielsprache",
+    "translate": "Übersetzen",
+    "translated_text": "Übersetzte Ausgabe",
+    "copy": "Kopieren"
   }
 }

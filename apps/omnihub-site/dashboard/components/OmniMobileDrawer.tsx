@@ -66,7 +66,7 @@ export function OmniMobileDrawer({ isOpen, onClose, title, children }: OmniMobil
             type="button"
             className="omni-drawer__close"
             onClick={onClose}
-            aria-label={tx("dashboard.closePanel", { defaultValue: "Close panel" })}
+            aria-label={tx("dashboard.mobile.closePanel", { defaultValue: "Close panel" })}
           >
             <svg
               width="20"

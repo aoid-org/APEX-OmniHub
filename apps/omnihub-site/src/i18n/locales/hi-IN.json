@@ -328,7 +328,8 @@
       "billingPlans": "बिलिंग और योजनाएं",
       "inviteMembers": "सदस्यों को आमंत्रित करें",
       "inviteSent": "{{email}} को आमंत्रण सफलतापूर्वक भेजा गया।",
-      "orgEnterprise": "एंटरप्राइज़"
+      "orgEnterprise": "एंटरप्राइज़",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "सत्र",
@@ -337,7 +338,8 @@
       "pause": "रोकें",
       "start": "शुरू करें",
       "reset": "रीसेट",
-      "longPressHint": "अवतार बदलने के लिए देर तक दबाएं"
+      "longPressHint": "अवतार बदलने के लिए देर तक दबाएं",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "डेमो सत्र शुरू हो रहा है…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "सुझाव भरें",
       "viewContext": "संदर्भ देखें",
       "systemError": "सिस्टम त्रुटि: APEX Agent से संपर्क नहीं हो सका। Guardian ऑडिट लॉग किया गया।",
-      "responseStopped": "उपयोगकर्ता द्वारा प्रतिक्रिया रोकी गई।"
+      "responseStopped": "उपयोगकर्ता द्वारा प्रतिक्रिया रोकी गई।",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "APEX ऐप जोड़ें"
+      "addApp": "APEX ऐप जोड़ें",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "ऐप गैलरी",
@@ -440,7 +445,8 @@
       "switchDark": "डार्क थीम पर स्विच करें",
       "signOut": "साइन आउट",
       "openInsights": "इनसाइट्स पैनल खोलें",
-      "dashboardNav": "डैशबोर्ड नेविगेशन"
+      "dashboardNav": "डैशबोर्ड नेविगेशन",
+      "closePanel": "पैनल बंद करें"
     },
     "sidebarWidgets": {
       "audits": "ऑडिट",
@@ -451,5 +457,12 @@
       "billing": "बिलिंग",
       "settings": "सेटिंग्स"
     }
+  },
+  "translation": {
+    "source_text": "स्रोत पाठ",
+    "target_language": "लक्ष्य भाषा",
+    "translate": "अनुवाद करें",
+    "translated_text": "अनूदित आउटपुट",
+    "copy": "कॉपी करें"
   }
 }

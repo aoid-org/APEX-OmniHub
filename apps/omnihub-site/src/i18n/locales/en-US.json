@@ -328,7 +328,8 @@
       "billingPlans": "Billing & Plans",
       "inviteMembers": "Invite Members",
       "inviteSent": "Invitation sent successfully to {{email}}.",
-      "orgEnterprise": "Enterprise"
+      "orgEnterprise": "Enterprise",
+      "omniSkills": "OmniSkills"
     },
     "agent": {
       "session": "SESSION",
@@ -337,7 +338,8 @@
       "pause": "Pause",
       "start": "Start",
       "reset": "RESET",
-      "longPressHint": "Long press to change avatar"
+      "longPressHint": "Long press to change avatar",
+      "title": "APEX Agent"
     },
     "slate": {
       "demoSession": "Starting demo session…",
@@ -350,10 +352,13 @@
       "fillSuggestion": "Fill suggestion",
       "viewContext": "View context",
       "systemError": "System Error: Unable to reach APEX Agent. Guardian audit logged.",
-      "responseStopped": "Response stopped by user."
+      "responseStopped": "Response stopped by user.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
     },
     "ecosystem": {
-      "addApp": "Add APEX App"
+      "addApp": "Add APEX App",
+      "title": "APEX Ecosystem"
     },
     "appGallery": {
       "title": "App Gallery",
@@ -449,7 +454,15 @@
       "switchDark": "Switch to dark theme",
       "signOut": "Sign out",
       "openInsights": "Open insights panel",
-      "dashboardNav": "Dashboard navigation"
+      "dashboardNav": "Dashboard navigation",
+      "closePanel": "Close panel"
     }
+  },
+  "translation": {
+    "source_text": "Source Text",
+    "target_language": "Target Language",
+    "translate": "Translate",
+    "translated_text": "Translated Output",
+    "copy": "Copy"
   }
 }

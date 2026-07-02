@@ -73,7 +73,7 @@ export function OmniMobileBottomNav({ activeTab, onSelect }: OmniMobileBottomNav
     <div
       className="omni-mobile-bottom-nav"
       role="tablist"
-      aria-label={tx("dashboard.mobile.navigation", { defaultValue: "Dashboard navigation" })}
+      aria-label={tx("dashboard.mobile.dashboardNav", { defaultValue: "Dashboard navigation" })}
     >
       {TAB_IDS.map((tabId) => {
         const isActive = activeTab === tabId;
