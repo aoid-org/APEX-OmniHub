@@ -119,8 +119,12 @@ function analyze(): void {
 
   const changedFiles = getChangedFiles(baseRef);
 
-  // Filter to only orchestrator files
-  const orchestratorFiles = changedFiles.filter(f => f.startsWith('orchestrator/'));
+  // Filter to only orchestrator files. The per-task execution log is exempt:
+  // EXECUTION_CONTRACT_2026-07 §B4 mandates appending to it on EVERY task, so
+  // counting it would silently shrink the ≤5 ceiling (§B3) to 4.
+  const orchestratorFiles = changedFiles.filter(
+    f => f.startsWith('orchestrator/') && !/^orchestrator\/EXECUTION_LOG_[\d-]+\.md$/.test(f),
+  );
 
   if (orchestratorFiles.length === 0) {
     console.log('✅ No orchestrator files affected. Blast radius: 0');

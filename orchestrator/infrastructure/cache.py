@@ -36,9 +36,15 @@ import redis.asyncio as aioredis
 from pydantic import BaseModel, Field
 from redis.commands.search.field import NumericField, TextField, VectorField
 from redis.commands.search.query import Query
-from sentence_transformers import SentenceTransformer
 
 from infrastructure.tidb_persistence import get_tidb_store
+
+# NOTE (FR4): sentence_transformers is imported lazily inside
+# SemanticCacheService.__init__, and only when a model *name* is given — its
+# transitive torch import is what OOMs a 512 MB worker, so it must never load
+# when an encoder object is injected. This module-level name stays None at
+# runtime; it exists so tests can patch("infrastructure.cache.SentenceTransformer").
+SentenceTransformer: Any = None
 
 # Redis search imports - handle multiple redis-py versions
 try:
@@ -247,7 +253,7 @@ class SemanticCacheService:
         redis_url: str,
         redis_password: str | None = None,
         redis_ssl: bool = False,
-        embedding_model: str = "all-MiniLM-L6-v2",
+        embedding_model: str | Any = "all-MiniLM-L6-v2",
         similarity_threshold: float = 0.85,
         ttl_seconds: int = 86400,  # 24 hours
     ):
@@ -258,7 +264,9 @@ class SemanticCacheService:
             redis_url: Redis connection URL
             redis_password: Optional Redis password
             redis_ssl: Whether to use SSL for connection
-            embedding_model: Sentence-transformers model name
+            embedding_model: Sentence-transformers model name, OR a pre-built
+                encoder object exposing encode()/get_sentence_embedding_dimension()
+                (e.g. infrastructure.lite_embedder.LiteEmbedder for 512 MB workers)
             similarity_threshold: Minimum cosine similarity for cache hit (0-1)
             ttl_seconds: Default TTL for cached plans
         """
@@ -271,14 +279,31 @@ class SemanticCacheService:
         # Redis client (async)
         self.redis: aioredis.Redis[bytes] | None = None
 
-        # Sentence embeddings model (runs locally, no API calls)
-        logger.info(f"Loading embedding model: {embedding_model}...")
-        self.embedding_model = SentenceTransformer(embedding_model)
+        if isinstance(embedding_model, str):
+            # Heavy path: lazy import so injected-encoder deployments never
+            # pay the torch memory cost (see module import note). Tests patch
+            # the module-level SentenceTransformer name instead.
+            logger.info(f"Loading embedding model: {embedding_model}...")
+            transformer_cls = SentenceTransformer
+            if transformer_cls is None:
+                from sentence_transformers import SentenceTransformer as _LazyST
+
+                transformer_cls = _LazyST
+
+            self.embedding_model = transformer_cls(embedding_model)
+            namespace = ""
+        else:
+            self.embedding_model = embedding_model
+            namespace = getattr(embedding_model, "cache_namespace", "custom")
+            logger.info(f"Using injected embedding encoder (namespace={namespace})")
         self.embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
         logger.info(f"Model loaded ({self.embedding_dim} dimensions)")
 
-        # Redis index name
-        self.index_name = "idx:plan_templates"
+        # Redis index/key namespace. Vector spaces from different encoders are
+        # NOT comparable, so each encoder gets an isolated index + key prefix.
+        suffix = f":{namespace}" if namespace else ""
+        self.index_name = f"idx:plan_templates{suffix}"
+        self.key_prefix = f"plan{suffix}:"
 
     async def initialize(self) -> None:
         """
@@ -350,7 +375,7 @@ class SemanticCacheService:
         # Create index
         await self.redis.ft(self.index_name).create_index(
             fields=schema,
-            definition=IndexDefinition(prefix=["plan:"], index_type=IndexType.HASH),
+            definition=IndexDefinition(prefix=[self.key_prefix], index_type=IndexType.HASH),
         )
         logger.info(f"Created vector index: {self.index_name}")
 
@@ -411,7 +436,7 @@ class SemanticCacheService:
 
         # Step 5: Rehydrate plan with actual parameters
         template_id = best_match.template_id
-        plan_steps_json = await self.redis.hget(f"plan:{template_id}", "plan_steps")
+        plan_steps_json = await self.redis.hget(f"{self.key_prefix}{template_id}", "plan_steps")
 
         if not plan_steps_json:
             return None
@@ -422,7 +447,7 @@ class SemanticCacheService:
         injected_steps = self._inject_parameters(plan_steps, parameters)
 
         # Increment hit count
-        await self.redis.hincrby(f"plan:{template_id}", "hit_count", 1)
+        await self.redis.hincrby(f"{self.key_prefix}{template_id}", "hit_count", 1)
 
         logger.info(f"Cache HIT (similarity={similarity:.3f}, template={template_id})")
 
@@ -468,7 +493,7 @@ class SemanticCacheService:
         template_id = hashlib.sha256(template_text.encode()).hexdigest()[:16]
 
         # Check if template already exists
-        exists = await self.redis.exists(f"plan:{template_id}")
+        exists = await self.redis.exists(f"{self.key_prefix}{template_id}")
         if exists:
             logger.info(f"Template already cached: {template_id}")
             return template_id
@@ -511,7 +536,7 @@ class SemanticCacheService:
 
         # Store in Redis as hash
         await self.redis.hset(
-            f"plan:{template_id}",
+            f"{self.key_prefix}{template_id}",
             mapping={
                 "template_id": plan_template.template_id,
                 "template_text": plan_template.template_text,
@@ -523,7 +548,7 @@ class SemanticCacheService:
         )
 
         # Set TTL
-        await self.redis.expire(f"plan:{template_id}", ttl_seconds or self.ttl_seconds)
+        await self.redis.expire(f"{self.key_prefix}{template_id}", ttl_seconds or self.ttl_seconds)
 
         logger.info(f"Cached new template: {template_id} (TTL={ttl_seconds or self.ttl_seconds}s)")
         return template_id
