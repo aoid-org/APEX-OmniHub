@@ -288,6 +288,43 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
     }
   }, []);
 
+  // PRCC-001 WP-3a: backfill the feed from omnitrace_events on mount. The panel
+  // previously only rendered realtime INSERTs, so existing trace events (e.g. an
+  // automation the user just executed) never appeared — the feed read empty even
+  // when rows existed. This is the read half of the flagship loop; the write half
+  // lands in supabase/functions/_shared/omnitrace.ts + execute-automation. RLS
+  // scopes SELECT to auth.uid(), so users only ever see their own trace.
+  useEffect(() => {
+    const hasConfig = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+    if (!hasConfig) return;
+    let cancelled = false;
+    const supabase = mockSupabase ?? supabaseSingleton;
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('omnitrace_events')
+        .select('id, event_text, severity, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (cancelled || error || !data) return;
+      const mapped: AuditLog[] = data.map((r: Record<string, unknown>) => ({
+        id: String(r.id),
+        action: String(r.event_text ?? ''),
+        created_at: String(r.created_at),
+        severity:
+          r.severity === 'success' ? 'ok'
+          : r.severity === 'error' || r.severity === 'warning' ? 'warn'
+          : 'info',
+      }));
+      if (mapped.length > 0) {
+        setLogs(mapped);
+        setStatus('SUBSCRIBED');
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [mockSupabase]);
+
   useEffect(() => {
     const hasConfig = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
     if (!hasConfig) return;
