@@ -184,3 +184,31 @@ describe("runSandboxCheck", () => {
     expect(npmCalls).toHaveLength(1);
   });
 });
+
+describe("runSandboxCheck error formatting edges", () => {
+  it("uses stderr when stdout is absent on an exec-style failure", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        throw new ExecError("tsc failed", "", "stderr-only failure");
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toContain("stderr-only failure");
+  });
+
+  it("stringifies non-Error thrown values from command execution", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        throw "string failure";
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toContain("string failure");
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, createEvent } from '@testing-library/react';
 
 import { DraggableWidget } from '../../apps/omnihub-site/dashboard/DraggableWidget';
 import { DRAG_THRESHOLD_PX } from '../../apps/omnihub-site/dashboard/lib/widgetLayout';
@@ -75,6 +75,22 @@ describe('DraggableWidget', () => {
     const el = screen.getByTestId('widget_lp');
     fireEvent.pointerDown(el, { clientX: 10, clientY: 10 });
     act(() => { vi.advanceTimersByTime(600); });
+    expect(screen.getByText('DRAG')).toBeTruthy();
+    expect(el).toHaveAttribute('data-drag-mode', 'ready');
+  });
+
+  it('starts desktop mouse drag readiness in the same pointer gesture', () => {
+    render(
+      <DraggableWidget id="widget_mouse">
+        <span>mouse</span>
+      </DraggableWidget>,
+    );
+    const el = screen.getByTestId('widget_mouse');
+    const pointerDown = createEvent.pointerDown(el, { clientX: 10, clientY: 10 });
+    Object.defineProperty(pointerDown, 'pointerType', { value: 'mouse' });
+    act(() => {
+      fireEvent(el, pointerDown);
+    });
     expect(screen.getByText('DRAG')).toBeTruthy();
     expect(el).toHaveAttribute('data-drag-mode', 'ready');
   });
@@ -317,7 +333,7 @@ describe('DraggableWidget', () => {
     // No saved position (posRef starts at 0,0); myRect.left/top = -500 means
     // the widget is 500px off-canvas, so the clamp must add a +500px delta
     // per axis to pull it back to the canvas origin.
-    expect(el.style.transform).toContain('translate(500px, 500px)');
+    expect(el.style.transform).toContain('translate3d(500px, 500px, 0)');
 
     document.body.removeChild(canvas);
   });
@@ -352,7 +368,7 @@ describe('DraggableWidget', () => {
     fireEvent.pointerUp(el, { clientX: 30, clientY: 30, pointerId: 1 });
 
     // Already well within the 800x600 canvas — clamping must be a no-op.
-    expect(el.style.transform).toContain('translate(0px, 0px)');
+    expect(el.style.transform).toContain('translate3d(0px, 0px, 0)');
 
     document.body.removeChild(canvas);
   });

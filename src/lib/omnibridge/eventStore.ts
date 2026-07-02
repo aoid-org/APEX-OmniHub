@@ -64,13 +64,20 @@ export type PersistOutcome = PersistResult | PersistFailure;
 
 const HARDCODED_TIMEOUT_MS = 3_000;
 
+function getProcessEnv(): EventStoreEnv {
+  if (typeof process === 'undefined') {
+    return {};
+  }
+  return process.env;
+}
+
 /**
  * Resolve Supabase config from an explicit env bag. On CF Pages Functions
  * callers pass context.env. On Node (tests) the caller may pass process.env.
  * Returns null when required values aren't set — caller decides how to fail.
  */
 function readSupabaseConfig(env: EventStoreEnv | undefined): { url: string; serviceKey: string } | null {
-  const source = env ?? (typeof process !== 'undefined' ? process.env : {});
+  const source = env ?? getProcessEnv();
   const url = source.SUPABASE_URL ?? source.VITE_SUPABASE_URL;
   const serviceKey = source.SUPABASE_SERVICE_ROLE_KEY;
   if (url && serviceKey) return { url, serviceKey };

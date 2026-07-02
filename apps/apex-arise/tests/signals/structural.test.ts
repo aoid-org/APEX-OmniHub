@@ -206,3 +206,25 @@ describe("collectStructural", () => {
     expect(expectedScore).toBeCloseTo(0.5, 5);
   });
 });
+
+describe("collectStructural nesting coverage", () => {
+  it("counts control-flow nesting above the depth threshold", () => {
+    const makeNode = (kind: number, child?: MockFile): MockFile => ({
+      getFilePath: () => "/fake/repo/src/nested.ts",
+      getEndLineNumber: () => 25,
+      getKind: () => kind,
+      forEachChild: (cb: (child: MockFile) => void) => {
+        if (child) cb(child);
+      },
+    });
+    const leaf = makeNode(299);
+    const nested = makeNode(241, makeNode(242, makeNode(243, makeNode(244, makeNode(245, makeNode(246, leaf))))));
+    mockFiles = [nested];
+
+    const [depth] = collectStructural(SCAN_TARGETS, REPO_ROOT);
+
+    expect(depth.score).toBeCloseTo(0.5, 5);
+    expect(depth.raw).toContain("nested.ts");
+    expect(depth.raw).toContain("1 file(s) exceed depth 4");
+  });
+});

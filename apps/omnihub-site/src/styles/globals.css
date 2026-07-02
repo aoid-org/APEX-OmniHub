@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body,
+#root,
+[data-testid="app-shell"] {
+  min-height: 100dvh;
+}
+
+body {
+  margin: 0;
+  background: #060a13;
+}
+
+#root,
+[data-testid="app-shell"] {
+  display: flex;
+  flex-direction: column;
+}
+
 /*
  * shadcn/ui Design Tokens for OmniDash
  *

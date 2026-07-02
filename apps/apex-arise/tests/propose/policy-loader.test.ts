@@ -82,3 +82,12 @@ describe("loadProposePolicy", () => {
     expect(policy.hardBlockedAlways.some((p) => p.includes("#"))).toBe(false);
   });
 });
+
+describe("loadProposePolicy edge fields", () => {
+  it("throws when one tier_1_propose numeric field is missing", async () => {
+    mockReadFileSync.mockReturnValue(VALID_POLICY.replace(/\s{2}max_files_changed: 5\n/, ""));
+    const { loadProposePolicy, PolicyLoadError } = await import("../../src/propose/policy-loader.js");
+
+    expect(() => loadProposePolicy()).toThrow(PolicyLoadError);
+  });
+});

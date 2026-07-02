@@ -141,3 +141,13 @@ describe("selectRedundancyTarget", () => {
     expect(mockRmSync).toHaveBeenCalledWith("/tmp/arise-propose-jscpd-abc", { recursive: true, force: true });
   });
 });
+
+describe("selectRedundancyTarget report edge cases", () => {
+  it("treats a report with no duplicates property as no target", async () => {
+    mockExecFileSync.mockReturnValue("");
+    mockReadFileSync.mockReturnValue(JSON.stringify({ statistics: {} }));
+    const { selectRedundancyTarget } = await import("../../src/propose/target.js");
+
+    expect(selectRedundancyTarget()).toBeNull();
+  });
+});

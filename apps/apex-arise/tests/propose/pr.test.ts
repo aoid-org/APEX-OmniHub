@@ -174,3 +174,21 @@ describe("openProposalPr", () => {
     }
   });
 });
+
+describe("openProposalPr error and git resolution edges", () => {
+  it("returns stringified non-Error git failures", async () => {
+    process.env.GITHUB_TOKEN = "test-token";
+    process.env.GITHUB_REPOSITORY = "apexbusiness-systems/apex-omnihub";
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "git" && Array.isArray(args) && args[0] === "apply") {
+        throw "string patch failure";
+      }
+      return "";
+    });
+    const { openProposalPr } = await import("../../src/propose/pr.js");
+
+    const result = await openProposalPr({ diff: DIFF, proposal: PROPOSAL, branchName: "arise/propose-test" });
+    expect(result.opened).toBe(false);
+    expect(result.error).toContain("string patch failure");
+  });
+});
