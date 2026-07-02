@@ -1368,3 +1368,28 @@ curl -s -X POST "$SUPABASE_URL/functions/v1/execute-automation" \
 
 **Operational impact:** two edge functions redeployed (`generate-business-skills`, `execute-automation`),
 one new shared helper, one new CI gate. No change to start commands, orchestrator topology, or DB schema.
+
+---
+
+## 9.27 PRCC-001 WP-2a — OmniSlate chat persistence (2026-07-01)
+
+**Changed critical runtime paths:** `supabase/migrations/20260701210000_omnislate_messages.sql` (new),
+`apps/omnihub-site/dashboard/OmniDashShell.tsx`.
+
+### Operational change summary
+
+- **New table `public.omnislate_messages`** (additive migration; `IF NOT EXISTS`, no existing object
+  altered). Columns: `id`, `user_id → auth.users ON DELETE CASCADE`, `role ('user'|'assistant')`,
+  `content`, `created_at`. Index on `(user_id, created_at)`. RLS enabled with four policies: users
+  SELECT / INSERT (`WITH CHECK auth.uid() = user_id`) / DELETE their own rows; service_role full access.
+- **OmniSlateWidget** now hydrates from `omnislate_messages` on mount, persists both turns after each
+  reply (best-effort, non-blocking), and clears persisted history when the user clears the chat. Demo
+  mode stays fully ephemeral (no hydrate/persist). Closes audit 2026-07-01 defect #2 (chat erased on reload).
+
+### Environment / topology impact
+
+- **No new secrets.** New DB table + RLS only; applied via the standard migration pipeline.
+- **Migration validated** offline with libpg_query (parses clean) and dry-run in a rolled-back
+  transaction; follows the in-production `tenant_entitlements` table/RLS pattern.
+
+**Operational impact:** one additive migration, one frontend component. No edge/secret/start-command change.
