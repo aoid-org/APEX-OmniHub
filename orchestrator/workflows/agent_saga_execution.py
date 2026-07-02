@@ -1,11 +1,7 @@
 """
-AgentWorkflow execution mixin: DAG plan execution and single-step
-execution with saga compensation registration.
-
-Split from workflows/agent_saga.py (S6, 600-line law) — pure structural move.
-Names that tests patch on the workflows.agent_saga namespace (notably
-``workflow``) are resolved late through ``_ns()`` so existing patches keep
-governing this code exactly as before the split.
+AgentWorkflow execution mixin: DAG plan execution and single-step execution
+with saga compensation registration (S6 split of workflows/agent_saga.py).
+Patched names resolve late via ``_ns()`` — see saga_context.py.
 """
 
 import sys
@@ -20,12 +16,7 @@ from models.man_mode import create_idempotency_key
 
 
 def _ns():
-    """Late-bound workflows.agent_saga module namespace.
-
-    Resolved through ``sys.modules`` — the same way ``unittest.mock.patch``
-    resolves dotted targets — so existing test patches on workflows.agent_saga
-    govern this code exactly as before the S6 split.
-    """
+    """Late-bound workflows.agent_saga namespace (mock.patch semantics)."""
     return sys.modules["workflows.agent_saga"]
 
 
@@ -33,17 +24,9 @@ class AgentSagaExecutionMixin:
     """Undecorated helper methods for AgentWorkflow (state lives on the workflow)."""
 
     if TYPE_CHECKING:
-        # Shared workflow state and cross-module methods live on AgentWorkflow
-        # (workflows/agent_saga.py); declared here so mypy can type-check the
-        # mixin in isolation. Zero runtime effect.
-        goal: str
-        user_id: str
-        plan_id: str
+        # State/methods live on AgentWorkflow; declared for mypy only.
         plan_steps: list[dict[str, Any]]
-        step_results: dict[str, Any]
         step_count: int
-        start_time: Any
-        workflow_context: dict[str, Any]
         deferred_steps: dict[str, Any]
         saga: Any
         _admin_paused: bool
@@ -51,9 +34,6 @@ class AgentSagaExecutionMixin:
 
         async def _append_event(self, event: Any) -> None: ...
         async def _omnitrace_record_event(self, *args: Any, **kwargs: Any) -> None: ...
-        async def _execute_omnitrace_activity(
-            self, activity_name: str, args: dict[str, Any], timeout_seconds: int = 5
-        ) -> Any: ...
         def _build_dag_structure(self) -> Any: ...
         def _build_policy_ctx(self, step: dict[str, Any], step_id: str) -> dict[str, Any]: ...
         async def _execute_dag_level(self, *args: Any, **kwargs: Any) -> Any: ...

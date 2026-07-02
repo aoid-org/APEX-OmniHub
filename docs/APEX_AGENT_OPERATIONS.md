@@ -1442,13 +1442,13 @@ owner-authorized task.
 ## 9.30 Orchestrator — S6 structural split to the 600-line law (2026-07-02)
 
 **Changed critical runtime paths:** `orchestrator/workflows/agent_saga.py`,
-`orchestrator/activities/tools.py` (split, zero behavior change) + five new sibling
+`orchestrator/activities/tools.py` (split, zero behavior change) + six new sibling
 modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 `workflows/agent_saga_execution.py`, `activities/plan_generation.py`,
-`activities/tool_executors.py`).
+`activities/tool_executors.py`, `activities/tool_network.py`).
 
 - Owner-authorized S6 exception: pure structural split of the two files exceeding the
-  600-line law (1487/1176 ln → max 598 ln per file). **No service, env var, DB object,
+  600-line law (1487/1176 ln → max 494/422 ln; CI APEX policy gate enforces a stricter 500-line ceiling than the 600-line law — all new modules comply). **No service, env var, DB object,
   start command, or activity-name change** — every Temporal activity keeps its
   registered name and every import path (`main.py`, `server.py`, tests) is preserved
   via facade re-exports from the original modules.
