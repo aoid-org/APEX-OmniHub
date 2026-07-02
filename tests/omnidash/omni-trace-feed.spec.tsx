@@ -8,9 +8,18 @@ const mockOn = vi.fn().mockReturnThis();
 const mockRemoveChannel = vi.fn();
 const mockChannel = vi.fn().mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
 
+// PRCC-001 WP-3a: the feed now backfills from omnitrace_events on mount via
+// supabase.from(...).select(...).order(...).limit(...). Mock that chain to resolve
+// EMPTY so the existing realtime/"No events yet" expectations are preserved.
+const mockLimit = vi.fn().mockResolvedValue({ data: [], error: null });
+const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit });
+const mockSelect = vi.fn().mockReturnValue({ order: mockOrder });
+const mockFrom = vi.fn().mockReturnValue({ select: mockSelect });
+
 const mockSupabaseClient = {
   channel: mockChannel,
   removeChannel: mockRemoveChannel,
+  from: mockFrom,
 };
 
 describe('OmniTraceFeed', () => {
@@ -26,6 +35,10 @@ describe('OmniTraceFeed', () => {
       return { unsubscribe: vi.fn() };
     });
     mockChannel.mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
+    mockLimit.mockResolvedValue({ data: [], error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
+    mockSelect.mockReturnValue({ order: mockOrder });
+    mockFrom.mockReturnValue({ select: mockSelect });
   });
 
   afterEach(() => {

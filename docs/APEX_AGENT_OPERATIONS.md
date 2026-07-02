@@ -89,7 +89,8 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `ORCHESTRATOR_SHARED_SECRET` | same value as edge secret | |
 | `ORCHESTRATOR_REQUIRE_SIGNATURE` | `true` | config refuses to boot if `false` in prod |
 | `ENVIRONMENT` | `production` | |
-| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker | `true`/unset needs ≥2 GB (PyTorch model) |
+| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker (legacy kill-switch; always wins) | to enable caching on 512 MB, set `true` **and** `SEMANTIC_CACHE_MODE=lite` |
+| `SEMANTIC_CACHE_MODE` | `lite` on 512 MB worker · `full` (default) needs ≥2 GB (PyTorch) · `off` | `lite` = stdlib `LiteEmbedder` (hashed n-gram, measured ~50 MB RSS, no torch); lexical/near-duplicate template hits only; isolated Redis namespace (`plan:lite-v1:*`, `idx:plan_templates:lite-v1`); hit rate = `semantic_cache_lookups_total{result="hit"}` ÷ (hit+miss) on worker `/metrics` |
 | `API_HOST` / `API_PORT` | `0.0.0.0` / `10000` | **API service only** |
 | `CORS_ALLOWED_ORIGINS` | `https://apexomnihub.icu,https://www.apexomnihub.icu` (comma-sep, no spaces) | **API only** — browser origins allowed to call the API cross-origin |
 
@@ -1308,3 +1309,132 @@ migrations, `memory/omni-recall/wiki/_core_directives/`, production OmniDash she
 - **Edge Function synchronization (`omnilink-port`)**: Verified and documented live production runtime state of `omnilink-port` v36 (`ezbr_sha256: 40566870db3288b1ed7893c57faef7adbb319144ec022849e5de2c022dc417ba`) against live project `rtopreovkywofgwgmozi`. Confirmed `ORCHESTRATOR_URL` secret presence and route dispatch for `/omnimedia-catalog`.
 
 **Operational impact:** None to deployed topology, start commands, secrets, database tables, or environment variables. This update records internal refactoring of the MCP invoke handler and live edge synchronization to satisfy the Ops Doc Drift Guard.
+
+---
+
+## 9.26 PRCC-001 — silent-failure kill + flagship OmniTrace loop (2026-07-01, PR #1552)
+
+**Changed critical runtime paths:** `supabase/functions/generate-business-skills/index.ts`,
+`supabase/functions/execute-automation/index.ts`, `supabase/functions/_shared/omnitrace.ts` (new),
+`supabase/config.toml`, `package.json`, `scripts/ci/verify-edge-function-existence.mjs` (new),
+`scripts/ci/verify-release.mjs`.
+
+### Operational change summary
+
+- **`generate-business-skills` — deployed + auth fix (WP-1a).** The function existed in-repo
+  but was never deployed, so SkillForge / OnboardingWizard / OmniSkillsForgePanel all hit a
+  silent 404. Deployed to project `rtopreovkywofgwgmozi` with `verify_jwt = true`
+  (added to `supabase/config.toml`). Its `supabase-js@2.39.3` no-arg `getUser()` rejected valid
+  user JWTs because the `SUPABASE_ANON_KEY` function secret now holds an `sb_publishable_*` key;
+  bumped to `2.58.0` and pass the JWT explicitly (`getUser(token)`), matching `_shared/auth.ts`.
+  Live proof: authed forge → 200 → real row in `user_generated_skills` (`origin=skill_forge`).
+
+- **Gate 29 — edge-function existence check (WP-1d).** New `scripts/ci/verify-edge-function-existence.mjs`
+  wired into `verify:release` (after `verify:supabase-security`). Fails the build if any
+  frontend-referenced edge function slug lacks a `supabase/functions/<slug>/` dir; when
+  `SUPABASE_ACCESS_TOKEN` + `SUPABASE_PROJECT_REF` are set, also fails if the slug is not in the
+  deployed function list (absence = BLOCKED, never silent pass). `GATE29_WARN_ONLY=1` downgrades
+  to warnings for the 48h bake-in window.
+
+- **`execute-automation` — flagship OmniTrace emit + CORS fix (WP-3a).**
+  New shared helper `supabase/functions/_shared/omnitrace.ts` `emitTraceEvent()` inserts a row into
+  `omnitrace_events` (server-authored via service-role; table exposes SELECT-only RLS
+  `user_id = auth.uid()`, no INSERT policy, so users read but never forge trace). `execute-automation`
+  emits one `automation.execute` / `success` / `green` event per successful run — best-effort,
+  non-blocking (a trace failure never fails the action). Also fixed a pre-existing CORS defect:
+  `_shared/cors.ts` `corsJsonResponse` defaults `origin=null`, so every non-preflight response
+  carried `Access-Control-Allow-Origin: null` and browsers blocked it; the handler now threads
+  `req` origin through all responses. Live proof: `omnitrace_events` 0 → 3 rows after a UI execute;
+  browser POST now returns the validated origin.
+
+### Environment / topology impact
+
+- **New deployed-function `verify_jwt` entry:** `generate-business-skills = true` in `supabase/config.toml`.
+- **No new secrets, tables, or migrations.** `omnitrace_events` and `user_generated_skills` already existed.
+- **Frontend read-path (non-edge):** `apps/omnihub-site/dashboard/components/OmniTraceFeed.tsx` now
+  backfills the OmniTrace rail from `omnitrace_events` on mount (RLS-scoped). Realtime-channel repoint
+  from `audit_log` to `omnitrace_events` is a tracked follow-up (source-of-truth decision pending).
+
+### Smoke test (post-deploy)
+
+```
+# forge (expects 200 + user_generated_skills row)
+curl -s -X POST "$SUPABASE_URL/functions/v1/generate-business-skills" \
+  -H "Authorization: Bearer <user-jwt>" -H "apikey: <anon>" \
+  -H 'Content-Type: application/json' \
+  -d '{"intent":"...","trigger":"...","constraints":"..."}'
+
+# automation execute (expects 200 + a new omnitrace_events row)
+curl -s -X POST "$SUPABASE_URL/functions/v1/execute-automation" \
+  -H "Authorization: Bearer <user-jwt>" -H "apikey: <anon>" \
+  -H 'Content-Type: application/json' -d '{"automationId":"<uuid>"}'
+```
+
+**Operational impact:** two edge functions redeployed (`generate-business-skills`, `execute-automation`),
+one new shared helper, one new CI gate. No change to start commands, orchestrator topology, or DB schema.
+
+---
+
+## 9.27 PRCC-001 WP-2a — OmniSlate chat persistence (2026-07-01)
+
+**Changed critical runtime paths:** `supabase/migrations/20260701210000_omnislate_messages.sql` (new),
+`apps/omnihub-site/dashboard/OmniDashShell.tsx`.
+
+### Operational change summary
+
+- **New table `public.omnislate_messages`** (additive migration; `IF NOT EXISTS`, no existing object
+  altered). Columns: `id`, `user_id → auth.users ON DELETE CASCADE`, `role ('user'|'assistant')`,
+  `content`, `created_at`. Index on `(user_id, created_at)`. RLS enabled with four policies: users
+  SELECT / INSERT (`WITH CHECK auth.uid() = user_id`) / DELETE their own rows; service_role full access.
+- **OmniSlateWidget** now hydrates from `omnislate_messages` on mount, persists both turns after each
+  reply (best-effort, non-blocking), and clears persisted history when the user clears the chat. Demo
+  mode stays fully ephemeral (no hydrate/persist). Closes audit 2026-07-01 defect #2 (chat erased on reload).
+
+### Environment / topology impact
+
+- **No new secrets.** New DB table + RLS only; applied via the standard migration pipeline.
+- **Migration validated** offline with libpg_query (parses clean) and dry-run in a rolled-back
+  transaction; follows the in-production `tenant_entitlements` table/RLS pattern.
+
+**Operational impact:** one additive migration, one frontend component. No edge/secret/start-command change.
+
+## 9.28 Orchestrator — BYOM model registry quarantined (S5, cert C9) — 2026-07-02 (PR #1558)
+
+**Changed critical runtime paths:** `orchestrator/core/model_registry.py` (deprecation only).
+
+### Operational change summary
+
+- **`orchestrator/core/model_registry.py` is QUARANTINED** per owner ruling S5
+  (`orchestrator/ORCHESTRATOR_CERTIFICATION.md` C9): the module has **zero runtime
+  callers** (`orchestrator/AUDIT_2026-07.md` §3.3) — its AEGIS/VERITAS/RSI BYOM
+  governance was never wired into any production path and enforces nothing.
+  Wiring it was ruled out-of-scope (A3/B3 scope-creep guard); deleting it was
+  ruled out too — code and its 10 tests are retained.
+- Change is a module-level deprecation docstring plus a `logger.warning` emitted
+  if `ModelProviderRegistry` is ever instantiated, so the dead governance layer
+  cannot be mistaken for live enforcement. **No behavior change on any active
+  code path** — `core/__init__.py`, `main.py`, and `server.py` import nothing
+  from this module.
+
+### Environment / topology impact
+
+- **None.** No service, env var, DB object, or start command changes. Live BYOM
+  enforcement remains where it always was: `supabase/functions/byom-login` /
+  `byom-proxy` + `omnihub_model_registry` (see §9.7).
+- **Operator note:** if `core.model_registry is QUARANTINED` warnings ever appear
+  in orchestrator logs, something started instantiating the dead registry —
+  treat as a regression and trace the importer; do not silence the warning.
+
+**Operational impact:** documentation/deprecation only. Un-quarantining requires a new
+owner-authorized task.
+
+## 9.29 Orchestrator — LiteEmbedder tensor-output refused fail-closed (2026-07-02, PR #1562)
+
+**Changed critical runtime paths:** `orchestrator/infrastructure/lite_embedder.py` (guard only).
+
+- Sonar unused-param fix: `LiteEmbedder.encode(convert_to_numpy=...)` is retained for
+  SentenceTransformer duck-type compatibility (`infrastructure/cache.py:406,502`) and now
+  raises `NotImplementedError` when called with `convert_to_numpy=False` instead of
+  silently returning numpy. All in-tree callers pass `True`; no live path changes.
+- Also in this PR: real CI/Sonar run links attached to `orchestrator/ORCHESTRATOR_CERTIFICATION.md`;
+  §4 S5 escalation closed (C9). **No service, env var, DB, or start-command change.**

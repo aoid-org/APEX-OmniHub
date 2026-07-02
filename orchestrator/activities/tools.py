@@ -41,6 +41,7 @@ from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
 
+import metrics
 from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.base import DatabaseError
@@ -142,26 +143,49 @@ async def setup_activities(
     os.environ["SUPABASE_URL"] = supabase_url
     os.environ["SUPABASE_SERVICE_ROLE_KEY"] = supabase_key
 
-    # Initialize semantic cache (optional). Gated by SEMANTIC_CACHE_ENABLED so
-    # low-memory workers can skip loading the sentence-transformers/torch model
-    # (which OOMs a 512MB instance). Disabling only removes a planning-latency
-    # optimization; correctness is unaffected (check_semantic_cache returns a miss).
-    if os.getenv("SEMANTIC_CACHE_ENABLED", "true").lower() in ("false", "0", "no"):
-        activity.logger.info(
-            "Semantic cache DISABLED (SEMANTIC_CACHE_ENABLED=false) - skipping embedding model load"
-        )
+    # Initialize semantic cache (optional). Mode resolution (FR4):
+    #   SEMANTIC_CACHE_ENABLED=false        → off (legacy kill-switch, always wins)
+    #   SEMANTIC_CACHE_MODE=off             → off
+    #   SEMANTIC_CACHE_MODE=lite            → stdlib LiteEmbedder, fits a 512MB worker
+    #   SEMANTIC_CACHE_MODE=full (default)  → sentence-transformers (needs ≥2GB RAM)
+    # Off only removes a planning-latency optimization; correctness is unaffected
+    # (check_semantic_cache returns a miss).
+    mode = _resolve_cache_mode()
+    if mode == "off":
+        activity.logger.info("Semantic cache DISABLED (mode=off) - skipping embedding model load")
     else:
         from infrastructure.cache import SemanticCacheService
+
+        if mode == "lite":
+            from infrastructure.lite_embedder import LiteEmbedder
+
+            embedding_model: str | LiteEmbedder = LiteEmbedder()
+        else:
+            embedding_model = os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
         _semantic_cache = SemanticCacheService(
             redis_url=redis_url,
             redis_password=redis_password,
             redis_ssl=redis_ssl,
-            embedding_model=os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
+            embedding_model=embedding_model,
             similarity_threshold=float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85")),
         )
         await _semantic_cache.initialize()
-        activity.logger.info("✓ Semantic cache initialized")
+        activity.logger.info(f"✓ Semantic cache initialized (mode={mode})")
+
+
+def _resolve_cache_mode() -> str:
+    """
+    Resolve the semantic-cache mode from environment (FR4).
+
+    Returns one of "off" | "lite" | "full". The legacy SEMANTIC_CACHE_ENABLED
+    kill-switch (false/0/no) always wins so the existing production config
+    keeps its exact behavior until the owner flips it deliberately.
+    """
+    if os.getenv("SEMANTIC_CACHE_ENABLED", "true").lower() in ("false", "0", "no"):
+        return "off"
+    mode = os.getenv("SEMANTIC_CACHE_MODE", "full").lower()
+    return mode if mode in ("off", "lite", "full") else "full"
 
 
 # ============================================================================
@@ -183,6 +207,7 @@ async def check_semantic_cache(goal: str) -> dict[str, Any] | None:
     """
     if not _semantic_cache:
         activity.logger.info("Semantic cache disabled/unavailable - treating as cache miss")
+        metrics.record_cache_lookup("disabled")
         return None
 
     activity.logger.info(f"Checking semantic cache for: {goal}")
@@ -193,10 +218,12 @@ async def check_semantic_cache(goal: str) -> dict[str, Any] | None:
         activity.logger.info(
             f"✓ Cache HIT (similarity={cached.similarity_score:.3f}, template={cached.template_id})"
         )
+        metrics.record_cache_lookup("hit")
         # Convert Pydantic model to dict for workflow
         return cached.model_dump()
 
     activity.logger.info("✗ Cache MISS")
+    metrics.record_cache_lookup("miss")
     return None
 
 
@@ -458,6 +485,7 @@ Output valid JSON matching the PlanStep schema."""
                 goal=goal,
                 plan_steps=[step.model_dump() for step in plan.steps],
             )
+            metrics.record_cache_store()
 
         # Return as dict for workflow
         return {

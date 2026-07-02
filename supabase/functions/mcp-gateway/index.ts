@@ -4,11 +4,11 @@
  * ============================================================
  *
  * Remote MCP server implementing the Streamable HTTP transport.
- * Exposes 26 tools across 4 categories:
+ * Exposes 27 tools across 4 categories:
  *   • Supabase DB operations    (8 tools)
  *   • GitHub repo management    (6 tools)
  *   • Cloudflare deployments    (5 tools)
- *   • OmniHub platform monitor  (7 tools)
+ *   • OmniHub platform monitor  (8 tools)
  *
  * Authentication: Bearer token via MCP_GATEWAY_API_KEY env var
  *

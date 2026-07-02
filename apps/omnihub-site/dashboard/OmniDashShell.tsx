@@ -13,13 +13,14 @@ import { SystemHealthRow } from './components/SystemHealthRow';
 import { FooterObservabilityRow } from './components/FooterObservabilityRow';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
-import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
+import { invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { GlobalMediaDock } from '@/dashboard/components/media/GlobalMediaDock';
 import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLaunchWidget';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
+import { ConnectAiAuthModal } from '../src/components/byom/ConnectAiAuthModal';
 import { useAuth } from '@/lib/useAuth';
 import { LayoutContext } from './contexts/LayoutContext';
 import {
@@ -394,6 +395,18 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
+  const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return OMNIDASH_SIDEBAR_WIDGETS.filter(widget => {
+      const moduleKey = widget.moduleKey ?? '';
+      return widget.label.toLowerCase().includes(query) || moduleKey.toLowerCase().includes(query);
+    }).slice(0, 6);
+  }, [searchQuery]);
 
   const handleOmniSkills = () => {
     invoke({
@@ -407,29 +420,55 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     });
   };
 
-  const handleConnectAI = async () => {
-    // APEX-DEV: Requesting directly from central Agent Card Registry per gateway mandate
-    const items = await queryAgentRegistry();
+  const handleConnectAI = () => {
+    setShowConnectAi(true);
+  };
+
+  const handleConnectAiSuccess = () => {
+    setShowConnectAi(false);
+    const connected = sessionStorage.getItem('omni_ai_provider');
+    if (connected) setAiProvider(connected);
+  };
+
+  const openSearchResult = (widget: OmniDashSidebarWidget) => {
+    const moduleKey = widget.moduleKey ?? widget.id;
     invoke({
-      id: 'header-connect-ai',
+      id: `omnidash-search-${widget.id}`,
       provider: 'omnidash',
-      type: 'selection',
-      title: 'Connect AI Provider',
-      description: 'Select an AI provider to integrate with your APEX workspace.',
-      schema: { items },
-      onComplete: async (result: Record<string, unknown>) => {
-        if (typeof result.selectedId === 'string') {
-          const selected = items.find(i => i.id === result.selectedId);
-          if (selected) {
-            setAiProvider(selected.label);
-            // NS-H-001: Write to sessionStorage instead of localStorage
-            sessionStorage.setItem('omni_ai_provider', selected.label);
-          }
-        }
-      },
+      type: 'module',
+      title: widget.label,
+      contextData: { moduleKey },
+      onComplete: async () => {},
       onCancel: () => {},
     });
+    setSearchOpen(false);
+    setSearchQuery('');
   };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setSearchOpen(false);
+      return;
+    }
+    if (event.key === 'Enter' && searchResults[0]) {
+      event.preventDefault();
+      openSearchResult(searchResults[0]);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [isDesktop]);
 
   const { demoMode } = useDemoMode();
   const notifications = useNotificationStore(state => state.notifications);
@@ -512,18 +551,69 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
           controls are never clipped. A flex spacer keeps actions right-aligned. */}
       {isDesktop ? (
         <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-          <div style={{
-            display:"flex", alignItems:"center", gap:9,
-            background:T.card, border:`1px solid ${T.border}`,
-            borderRadius:10, padding:"0 12px",
-            width:"100%", maxWidth:360, height:44,
-            color:T.t2, fontSize:13,
-          }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
-            <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
+          <div role="search" style={{ position:"relative", width:"100%", maxWidth:360 }}>
+            <div style={{
+              display:"flex", alignItems:"center", gap:9,
+              background:T.card, border:`1px solid ${searchOpen ? 'rgba(249,115,22,0.42)' : T.border}`,
+              borderRadius:10, padding:"0 12px",
+              width:"100%", height:44,
+              color:T.t2, fontSize:13,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                ref={searchInputRef}
+                aria-label="Search OmniHub"
+                role="searchbox"
+                aria-expanded={searchOpen}
+                aria-controls="omnidash-search-results"
+                value={searchQuery}
+                onFocus={() => setSearchOpen(true)}
+                onChange={event => { setSearchQuery(event.target.value); setSearchOpen(true); }}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search OmniHub…"
+                style={{
+                  flex:1, minWidth:0, background:'transparent', border:'none', outline:'none',
+                  color:T.t1, fontSize:13, fontWeight:500,
+                }}
+              />
+              <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K / Ctrl+K</span>
+            </div>
+            {searchOpen && searchQuery.trim() && (
+              <div
+                id="omnidash-search-results"
+                role="listbox"
+                aria-label="OmniDash search results"
+                style={{
+                  position:'absolute', top:'calc(100% + 6px)', left:0, right:0, zIndex:220,
+                  background:T.card, border:`1px solid ${T.border}`, borderRadius:12,
+                  boxShadow:'0 12px 36px rgba(0,0,0,.45)', padding:6,
+                }}
+              >
+                {searchResults.length > 0 ? searchResults.map(widget => (
+                  <button
+                    key={widget.id}
+                    role="option"
+                    aria-selected="false"
+                    onMouseDown={event => event.preventDefault()}
+                    onClick={() => openSearchResult(widget)}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8, width:'100%',
+                      background:'transparent', border:'none', borderRadius:8, padding:'9px 10px',
+                      color:T.t1, cursor:'pointer', textAlign:'left', fontSize:13, fontWeight:600,
+                    }}
+                  >
+                    <IconBadge idx={widget.iconIdx} size={16} />
+                    <span>{widget.label}</span>
+                  </button>
+                )) : (
+                  <div role="status" style={{ padding:'10px 12px', color:T.t3, fontSize:12.5 }}>
+                    No OmniDash surfaces match “{searchQuery.trim()}”.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -613,6 +703,11 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         }}>
           {aiProvider || 'Connect AI'}
         </button>
+        <ConnectAiAuthModal
+          isOpen={showConnectAi}
+          onClose={() => setShowConnectAi(false)}
+          onSuccess={handleConnectAiSuccess}
+        />
 
         {/* Divider — separates action buttons from icon tray */}
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
@@ -952,6 +1047,25 @@ const OmniSlateWidget = () => {
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // PRCC-001 WP-2a: hydrate chat history from omnislate_messages on mount so the
+  // conversation survives reloads. Previously messages lived only in useState, so
+  // every reload wiped the thread (audit 2026-07-01 defect #2). RLS scopes reads
+  // to auth.uid(); demo mode stays ephemeral (no hydrate/persist).
+  useEffect(() => {
+    if (demoMode) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('omnislate_messages')
+        .select('role, content, created_at')
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (cancelled || error || !data || data.length === 0) return;
+      setMessages(data.map((m: Record<string, unknown>) => ({ role: String(m.role), text: String(m.content) })));
+    })();
+    return () => { cancelled = true; };
+  }, [demoMode]);
+
   const send = useCallback(async () => {
     if (!input.trim()) return;
     const q = input.trim(); setInput(""); setLoading(true);
@@ -962,14 +1076,28 @@ const OmniSlateWidget = () => {
         prompt: q, 
         context: { apps: contextApps.map(a => a.id) } 
       });
-      setMessages(m => [...m, {role:"assistant", text: res.reply }]);
+      const reply = res.reply;
+      setMessages(m => [...m, {role:"assistant", text: reply }]);
+      // WP-2a: persist both turns (best-effort, non-blocking; RLS WITH CHECK ties
+      // rows to auth.uid()). Never awaited into the UI path — a persist failure
+      // must not affect the live conversation.
+      if (!demoMode) {
+        void supabase.auth.getUser().then(({ data: u }) => {
+          const uid = u?.user?.id;
+          if (!uid) return;
+          void supabase.from('omnislate_messages').insert([
+            { user_id: uid, role: 'user', content: q },
+            { user_id: uid, role: 'assistant', content: reply },
+          ]);
+        });
+      }
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
       setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
     } finally {
       setLoading(false);
     }
-  }, [input, contextApps]);
+  }, [input, contextApps, demoMode]);
 
   const stop = useCallback(() => {
     setLoading(false);
@@ -1051,7 +1179,15 @@ const OmniSlateWidget = () => {
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
-          <button onClick={() => setMessages([])} style={{
+          <button onClick={() => {
+            setMessages([]);
+            if (!demoMode) {
+              void supabase.auth.getUser().then(({ data: u }) => {
+                const uid = u?.user?.id;
+                if (uid) void supabase.from('omnislate_messages').delete().eq('user_id', uid);
+              });
+            }
+          }} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
             background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",

@@ -6,9 +6,11 @@ status: verified
 
 # APEX Orchestrator - Implementation Summary
 
-**Status**: ✅ Production-Ready, Enterprise-Grade
-**Last Updated**: 2026-03-16
-**Branch**: `claude/setup-custom-skills-rJs1h`
+**Status**: implementation summary — point-in-time engineering record. Production
+certification is a separate owner act ("CI validates, owner certifies"); see
+`docs/release/owner-approved/` and `orchestrator/AUDIT_2026-07.md` for current
+verified state (correction 2026-07-02, AUDIT M3).
+**Last Updated**: 2026-07-02 (originally 2026-03-16)
 **Version**: v1.3.0
 
 ---
@@ -22,7 +24,7 @@ Built a **production-grade AI Agent Orchestration platform** that solves ALL the
 - File: `models/events.py`
 - 100% type-safe Python ↔ TypeScript interop
 - SchemaTranslator for dynamic validation
-- All 12 APEX apps supported (AppName enum)
+- All APEX apps supported via the AppName enum (14 members as of 2026-07-02 — `models/events.py`; originally 12, later +`omnilink`, +`tradeline247`)
 
 ### Problem 2: No State Rehydration ❌ → ✅ SOLVED
 **Solution**: Event Sourcing with Temporal.io

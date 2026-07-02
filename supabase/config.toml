@@ -114,3 +114,11 @@ verify_jwt = false
 # Supabase gateway validation prevents unauthenticated invocations.
 [functions.apex-agent]
 verify_jwt = true
+
+# OmniSkills Forge — generate-business-skills
+# Deployed 2026-07-01 (PRCC-001 WP-1a): function existed in repo but was never
+# deployed, causing silent 404s from SkillForge/OnboardingWizard/OmniSkillsForgePanel.
+# verify_jwt = true: frontend invokes via supabase.functions.invoke with user JWT;
+# handler additionally validates the user record and rate-limits per user.
+[functions.generate-business-skills]
+verify_jwt = true
