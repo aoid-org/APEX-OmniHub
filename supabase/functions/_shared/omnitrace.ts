@@ -14,7 +14,6 @@
  *   migration 20260312090000_omnidash_runtime_tables.sql.
  */
 
-// @ts-ignore: Deno-resolved import at runtime
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 
 export type TraceSeverity = "info" | "warning" | "error" | "success";
