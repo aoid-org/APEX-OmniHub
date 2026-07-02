@@ -92,6 +92,16 @@ AUDIT M5); tested (`tests/omniconnect/semantic-translation.test.ts`) but not wir
 production ingestion surface. Orchestrator-side TS↔Python translation that IS live:
 `models/events.py` `SchemaTranslator` + `_shared/event-ingress-adapter.ts`.
 
+### C9. BYOM model governance — **QUARANTINED by owner decision (2026-07-02)**
+Owner ruling on escalation S5: **quarantine, do not wire.** Wiring is new scope outside
+FR6's boundary — exactly the scope-creep A3/§B3 exist to prevent; unwired, undocumented
+code sitting live in a production orchestrator is the worse state. Implemented:
+module-level deprecation notice + `logger.warning` on `ModelProviderRegistry`
+instantiation (`core/model_registry.py`), zero active import paths (verified:
+`core/__init__.py`, `main.py`, `server.py` import nothing from it), code and tests
+retained (`tests/test_model_registry.py`, 10 passing). Supersedes the C7/§4
+BLOCKED-SCOPE(S5) escalation — decision recorded, escalation closed.
+
 ## 3. A.R.I.S.E. Phase 0 Gap Closure (FR2/FR3)
 
 | Gap | Status | Evidence |
