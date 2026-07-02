@@ -111,26 +111,34 @@ beforeEach(() => {
   document.body.innerHTML = '<div id="omni-portal-root"></div>';
 });
 
-describe('OmniDash header search', () => {
-  it('renders a real accessible search input and focuses it with the truthful keyboard shortcut', async () => {
+/** Open the palette through the real header trigger and return its searchbox. */
+async function openSearch() {
+  fireEvent.click(screen.getByTestId('omnidash-search-trigger'));
+  return await screen.findByRole('searchbox', { name: 'Search OmniHub' });
+}
+
+describe('OmniDash header search (real shell + ⌘K palette)', () => {
+  it('renders a real trigger and the truthful keyboard shortcut opens + focuses the searchbox', async () => {
     render(<OmniDashShell />);
-    const search = screen.getByRole('searchbox', { name: 'Search OmniHub' });
-    expect(search).toBeTruthy();
+    expect(screen.getByTestId('omnidash-search-trigger')).toBeTruthy();
     expect(screen.getByText(/⌘K|Ctrl\+K/)).toBeTruthy();
+    // Closed by default — no orphaned searchbox in the header.
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
 
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    const search = await screen.findByRole('searchbox', { name: 'Search OmniHub' });
     await waitFor(() => expect(document.activeElement).toBe(search));
   });
 
   it('filters real OmniDash registry surfaces and opens the selected module by keyboard', async () => {
     render(<OmniDashShell />);
-    const search = screen.getByRole('searchbox', { name: 'Search OmniHub' });
+    const search = await openSearch();
     fireEvent.change(search, { target: { value: 'pipeline' } });
     expect(await screen.findByRole('option', { name: /Pipeline/ })).toBeTruthy();
 
     fireEvent.keyDown(search, { key: 'Enter' });
     await waitFor(() => expect(invokeMock).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'omnidash-search-pipeline',
+      id: 'omni-search-pipeline',
       title: 'Pipeline',
       contextData: { moduleKey: 'pipeline' },
     })));
@@ -138,21 +146,28 @@ describe('OmniDash header search', () => {
 
   it('opens a clicked result, supports Escape close, and shows an empty state for unknown queries', async () => {
     render(<OmniDashShell />);
-    const search = screen.getByRole('searchbox', { name: 'Search OmniHub' });
+    let search = await openSearch();
     fireEvent.change(search, { target: { value: 'billing' } });
     fireEvent.click(await screen.findByRole('option', { name: /Billing/ }));
-    expect(invokeMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'omnidash-search-billing' }));
+    expect(invokeMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'omni-search-billing' }));
+    // Selecting a result closes the palette.
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
 
+    search = await openSearch();
     fireEvent.change(search, { target: { value: 'not-a-real-surface' } });
-    expect(await screen.findByText(/No OmniDash surfaces match/i)).toBeTruthy();
+    expect(await screen.findByText(/No OmniHub surface matches/i)).toBeTruthy();
+    expect(screen.queryByRole('option')).toBeNull();
+
     fireEvent.keyDown(search, { key: 'Escape' });
-    expect(screen.queryByText(/No OmniDash surfaces match/i)).toBeNull();
-    expect(screen.getByRole('searchbox', { name: 'Search OmniHub' })).toBeTruthy();
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
+    // Trigger survives for the next open.
+    expect(screen.getByTestId('omnidash-search-trigger')).toBeTruthy();
   });
 
-  it('does not call agent registry or BYOM credential routes during search', () => {
+  it('does not call agent registry or BYOM credential routes during search', async () => {
     render(<OmniDashShell />);
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search OmniHub' }), { target: { value: 'billing' } });
+    const search = await openSearch();
+    fireEvent.change(search, { target: { value: 'billing' } });
     expect(queryAgentRegistryMock).not.toHaveBeenCalled();
     expect(byomInvokeMock).not.toHaveBeenCalled();
   });

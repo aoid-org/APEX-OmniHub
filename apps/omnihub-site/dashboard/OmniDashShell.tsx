@@ -10,6 +10,7 @@ import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useViewport } from "./hooks/useViewport";
 import { SystemHealthRow } from './components/SystemHealthRow';
+import { OmniSearchPalette } from './components/OmniSearchPalette';
 import { FooterObservabilityRow } from './components/FooterObservabilityRow';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
@@ -398,6 +399,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
 const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: OmniDashHeaderProps) => {
   const { tx } = useAppTranslation();
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
   // PRCC-001 WP-2b: Connect AI opens the real BYOM credential modal
@@ -530,6 +532,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
       ) : (
         <div style={{ flex:1, minWidth:8 }} aria-hidden="true" />
       )}
+      <OmniSearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Right actions — functional buttons */}
       <div className="omni-header-actions" style={{
