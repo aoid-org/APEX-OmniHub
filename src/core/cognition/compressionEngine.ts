@@ -102,24 +102,36 @@ export function extractEntities(text: string): string[] {
 // Semantic Deduplication
 // ============================================================================
 
+function calculateJaccardFromSets(wordsA: Set<string>, wordsB: Set<string>): number {
+  if (wordsA.size === 0 && wordsB.size === 0) return 1;
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+
+  // Optimize iteration by traversing the smaller set
+  const [smaller, larger] = wordsA.size < wordsB.size ? [wordsA, wordsB] : [wordsB, wordsA];
+
+  let intersection = 0;
+  for (const word of smaller) {
+    if (larger.has(word)) intersection++;
+  }
+
+  // ⚡ Bolt: compute union mathematically without O(N) array allocation overhead
+  const union = wordsA.size + wordsB.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+/**
+ * Tokenize a string into a set of lowercased words.
+ */
+function tokenizeToSet(text: string): Set<string> {
+  return new Set(text.toLowerCase().split(/\s+/).filter(Boolean));
+}
+
 /**
  * Compute Jaccard similarity between two strings (word-level).
  * Returns a value between 0 (no overlap) and 1 (identical).
  */
 export function jaccardSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(Boolean));
-  const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(Boolean));
-
-  if (wordsA.size === 0 && wordsB.size === 0) return 1;
-  if (wordsA.size === 0 || wordsB.size === 0) return 0;
-
-  let intersection = 0;
-  for (const word of wordsA) {
-    if (wordsB.has(word)) intersection++;
-  }
-
-  const union = new Set([...wordsA, ...wordsB]).size;
-  return union === 0 ? 0 : intersection / union;
+  return calculateJaccardFromSets(tokenizeToSet(a), tokenizeToSet(b));
 }
 
 /**
@@ -131,13 +143,25 @@ export function deduplicateEntries(
   threshold: number = SIMILARITY_THRESHOLD,
 ): DeduplicationResult {
   const unique: CompressibleEntry[] = [];
+  // ⚡ Bolt: Cache pre-tokenized sets to avoid O(N*M) redundant tokenizations
+  const uniqueSets: Set<string>[] = [];
 
   for (const entry of entries) {
-    const isDuplicate = unique.some(
-      (existing) => jaccardSimilarity(existing.content, entry.content) >= threshold,
-    );
+    const entrySet = tokenizeToSet(entry.content);
+
+    // Instead of using some() and recreating sets for each comparison,
+    // we iterate through our cached pre-tokenized sets.
+    let isDuplicate = false;
+    for (const existingSet of uniqueSets) {
+      if (calculateJaccardFromSets(existingSet, entrySet) >= threshold) {
+        isDuplicate = true;
+        break;
+      }
+    }
+
     if (!isDuplicate) {
       unique.push(entry);
+      uniqueSets.push(entrySet);
     }
   }
 
