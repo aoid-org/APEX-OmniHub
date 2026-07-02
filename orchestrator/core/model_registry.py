@@ -1,6 +1,16 @@
 """
-Model Provider Registry and AI Governance
-Enforces AEGIS, VERITAS, and RSI requirements for BYOM connections.
+Model Provider Registry and AI Governance — QUARANTINED (deprecated, unwired).
+
+.. deprecated:: 2026-07-02
+   Owner decision (S5, ORCHESTRATOR_CERTIFICATION.md C9): this module has zero
+   runtime callers (AUDIT_2026-07.md §3.3) — it enforces nothing in production.
+   Wiring it was ruled out-of-scope (A3/§B3 scope-creep guard). It is retained,
+   excluded from all active import paths, and emits a warning if instantiated,
+   so its AEGIS/VERITAS/RSI gating cannot be mistaken for live enforcement.
+   Do not import from production code without a new owner-authorized task.
+
+Original purpose: enforce AEGIS, VERITAS, and RSI requirements for BYOM
+connections.
 """
 
 import logging
@@ -8,6 +18,12 @@ import logging
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
+_QUARANTINE_WARNING = (
+    "core.model_registry is QUARANTINED (deprecated 2026-07-02, cert C9): "
+    "BYOM governance is NOT wired into any production path; instantiating "
+    "this registry does not enforce anything at runtime."
+)
 
 
 class ModelProviderConfig(BaseModel):
@@ -35,6 +51,7 @@ class ModelProviderRegistry:
     """
 
     def __init__(self):
+        logger.warning(_QUARANTINE_WARNING)
         self._providers: dict[str, ModelProviderConfig] = {}
         self.audit_logs = []
 
