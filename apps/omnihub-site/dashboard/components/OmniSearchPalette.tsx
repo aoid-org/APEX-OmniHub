@@ -160,9 +160,7 @@ export const OmniSearchPalette = ({ open, onClose }: OmniSearchPaletteProps) => 
           <input
             ref={inputRef}
             data-testid="omni-search-input"
-            type="text"
-            role="combobox"
-            aria-expanded="true"
+            type="search"
             aria-controls="omni-search-results"
             aria-activedescendant={
               results[clampedHighlight]

@@ -403,17 +403,6 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   // tracked follow-up (needs a demoMode-guarded read; deferred to keep this diff
   // surgical and avoid coupling the header to a backend read on every mount).
   const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const searchResults = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return [];
-    return OMNIDASH_SIDEBAR_WIDGETS.filter(widget => {
-      const moduleKey = widget.moduleKey ?? '';
-      return widget.label.toLowerCase().includes(query) || moduleKey.toLowerCase().includes(query);
-    }).slice(0, 6);
-  }, [searchQuery]);
 
   // ⌘K / Ctrl+K opens search from anywhere on the dashboard (all viewports,
   // even where the header trigger is hidden).
@@ -452,46 +441,6 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     const connected = sessionStorage.getItem('omni_ai_provider');
     if (connected) setAiProvider(connected);
   };
-
-  const openSearchResult = (widget: OmniDashSidebarWidget) => {
-    const moduleKey = widget.moduleKey ?? widget.id;
-    invoke({
-      id: `omnidash-search-${widget.id}`,
-      provider: 'omnidash',
-      type: 'module',
-      title: widget.label,
-      contextData: { moduleKey },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-    setSearchOpen(false);
-    setSearchQuery('');
-  };
-
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setSearchOpen(false);
-      return;
-    }
-    if (event.key === 'Enter' && searchResults[0]) {
-      event.preventDefault();
-      openSearchResult(searchResults[0]);
-    }
-  };
-
-  useEffect(() => {
-    if (!isDesktop) return;
-    const handleShortcut = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setSearchOpen(true);
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
-  }, [isDesktop]);
 
   const { demoMode } = useDemoMode();
   const notifications = useNotificationStore(state => state.notifications);
