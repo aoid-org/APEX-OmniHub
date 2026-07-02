@@ -184,6 +184,57 @@ function processTerminalSseEvent(
   return null;
 }
 
+function parseSseDataLine(trimmed: string): Record<string, unknown> | null {
+  if (!trimmed.startsWith('data: ')) {
+    return null;
+  }
+  try {
+    return JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function handleParsedSseEvent(
+  parsed: Record<string, unknown>,
+  lastEventName: string,
+  onStatus?: (status: string, workflowId?: string, traceId?: string) => void,
+): { result: McpIntentResponse | null; consumedIntermediate: boolean } {
+  const traceId = parsed.traceId as string | undefined;
+  const workflowId = parsed.workflowId as string | undefined;
+  const status = (parsed.status as string | undefined) ?? lastEventName;
+
+  if (status === 'queued' || status === 'running') {
+    onStatus?.(status, workflowId, traceId);
+    return { result: null, consumedIntermediate: true };
+  }
+
+  return {
+    result: processTerminalSseEvent(status, lastEventName, parsed, workflowId, traceId),
+    consumedIntermediate: false,
+  };
+}
+
+function processSseLine(
+  line: string,
+  lastEventName: string,
+  onStatus?: (status: string, workflowId?: string, traceId?: string) => void,
+): { lastEventName: string; result: McpIntentResponse | null } {
+  const trimmed = line.trim();
+
+  if (trimmed.startsWith('event: ')) {
+    return { lastEventName: trimmed.slice(7).trim(), result: null };
+  }
+
+  const parsed = parseSseDataLine(trimmed);
+  if (!parsed) {
+    return { lastEventName, result: null };
+  }
+
+  const { result, consumedIntermediate } = handleParsedSseEvent(parsed, lastEventName, onStatus);
+  return { lastEventName: consumedIntermediate ? lastEventName : '', result };
+}
+
 async function parseSseToCompletion(
   body: ReadableStream<Uint8Array>,
   onStatus?: (status: string, workflowId?: string, traceId?: string) => void,
@@ -204,38 +255,10 @@ async function parseSseToCompletion(
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        const trimmed = line.trim();
-
-        if (trimmed.startsWith('event: ')) {
-          lastEventName = trimmed.slice(7).trim();
-          continue;
-        }
-
-        if (trimmed.startsWith('data: ')) {
-          let parsed: Record<string, unknown>;
-          try {
-            parsed = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
-          } catch {
-            continue;
-          }
-
-          const traceId = parsed.traceId as string | undefined;
-          const workflowId = parsed.workflowId as string | undefined;
-          const status = (parsed.status as string | undefined) ?? lastEventName;
-
-          // Notify on intermediate status events (queued, running)
-          if (status === 'queued' || status === 'running') {
-            onStatus?.(status, workflowId, traceId);
-            continue;
-          }
-
-          // Terminal events
-          const result = processTerminalSseEvent(status, lastEventName, parsed, workflowId, traceId);
-          if (result) {
-            finalResult = result;
-          }
-
-          lastEventName = '';
+        const processed = processSseLine(line, lastEventName, onStatus);
+        lastEventName = processed.lastEventName;
+        if (processed.result) {
+          finalResult = processed.result;
         }
       }
     }
@@ -247,6 +270,35 @@ async function parseSseToCompletion(
 
   // Stream ended without terminal event — treat as failure
   throw new Error('[MCP Client] SSE stream ended without terminal event (completed/failed/timeout)');
+}
+
+async function readGatewayError(res: Response): Promise<string> {
+  let errorMsg = `HTTP ${res.status}`;
+  try {
+    const body = await res.json() as { error?: string };
+    if (body.error) errorMsg = body.error;
+  } catch { /* ignore */ }
+  return errorMsg;
+}
+
+async function readJsonGatewayResponse(res: Response): Promise<McpIntentResponse> {
+  const data = await res.json() as Record<string, unknown>;
+  const status = data.status as string | undefined;
+
+  if (!status) {
+    throw new Error('[MCP Client] JSON response missing terminal status');
+  }
+
+  if (status === 'queued' || status === 'running' || status === 'pending') {
+    throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
+  }
+
+  const result = processTerminalSseEvent(status, '', data);
+  if (result) {
+    return result;
+  }
+
+  throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
 }
 
 // ============================================================================
@@ -310,11 +362,7 @@ export async function invokeMcpIntent(
   }
 
   if (!res.ok) {
-    let errorMsg = `HTTP ${res.status}`;
-    try {
-      const body = await res.json() as { error?: string };
-      if (body.error) errorMsg = body.error;
-    } catch { /* ignore */ }
+    const errorMsg = await readGatewayError(res);
     throw new Error(`[MCP Client] Gateway error: ${errorMsg}`);
   }
 
@@ -328,24 +376,8 @@ export async function invokeMcpIntent(
       console.error('[MCP Client] SSE parse error:', err);
       throw err;
     }
-  } else {
-    // Fallback for tests/mocks returning JSON
-    const data = await res.json() as Record<string, unknown>;
-    const status = data.status as string | undefined;
-
-    if (!status) {
-      throw new Error('[MCP Client] JSON response missing terminal status');
-    }
-
-    if (status === 'queued' || status === 'running' || status === 'pending') {
-      throw new Error(`[MCP Client] JSON response returned non-terminal status: ${status}`);
-    }
-
-    const result = processTerminalSseEvent(status, '', data);
-    if (result) {
-      return result;
-    }
-
-    throw new Error(`[MCP Client] JSON response returned unknown or non-terminal status: ${status}`);
   }
+
+  // Fallback for tests/mocks returning JSON
+  return readJsonGatewayResponse(res);
 }

@@ -46,9 +46,9 @@ const HIGH_RISK_PATTERNS: InjectionPattern[] = [
   },
 
   // Data exfiltration
-  { name: 'send_to', pattern: /send\s+(?:.*?\s+)?to\s+/i, score: 75 },
-  { name: 'post_to', pattern: /post\s+(?:.*?\s+)?to\s+/i, score: 75 },
-  { name: 'email_to', pattern: /email\s+(?:.*?\s+)?to\s+/i, score: 75 },
+  { name: 'send_to', pattern: /send\s+(?:\S+\s+){0,12}to\s+/i, score: 75 },
+  { name: 'post_to', pattern: /post\s+(?:\S+\s+){0,12}to\s+/i, score: 75 },
+  { name: 'email_to', pattern: /email\s+(?:\S+\s+){0,12}to\s+/i, score: 75 },
 
   // Security bypass
   { name: 'bypass_security', pattern: /bypass\s+(the\s+)?security/i, score: 95 },

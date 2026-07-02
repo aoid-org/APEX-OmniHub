@@ -5,10 +5,10 @@
  * framer-motion drag. Positions are stored via widgetLayout.ts under a
  * consolidated key scoped by userId and breakpoint.
  *
- * LONG-PRESS ACTIVATION MODEL:
- *   Drag activates only after a 500ms long-press. Incidental touch / scroll
- *   (pointer moves > 8px before timer fires) cancels the timer and keeps
- *   the widget non-draggable. This prevents accidental drags during scroll.
+ * ACTIVATION MODEL:
+ *   Desktop mouse/pen drag starts in the same pointer gesture after the normal
+ *   movement threshold, using pointer capture. Touch retains the 500ms
+ *   long-press guard so scroll gestures do not accidentally move widgets.
  *
  * DRAG MODE STATE MACHINE:
  *   idle → (500ms hold) → ready → (pointer move) → dragging → (pointer up) → idle
@@ -116,6 +116,20 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Most recent pointer-move sample (position + time) for flick velocity.
   const flickSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const transformFrameRef = useRef<number | null>(null);
+  const pendingTransformRef = useRef<{ x: number; y: number } | null>(null);
+
+  const applyDragTransform = useCallback((x: number, y: number) => {
+    pendingTransformRef.current = { x, y };
+    if (transformFrameRef.current !== null) return;
+    transformFrameRef.current = requestAnimationFrame(() => {
+      transformFrameRef.current = null;
+      const next = pendingTransformRef.current;
+      const el = elRef.current;
+      if (!next || !el) return;
+      el.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
+    });
+  }, []);
 
   // Restore persisted position and register in registry
   useEffect(() => {
@@ -128,7 +142,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
       const saved = positions[id];
       if (saved) {
         posRef.current = { x: saved.x, y: saved.y };
-        el.style.transform = `translate(${saved.x}px, ${saved.y}px)`;
+        el.style.transform = `translate3d(${saved.x}px, ${saved.y}px, 0)`;
       }
     }
 
@@ -147,6 +161,12 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [dragMode]);
+
+  useEffect(() => () => {
+    if (transformFrameRef.current !== null) {
+      cancelAnimationFrame(transformFrameRef.current);
+    }
+  }, []);
 
   // Click outside cancels 'ready' state
   useEffect(() => {
@@ -171,6 +191,11 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     pointerOriginRef.current = { x: e.clientX, y: e.clientY };
     cancelLongPress();
 
+    if (e.pointerType === 'mouse' || e.pointerType === 'pen') {
+      setDragMode('ready');
+      return;
+    }
+
     longPressTimerRef.current = setTimeout(() => {
       longPressTimerRef.current = null;
       setDragMode('ready');
@@ -186,7 +211,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         const newX = dragStartPos.current.offsetX + dx;
         const newY = dragStartPos.current.offsetY + dy;
         posRef.current = { x: newX, y: newY };
-        elRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
+        applyDragTransform(newX, newY);
         // Sample for flick velocity (mobile/tablet flick-to-set).
         flickSampleRef.current = { x: e.clientX, y: e.clientY, t: performance.now() };
 
@@ -216,7 +241,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         pointerOriginRef.current = null;
       }
     },
-    [cancelLongPress, id],
+    [applyDragTransform, cancelLongPress, id],
   );
 
   const handlePointerUp = useCallback(
@@ -224,6 +249,11 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
       // End active drag
       if (dragStartPos.current && elRef.current) {
         elRef.current.releasePointerCapture?.(e.pointerId);
+        if (transformFrameRef.current !== null) {
+          cancelAnimationFrame(transformFrameRef.current);
+          transformFrameRef.current = null;
+        }
+        pendingTransformRef.current = null;
         dragStartPos.current = null;
         setDragMode('idle');
         pointerOriginRef.current = null;
@@ -278,7 +308,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
         // Animate to resolved position
         posRef.current = { x: finalX, y: finalY };
         el.style.transition = `transform ${SPRING_DURATION_MS}ms cubic-bezier(0.25,0.1,0.25,1)`;
-        el.style.transform = `translate(${finalX}px, ${finalY}px)`;
+        el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
         setTimeout(() => { el.style.transition = ''; }, SPRING_DURATION_MS);
 
         if (id) {
@@ -313,11 +343,11 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
                 const toX = finalX + (rect.left + rect.width / 2) - (elRect.left + elRect.width / 2);
                 const toY = finalY + (rect.top + rect.height / 2) - (elRect.top + elRect.height / 2);
                 el.style.transition = `transform ${FLICK_FLY_MS}ms cubic-bezier(0.4,0,0.2,1), opacity ${FLICK_FLY_MS}ms`;
-                el.style.transform = `translate(${toX}px, ${toY}px) scale(0.25)`;
+                el.style.transform = `translate3d(${toX}px, ${toY}px, 0) scale(0.25)`;
                 el.style.opacity = '0.35';
                 setTimeout(() => {
                   el.style.transition = 'transform 240ms ease, opacity 240ms ease';
-                  el.style.transform = `translate(${finalX}px, ${finalY}px) scale(1)`;
+                  el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0) scale(1)`;
                   el.style.opacity = '1';
                   setTimeout(() => { el.style.transition = ''; }, 240);
                 }, FLICK_FLY_MS);
@@ -331,7 +361,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
         flickSampleRef.current = null;
         // Reset scale
-        el.style.transform = `translate(${finalX}px, ${finalY}px) scale(1)`;
+        el.style.transform = `translate3d(${finalX}px, ${finalY}px, 0) scale(1)`;
         el.style.zIndex = '';
         return;
       }
@@ -352,6 +382,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
       if (!el) return;
 
       el.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
       dragStartPos.current = {
         x: e.clientX,
         y: e.clientY,
@@ -362,7 +393,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
       // Visual: lift widget
       el.style.zIndex = '999';
-      el.style.transform = `translate(${posRef.current.x}px, ${posRef.current.y}px) scale(1.015)`;
+      el.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0) scale(1.015)`;
     },
     [dragMode],
   );

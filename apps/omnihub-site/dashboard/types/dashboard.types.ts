@@ -9,16 +9,12 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-// ── Navigation ──────────────────────────────────────────────────────────────
-
-import type { OmniDashSidebarWidgetLabel } from '@/contracts/omnidash-sidebar-widgets';
-
 /**
  * Canonical "current surface" value shared by the sidebar (desktop) and the
  * bottom nav (mobile/tablet). 'Home' is the persistent canvas with no module
  * modal open; every sidebar widget label is a real, navigable module surface.
  */
-export type DashboardNavSection = OmniDashSidebarWidgetLabel | 'Home';
+export type DashboardNavSection = string;
 
 // ── Health State ───────────────────────────────────────────────────────────────
 

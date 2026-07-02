@@ -324,7 +324,13 @@ export function OmniSpatialHost() {
               {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
               ref={dialogRef}
               className={`pointer-events-auto relative w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] mx-auto border border-white/10 text-foreground p-6 shadow-lg sm:rounded-lg max-h-[calc(100dvh-2rem)] overflow-y-auto sm:w-full ${activeModal?.type === 'module' ? 'sm:max-w-[560px]' : 'sm:max-w-[425px]'}`}
-              style={{ backgroundColor: '#0b1220', display: isMinimized ? 'none' : undefined, cursor: isDialogDragging ? 'grabbing' : 'default' }}
+              style={{
+                backgroundColor: '#0b1220',
+                display: isMinimized ? 'none' : undefined,
+                cursor: isDialogDragging ? 'grabbing' : 'default',
+                contain: 'layout paint',
+                willChange: isDialogDragging ? 'transform' : undefined,
+              }}
             >
               {/* Draggable title bar — grab to reposition; buttons stop propagation so they don't drag */}
               <div className="flex items-start justify-between mb-4 select-none" style={{ cursor: isDialogDragging ? 'grabbing' : 'grab' }}>

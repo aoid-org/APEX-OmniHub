@@ -208,3 +208,19 @@ describe("writeSnapshot", () => {
     expect(outPath).toContain("2026_12_31");
   });
 });
+
+describe("writeSnapshot degraded fallback coverage", () => {
+  it("falls back to failure names when compositeError is null", () => {
+    writeSnapshot({
+      signals: [],
+      composite: null,
+      compositeError: null,
+      failures: [{ name: "redundancy", error: "jscpd failed" }],
+      scanTargets: ["src"],
+      timestamp: "2026-07-01T10:00:00.000Z",
+    });
+
+    const [, content] = (writeFileSync as ReturnType<typeof vi.fn>).mock.calls.at(-1) as [string, string, string];
+    expect(content).toContain("degraded run (redundancy)");
+  });
+});

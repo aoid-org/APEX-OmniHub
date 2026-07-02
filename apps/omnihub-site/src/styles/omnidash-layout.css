@@ -14,10 +14,6 @@
  *   Level 3 (interactive): accent-tinged glass with hover lift
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
-
-
 /* ===== Design Token Variables ===== */
 :root {
   --od-bg-canvas: #060a13;

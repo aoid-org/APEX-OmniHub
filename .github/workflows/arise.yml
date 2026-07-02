@@ -89,20 +89,20 @@ jobs:
           retention-days: 90
 
   publish-snapshot:
-    name: "Publish dated snapshot"
+    name: "Publish dated snapshot PR"
     needs: [structural-observatory, diagnosis-observatory]
-    # Only commit back on a push to a protected branch. PRs (including
-    # same-repo PRs, which run third-party scan tooling in the job above)
-    # never get a write-scoped token for this workflow.
+    # Protected branches reject direct pushes. Publish generated snapshots by
+    # opening a pull request so branch protection and required checks remain
+    # authoritative.
     if: |
       always() &&
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-22.04
     timeout-minutes: 5
-    continue-on-error: true
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -127,7 +127,9 @@ jobs:
           name: arise-diagnosis-report
           path: memory/omni-recall/docs
 
-      - name: Commit dated snapshot and diagnosis report
+      - name: Commit dated snapshot and diagnosis report to PR branch
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -142,7 +144,24 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}"
+          case "$branch" in
+            main|master|refs/heads/main|refs/heads/master|origin/main|origin/master)
+              echo "Refusing to publish A.R.I.S.E. snapshots to protected branch target: $branch" >&2
+              exit 1
+              ;;
+            automation/arise-snapshot-*) ;;
+            *)
+              echo "Refusing to publish A.R.I.S.E. snapshots to unexpected branch target: $branch" >&2
+              exit 1
+              ;;
+          esac
+          git checkout -b "$branch"
           git add "${files[@]}"
           git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report [skip ci]"
-          git pull --rebase origin "${{ github.ref_name }}"
-          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "HEAD:refs/heads/$branch"
+          gh pr create \
+            --base "${{ github.ref_name }}" \
+            --head "$branch" \
+            --title "chore(arise): publish structural baseline snapshot" \
+            --body "Automated A.R.I.S.E. snapshot publication. Opened as a pull request to comply with protected-branch rules and required status checks."
