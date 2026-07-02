@@ -26,3 +26,7 @@ A regression test now reads `.github/workflows/arise.yml` and verifies the workf
 ## Rollback
 
 If this workflow needs rollback, do not restore direct protected-branch pushes. Prefer disabling the publish job or keeping artifact upload only until a compliant PR-based publisher is repaired.
+
+## Ops-doc drift guard follow-up
+
+The repository's `ops-doc-guard` treats `.github/workflows/**` as critical-path operational source-of-truth. Because `.github/workflows/arise.yml` changed, `docs/APEX_AGENT_OPERATIONS.md` must be updated in the same PR. The operations doc now records the protected-branch-safe A.R.I.S.E. publisher contract: scan and diagnosis jobs upload artifacts with read-only permissions, while `publish-snapshot` uses `contents: write` plus `pull-requests: write` only to push a unique automation branch and open a PR instead of writing directly to `main`/`master`.
