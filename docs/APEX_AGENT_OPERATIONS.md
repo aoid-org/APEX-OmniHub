@@ -1220,7 +1220,7 @@ executes:
 |---|---|---|---|
 | `structural-observatory` | push/PR to `main`/`master`; `workflow_dispatch` | `contents: read` | Installs deps, runs `arise:scan`, uploads the dated structural snapshot as a build artifact (`arise-structural-baseline`, 90-day retention). |
 | `diagnosis-observatory` | push/PR to `main`/`master`; `workflow_dispatch` | `contents: read` | Installs deps, runs `arise:diagnose`, uploads the dated diagnosis report as a build artifact (`arise-diagnosis-report`, 90-day retention). |
-| `publish-snapshot` | push to `main`/`master` only (never on `pull_request`) | `contents: write`, `pull-requests: write` | Downloads whichever generated artifacts exist and, if they differ from committed docs, creates `automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}`, pushes `HEAD:$branch`, and opens a PR back to the protected base branch. It must not push generated commits directly to `main` or `master`. |
+| `publish-snapshot` | push to `main`/`master` only (never on `pull_request`) | `contents: write`, `pull-requests: write` | Downloads whichever generated artifacts exist and, if they differ from committed docs, creates `automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}`, refuses protected/unexpected branch targets, pushes only to `HEAD:refs/heads/$branch`, and opens a PR back to the protected base branch. It must not push generated commits directly to `main` or `master`. |
 
 | Property | Value |
 |---|---|

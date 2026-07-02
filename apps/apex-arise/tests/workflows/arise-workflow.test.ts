@@ -10,12 +10,15 @@ describe("A.R.I.S.E. snapshot publication workflow", () => {
     expect(workflow).toContain("Publish dated snapshot PR");
     expect(workflow).toContain("pull-requests: write");
     expect(workflow).toContain('branch="automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}"');
-    expect(workflow).toContain('git push origin "HEAD:$branch"');
+    expect(workflow).toContain('git push origin "HEAD:refs/heads/$branch"');
+    expect(workflow).toContain("Refusing to publish A.R.I.S.E. snapshots to protected branch target");
+    expect(workflow).toContain("Refusing to publish A.R.I.S.E. snapshots to unexpected branch target");
     expect(workflow).toContain("gh pr create");
     expect(workflow).toContain('--base "${{ github.ref_name }}"');
     expect(workflow).toContain('--head "$branch"');
 
     expect(workflow).not.toMatch(/git\s+push\s+origin\s+(?:HEAD:)?(?:main|master)\b/);
+    expect(workflow).not.toMatch(/git\s+push\s+origin\s+HEAD:refs\/heads\/(?:main|master)\b/);
     expect(workflow).not.toMatch(/git\s+push\s+origin\s+HEAD:\$\{\{\s*github\.ref_name\s*\}\}/);
     expect(workflow).not.toMatch(/git\s+push\s+origin\s+HEAD:\$GITHUB_REF_NAME\b/);
   });

@@ -145,10 +145,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           branch="automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}"
+          case "$branch" in
+            main|master|refs/heads/main|refs/heads/master|origin/main|origin/master)
+              echo "Refusing to publish A.R.I.S.E. snapshots to protected branch target: $branch" >&2
+              exit 1
+              ;;
+            automation/arise-snapshot-*) ;;
+            *)
+              echo "Refusing to publish A.R.I.S.E. snapshots to unexpected branch target: $branch" >&2
+              exit 1
+              ;;
+          esac
           git checkout -b "$branch"
           git add "${files[@]}"
           git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report [skip ci]"
-          git push origin "HEAD:$branch"
+          git push origin "HEAD:refs/heads/$branch"
           gh pr create \
             --base "${{ github.ref_name }}" \
             --head "$branch" \
