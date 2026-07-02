@@ -36,11 +36,11 @@ vi.mock('@/contracts/omnidash-sidebar-widgets', () => ({
   ],
 }));
 
+import { OmniSearchPalette } from '../../apps/omnihub-site/dashboard/components/OmniSearchPalette';
 import {
-  OmniSearchPalette,
   buildSearchTargets,
   filterSearchTargets,
-} from '../../apps/omnihub-site/dashboard/components/OmniSearchPalette';
+} from '../../apps/omnihub-site/dashboard/components/omniSearchTargets';
 
 describe('search target index', () => {
   it('covers all 9 canonical sidebar modules plus OmniSkills', () => {
