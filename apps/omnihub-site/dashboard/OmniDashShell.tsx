@@ -14,13 +14,14 @@ import { OmniSearchPalette } from './components/OmniSearchPalette';
 import { FooterObservabilityRow } from './components/FooterObservabilityRow';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
-import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
+import { invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { GlobalMediaDock } from '@/dashboard/components/media/GlobalMediaDock';
 import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLaunchWidget';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
+import { ConnectAiAuthModal } from '../src/components/byom/ConnectAiAuthModal';
 import { useAuth } from '@/lib/useAuth';
 import { LayoutContext } from './contexts/LayoutContext';
 import {
@@ -396,6 +397,23 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
+  // PRCC-001 WP-2b: Connect AI opens the real BYOM credential modal
+  // (ConnectAiAuthModal -> byom-login, AES-256-GCM vault) instead of the previous
+  // cosmetic label-swap. Cross-reload reflection from provider_connections is a
+  // tracked follow-up (needs a demoMode-guarded read; deferred to keep this diff
+  // surgical and avoid coupling the header to a backend read on every mount).
+  const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return OMNIDASH_SIDEBAR_WIDGETS.filter(widget => {
+      const moduleKey = widget.moduleKey ?? '';
+      return widget.label.toLowerCase().includes(query) || moduleKey.toLowerCase().includes(query);
+    }).slice(0, 6);
+  }, [searchQuery]);
 
   // ⌘K / Ctrl+K opens search from anywhere on the dashboard (all viewports,
   // even where the header trigger is hidden).
@@ -422,29 +440,58 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     });
   };
 
-  const handleConnectAI = async () => {
-    // APEX-DEV: Requesting directly from central Agent Card Registry per gateway mandate
-    const items = await queryAgentRegistry();
+  // PRCC-001 WP-2b: open the real BYOM credential capture (ConnectAiAuthModal ->
+  // byom-login). Replaces the registry-selection label-swap that set a display
+  // string in sessionStorage without ever capturing or encrypting a credential.
+  const handleConnectAI = () => {
+    setShowConnectAi(true);
+  };
+
+  const handleConnectAiSuccess = () => {
+    setShowConnectAi(false);
+    const connected = sessionStorage.getItem('omni_ai_provider');
+    if (connected) setAiProvider(connected);
+  };
+
+  const openSearchResult = (widget: OmniDashSidebarWidget) => {
+    const moduleKey = widget.moduleKey ?? widget.id;
     invoke({
-      id: 'header-connect-ai',
+      id: `omnidash-search-${widget.id}`,
       provider: 'omnidash',
-      type: 'selection',
-      title: 'Connect AI Provider',
-      description: 'Select an AI provider to integrate with your APEX workspace.',
-      schema: { items },
-      onComplete: async (result: Record<string, unknown>) => {
-        if (typeof result.selectedId === 'string') {
-          const selected = items.find(i => i.id === result.selectedId);
-          if (selected) {
-            setAiProvider(selected.label);
-            // NS-H-001: Write to sessionStorage instead of localStorage
-            sessionStorage.setItem('omni_ai_provider', selected.label);
-          }
-        }
-      },
+      type: 'module',
+      title: widget.label,
+      contextData: { moduleKey },
+      onComplete: async () => {},
       onCancel: () => {},
     });
+    setSearchOpen(false);
+    setSearchQuery('');
   };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setSearchOpen(false);
+      return;
+    }
+    if (event.key === 'Enter' && searchResults[0]) {
+      event.preventDefault();
+      openSearchResult(searchResults[0]);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [isDesktop]);
 
   const { demoMode } = useDemoMode();
   const notifications = useNotificationStore(state => state.notifications);
@@ -635,6 +682,11 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         }}>
           {aiProvider || 'Connect AI'}
         </button>
+        <ConnectAiAuthModal
+          isOpen={showConnectAi}
+          onClose={() => setShowConnectAi(false)}
+          onSuccess={handleConnectAiSuccess}
+        />
 
         {/* Divider — separates action buttons from icon tray */}
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
