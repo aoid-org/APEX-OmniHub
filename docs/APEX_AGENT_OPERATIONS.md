@@ -89,7 +89,8 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `ORCHESTRATOR_SHARED_SECRET` | same value as edge secret | |
 | `ORCHESTRATOR_REQUIRE_SIGNATURE` | `true` | config refuses to boot if `false` in prod |
 | `ENVIRONMENT` | `production` | |
-| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker | `true`/unset needs ≥2 GB (PyTorch model) |
+| `SEMANTIC_CACHE_ENABLED` | `false` on 512 MB worker (legacy kill-switch; always wins) | to enable caching on 512 MB, set `true` **and** `SEMANTIC_CACHE_MODE=lite` |
+| `SEMANTIC_CACHE_MODE` | `lite` on 512 MB worker · `full` (default) needs ≥2 GB (PyTorch) · `off` | `lite` = stdlib `LiteEmbedder` (hashed n-gram, measured ~50 MB RSS, no torch); lexical/near-duplicate template hits only; isolated Redis namespace (`plan:lite-v1:*`, `idx:plan_templates:lite-v1`); hit rate = `semantic_cache_lookups_total{result="hit"}` ÷ (hit+miss) on worker `/metrics` |
 | `API_HOST` / `API_PORT` | `0.0.0.0` / `10000` | **API service only** |
 | `CORS_ALLOWED_ORIGINS` | `https://apexomnihub.icu,https://www.apexomnihub.icu` (comma-sep, no spaces) | **API only** — browser origins allowed to call the API cross-origin |
 
@@ -1396,3 +1397,44 @@ one new shared helper, one new CI gate. No change to start commands, orchestrato
   transaction; follows the in-production `tenant_entitlements` table/RLS pattern.
 
 **Operational impact:** one additive migration, one frontend component. No edge/secret/start-command change.
+
+## 9.28 Orchestrator — BYOM model registry quarantined (S5, cert C9) — 2026-07-02 (PR #1558)
+
+**Changed critical runtime paths:** `orchestrator/core/model_registry.py` (deprecation only).
+
+### Operational change summary
+
+- **`orchestrator/core/model_registry.py` is QUARANTINED** per owner ruling S5
+  (`orchestrator/ORCHESTRATOR_CERTIFICATION.md` C9): the module has **zero runtime
+  callers** (`orchestrator/AUDIT_2026-07.md` §3.3) — its AEGIS/VERITAS/RSI BYOM
+  governance was never wired into any production path and enforces nothing.
+  Wiring it was ruled out-of-scope (A3/B3 scope-creep guard); deleting it was
+  ruled out too — code and its 10 tests are retained.
+- Change is a module-level deprecation docstring plus a `logger.warning` emitted
+  if `ModelProviderRegistry` is ever instantiated, so the dead governance layer
+  cannot be mistaken for live enforcement. **No behavior change on any active
+  code path** — `core/__init__.py`, `main.py`, and `server.py` import nothing
+  from this module.
+
+### Environment / topology impact
+
+- **None.** No service, env var, DB object, or start command changes. Live BYOM
+  enforcement remains where it always was: `supabase/functions/byom-login` /
+  `byom-proxy` + `omnihub_model_registry` (see §9.7).
+- **Operator note:** if `core.model_registry is QUARANTINED` warnings ever appear
+  in orchestrator logs, something started instantiating the dead registry —
+  treat as a regression and trace the importer; do not silence the warning.
+
+**Operational impact:** documentation/deprecation only. Un-quarantining requires a new
+owner-authorized task.
+
+## 9.29 Orchestrator — LiteEmbedder tensor-output refused fail-closed (2026-07-02, PR #1562)
+
+**Changed critical runtime paths:** `orchestrator/infrastructure/lite_embedder.py` (guard only).
+
+- Sonar unused-param fix: `LiteEmbedder.encode(convert_to_numpy=...)` is retained for
+  SentenceTransformer duck-type compatibility (`infrastructure/cache.py:406,502`) and now
+  raises `NotImplementedError` when called with `convert_to_numpy=False` instead of
+  silently returning numpy. All in-tree callers pass `True`; no live path changes.
+- Also in this PR: real CI/Sonar run links attached to `orchestrator/ORCHESTRATOR_CERTIFICATION.md`;
+  §4 S5 escalation closed (C9). **No service, env var, DB, or start-command change.**

@@ -54,6 +54,13 @@ const STATE_KIND_STYLES: Readonly<Record<string, StateStyle>> = {
     color: '#ef4444',
     border: '1px solid rgba(239,68,68,0.3)',
   },
+  // PRCC-001 WP-3b: a module whose data loads but whose actions are all gated is
+  // honestly a preview, not LIVE. Amber distinguishes it from live(green)/demo(purple).
+  preview: {
+    background: 'rgba(245,158,11,0.1)',
+    color: '#f59e0b',
+    border: '1px solid rgba(245,158,11,0.3)',
+  },
 };
 
 const DEFAULT_STATE_STYLE: StateStyle = {
@@ -154,6 +161,30 @@ export const ModuleShell = memo(function ModuleShell({
     );
   }
 
+  // PRCC-001 WP-3b/3c: honest render-time gating for the module action buttons.
+  const gateReason = (actionId: string): string | null => {
+    // Only the pure STUB case gates the button: a module that wires no onAction
+    // handler AND whose action the capability map marks unsupported. Selection /
+    // validation gates (getActionDisabledReason on modules that DO work, e.g.
+    // "select one live automation") are intentionally left to click-time so their
+    // inline messages still surface — we never disable a genuinely working button.
+    if (!onAction) {
+      const cap = getModuleActionCapability(state.moduleKey, actionId);
+      if (!cap.supported) return cap.copy;
+    }
+    return null;
+  };
+
+  // Downgrade a "live" badge to PREVIEW when the module loaded but every action is
+  // gated — the surface renders, nothing is actionable yet. Honest, and derived
+  // from the same source as the button state so badge and buttons never disagree.
+  const displayStateKind =
+    state.stateKind === 'live' &&
+    state.actions.length > 0 &&
+    state.actions.every((a) => gateReason(a.id) !== null)
+      ? 'preview'
+      : state.stateKind;
+
   return (
     <div className="py-3 flex flex-col gap-3">
       {/* State indicator */}
@@ -161,9 +192,9 @@ export const ModuleShell = memo(function ModuleShell({
         <p className="text-sm text-muted-foreground flex-1">{state.headline}</p>
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
-          style={STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE}
+          style={STATE_KIND_STYLES[displayStateKind] ?? DEFAULT_STATE_STYLE}
         >
-          {state.stateKind.toUpperCase()}
+          {displayStateKind.toUpperCase()}
         </span>
       </div>
 
@@ -245,17 +276,28 @@ export const ModuleShell = memo(function ModuleShell({
       {/* Actions — top-right X on the modal handles close; no bottom Close button */}
       {state.actions.length > 0 && (
         <DialogFooter className="gap-2 pt-2">
-          {state.actions.map((action) => (
-            <Button
-              key={action.id}
-              variant={action.variant === 'destructive' ? 'destructive' : 'default'}
-              disabled={processing}
-              onClick={() => handleAction(action.id)}
-            >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {action.label}
-            </Button>
-          ))}
+          {state.actions.map((action) => {
+            const reason = gateReason(action.id);
+            const gated = reason !== null;
+            const variant = gated
+              ? 'secondary'
+              : action.variant === 'destructive'
+                ? 'destructive'
+                : 'default';
+            return (
+              <Button
+                key={action.id}
+                variant={variant}
+                disabled={processing || gated}
+                title={reason ?? undefined}
+                aria-disabled={gated || undefined}
+                onClick={() => handleAction(action.id)}
+              >
+                {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {action.label}
+              </Button>
+            );
+          })}
         </DialogFooter>
       )}
     </div>

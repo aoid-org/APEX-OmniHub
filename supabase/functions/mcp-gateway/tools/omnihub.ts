@@ -1,11 +1,20 @@
 /**
- * OmniHub Platform Monitoring Tools (7 tools)
- * Calls existing APEX edge functions and Supabase admin APIs.
+ * OmniHub Platform Monitoring Tools (8 tools)
+ * Calls existing APEX edge functions, Supabase admin APIs, and the
+ * APEX Orchestrator universal intent endpoint.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { MCPTool, ToolCallResult } from "./registry.ts";
 import { ok, err } from "./registry.ts";
+import {
+  normalizeToEventEnvelope,
+  toPythonEventEnvelope,
+} from "../../_shared/event-ingress-adapter.ts";
+import { buildSignedHeaders } from "../../_shared/requestSigning.ts";
+
+/** Attributed userId for intents dispatched by the MCP gateway itself. */
+const MCP_GATEWAY_ACTOR = "mcp-gateway";
 
 function adminClient() {
   return createClient(
@@ -93,6 +102,30 @@ export const omnihubTools: MCPTool[] = [
       properties: {
         window_hours: { type: "number", description: "Lookback window in hours (default 24)" },
       },
+    },
+  },
+  {
+    name: "omnihub_execute_intent",
+    description:
+      "Execute a registered universal intent on the APEX Orchestrator (Temporal). " +
+      "Routes through the fail-closed Intent Registry: unregistered intentIds return " +
+      "status=offline without starting a workflow. Try intent_id=system.list_intents " +
+      "to discover the registry.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        intent_id: {
+          type: "string",
+          description:
+            "Registered intentId (e.g. system.health_check, system.echo, system.list_intents)",
+        },
+        payload: {
+          type: "object",
+          description: "Intent payload fields (merged into the EventEnvelope payload)",
+        },
+        trace_id: { type: "string", description: "Optional trace UUID (generated when omitted)" },
+      },
+      required: ["intent_id"],
     },
   },
 ];
@@ -221,8 +254,66 @@ export async function handleOmnihubTool(
       });
     }
 
+    if (name === "omnihub_execute_intent") {
+      return await executeIntent(args);
+    }
+
     return err(`Unhandled omnihub tool: ${name}`);
   } catch (e) {
     return err(e instanceof Error ? e.message : String(e));
   }
+}
+
+/**
+ * FR6 — first live producer for the Universal Orchestrator intent path.
+ * Reuses the exact wire contract the edge layer already speaks: the shared
+ * event-ingress adapter builds the Python EventEnvelope and the shared HMAC
+ * signer authorizes the call, so the orchestrator sees a request identical to
+ * one from trigger-workflow. Fail-closed: the orchestrator rejects intentIds
+ * missing from the Intent Registry before any Temporal workflow starts.
+ */
+async function executeIntent(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const intentId = args.intent_id;
+  if (typeof intentId !== "string" || intentId.length === 0) {
+    return err("intent_id (string) is required");
+  }
+
+  const orchestratorUrl = Deno.env.get("ORCHESTRATOR_URL");
+  if (!orchestratorUrl) {
+    // Honest-Gateway Law: never fake success when the backend is unreachable.
+    return err("ORCHESTRATOR_URL is not configured for this environment");
+  }
+
+  const tsEnvelope = normalizeToEventEnvelope(
+    {
+      ...(typeof args.payload === "object" && args.payload !== null ? args.payload : {}),
+      ...(typeof args.trace_id === "string" ? { trace_id: args.trace_id } : {}),
+      intentId,
+      // Same rule as trigger-workflow: the server-side identity always wins
+      // over any caller-supplied tenant field.
+      tenantId: MCP_GATEWAY_ACTOR,
+    },
+    { channel: "api", userAgent: "mcp-gateway/omnihub_execute_intent" },
+  );
+
+  const pythonEnvelope = toPythonEventEnvelope(tsEnvelope, MCP_GATEWAY_ACTOR);
+  const intentPath = "/api/v1/intents";
+  const intentBody = JSON.stringify(pythonEnvelope);
+  const signedHeaders = await buildSignedHeaders("POST", intentPath, intentBody, tsEnvelope.traceId);
+
+  const res = await fetch(`${orchestratorUrl}${intentPath}`, {
+    method: "POST",
+    headers: {
+      ...signedHeaders,
+      "X-Idempotency-Key": tsEnvelope.idempotencyKey,
+      "X-Trace-Id": tsEnvelope.traceId,
+    },
+    body: intentBody,
+  });
+
+  const data = await res.json().catch(() => ({ error: "non-JSON orchestrator response" }));
+  if (!res.ok) {
+    return err(`Orchestrator ${res.status}: ${JSON.stringify(data)}`);
+  }
+  return ok({ trace_id: tsEnvelope.traceId, ...data });
 }

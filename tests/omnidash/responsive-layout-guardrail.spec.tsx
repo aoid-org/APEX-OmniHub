@@ -224,7 +224,7 @@ describe('OmniDash responsive-layout guardrail', () => {
     } as ReturnType<typeof useViewport>);
     const { container } = render(<OmniDashShell />);
 
-    expect(screen.getByText(/Search OmniHub/i)).toBeTruthy();
+    expect(screen.getByRole('searchbox', { name: 'Search OmniHub' })).toBeTruthy();
 
     const actions = container.querySelector('.omni-header-actions') as HTMLElement | null;
     expect(actions).not.toBeNull();
