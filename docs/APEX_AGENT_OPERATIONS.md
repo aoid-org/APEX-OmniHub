@@ -1427,3 +1427,14 @@ one new shared helper, one new CI gate. No change to start commands, orchestrato
 
 **Operational impact:** documentation/deprecation only. Un-quarantining requires a new
 owner-authorized task.
+
+## 9.29 Orchestrator — LiteEmbedder tensor-output refused fail-closed (2026-07-02, PR #1562)
+
+**Changed critical runtime paths:** `orchestrator/infrastructure/lite_embedder.py` (guard only).
+
+- Sonar unused-param fix: `LiteEmbedder.encode(convert_to_numpy=...)` is retained for
+  SentenceTransformer duck-type compatibility (`infrastructure/cache.py:406,502`) and now
+  raises `NotImplementedError` when called with `convert_to_numpy=False` instead of
+  silently returning numpy. All in-tree callers pass `True`; no live path changes.
+- Also in this PR: real CI/Sonar run links attached to `orchestrator/ORCHESTRATOR_CERTIFICATION.md`;
+  §4 S5 escalation closed (C9). **No service, env var, DB, or start-command change.**
