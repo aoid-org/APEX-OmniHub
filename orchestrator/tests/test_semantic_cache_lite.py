@@ -21,6 +21,12 @@ from metrics import semantic_cache_lookups
 # ── LiteEmbedder contract ────────────────────────────────────────────
 
 
+def test_lite_embedder_refuses_tensor_output():
+    emb = LiteEmbedder()
+    with pytest.raises(NotImplementedError, match="convert_to_numpy=False"):
+        emb.encode("anything", convert_to_numpy=False)
+
+
 def test_lite_embedder_shape_dtype_and_norm():
     emb = LiteEmbedder()
     vec = emb.encode("Book flight to {DESTINATION} {DATE}", convert_to_numpy=True)
