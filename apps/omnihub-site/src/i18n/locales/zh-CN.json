@@ -6,7 +6,11 @@
       "line3": "编排器。"
     },
     "subtitle": "Enterprise AI Governance Command Center. Unify software, AI agents, and enterprise platforms into one governed layer where every action is authorized, logged, and reversible.",
-    "tiles": ["指挥", "审计", "推演"],
+    "tiles": [
+      "指挥",
+      "审计",
+      "推演"
+    ],
     "cta": {
       "primary": "申请抢先体验",
       "secondary": "观看演示"
@@ -302,6 +306,147 @@
     "playLabel": "播放 {{title}}",
     "deleteLabel": "删除 {{title}}",
     "firstParty": "第一方",
-    "external": "外部"
+    "external": "外部",
+    "open": "打开"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "所有系统运行正常",
+      "companyName": "APEX Business Systems Ltd. · 埃德蒙顿，AB",
+      "signOut": "退出登录",
+      "signingOut": "正在退出…",
+      "systemKpis": "系统指标"
+    },
+    "header": {
+      "searchPlaceholder": "搜索 OmniHub…",
+      "zeroTrustActive": "零信任已激活",
+      "connectAi": "连接 AI",
+      "notifications": "通知",
+      "noNotifications": "您没有待处理的通知或审批。",
+      "recentActivity": "您的 APEX 工作区近期活动。",
+      "workspaceSettings": "工作区设置",
+      "billingPlans": "账单与计划",
+      "inviteMembers": "邀请成员",
+      "inviteSent": "邀请已成功发送至 {{email}}。",
+      "orgEnterprise": "企业版"
+    },
+    "agent": {
+      "session": "会话",
+      "chooseAvatar": "选择代理头像",
+      "cancel": "取消",
+      "pause": "暂停",
+      "start": "开始",
+      "reset": "重置",
+      "longPressHint": "长按更换头像"
+    },
+    "slate": {
+      "demoSession": "正在启动演示会话…",
+      "startSession": "开始会话以继续",
+      "placeholder": "向 APEX Agent 提问…",
+      "execute": "执行",
+      "stop": "停止",
+      "contextSources": "上下文来源",
+      "removeContext": "移除上下文",
+      "fillSuggestion": "填充建议",
+      "viewContext": "查看上下文",
+      "systemError": "系统错误：无法联系 APEX Agent。Guardian 审计已记录。",
+      "responseStopped": "用户已停止响应。"
+    },
+    "ecosystem": {
+      "addApp": "添加 APEX 应用"
+    },
+    "appGallery": {
+      "title": "应用库",
+      "awaiting": "等待中",
+      "awaitingSlot": "应用槽位 {{n}} — 等待连接"
+    },
+    "trace": {
+      "live": "实时",
+      "connecting": "连接中",
+      "demoSimulated": "演示（模拟）",
+      "noEvents": "暂无事件",
+      "replayWorkflows": "回放工作流",
+      "closeReplay": "关闭回放",
+      "replayMode": "回放模式"
+    },
+    "sentry": {
+      "enable": "启用以激活断路器监控。",
+      "initializing": "初始化中…",
+      "disableLabel": "禁用 OmniSentry",
+      "enableLabel": "启用 OmniSentry",
+      "circuit": "断路器",
+      "errorsMin": "错误/分钟",
+      "memory": "内存",
+      "uptime": "运行时间",
+      "probeCircuit": "探测断路器",
+      "probing": "探测中…",
+      "circuitClosed": "✓ 断路器关闭",
+      "circuitOpen": "⚡ 断路器打开",
+      "probeFailed": "✗ 探测失败",
+      "flushOffline": "刷新 {{count}} 个离线错误",
+      "flushOffline_plural": "刷新 {{count}} 个离线错误",
+      "flushing": "正在刷新…",
+      "flushed": "✓ 已刷新 {{count}}"
+    },
+    "ops": {
+      "title": "运维控制",
+      "demoMode": "演示模式",
+      "demoModeSub": "模拟数据流",
+      "autoPilot": "自动驾驶",
+      "autoPilotSub": "自主任务处理",
+      "guardianMode": "Guardian 模式",
+      "guardianModeSub": "AI 策略执行"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "健康",
+      "healthy": "正常",
+      "degraded": "降级",
+      "incident": "事件",
+      "unknown": "未知",
+      "sev1": "SEV-1",
+      "incidents": "事件数",
+      "sync": "同步",
+      "syncLive": "实时",
+      "syncDemo": "演示",
+      "syncSyncing": "同步中",
+      "syncError": "同步错误",
+      "guardianActive": "Guardian: 已激活",
+      "simulated": "（模拟）"
+    },
+    "systemHealth": {
+      "title": "系统状态",
+      "eventsTracked": "已追踪事件",
+      "systemHealth": "系统健康",
+      "guardianLoops": "Guardian 循环",
+      "staleChecks": "过期检查",
+      "clean": "无异常",
+      "loop": "{{count}} 次循环"
+    },
+    "media": {
+      "open": "打开"
+    },
+    "mobile": {
+      "home": "首页",
+      "slate": "Slate",
+      "apps": "应用",
+      "insights": "洞察",
+      "more": "更多",
+      "insightsControls": "洞察与控制",
+      "switchLight": "切换至亮色主题",
+      "switchDark": "切换至暗色主题",
+      "signOut": "退出登录",
+      "openInsights": "打开洞察面板",
+      "dashboardNav": "仪表板导航"
+    },
+    "sidebarWidgets": {
+      "audits": "审计",
+      "links": "链接",
+      "automations": "自动化",
+      "workflows": "工作流",
+      "files": "文件",
+      "billing": "账单",
+      "settings": "设置"
+    }
   }
 }

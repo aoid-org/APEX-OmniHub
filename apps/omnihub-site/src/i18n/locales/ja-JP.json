@@ -6,7 +6,11 @@
       "line3": "オーケストレーター。"
     },
     "subtitle": "Entering AI wa subete no kodo ga nintei, kiroku, saketeiru sekaitsuki na komando hyomen desu. Software, AI agent, enterprise platform wo hitotsu no orchestration layer ni tougo shimasu.",
-    "tiles": ["指示", "監査", "推論"],
+    "tiles": [
+      "指示",
+      "監査",
+      "推論"
+    ],
     "cta": {
       "primary": "Early Access wo Kadoo Suru",
       "secondary": "Demo wo Miru"
@@ -302,6 +306,147 @@
     "playLabel": "{{title}} を再生",
     "deleteLabel": "{{title}} を削除",
     "firstParty": "ファーストパーティ",
-    "external": "外部"
+    "external": "外部",
+    "open": "開く"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "全システム正常稼働中",
+      "companyName": "APEX Business Systems Ltd. · エドモントン, AB",
+      "signOut": "サインアウト",
+      "signingOut": "サインアウト中…",
+      "systemKpis": "システムKPI"
+    },
+    "header": {
+      "searchPlaceholder": "OmniHubを検索…",
+      "zeroTrustActive": "ゼロトラスト有効",
+      "connectAi": "AIを接続",
+      "notifications": "通知",
+      "noNotifications": "保留中の通知や承認はありません。",
+      "recentActivity": "APEXワークスペースの最近のアクティビティ。",
+      "workspaceSettings": "ワークスペース設定",
+      "billingPlans": "請求とプラン",
+      "inviteMembers": "メンバーを招待",
+      "inviteSent": "{{email}}への招待を送信しました。",
+      "orgEnterprise": "エンタープライズ"
+    },
+    "agent": {
+      "session": "セッション",
+      "chooseAvatar": "エージェントアバターを選択",
+      "cancel": "キャンセル",
+      "pause": "一時停止",
+      "start": "開始",
+      "reset": "リセット",
+      "longPressHint": "長押しでアバターを変更"
+    },
+    "slate": {
+      "demoSession": "デモセッションを開始中…",
+      "startSession": "セッションを開始してください",
+      "placeholder": "APEX Agentに質問…",
+      "execute": "実行",
+      "stop": "停止",
+      "contextSources": "コンテキストソース",
+      "removeContext": "コンテキストを削除",
+      "fillSuggestion": "提案を入力",
+      "viewContext": "コンテキストを表示",
+      "systemError": "システムエラー: APEX Agentに接続できません。Guardian監査を記録しました。",
+      "responseStopped": "ユーザーが応答を停止しました。"
+    },
+    "ecosystem": {
+      "addApp": "APEXアプリを追加"
+    },
+    "appGallery": {
+      "title": "アプリギャラリー",
+      "awaiting": "待機中",
+      "awaitingSlot": "アプリスロット{{n}} — 接続待ち"
+    },
+    "trace": {
+      "live": "ライブ",
+      "connecting": "接続中",
+      "demoSimulated": "デモ（シミュレーション）",
+      "noEvents": "イベントなし",
+      "replayWorkflows": "ワークフローを再生",
+      "closeReplay": "再生を閉じる",
+      "replayMode": "再生モード"
+    },
+    "sentry": {
+      "enable": "回路遮断器の監視を有効にします。",
+      "initializing": "初期化中…",
+      "disableLabel": "OmniSentryを無効化",
+      "enableLabel": "OmniSentryを有効化",
+      "circuit": "回路",
+      "errorsMin": "エラー/分",
+      "memory": "メモリ",
+      "uptime": "稼働時間",
+      "probeCircuit": "回路をテスト",
+      "probing": "テスト中…",
+      "circuitClosed": "✓ 回路閉鎖",
+      "circuitOpen": "⚡ 回路開放",
+      "probeFailed": "✗ テスト失敗",
+      "flushOffline": "{{count}}件のオフラインエラーをフラッシュ",
+      "flushOffline_plural": "{{count}}件のオフラインエラーをフラッシュ",
+      "flushing": "フラッシュ中…",
+      "flushed": "✓ {{count}}件フラッシュ完了"
+    },
+    "ops": {
+      "title": "Ops制御",
+      "demoMode": "デモモード",
+      "demoModeSub": "シミュレーションデータフィード",
+      "autoPilot": "オートパイロット",
+      "autoPilotSub": "自律タスク処理",
+      "guardianMode": "Guardianモード",
+      "guardianModeSub": "AIポリシー適用"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "ヘルス",
+      "healthy": "正常",
+      "degraded": "劣化",
+      "incident": "インシデント",
+      "unknown": "不明",
+      "sev1": "SEV-1",
+      "incidents": "インシデント",
+      "sync": "同期",
+      "syncLive": "ライブ",
+      "syncDemo": "デモ",
+      "syncSyncing": "同期中",
+      "syncError": "同期エラー",
+      "guardianActive": "Guardian: アクティブ",
+      "simulated": "（シミュレーション）"
+    },
+    "systemHealth": {
+      "title": "システムステータス",
+      "eventsTracked": "追跡イベント",
+      "systemHealth": "システムヘルス",
+      "guardianLoops": "Guardianループ",
+      "staleChecks": "期限切れチェック",
+      "clean": "クリーン",
+      "loop": "{{count}}ループ"
+    },
+    "media": {
+      "open": "開く"
+    },
+    "mobile": {
+      "home": "ホーム",
+      "slate": "Slate",
+      "apps": "アプリ",
+      "insights": "インサイト",
+      "more": "その他",
+      "insightsControls": "インサイトと制御",
+      "switchLight": "ライトテーマに切替",
+      "switchDark": "ダークテーマに切替",
+      "signOut": "サインアウト",
+      "openInsights": "インサイトパネルを開く",
+      "dashboardNav": "ダッシュボードナビゲーション"
+    },
+    "sidebarWidgets": {
+      "audits": "監査",
+      "links": "リンク",
+      "automations": "自動化",
+      "workflows": "ワークフロー",
+      "files": "ファイル",
+      "billing": "請求",
+      "settings": "設定"
+    }
   }
 }

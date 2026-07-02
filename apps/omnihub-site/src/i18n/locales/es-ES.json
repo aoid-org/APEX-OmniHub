@@ -6,7 +6,11 @@
       "line3": "Orquestador."
     },
     "subtitle": "La superficie de mando gobernada para la IA empresarial. Unifique software, agentes de IA y plataformas empresariales en una capa orquestada donde cada accion esta autorizada, registrada y reversible.",
-    "tiles": ["DIRECTO", "AUDITAR", "DEDUCIR"],
+    "tiles": [
+      "DIRECTO",
+      "AUDITAR",
+      "DEDUCIR"
+    ],
     "cta": {
       "primary": "Solicitar Acceso Anticipado",
       "secondary": "Ver Demo"
@@ -302,6 +306,147 @@
     "playLabel": "Reproducir {{title}}",
     "deleteLabel": "Eliminar {{title}}",
     "firstParty": "Propio",
-    "external": "Externo"
+    "external": "Externo",
+    "open": "Abrir"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "Todos los sistemas operativos",
+      "companyName": "APEX Business Systems Ltd. · Edmonton, AB",
+      "signOut": "Cerrar sesión",
+      "signingOut": "Cerrando sesión…",
+      "systemKpis": "KPIs del sistema"
+    },
+    "header": {
+      "searchPlaceholder": "Buscar en OmniHub…",
+      "zeroTrustActive": "Zero Trust activo",
+      "connectAi": "Conectar IA",
+      "notifications": "Notificaciones",
+      "noNotifications": "No tiene notificaciones ni aprobaciones pendientes.",
+      "recentActivity": "Actividad reciente en su espacio APEX.",
+      "workspaceSettings": "Configuración del espacio",
+      "billingPlans": "Facturación y planes",
+      "inviteMembers": "Invitar miembros",
+      "inviteSent": "Invitación enviada con éxito a {{email}}.",
+      "orgEnterprise": "Empresa"
+    },
+    "agent": {
+      "session": "SESIÓN",
+      "chooseAvatar": "Elegir avatar del agente",
+      "cancel": "Cancelar",
+      "pause": "Pausar",
+      "start": "Iniciar",
+      "reset": "REST.",
+      "longPressHint": "Mantenga pulsado para cambiar avatar"
+    },
+    "slate": {
+      "demoSession": "Iniciando sesión de demostración…",
+      "startSession": "Inicie una sesión para comenzar",
+      "placeholder": "Pregunte algo a APEX Agent…",
+      "execute": "Ejecutar",
+      "stop": "Detener",
+      "contextSources": "Fuentes de contexto",
+      "removeContext": "Eliminar contexto",
+      "fillSuggestion": "Completar sugerencia",
+      "viewContext": "Ver contexto",
+      "systemError": "Error del sistema: No se pudo contactar a APEX Agent. Auditoría Guardian registrada.",
+      "responseStopped": "Respuesta detenida por el usuario."
+    },
+    "ecosystem": {
+      "addApp": "Agregar app APEX"
+    },
+    "appGallery": {
+      "title": "Galería de apps",
+      "awaiting": "EN ESPERA",
+      "awaitingSlot": "Ranura {{n}} — esperando conexión"
+    },
+    "trace": {
+      "live": "En vivo",
+      "connecting": "Conectando",
+      "demoSimulated": "Demo (Simulado)",
+      "noEvents": "Sin eventos aún",
+      "replayWorkflows": "Reproducir workflows",
+      "closeReplay": "Cerrar reproducción",
+      "replayMode": "Modo reproducción"
+    },
+    "sentry": {
+      "enable": "Activar para iniciar la monitorización del disyuntor.",
+      "initializing": "Inicializando…",
+      "disableLabel": "Desactivar OmniSentry",
+      "enableLabel": "Activar OmniSentry",
+      "circuit": "Circuito",
+      "errorsMin": "Errores/min",
+      "memory": "Memoria",
+      "uptime": "Tiempo activo",
+      "probeCircuit": "Probar circuito",
+      "probing": "Probando…",
+      "circuitClosed": "✓ Circuito cerrado",
+      "circuitOpen": "⚡ Circuito abierto",
+      "probeFailed": "✗ Prueba fallida",
+      "flushOffline": "Purgar {{count}} error offline",
+      "flushOffline_plural": "Purgar {{count}} errores offline",
+      "flushing": "Purgando…",
+      "flushed": "✓ {{count}} purgado(s)"
+    },
+    "ops": {
+      "title": "Controles de Ops",
+      "demoMode": "Modo demo",
+      "demoModeSub": "Flujo de datos simulado",
+      "autoPilot": "Piloto automático",
+      "autoPilotSub": "Manejo autónomo de tareas",
+      "guardianMode": "Modo Guardian",
+      "guardianModeSub": "Aplicación de políticas de IA"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "Salud",
+      "healthy": "Saludable",
+      "degraded": "Degradado",
+      "incident": "Incidente",
+      "unknown": "Desconocido",
+      "sev1": "SEV-1",
+      "incidents": "Incidentes",
+      "sync": "Sincronización",
+      "syncLive": "En vivo",
+      "syncDemo": "Demo",
+      "syncSyncing": "Sincronizando",
+      "syncError": "Error de sincronización",
+      "guardianActive": "Guardian: ACTIVO",
+      "simulated": "(Simulado)"
+    },
+    "systemHealth": {
+      "title": "Estado del sistema",
+      "eventsTracked": "Eventos rastreados",
+      "systemHealth": "Salud del sistema",
+      "guardianLoops": "Ciclos Guardian",
+      "staleChecks": "Comprobaciones obsoletas",
+      "clean": "Limpio",
+      "loop": "{{count}} ciclo"
+    },
+    "media": {
+      "open": "Abrir"
+    },
+    "mobile": {
+      "home": "Inicio",
+      "slate": "Slate",
+      "apps": "Apps",
+      "insights": "Insights",
+      "more": "Más",
+      "insightsControls": "Insights y controles",
+      "switchLight": "Cambiar a tema claro",
+      "switchDark": "Cambiar a tema oscuro",
+      "signOut": "Cerrar sesión",
+      "openInsights": "Abrir panel de insights",
+      "dashboardNav": "Navegación del panel"
+    },
+    "sidebarWidgets": {
+      "audits": "Auditorías",
+      "links": "Enlaces",
+      "automations": "Automatizaciones",
+      "workflows": "Flujos de trabajo",
+      "files": "Archivos",
+      "billing": "Facturación",
+      "settings": "Configuración"
+    }
   }
 }

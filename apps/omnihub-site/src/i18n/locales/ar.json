@@ -6,7 +6,11 @@
       "line3": "الشامل."
     },
     "subtitle": "سطح الأوامر المُحكوم للذكاء الاصطناعي المؤسسي. وحّد البرمجيات ووكلاء الذكاء الاصطناعي والمنصات المؤسسية في طبقة تنسيق واحدة حيث كل إجراء مُصرَّح به ومُسجَّل وقابل للتراجع.",
-    "tiles": ["مباشر", "تدقيق", "استنتاج"],
+    "tiles": [
+      "مباشر",
+      "تدقيق",
+      "استنتاج"
+    ],
     "cta": {
       "primary": "طلب وصول مبكر",
       "secondary": "مشاهدة العرض التجريبي"
@@ -302,6 +306,147 @@
     "playLabel": "تشغيل {{title}}",
     "deleteLabel": "حذف {{title}}",
     "firstParty": "داخلية",
-    "external": "خارجية"
+    "external": "خارجية",
+    "open": "فتح"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "جميع الأنظمة تعمل",
+      "companyName": "APEX Business Systems Ltd. · إدمنتون، AB",
+      "signOut": "تسجيل الخروج",
+      "signingOut": "جارٍ تسجيل الخروج…",
+      "systemKpis": "مؤشرات النظام"
+    },
+    "header": {
+      "searchPlaceholder": "البحث في OmniHub…",
+      "zeroTrustActive": "Zero Trust نشط",
+      "connectAi": "ربط الذكاء الاصطناعي",
+      "notifications": "الإشعارات",
+      "noNotifications": "لا توجد إشعارات أو موافقات معلقة.",
+      "recentActivity": "النشاط الأخير في مساحة عمل APEX.",
+      "workspaceSettings": "إعدادات مساحة العمل",
+      "billingPlans": "الفوترة والخطط",
+      "inviteMembers": "دعوة أعضاء",
+      "inviteSent": "تم إرسال الدعوة بنجاح إلى {{email}}.",
+      "orgEnterprise": "مؤسسي"
+    },
+    "agent": {
+      "session": "الجلسة",
+      "chooseAvatar": "اختيار صورة الوكيل",
+      "cancel": "إلغاء",
+      "pause": "إيقاف مؤقت",
+      "start": "بدء",
+      "reset": "إعادة",
+      "longPressHint": "اضغط مطولاً لتغيير الصورة"
+    },
+    "slate": {
+      "demoSession": "جارٍ بدء جلسة تجريبية…",
+      "startSession": "ابدأ جلسة للمتابعة",
+      "placeholder": "اسأل APEX Agent أي شيء…",
+      "execute": "تنفيذ",
+      "stop": "إيقاف",
+      "contextSources": "مصادر السياق",
+      "removeContext": "إزالة السياق",
+      "fillSuggestion": "تعبئة الاقتراح",
+      "viewContext": "عرض السياق",
+      "systemError": "خطأ في النظام: تعذر الاتصال بـ APEX Agent. تم تسجيل تدقيق Guardian.",
+      "responseStopped": "تم إيقاف الاستجابة من قبل المستخدم."
+    },
+    "ecosystem": {
+      "addApp": "إضافة تطبيق APEX"
+    },
+    "appGallery": {
+      "title": "معرض التطبيقات",
+      "awaiting": "بانتظار",
+      "awaitingSlot": "فتحة {{n}} — بانتظار الاتصال"
+    },
+    "trace": {
+      "live": "مباشر",
+      "connecting": "جارٍ الاتصال",
+      "demoSimulated": "تجريبي (محاكاة)",
+      "noEvents": "لا توجد أحداث بعد",
+      "replayWorkflows": "إعادة تشغيل العمليات",
+      "closeReplay": "إغلاق الإعادة",
+      "replayMode": "وضع الإعادة"
+    },
+    "sentry": {
+      "enable": "تفعيل لتنشيط مراقبة قاطع الدائرة.",
+      "initializing": "جارٍ التهيئة…",
+      "disableLabel": "تعطيل OmniSentry",
+      "enableLabel": "تفعيل OmniSentry",
+      "circuit": "الدائرة",
+      "errorsMin": "أخطاء/دقيقة",
+      "memory": "الذاكرة",
+      "uptime": "وقت التشغيل",
+      "probeCircuit": "اختبار الدائرة",
+      "probing": "جارٍ الاختبار…",
+      "circuitClosed": "✓ الدائرة مغلقة",
+      "circuitOpen": "⚡ الدائرة مفتوحة",
+      "probeFailed": "✗ فشل الاختبار",
+      "flushOffline": "تفريغ {{count}} خطأ غير متصل",
+      "flushOffline_plural": "تفريغ {{count}} أخطاء غير متصلة",
+      "flushing": "جارٍ التفريغ…",
+      "flushed": "✓ تم تفريغ {{count}}"
+    },
+    "ops": {
+      "title": "عناصر التحكم",
+      "demoMode": "الوضع التجريبي",
+      "demoModeSub": "تدفق بيانات محاكى",
+      "autoPilot": "القيادة التلقائية",
+      "autoPilotSub": "معالجة المهام الذاتية",
+      "guardianMode": "وضع Guardian",
+      "guardianModeSub": "تطبيق سياسات الذكاء الاصطناعي"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "الصحة",
+      "healthy": "سليم",
+      "degraded": "متدهور",
+      "incident": "حادثة",
+      "unknown": "غير معروف",
+      "sev1": "SEV-1",
+      "incidents": "الحوادث",
+      "sync": "المزامنة",
+      "syncLive": "مباشر",
+      "syncDemo": "تجريبي",
+      "syncSyncing": "جارٍ المزامنة",
+      "syncError": "خطأ مزامنة",
+      "guardianActive": "Guardian: نشط",
+      "simulated": "(محاكاة)"
+    },
+    "systemHealth": {
+      "title": "حالة النظام",
+      "eventsTracked": "الأحداث المتتبعة",
+      "systemHealth": "صحة النظام",
+      "guardianLoops": "دورات Guardian",
+      "staleChecks": "فحوصات منتهية",
+      "clean": "نظيف",
+      "loop": "{{count}} دورة"
+    },
+    "media": {
+      "open": "فتح"
+    },
+    "mobile": {
+      "home": "الرئيسية",
+      "slate": "Slate",
+      "apps": "التطبيقات",
+      "insights": "الرؤى",
+      "more": "المزيد",
+      "insightsControls": "الرؤى والتحكم",
+      "switchLight": "التبديل إلى المظهر الفاتح",
+      "switchDark": "التبديل إلى المظهر الداكن",
+      "signOut": "تسجيل الخروج",
+      "openInsights": "فتح لوحة الرؤى",
+      "dashboardNav": "تنقل لوحة المعلومات"
+    },
+    "sidebarWidgets": {
+      "audits": "عمليات التدقيق",
+      "links": "الروابط",
+      "automations": "الأتمتة",
+      "workflows": "مسارات العمل",
+      "files": "الملفات",
+      "billing": "الفواتير",
+      "settings": "الإعدادات"
+    }
   }
 }

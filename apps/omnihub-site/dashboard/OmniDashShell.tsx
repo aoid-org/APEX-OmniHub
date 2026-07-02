@@ -20,7 +20,7 @@ import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLau
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
-import { ConnectAiAuthModal } from '../src/components/byom/ConnectAiAuthModal';
+import { ConnectAiAuthModal } from '@/components/byom/ConnectAiAuthModal';
 import { useAuth } from '@/lib/useAuth';
 import { LayoutContext } from './contexts/LayoutContext';
 import {
@@ -30,6 +30,7 @@ import {
 import { toast } from 'sonner';
 import { LanguageSelector } from '../src/components/LanguageSelector';
 import { SidebarKpiBar } from './components/SidebarKpiBar';
+import { useAppTranslation } from '../src/i18n/useAppTranslation';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -216,7 +217,9 @@ const IconBadge = ({ idx, size = 19, style = {} }: IconBadgeProps) => (
 // ALL tiles use OmniBoard's exact look as the base.
 // isActive = brighter border + stronger glow only.
 const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
+  const { tx } = useAppTranslation();
   const [hov, setHov] = useState<boolean>(false);
+  const displayLabel = n.labelKey ? tx(n.labelKey, { defaultValue: n.label }) : n.label;
     // Apple-quality orange glassmorph tile. Explicit rgba() is used (not `${T.orange}xx`)
     // because appending hex alpha to a CSS variable — e.g. `var(--omni-orange)28` — is
     // invalid CSS and silently paints a transparent, borderless tile.
@@ -298,7 +301,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         }} />
       </div>
 
-      <span>{n.label}</span>
+      <span>{displayLabel}</span>
 
       {isActive && (
         <div style={{
@@ -314,6 +317,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode: sidebarDemoMode }: OmniDashSidebarProps) => {
+  const { tx } = useAppTranslation();
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -359,9 +363,9 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
         <SidebarKpiBar kpi={kpi} systemHealth={systemHealth} demoMode={sidebarDemoMode} />
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
-          <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>All Systems Operational</span>
+          <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>{tx('dashboard.sidebar.allSystemsOperational')}</span>
         </div>
-        <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd. · Edmonton, AB</div>
+        <div style={{ fontSize:10.8, color:T.t3 }}>{tx('dashboard.sidebar.companyName')}</div>
         <button
           onClick={handleSignOut}
           disabled={signingOut}
@@ -383,7 +387,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
               : <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>
             }
           </svg>
-          {signingOut ? "Signing out…" : "Sign Out"}
+          {signingOut ? tx('dashboard.sidebar.signingOut') : tx('dashboard.sidebar.signOut')}
         </button>
       </div>
     </div>
@@ -392,21 +396,16 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
 const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: OmniDashHeaderProps) => {
+  const { tx } = useAppTranslation();
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
+  // PRCC-001 WP-2b: Connect AI opens the real BYOM credential modal
+  // (ConnectAiAuthModal -> byom-login, AES-256-GCM vault) instead of the previous
+  // cosmetic label-swap. Cross-reload reflection from provider_connections is a
+  // tracked follow-up (needs a demoMode-guarded read; deferred to keep this diff
+  // surgical and avoid coupling the header to a backend read on every mount).
   const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const searchResults = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return [];
-    return OMNIDASH_SIDEBAR_WIDGETS.filter(widget => {
-      const moduleKey = widget.moduleKey ?? '';
-      return widget.label.toLowerCase().includes(query) || moduleKey.toLowerCase().includes(query);
-    }).slice(0, 6);
-  }, [searchQuery]);
 
   const handleOmniSkills = () => {
     invoke({
@@ -420,6 +419,9 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     });
   };
 
+  // PRCC-001 WP-2b: open the real BYOM credential capture (ConnectAiAuthModal ->
+  // byom-login). Replaces the registry-selection label-swap that set a display
+  // string in sessionStorage without ever capturing or encrypting a credential.
   const handleConnectAI = () => {
     setShowConnectAi(true);
   };
@@ -429,46 +431,6 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     const connected = sessionStorage.getItem('omni_ai_provider');
     if (connected) setAiProvider(connected);
   };
-
-  const openSearchResult = (widget: OmniDashSidebarWidget) => {
-    const moduleKey = widget.moduleKey ?? widget.id;
-    invoke({
-      id: `omnidash-search-${widget.id}`,
-      provider: 'omnidash',
-      type: 'module',
-      title: widget.label,
-      contextData: { moduleKey },
-      onComplete: async () => {},
-      onCancel: () => {},
-    });
-    setSearchOpen(false);
-    setSearchQuery('');
-  };
-
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setSearchOpen(false);
-      return;
-    }
-    if (event.key === 'Enter' && searchResults[0]) {
-      event.preventDefault();
-      openSearchResult(searchResults[0]);
-    }
-  };
-
-  useEffect(() => {
-    if (!isDesktop) return;
-    const handleShortcut = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setSearchOpen(true);
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
-  }, [isDesktop]);
 
   const { demoMode } = useDemoMode();
   const notifications = useNotificationStore(state => state.notifications);
@@ -481,8 +443,8 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         id: 'header-notifications',
         provider: 'omnidash',
         type: 'selection',
-        title: 'Notifications',
-        description: 'You have no pending notifications or approvals.',
+        title: tx('dashboard.header.notifications'),
+        description: tx('dashboard.header.noNotifications'),
         schema: {
           items: [],
         },
@@ -496,8 +458,8 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
       id: 'header-notifications',
       provider: 'omnidash',
       type: 'selection',
-      title: 'Notifications',
-      description: 'Recent activity across your APEX workspace.',
+      title: tx('dashboard.header.notifications'),
+      description: tx('dashboard.header.recentActivity'),
       schema: {
         items: notifications.map(n => ({
           id: n.id,
@@ -544,76 +506,25 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         transition:"border-color .15s, background .15s",
       }}>
         <IconBadge idx={0} size={17} />
-        OmniSkills
+        {tx('dashboard.header.omniSkills')}
       </button>
 
       {/* Search — desktop only; on mobile/tablet it is dropped so the action
           controls are never clipped. A flex spacer keeps actions right-aligned. */}
       {isDesktop ? (
         <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-          <div role="search" style={{ position:"relative", width:"100%", maxWidth:360 }}>
-            <div style={{
-              display:"flex", alignItems:"center", gap:9,
-              background:T.card, border:`1px solid ${searchOpen ? 'rgba(249,115,22,0.42)' : T.border}`,
-              borderRadius:10, padding:"0 12px",
-              width:"100%", height:44,
-              color:T.t2, fontSize:13,
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-              <input
-                ref={searchInputRef}
-                aria-label="Search OmniHub"
-                role="searchbox"
-                aria-expanded={searchOpen}
-                aria-controls="omnidash-search-results"
-                value={searchQuery}
-                onFocus={() => setSearchOpen(true)}
-                onChange={event => { setSearchQuery(event.target.value); setSearchOpen(true); }}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search OmniHub…"
-                style={{
-                  flex:1, minWidth:0, background:'transparent', border:'none', outline:'none',
-                  color:T.t1, fontSize:13, fontWeight:500,
-                }}
-              />
-              <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K / Ctrl+K</span>
-            </div>
-            {searchOpen && searchQuery.trim() && (
-              <div
-                id="omnidash-search-results"
-                role="listbox"
-                aria-label="OmniDash search results"
-                style={{
-                  position:'absolute', top:'calc(100% + 6px)', left:0, right:0, zIndex:220,
-                  background:T.card, border:`1px solid ${T.border}`, borderRadius:12,
-                  boxShadow:'0 12px 36px rgba(0,0,0,.45)', padding:6,
-                }}
-              >
-                {searchResults.length > 0 ? searchResults.map(widget => (
-                  <button
-                    key={widget.id}
-                    role="option"
-                    aria-selected="false"
-                    onMouseDown={event => event.preventDefault()}
-                    onClick={() => openSearchResult(widget)}
-                    style={{
-                      display:'flex', alignItems:'center', gap:8, width:'100%',
-                      background:'transparent', border:'none', borderRadius:8, padding:'9px 10px',
-                      color:T.t1, cursor:'pointer', textAlign:'left', fontSize:13, fontWeight:600,
-                    }}
-                  >
-                    <IconBadge idx={widget.iconIdx} size={16} />
-                    <span>{widget.label}</span>
-                  </button>
-                )) : (
-                  <div role="status" style={{ padding:'10px 12px', color:T.t3, fontSize:12.5 }}>
-                    No OmniDash surfaces match “{searchQuery.trim()}”.
-                  </div>
-                )}
-              </div>
-            )}
+          <div style={{
+            display:"flex", alignItems:"center", gap:9,
+            background:T.card, border:`1px solid ${T.border}`,
+            borderRadius:10, padding:"0 12px",
+            width:"100%", maxWidth:360, height:44,
+            color:T.t2, fontSize:13,
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span style={{color:T.t3, flex:1}}>{tx('dashboard.header.searchPlaceholder')}</span>
+            <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
           </div>
         </div>
       ) : (
@@ -639,7 +550,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
             transition:"border-color .15s",
           }}>
             <img src={IMG_BADGE} alt="Org Badge" style={{width:16,height:16,objectFit:"contain",flexShrink:0}} />
-            <span style={{ maxWidth:105, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>APEX Business Systems</span>
+            <span style={{ maxWidth:105, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>APEX Business Systems{/* brand — not translated */}</span>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               style={{ transition:"transform .2s", transform: orgOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
               <path d="m6 9 6 6 6-6"/>
@@ -655,12 +566,12 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
             }}>
               <div style={{ padding:"10px 14px 8px", borderBottom:`1px solid ${T.border}` }}>
                 <div style={{ fontSize:11.9, fontWeight:700, color:T.t1 }}>APEX Business Systems</div>
-                <div style={{ fontSize:10.3, color:T.t3, marginTop:2 }}>Edmonton, AB · Enterprise</div>
+                <div style={{ fontSize:10.3, color:T.t3, marginTop:2 }}>Edmonton, AB · {tx('dashboard.header.orgEnterprise')}</div>
               </div>
               {[
-                { label:"Workspace Settings", icon:"⚙️", action: () => { setOrgOpen(false); invoke({ id:'org-settings', provider:'omnidash', type:'module', title:'Settings', contextData:{ moduleKey:'settings' }, onComplete: async () => { toast.success('Settings updated'); }, onCancel: () => {} }); } },
-                { label:"Billing & Plans", icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => { toast.success('Billing changes applied'); }, onCancel: () => {} }); } },
-                { label:"Invite Members", icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async (result) => { toast.success(`Invitation sent successfully to ${(result.data as Record<string, string>)?.email || 'team member'}.`); }, onCancel: () => {} }); } },
+                { label: tx('dashboard.header.workspaceSettings'), icon:"⚙️", action: () => { setOrgOpen(false); invoke({ id:'org-settings', provider:'omnidash', type:'module', title:'Settings', contextData:{ moduleKey:'settings' }, onComplete: async () => { toast.success('Settings updated'); }, onCancel: () => {} }); } },
+                { label: tx('dashboard.header.billingPlans'), icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => { toast.success('Billing changes applied'); }, onCancel: () => {} }); } },
+                { label: tx('dashboard.header.inviteMembers'), icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async (result) => { toast.success(tx('dashboard.header.inviteSent', { email: (result.data as Record<string, string>)?.email || 'team member' })); }, onCancel: () => {} }); } },
               ].map(item => (
                 <button key={item.label} onClick={item.action} style={{
                   display:"flex", alignItems:"center", gap:10,
@@ -689,7 +600,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
             width:6, height:6, borderRadius:"50%", background:T.green, flexShrink:0,
             animation:"apexPulse 2s ease-in-out infinite",
           }} />
-          Zero Trust Active{demoMode ? ' (Simulated)' : ''}
+          {tx('dashboard.header.zeroTrustActive')}{demoMode ? ` ${tx('dashboard.footer.simulated')}` : ''}
         </div>
 
         {/* Connect AI */}
@@ -701,7 +612,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
           whiteSpace:"nowrap",
           transition:"opacity .15s",
         }}>
-          {aiProvider || 'Connect AI'}
+          {aiProvider || tx('dashboard.header.connectAi')}
         </button>
         <ConnectAiAuthModal
           isOpen={showConnectAi}
@@ -716,7 +627,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         <LanguageSelector className="omni-header-lang" />
 
         {/* Theme Toggle — Sun/Moon */}
-        <button className="ose-icon-button" aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
+        <button className="ose-icon-button" aria-label={isDark ? tx('dashboard.mobile.switchLight') : tx('dashboard.mobile.switchDark')} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
           {isDark
             ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5"/>
@@ -732,7 +643,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         </button>
 
         {/* Bell */}
-        <button className="ose-icon-button" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`} onClick={handleBell}>
+        <button className="ose-icon-button" aria-label={`${tx('dashboard.header.notifications')}${unreadCount > 0 ? ` (${unreadCount})` : ''}`} onClick={handleBell}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
@@ -752,6 +663,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = (_props: AgentWidgetProps) => {
+  const { tx } = useAppTranslation();
   const { autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -787,13 +699,13 @@ const AgentWidget = (_props: AgentWidgetProps) => {
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden", position:"relative" }}>
       {/* Header — unified 44px */}
       <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-        <SectionLabel>APEX Agent</SectionLabel>
+        <SectionLabel>{tx('dashboard.agent.title')}</SectionLabel>
         <StatusDot color={isRunning ? T.green : T.warn} />
       </div>
 
       {/* Session Timer — compact */}
       <div style={{ textAlign:"center", padding:"8px 16px 4px" }}>
-        <div style={{ fontSize:8.7, color:T.t3, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:2 }}>SESSION</div>
+        <div style={{ fontSize:8.7, color:T.t3, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:2 }}>{tx('dashboard.agent.session')}</div>
         <div style={{
           fontSize:19.5, fontWeight:700, letterSpacing:"0.06em",
           fontVariantNumeric:"tabular-nums",
@@ -811,7 +723,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
           gap:16, padding:20,
         }}>
           <div style={{ fontSize:9.5, color:"rgba(224,231,255,0.45)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
-            Choose Agent Avatar
+            {tx('dashboard.agent.chooseAvatar')}
           </div>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
             {AGENT_AVATARS.map((filename) => {
@@ -848,7 +760,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
               fontFamily:"'Space Grotesk',sans-serif",
             }}
           >
-            Cancel
+            {tx('dashboard.agent.cancel')}
           </button>
         </div>
       )}
@@ -937,7 +849,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
             onPointerDown={handleAvatarPointerDown}
             onPointerUp={handleAvatarPointerUp}
             onPointerLeave={handleAvatarPointerUp}
-            title="Long-press to change avatar"
+            title={tx('dashboard.agent.longPressHint')}
             style={{
               width:80, height:80, borderRadius:"50%",
               overflow:"hidden", position:"relative", zIndex:1,
@@ -957,7 +869,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
         {/* Play / Pause */}
         <button
           onClick={handlePlayPause}
-          title={isRunning ? "Pause" : "Start"}
+          title={isRunning ? tx('dashboard.agent.pause') : tx('dashboard.agent.start')}
           style={{
             width:44, height:44, borderRadius:12,
             border:"1px solid rgba(249,115,22,0.53)",
@@ -976,7 +888,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
         {/* Reset */}
         <button
           onClick={handleReset}
-          title="Reset"
+          title={tx('dashboard.agent.reset')}
           style={{
             height:44, borderRadius:12, padding:"0 14px",
             border:`1px solid ${T.border}`,
@@ -990,7 +902,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/>
           </svg>
-          RES.
+          {tx('dashboard.agent.reset')}
         </button>
       </div>
     </GlassCard>
@@ -1039,6 +951,7 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
 };
 
 const OmniSlateWidget = () => {
+  const { tx } = useAppTranslation();
   const { demoMode } = useDemoMode();
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
@@ -1046,25 +959,6 @@ const OmniSlateWidget = () => {
   const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
-
-  // PRCC-001 WP-2a: hydrate chat history from omnislate_messages on mount so the
-  // conversation survives reloads. Previously messages lived only in useState, so
-  // every reload wiped the thread (audit 2026-07-01 defect #2). RLS scopes reads
-  // to auth.uid(); demo mode stays ephemeral (no hydrate/persist).
-  useEffect(() => {
-    if (demoMode) return;
-    let cancelled = false;
-    void (async () => {
-      const { data, error } = await supabase
-        .from('omnislate_messages')
-        .select('role, content, created_at')
-        .order('created_at', { ascending: true })
-        .limit(100);
-      if (cancelled || error || !data || data.length === 0) return;
-      setMessages(data.map((m: Record<string, unknown>) => ({ role: String(m.role), text: String(m.content) })));
-    })();
-    return () => { cancelled = true; };
-  }, [demoMode]);
 
   const send = useCallback(async () => {
     if (!input.trim()) return;
@@ -1076,28 +970,14 @@ const OmniSlateWidget = () => {
         prompt: q, 
         context: { apps: contextApps.map(a => a.id) } 
       });
-      const reply = res.reply;
-      setMessages(m => [...m, {role:"assistant", text: reply }]);
-      // WP-2a: persist both turns (best-effort, non-blocking; RLS WITH CHECK ties
-      // rows to auth.uid()). Never awaited into the UI path — a persist failure
-      // must not affect the live conversation.
-      if (!demoMode) {
-        void supabase.auth.getUser().then(({ data: u }) => {
-          const uid = u?.user?.id;
-          if (!uid) return;
-          void supabase.from('omnislate_messages').insert([
-            { user_id: uid, role: 'user', content: q },
-            { user_id: uid, role: 'assistant', content: reply },
-          ]);
-        });
-      }
+      setMessages(m => [...m, {role:"assistant", text: res.reply }]);
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
       setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
     } finally {
       setLoading(false);
     }
-  }, [input, contextApps, demoMode]);
+  }, [input, contextApps]);
 
   const stop = useCallback(() => {
     setLoading(false);
@@ -1177,21 +1057,13 @@ const OmniSlateWidget = () => {
         display:"flex", alignItems:"center", justifyContent:"space-between",
         background:"linear-gradient(90deg,rgba(249,115,22,0.03),transparent)",
       }}>
-        <SectionLabel>OmniSlate</SectionLabel>
+        <SectionLabel>{tx('dashboard.slate.title')}</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
-          <button onClick={() => {
-            setMessages([]);
-            if (!demoMode) {
-              void supabase.auth.getUser().then(({ data: u }) => {
-                const uid = u?.user?.id;
-                if (uid) void supabase.from('omnislate_messages').delete().eq('user_id', uid);
-              });
-            }
-          }} style={{
+          <button onClick={() => setMessages([])} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
             background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
-          }}>CleanSlate</button>
+          }}>{tx('dashboard.slate.cleanSlate')}</button>
 
           <button
             type="button"
@@ -1206,7 +1078,7 @@ const OmniSlateWidget = () => {
               }
             }}
             onClick={fillSuggestion}
-            title={aggregateHealth ? "View Context" : "Fill suggestion"}
+            title={aggregateHealth ? tx('dashboard.slate.viewContext') : tx('dashboard.slate.fillSuggestion')}
             style={{ position: "relative", background: "none", border: "none", padding: 0 }}
           >
             <div
@@ -1233,7 +1105,7 @@ const OmniSlateWidget = () => {
                  display: "flex", flexDirection: "column", gap: 6,
                }}>
                  <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                   Context Sources
+                   {tx('dashboard.slate.contextSources')}
                  </div>
                  {contextApps.map(app => {
                    const palette = getHealthPalette(app.health);
@@ -1249,7 +1121,7 @@ const OmniSlateWidget = () => {
                       <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
-                       title="Remove context"
+                       title={tx('dashboard.slate.removeContext')}
                        style={{
                          background: "none", border: "none", color: "currentColor", cursor: "pointer", 
                          opacity: 0.6, padding: 0, display: "flex", alignItems: "center"
@@ -1270,7 +1142,7 @@ const OmniSlateWidget = () => {
         {messages.length === 0 && (
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <span style={{ fontSize:12, color:T.t4, fontStyle:"italic" }}>
-              {demoMode ? "Starting demo session…" : "Start a session to begin"}
+              {demoMode ? tx('dashboard.slate.demoSession') : tx('dashboard.slate.startSession')}
             </span>
           </div>
         )}
@@ -1332,7 +1204,7 @@ const OmniSlateWidget = () => {
           data-testid="omnislate-prompt-input"
           value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key==="Enter" && send()}
-          placeholder="Ask APEX Agent anything…"
+          placeholder={tx('dashboard.slate.placeholder')}
           style={{
             flex:1, minWidth:0, background:T.surface,
             border:`1px solid ${T.border}`,
@@ -1342,7 +1214,7 @@ const OmniSlateWidget = () => {
           }}
         />
         {/* Play / Stop icon buttons only — no text labels */}
-        <button data-testid="submit-prompt" onClick={send} title="Execute" style={{
+        <button data-testid="submit-prompt" onClick={send} title={tx('dashboard.slate.execute')} style={{
           width:44, height:44, borderRadius:12, flexShrink:0,
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
           border:"none", cursor:"pointer",
@@ -1353,7 +1225,7 @@ const OmniSlateWidget = () => {
         </button>
         <button
           onClick={stop}
-          title="Stop"
+          title={tx('dashboard.slate.stop')}
           disabled={!loading}
           style={{
             width:44, height:44, borderRadius:12, flexShrink:0,
@@ -1382,6 +1254,7 @@ const APP_TILE_STYLE: React.CSSProperties = {
 
 // ─── Widget: APEX Ecosystem ───────────────────────────────────────────────────
 const EcosystemWidget = () => {
+  const { tx } = useAppTranslation();
   const { invoke } = useOmniModal();
 
   const handleAddApp = () => {
@@ -1429,7 +1302,7 @@ const EcosystemWidget = () => {
           fontSize:22, color:T.orange, flexShrink:0,
           boxShadow:`0 0 14px rgba(${ORANGE},0.35)`,
         }}>+</span>
-        {' '}Add APEX App
+        {' '}{tx('dashboard.ecosystem.addApp')}
       </button>
     </div>
   </GlassCard>
@@ -1446,10 +1319,12 @@ const EcosystemWidget = () => {
 // not return (no split sub-panels, no connect CTA in this gallery).
 // "Awaiting" tiles are an honest, non-interactive empty state — no fabricated
 // connected state, no click-through. (User directive 2026-06-28.)
-const IntegratedAppsGalleryWidget = () => (
+const IntegratedAppsGalleryWidget = () => {
+  const { tx } = useAppTranslation();
+  return (
   <GlassCard style={{ padding: '16px' }}>
     <div style={{ marginBottom: 12 }}>
-      <SectionLabel>App Gallery</SectionLabel>
+      <SectionLabel>{tx('dashboard.appGallery.title')}</SectionLabel>
     </div>
     {/* Four horizontal slots per canonical layout — same card shell as the
         former metrics band. Honest, non-interactive "Awaiting" empty state. */}
@@ -1462,7 +1337,7 @@ const IntegratedAppsGalleryWidget = () => (
         <div
           key={`integrated-app-ph-${i}`}
           className="ose-integrated-apps-slot"
-          aria-label={`App slot ${i} — awaiting connection`}
+          aria-label={tx('dashboard.appGallery.awaitingSlot', { n: i })}
           style={{
             background: T.card,
             border: `1px solid ${T.border}`,
@@ -1481,12 +1356,13 @@ const IntegratedAppsGalleryWidget = () => (
           }}>
             <span style={{ width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.20)' }} />
           </span>
-          <span style={{ fontSize: 12, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700 }}>Awaiting</span>
+          <span style={{ fontSize: 12, color: T.t3, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700 }}>{tx('dashboard.appGallery.awaiting')}</span>
         </div>
       ))}
     </div>
   </GlassCard>
-);
+  );
+};
 
 function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: readonly string[], isDesktop: boolean }>) {
   // Side columns use minmax(0, …) so they shrink before the center widget on
@@ -1720,7 +1596,7 @@ export default function OmniDashShell() {
             type="button"
             className="omni-mobile-drawer-btn"
             onClick={() => setDrawerView('insights')}
-            aria-label="Open insights panel"
+            aria-label={tx('dashboard.mobile.openInsights')}
             style={{
               position: "fixed",
               top: 10,
@@ -1751,7 +1627,7 @@ export default function OmniDashShell() {
       }}>
         <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
           <StatusDot color={T.green} pulse={false} />
-          © 2026 APEX Business Systems Ltd.
+          {tx('dashboard.footer.copyright')}
         </div>
         {/* Footer-only observability/status — fed by real shell state. */}
         <FooterObservabilityRow
@@ -1763,7 +1639,7 @@ export default function OmniDashShell() {
           error={dashData.error}
         />
         <div className="footer-right" style={{display:"flex", gap:14, alignItems:"center", flexShrink:0}}>
-          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE{demoMode ? ' (Simulated)' : ''}</span>
+          <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />{tx('dashboard.footer.guardianActive')}{demoMode ? ` ${tx('dashboard.footer.simulated')}` : ''}</span>
         </div>
       </div>
 
@@ -1773,9 +1649,9 @@ export default function OmniDashShell() {
           isOpen={drawerView !== null}
           onClose={() => setDrawerView(null)}
           title={
-            drawerView === 'apps' ? 'Apps'
-              : drawerView === 'more' ? 'More'
-              : 'Insights & Controls'
+            drawerView === 'apps' ? tx('dashboard.mobile.apps')
+              : drawerView === 'more' ? tx('dashboard.mobile.more')
+              : tx('dashboard.mobile.insightsControls')
           }
         >
           {drawerView === 'apps' && (
@@ -1808,14 +1684,14 @@ export default function OmniDashShell() {
                 onClick={() => setIsDark((d) => !d)}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: 'transparent', color: T.t1, fontSize: 13, cursor: 'pointer' }}
               >
-                {isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+                {isDark ? tx('dashboard.mobile.switchLight') : tx('dashboard.mobile.switchDark')}
               </button>
               <button
                 type="button"
                 onClick={() => { void supabase.auth.signOut().then(() => { globalThis.location.href = '/login'; }); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: 'transparent', color: T.t1, fontSize: 13, cursor: 'pointer' }}
               >
-                Sign out
+                {tx('dashboard.mobile.signOut')}
               </button>
             </div>
           )}

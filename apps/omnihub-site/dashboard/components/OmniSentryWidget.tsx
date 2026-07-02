@@ -22,6 +22,7 @@ import {
   withResilience,
   type HealthStatus,
 } from '@/lib/omni-sentry';
+import { useAppTranslation } from '@/i18n/useAppTranslation';
 
 const STORAGE_KEY = 'omni_sentry_enabled';
 const OFFLINE_KEY = 'omni_sentry_offline';
@@ -57,13 +58,15 @@ const CIRCUIT_COLOR: Record<string, string> = {
 
 type ProbeResult = 'idle' | 'running' | 'passed' | 'skipped' | 'failed';
 
-const PROBE_LABEL: Record<ProbeResult, string> = {
-  idle:    'Probe Circuit',
-  running: 'Probing…',
-  passed:  '✓ Circuit Closed',
-  skipped: '⚡ Circuit Open',
-  failed:  '✗ Probe Failed',
-};
+function getProbeLabel(res: ProbeResult, tx: (key: string, options?: Record<string, unknown>) => string): string {
+  switch (res) {
+    case 'idle':    return tx('dashboard.sentry.probeCircuit');
+    case 'running': return tx('dashboard.sentry.probing');
+    case 'passed':  return tx('dashboard.sentry.circuitClosed');
+    case 'skipped': return tx('dashboard.sentry.circuitOpen');
+    case 'failed':  return tx('dashboard.sentry.probeFailed');
+  }
+}
 
 const PROBE_COLOR: Record<ProbeResult, string> = {
   idle:    'var(--od-text-secondary)',
@@ -74,6 +77,7 @@ const PROBE_COLOR: Record<ProbeResult, string> = {
 };
 
 export function OmniSentryWidget() {
+  const { tx } = useAppTranslation();
   const [enabled, setEnabled]           = useState(false);
   const [health, setHealth]             = useState<HealthStatus | null>(null);
   const [offlineCount, setOfflineCount] = useState(0);
@@ -175,7 +179,7 @@ export function OmniSentryWidget() {
         </span>
         <button
           type="button"
-          aria-label={enabled ? 'Disable OmniSentry' : 'Enable OmniSentry'}
+          aria-label={enabled ? tx('dashboard.sentry.disableLabel') : tx('dashboard.sentry.enableLabel')}
           aria-pressed={enabled}
           onClick={toggle}
           style={{
@@ -215,10 +219,10 @@ export function OmniSentryWidget() {
           {/* ── Metrics grid ──────────────────────────────────── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
             {([
-              { label: 'Circuit',    value: health.metrics.circuitState, color: CIRCUIT_COLOR[health.metrics.circuitState] ?? 'var(--od-text-primary)' },
-              { label: 'Errors/min', value: String(health.metrics.errorRate),              color: 'var(--od-text-primary)' },
-              { label: 'Memory',     value: `${Math.round(health.metrics.memoryUsage)}%`,  color: 'var(--od-text-primary)' },
-              { label: 'Uptime',     value: `${Math.round(health.metrics.uptime / 1000)}s`,color: 'var(--od-text-primary)' },
+              { label: tx('dashboard.sentry.circuit'),    value: health.metrics.circuitState, color: CIRCUIT_COLOR[health.metrics.circuitState] ?? 'var(--od-text-primary)' },
+              { label: tx('dashboard.sentry.errorsMin'), value: String(health.metrics.errorRate),              color: 'var(--od-text-primary)' },
+              { label: tx('dashboard.sentry.memory'),     value: `${Math.round(health.metrics.memoryUsage)}%`,  color: 'var(--od-text-primary)' },
+              { label: tx('dashboard.sentry.uptime'),     value: `${Math.round(health.metrics.uptime / 1000)}s`,color: 'var(--od-text-primary)' },
             ] as const).map(({ label, value, color }) => (
               <div key={label} style={{
                 background: 'rgba(255,255,255,0.03)', borderRadius: 6,
@@ -266,9 +270,9 @@ export function OmniSentryWidget() {
                 transition: 'background .15s, color .15s',
               }}
             >
-              {flushState === 'idle'    && `Flush ${offlineCount} Offline Error${offlineCount !== 1 ? 's' : ''}`}
-              {flushState === 'flushing' && 'Flushing…'}
-              {flushState === 'done'    && `✓ Flushed ${flushedCount}`}
+              {flushState === 'idle'    && (offlineCount === 1 ? tx('dashboard.sentry.flushOffline', { count: offlineCount }) : tx('dashboard.sentry.flushOffline_plural', { count: offlineCount }))}
+              {flushState === 'flushing' && tx('dashboard.sentry.flushing')}
+              {flushState === 'done'    && tx('dashboard.sentry.flushed', { count: flushedCount })}
             </button>
           )}
 
@@ -291,12 +295,12 @@ export function OmniSentryWidget() {
               transition: 'border-color .15s, background .15s, color .15s',
             }}
           >
-            {PROBE_LABEL[probeResult]}
+            {getProbeLabel(probeResult, tx)}
           </button>
         </>
       ) : (
         <p style={{ fontSize: 10, color: 'var(--od-text-tertiary)', margin: 0, lineHeight: 1.5 }}>
-          {enabled ? 'Initializing…' : 'Enable to activate circuit-breaker monitoring.'}
+          {enabled ? tx('dashboard.sentry.initializing') : tx('dashboard.sentry.enable')}
         </p>
       )}
     </div>
