@@ -34,7 +34,7 @@ UTC_OFFSET_SUFFIX = "+00:00"
 
 
 class AppName(str, Enum):  # noqa: UP042
-    """12 APEX Apps - matches sim/contracts.ts AppName exactly."""
+    """APEX app registry (14 members) - matches sim/contracts.ts AppName exactly."""
 
     OMNI_DASH = "omni-dash"
     OMNI_LINK = "omni-link"
