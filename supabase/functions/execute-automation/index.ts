@@ -26,6 +26,7 @@ import {
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
 import { executeAction, type ActionConfig, type ActionType } from "../_shared/action-executor.ts";
+import { emitTraceEvent } from "../_shared/omnitrace.ts";
 
 /** Automation record from database */
 interface Automation {
@@ -44,9 +45,16 @@ serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
 
+  // PRCC-001 WP-3a fix: thread the request origin into every JSON response.
+  // corsJsonResponse defaults origin=null -> buildCorsHeaders emits ACAO 'null',
+  // which the browser blocks on the real POST (preflight was fine). Every handler
+  // response must echo the validated origin.
+  const origin = req.headers.get("origin");
+  const json = (data: unknown, status = 200) => corsJsonResponse(data, status, origin);
+
   // Only accept POST
   if (req.method !== "POST") {
-    return corsJsonResponse(
+    return json(
       { error: "method_not_allowed", message: "Only POST is allowed" },
       405
     );
@@ -64,7 +72,7 @@ serve(async (req: Request) => {
     } = await authenticateUser(authHeader, supabase);
 
     if (!success || !user) {
-      return corsJsonResponse(
+      return json(
         {
           error: "unauthorized",
           message: authError || "Authentication failed",
@@ -87,7 +95,7 @@ serve(async (req: Request) => {
       typeof automationId !== "string" ||
       automationId.trim().length === 0
     ) {
-      return corsJsonResponse(
+      return json(
         { error: "validation_error", message: "Invalid automationId" },
         400
       );
@@ -97,7 +105,7 @@ serve(async (req: Request) => {
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(automationId)) {
-      return corsJsonResponse(
+      return json(
         {
           error: "validation_error",
           message: "Invalid automationId format (must be UUID)",
@@ -116,7 +124,7 @@ serve(async (req: Request) => {
 
     if (fetchError) {
       if (fetchError.code === "PGRST116") {
-        return corsJsonResponse(
+        return json(
           { error: "not_found", message: "Automation not found" },
           404
         );
@@ -127,7 +135,7 @@ serve(async (req: Request) => {
     const typedAutomation = automation as Automation;
 
     if (!typedAutomation.is_active) {
-      return corsJsonResponse(
+      return json(
         { error: "inactive", message: "Automation is not active" },
         400
       );
@@ -147,7 +155,18 @@ serve(async (req: Request) => {
       .eq("id", automationId)
       .eq("user_id", user.id);
 
-    return corsJsonResponse({
+    // PRCC-001 WP-3a: close the flagship loop — record the executed action in the
+    // OmniTrace feed. Best-effort/non-blocking (helper never throws); server-authored
+    // via the service-role client (omnitrace_events has no INSERT RLS policy).
+    await emitTraceEvent(supabase, {
+      userId: user.id,
+      eventType: "automation.execute",
+      eventText: `Automation executed: ${typedAutomation.action_type}`,
+      severity: "success",
+      colorToken: "green",
+    });
+
+    return json({
       success: true,
       action_type: typedAutomation.action_type,
       result,
@@ -158,6 +177,6 @@ serve(async (req: Request) => {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
 
-    return corsJsonResponse({ error: "execution_error", message }, 500);
+    return json({ error: "execution_error", message }, 500);
   }
 });
