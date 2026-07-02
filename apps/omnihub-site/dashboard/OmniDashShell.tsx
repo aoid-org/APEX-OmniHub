@@ -395,6 +395,11 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
+  // PRCC-001 WP-2b: Connect AI opens the real BYOM credential modal
+  // (ConnectAiAuthModal -> byom-login, AES-256-GCM vault) instead of the previous
+  // cosmetic label-swap. Cross-reload reflection from provider_connections is a
+  // tracked follow-up (needs a demoMode-guarded read; deferred to keep this diff
+  // surgical and avoid coupling the header to a backend read on every mount).
   const [showConnectAi, setShowConnectAi] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -420,6 +425,9 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
     });
   };
 
+  // PRCC-001 WP-2b: open the real BYOM credential capture (ConnectAiAuthModal ->
+  // byom-login). Replaces the registry-selection label-swap that set a display
+  // string in sessionStorage without ever capturing or encrypting a credential.
   const handleConnectAI = () => {
     setShowConnectAi(true);
   };
