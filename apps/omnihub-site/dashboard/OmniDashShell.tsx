@@ -10,6 +10,7 @@ import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useViewport } from "./hooks/useViewport";
 import { SystemHealthRow } from './components/SystemHealthRow';
+import { OmniSearchPalette } from './components/OmniSearchPalette';
 import { FooterObservabilityRow } from './components/FooterObservabilityRow';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { useNotificationStore } from '../src/stores/notificationStore';
@@ -392,8 +393,22 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
 // ─── Shell: Header ────────────────────────────────────────────────────────────
 const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
   // NS-H-001: Read from sessionStorage (provider config should not persist across browser sessions)
   const [aiProvider, setAiProvider] = useState<string | null>(() => sessionStorage.getItem('omni_ai_provider'));
+
+  // ⌘K / Ctrl+K opens search from anywhere on the dashboard (all viewports,
+  // even where the header trigger is hidden).
+  useEffect(() => {
+    const onShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onShortcut);
+    return () => window.removeEventListener('keydown', onShortcut);
+  }, []);
 
   const handleOmniSkills = () => {
     invoke({
@@ -512,23 +527,30 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
           controls are never clipped. A flex spacer keeps actions right-aligned. */}
       {isDesktop ? (
         <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
-          <div style={{
-            display:"flex", alignItems:"center", gap:9,
-            background:T.card, border:`1px solid ${T.border}`,
-            borderRadius:10, padding:"0 12px",
-            width:"100%", maxWidth:360, height:44,
-            color:T.t2, fontSize:13,
-          }}>
+          <button
+            type="button"
+            data-testid="omnidash-search-trigger"
+            aria-haspopup="dialog"
+            onClick={() => setSearchOpen(true)}
+            style={{
+              display:"flex", alignItems:"center", gap:9,
+              background:T.card, border:`1px solid ${T.border}`,
+              borderRadius:10, padding:"0 12px",
+              width:"100%", maxWidth:360, height:44,
+              color:T.t2, fontSize:13, cursor:"pointer",
+              textAlign:"left", fontFamily:"inherit",
+            }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <span style={{color:T.t3, flex:1}}>Search OmniHub…</span>
             <span style={{fontSize:10.3,color:T.t4,background:T.surface,padding:"2px 5px",borderRadius:5,fontWeight:600}}>⌘K</span>
-          </div>
+          </button>
         </div>
       ) : (
         <div style={{ flex:1, minWidth:8 }} aria-hidden="true" />
       )}
+      <OmniSearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Right actions — functional buttons */}
       <div className="omni-header-actions" style={{
