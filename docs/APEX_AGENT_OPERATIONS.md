@@ -1438,3 +1438,22 @@ owner-authorized task.
   silently returning numpy. All in-tree callers pass `True`; no live path changes.
 - Also in this PR: real CI/Sonar run links attached to `orchestrator/ORCHESTRATOR_CERTIFICATION.md`;
   §4 S5 escalation closed (C9). **No service, env var, DB, or start-command change.**
+
+## 9.30 Orchestrator — S6 structural split to the 600-line law (2026-07-02)
+
+**Changed critical runtime paths:** `orchestrator/workflows/agent_saga.py`,
+`orchestrator/activities/tools.py` (split, zero behavior change) + five new sibling
+modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
+`workflows/agent_saga_execution.py`, `activities/plan_generation.py`,
+`activities/tool_executors.py`).
+
+- Owner-authorized S6 exception: pure structural split of the two files exceeding the
+  600-line law (1487/1176 ln → max 598 ln per file). **No service, env var, DB object,
+  start command, or activity-name change** — every Temporal activity keeps its
+  registered name and every import path (`main.py`, `server.py`, tests) is preserved
+  via facade re-exports from the original modules.
+- Moved code resolves the original module namespaces late (via `sys.modules`), so
+  operational monkey-patching/hotfix conventions targeting `activities.tools.*` or
+  `workflows.agent_saga.*` continue to govern the moved implementations.
+- Proof: `pytest -q` 981 passed / 20 skipped with **zero test-file edits**; ruff +
+  format clean; CI gating mypy pass green (33 files).
