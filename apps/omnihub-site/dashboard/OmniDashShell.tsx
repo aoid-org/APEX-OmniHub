@@ -20,7 +20,7 @@ import { OmniMediaLaunchWidget } from '@/dashboard/components/media/OmniMediaLau
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
-import { ConnectAiAuthModal } from '@/components/byom/ConnectAiAuthModal';
+import { ConnectAiAuthModal } from '../src/components/byom/ConnectAiAuthModal';
 import { useAuth } from '@/lib/useAuth';
 import { LayoutContext } from './contexts/LayoutContext';
 import {
