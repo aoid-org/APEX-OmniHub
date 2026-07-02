@@ -952,6 +952,25 @@ const OmniSlateWidget = () => {
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // PRCC-001 WP-2a: hydrate chat history from omnislate_messages on mount so the
+  // conversation survives reloads. Previously messages lived only in useState, so
+  // every reload wiped the thread (audit 2026-07-01 defect #2). RLS scopes reads
+  // to auth.uid(); demo mode stays ephemeral (no hydrate/persist).
+  useEffect(() => {
+    if (demoMode) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('omnislate_messages')
+        .select('role, content, created_at')
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (cancelled || error || !data || data.length === 0) return;
+      setMessages(data.map((m: Record<string, unknown>) => ({ role: String(m.role), text: String(m.content) })));
+    })();
+    return () => { cancelled = true; };
+  }, [demoMode]);
+
   const send = useCallback(async () => {
     if (!input.trim()) return;
     const q = input.trim(); setInput(""); setLoading(true);
@@ -962,14 +981,28 @@ const OmniSlateWidget = () => {
         prompt: q, 
         context: { apps: contextApps.map(a => a.id) } 
       });
-      setMessages(m => [...m, {role:"assistant", text: res.reply }]);
+      const reply = res.reply;
+      setMessages(m => [...m, {role:"assistant", text: reply }]);
+      // WP-2a: persist both turns (best-effort, non-blocking; RLS WITH CHECK ties
+      // rows to auth.uid()). Never awaited into the UI path — a persist failure
+      // must not affect the live conversation.
+      if (!demoMode) {
+        void supabase.auth.getUser().then(({ data: u }) => {
+          const uid = u?.user?.id;
+          if (!uid) return;
+          void supabase.from('omnislate_messages').insert([
+            { user_id: uid, role: 'user', content: q },
+            { user_id: uid, role: 'assistant', content: reply },
+          ]);
+        });
+      }
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
       setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
     } finally {
       setLoading(false);
     }
-  }, [input, contextApps]);
+  }, [input, contextApps, demoMode]);
 
   const stop = useCallback(() => {
     setLoading(false);
@@ -1051,7 +1084,15 @@ const OmniSlateWidget = () => {
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
-          <button onClick={() => setMessages([])} style={{
+          <button onClick={() => {
+            setMessages([]);
+            if (!demoMode) {
+              void supabase.auth.getUser().then(({ data: u }) => {
+                const uid = u?.user?.id;
+                if (uid) void supabase.from('omnislate_messages').delete().eq('user_id', uid);
+              });
+            }
+          }} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
             background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.27)",
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
