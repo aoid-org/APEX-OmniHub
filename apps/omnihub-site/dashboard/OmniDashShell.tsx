@@ -1380,6 +1380,7 @@ function OmniGridTop({ hiddenWidgets, isDesktop }: Readonly<{ hiddenWidgets: rea
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
+  const { tx } = useAppTranslation();
   const { session } = useAuth();
   const userId = session?.user?.id;
   const { activeNav, setActiveNav, isDark, setIsDark, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);

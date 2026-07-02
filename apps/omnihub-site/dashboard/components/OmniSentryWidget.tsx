@@ -58,7 +58,7 @@ const CIRCUIT_COLOR: Record<string, string> = {
 
 type ProbeResult = 'idle' | 'running' | 'passed' | 'skipped' | 'failed';
 
-function getProbeLabel(res: ProbeResult, tx: (key: string, options?: Record<string, unknown>) => string): string {
+function getProbeLabel(res: ProbeResult, tx: (key: string, options?: any) => string): string {
   switch (res) {
     case 'idle':    return tx('dashboard.sentry.probeCircuit');
     case 'running': return tx('dashboard.sentry.probing');
