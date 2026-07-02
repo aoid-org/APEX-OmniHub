@@ -32,3 +32,6 @@ status: verified
 ## 2026-06-12 - O(N) array search inside object traversal is a major bottleneck
 **Learning:** Calling `Object.entries()` inside loops (e.g. for detranslating values based on reverse lookup) is highly inefficient due to array allocations and O(N) searching for reverse key lookups.
 **Action:** Use a pre-calculated `REVERSE_DICTIONARY` with a direct lookup utilizing `Object.prototype.hasOwnProperty.call` to prevent prototype pollution and achieve O(1) direct property access instead.
+## 2026-06-13 - Replaced O(N²) Set allocations and iteration inside jaccardSimilarity with O(1) cached Sets and mathematical union
+**Learning:** In the `deduplicateEntries` function, the initial string tokenization (`new Set(text.split(...))`) inside an O(N²) comparison loop via `unique.some()` caused N*M redundant array iterations and garbage collection allocations per loop for both the target and the comparison items. Furthermore, `new Set([...wordsA, ...wordsB])` created unnecessary intermediate array and Set allocations for the Jaccard union.
+**Action:** Extract tokenization into a cached array mapping (`uniqueSets`) and reuse them iteratively. Use `union = wordsA.size + wordsB.size - intersection` instead of the spread syntax to bypass object allocations and execute purely mathematically.
