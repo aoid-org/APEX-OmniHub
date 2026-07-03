@@ -4,8 +4,15 @@ import path from "node:path";
 const changelogPath = process.argv[2] ?? "CHANGELOG.md";
 const md = fs.readFileSync(changelogPath, "utf8");
 
-// capture backticked tokens
-const tokens = [...md.matchAll(/`([^`]+)`/g)].map(m => m[1]);
+// Lines that record an intentional removal reference paths that correctly no
+// longer exist — never flag tokens from those lines.
+const DELETION_MARKERS = ["permanently deleted", "— removed", "— deprecated and removed"];
+
+// capture backticked tokens, line by line, skipping deletion-record lines
+const tokens = md
+  .split(/\r?\n/)
+  .filter(line => !DELETION_MARKERS.some(marker => line.includes(marker)))
+  .flatMap(line => [...line.matchAll(/`([^`]+)`/g)].map(m => m[1]));
 
 // treat only repo-like paths as enforceable
 const paths = tokens.filter(p =>
