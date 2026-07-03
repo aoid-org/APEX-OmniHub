@@ -1,5 +1,38 @@
 ---
 
+## [Unreleased]
+
+Backfill 2026-07-03: entries for every PR merged to `main` after the last recorded entry (PR #1529, v1.8.3). Summaries are drawn from each PR's squash/merge commit title and diff.
+
+### Minor Changes
+
+- feat(omnihub-site): 100% surface localization remediation across OmniDash and all 9 enterprise locales (PR #1565).
+- fix(omnidash): wire the header search bar — functional ⌘K/Ctrl+K search palette across all surfaces (PR #1564), building on the restored functional header search from PR #1563.
+- PRCC-001 WP-2b: Connect AI opens the real BYOM credential modal instead of a dead-end (PR #1561).
+- orchestrator(p0–p2): forensic audit, contract v2.0, FR2–FR7 closed — zero-cost semantic cache, intent-path producer, certification record (PR #1555).
+- PRCC-001 Phase 1 (WP-1): kill silent failure — forge deploy+auth, global Toaster, Gate 29 (PR #1552).
+- Wire real Automations create/execute and Audits export (PR #1549).
+- feat: A.R.I.S.E. Phase 0 structural observatory, measurement-only (PR #1540); dated structural snapshot persisted to the repo (PR #1543). Phase 1a Diagnosis Engine and Phase 1b propose engine landed as direct commits to `main` (`ac611ca`–`180eb7d`, 2026-07-01), including CI wiring, policy self-edit hazard fix, and SonarCloud new-code gate remediation.
+
+### Patch Changes
+
+- orchestrator(p2): S6 — split agent_saga.py and tools.py to the 600-line modularity law (PR #1567).
+- orchestrator(p2): certification run evidence + Sonar fail-closed fix on LiteEmbedder (PR #1562).
+- orchestrator(p2): S5 — quarantine BYOM model registry (cert C9) (PR #1558).
+- fix(omnidash): restore functional header search (PR #1563).
+- PRCC-001 WP-3b/3c: honest LIVE/PREVIEW badges + gated-CTA styling (PR #1557).
+- Guard A.R.I.S.E. snapshot workflow against protected-branch pushes (PR #1551).
+- fix: resolve SonarQube audit debt to reach a 100/100 Grade A quality gate and sync the live omnilink-port edge function (PR #1548).
+- docs(audit): full-build release gate audit — 2026-07-01 (PR #1550).
+- Fix billing auth: validate JWT explicitly, deploy checkout/webhook (PR #1536).
+- chore(arise): publish structural baseline snapshot and diagnosis report (PRs #1553, #1556, #1559).
+- fix(deps): sync stale apps/omnihub-site bun.lock with package.json ranges (PR #1542).
+- UI polish, PWA/WebAuthn tweaks, SSG WebSocket shim, and typing/path fixes (PR #1537).
+- UI and SSR fixes: rail styling, media fallbacks, WebAuthn/PWA tweaks, and SSG WebSocket polyfill (PR #1535).
+- fix(omnihub-site): stabilize Space Grotesk font fallback stack (PR #1545).
+- docs: sync README-cited current state and add the 2026-06-30 platform snapshot (PR #1533).
+- Direct commits to `main` (no PR): remove the orphaned static /launch page that shadowed the SPA onboarding route (`845fced`); optimize Jaccard similarity and string tokenization in `src/core/cognition/compressionEngine.ts` (`cd6e4d7`).
+
 ## 1.8.3
 ### Patch Changes
 
