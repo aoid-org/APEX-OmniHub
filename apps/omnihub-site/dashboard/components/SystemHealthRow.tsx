@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { omniRgba } from '../omniSkinTokens';
 import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 interface MetricCardProps {
   value: string | number;
@@ -34,11 +35,17 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   kpi: KpiSummary;
   systemHealth?: SystemHealthState;
 }) {
+  const { tx } = useAppTranslation();
   const eventsTracked = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
-  const healthDisplay = demoMode ? 'Healthy' : systemHealth ? systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) : 'Unknown';
+  const healthDisplay = demoMode
+    ? tx('dashboard.footer.healthy')
+    : systemHealth
+      ? tx(`dashboard.footer.${systemHealth}`, { defaultValue: systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) })
+      : tx('dashboard.footer.unknown');
   const guardianLoops = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
   const staleChecks = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
   const healthIsGreen = demoMode || systemHealth === 'healthy';
+  const simSuffix = demoMode ? ` ${tx('dashboard.footer.simulated')}` : '';
 
   return (
     // Wrapped in the same card tile as the left-sidebar System KPIs widget
@@ -64,32 +71,32 @@ export const SystemHealthRow = memo(function SystemHealthRow({
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}
       >
-        System Status
+        {tx('dashboard.systemHealth.title')}
       </div>
     <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
       {/* Row 1 — Events + Health */}
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard
           value={eventsTracked}
-          label={`Events Tracked${demoMode ? ' (Simulated)' : ''}`}
+          label={`${tx('dashboard.systemHealth.eventsTracked')}${simSuffix}`}
           valueColor="var(--od-text-primary)"
         />
         <MetricCard
           value={healthDisplay}
-          label={`System Health${demoMode ? ' (Simulated)' : ''}`}
+          label={`${tx('dashboard.systemHealth.systemHealth')}${simSuffix}`}
           valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>
       {/* Row 2 — Guardian + Stale */}
       <div className="sentinel-metric-row">
         <MetricCard
-          value={`${guardianLoops} loop`}
-          label={`Guardian Loops${demoMode ? ' (Simulated)' : ''}`}
+          value={tx('dashboard.systemHealth.loop', { count: guardianLoops, defaultValue: `${guardianLoops} loop` })}
+          label={`${tx('dashboard.systemHealth.guardianLoops')}${simSuffix}`}
           valueColor="var(--od-accent)"
         />
         <MetricCard
-          value={staleChecks === 0 ? 'Clean' : String(staleChecks)}
-          label={`Stale Checks${demoMode ? ' (Simulated)' : ''}`}
+          value={staleChecks === 0 ? tx('dashboard.systemHealth.clean') : String(staleChecks)}
+          label={`${tx('dashboard.systemHealth.staleChecks')}${simSuffix}`}
           valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>

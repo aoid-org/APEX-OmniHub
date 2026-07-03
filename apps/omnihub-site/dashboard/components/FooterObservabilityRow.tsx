@@ -18,6 +18,7 @@ import { memo } from 'react';
 import { T } from '../designSystem';
 import { StatusDot } from './designComponents';
 import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 export interface FooterObservabilityRowProps {
   readonly demoMode: boolean;
@@ -28,13 +29,13 @@ export interface FooterObservabilityRowProps {
   readonly error?: string | null;
 }
 
-function resolveHealth(demoMode: boolean, systemHealth?: SystemHealthState): { label: string; color: string } {
-  if (demoMode) return { label: 'Healthy', color: T.green };
+function resolveHealth(demoMode: boolean, systemHealth: SystemHealthState | undefined, tx: (key: string) => string): { label: string; color: string } {
+  if (demoMode) return { label: tx('dashboard.footer.healthy'), color: T.green };
   switch (systemHealth) {
-    case 'healthy': return { label: 'Healthy', color: T.green };
-    case 'degraded': return { label: 'Degraded', color: T.warn };
-    case 'incident': return { label: 'Incident', color: T.red };
-    default: return { label: 'Unknown', color: T.t3 };
+    case 'healthy': return { label: tx('dashboard.footer.healthy'), color: T.green };
+    case 'degraded': return { label: tx('dashboard.footer.degraded'), color: T.warn };
+    case 'incident': return { label: tx('dashboard.footer.incident'), color: T.red };
+    default: return { label: tx('dashboard.footer.unknown'), color: T.t3 };
   }
 }
 
@@ -57,17 +58,18 @@ function Chip({ label, value, color }: ChipProps) {
 export const FooterObservabilityRow = memo(function FooterObservabilityRow({
   demoMode, kpi, systemHealth, openIncidentsCount, isLoading, error,
 }: FooterObservabilityRowProps) {
-  const health = resolveHealth(demoMode, systemHealth);
+  const { tx } = useAppTranslation();
+  const health = resolveHealth(demoMode, systemHealth, tx);
   // Honest observability only — ops_sev1_incidents is a real system signal.
   // FlowBills demos/paid accounts are BUSINESS KPIs, not telemetry, so they are
   // deliberately NOT shown here as "Events"/"Loops" (reviewer item 4).
   const sev1 = demoMode ? 0 : (kpi?.ops_sev1_incidents ?? 0);
   const incidents = openIncidentsCount;
 
-  let syncLabel: string = demoMode ? 'Demo' : 'Live';
+  let syncLabel: string = demoMode ? tx('dashboard.footer.syncDemo') : tx('dashboard.footer.syncLive');
   let syncColor: string = demoMode ? T.warn : T.green;
-  if (isLoading) { syncLabel = 'Syncing'; syncColor = T.blue; }
-  else if (error) { syncLabel = 'Sync error'; syncColor = T.red; }
+  if (isLoading) { syncLabel = tx('dashboard.footer.syncSyncing'); syncColor = T.blue; }
+  else if (error) { syncLabel = tx('dashboard.footer.syncError'); syncColor = T.red; }
 
   return (
     <div
@@ -79,10 +81,10 @@ export const FooterObservabilityRow = memo(function FooterObservabilityRow({
         margin: '0 16px',
       }}
     >
-      <Chip label="Health" value={health.label} color={health.color} />
-      <Chip label="SEV-1" value={sev1} color={sev1 === 0 ? T.green : T.warn} />
-      <Chip label="Incidents" value={incidents} color={incidents === 0 ? T.green : T.warn} />
-      <Chip label="Sync" value={syncLabel} color={syncColor} />
+      <Chip label={tx('dashboard.footer.health')} value={health.label} color={health.color} />
+      <Chip label={tx('dashboard.footer.sev1')} value={sev1} color={sev1 === 0 ? T.green : T.warn} />
+      <Chip label={tx('dashboard.footer.incidents')} value={incidents} color={incidents === 0 ? T.green : T.warn} />
+      <Chip label={tx('dashboard.footer.sync')} value={syncLabel} color={syncColor} />
     </div>
   );
 });

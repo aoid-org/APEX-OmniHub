@@ -5,6 +5,7 @@
 
 import { memo } from 'react';
 import { useDemoMode } from '../../src/contexts/DemoModeContext';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 interface OpsToggleProps {
   label: string;
@@ -33,6 +34,7 @@ function OpsToggle({ label, sublabel, enabled, onToggle, ariaLabel }: OpsToggleP
 }
 
 export const SentinelPanel = memo(function SentinelPanel() {
+  const { tx } = useAppTranslation();
   const {
     demoMode, setDemoMode,
     autoPilot, setAutoPilot,
@@ -53,31 +55,31 @@ export const SentinelPanel = memo(function SentinelPanel() {
       }}
     >
     <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 16 }}>
-      <div className="sentinel-section-title">Ops Controls</div>
+      <div className="sentinel-section-title">{tx('dashboard.ops.title')}</div>
 
       {/* Demo Mode is not exposed in production builds — no demo state ships. */}
       {!import.meta.env.PROD && (
         <OpsToggle
-          label="Demo Mode"
-          sublabel="Simulated data feed"
+          label={tx('dashboard.ops.demoMode')}
+          sublabel={tx('dashboard.ops.demoModeSub')}
           enabled={demoMode}
           onToggle={() => setDemoMode(!demoMode)}
-          ariaLabel="Toggle demo mode"
+          ariaLabel={tx('dashboard.ops.toggleDemoMode', { defaultValue: 'Toggle demo mode' })}
         />
       )}
       <OpsToggle
-        label="Auto-Pilot"
-        sublabel="Autonomous task handling"
+        label={tx('dashboard.ops.autoPilot')}
+        sublabel={tx('dashboard.ops.autoPilotSub')}
         enabled={autoPilot}
         onToggle={() => setAutoPilot(!autoPilot)}
-        ariaLabel="Toggle auto pilot"
+        ariaLabel={tx('dashboard.ops.toggleAutoPilot', { defaultValue: 'Toggle auto pilot' })}
       />
       <OpsToggle
-        label="Guardian Mode"
-        sublabel="AI policy enforcement"
+        label={tx('dashboard.ops.guardianMode')}
+        sublabel={tx('dashboard.ops.guardianModeSub')}
         enabled={guardianMode}
         onToggle={() => setGuardianMode(!guardianMode)}
-        ariaLabel="Toggle guardian mode"
+        ariaLabel={tx('dashboard.ops.toggleGuardianMode', { defaultValue: 'Toggle guardian mode' })}
       />
     </div>
     </div>

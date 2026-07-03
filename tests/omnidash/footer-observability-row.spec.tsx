@@ -5,8 +5,28 @@
  * fixed/clipped footer row fed by REAL shell state (no decorative-only data).
  * These tests prove it renders real system/user values and clips its content.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+vi.mock('../../apps/omnihub-site/src/i18n/useAppTranslation', () => ({
+  useAppTranslation: () => ({
+    tx: (key: string, opts?: any) => {
+      const map: Record<string, string> = {
+        'dashboard.footer.healthy': 'Healthy',
+        'dashboard.footer.degraded': 'Degraded',
+        'dashboard.footer.sev1': 'SEV-1',
+        'dashboard.footer.incidents': 'Incidents',
+        'dashboard.footer.live': 'Live',
+        'dashboard.footer.syncError': 'Sync error',
+        'dashboard.footer.unknown': 'Unknown',
+        'dashboard.footer.syncing': 'Syncing',
+        'dashboard.footer.simulated': '(Simulated)',
+      };
+      return map[key] || opts?.defaultValue || key;
+    },
+  }),
+}));
+
 import { FooterObservabilityRow } from '../../apps/omnihub-site/dashboard/components/FooterObservabilityRow';
 import { EMPTY_KPI_SUMMARY } from '../../apps/omnihub-site/dashboard/types/dashboard.types';
 import type { KpiSummary } from '../../apps/omnihub-site/dashboard/types/dashboard.types';

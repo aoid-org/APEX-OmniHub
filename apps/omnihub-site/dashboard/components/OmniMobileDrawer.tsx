@@ -6,6 +6,7 @@
  */
 import { useEffect, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
+import { useAppTranslation } from "../../src/i18n/useAppTranslation";
 
 interface OmniMobileDrawerProps {
   readonly isOpen: boolean;
@@ -15,6 +16,7 @@ interface OmniMobileDrawerProps {
 }
 
 export function OmniMobileDrawer({ isOpen, onClose, title, children }: OmniMobileDrawerProps) {
+  const { tx } = useAppTranslation();
   const drawerRef = useRef<HTMLDialogElement>(null);
 
   const handleEscape = useCallback(
@@ -64,7 +66,7 @@ export function OmniMobileDrawer({ isOpen, onClose, title, children }: OmniMobil
             type="button"
             className="omni-drawer__close"
             onClick={onClose}
-            aria-label="Close panel"
+            aria-label={tx("dashboard.mobile.closePanel", { defaultValue: "Close panel" })}
           >
             <svg
               width="20"
