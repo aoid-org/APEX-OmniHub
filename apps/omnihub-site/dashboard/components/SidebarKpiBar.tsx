@@ -53,12 +53,13 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       style={{
         margin: '0 0 8px',
         borderRadius: 11,
-        // Same fill alpha as NavItem above it (0.16, not the right rail's 0.06) —
-        // this tile is much smaller than the right-rail cards, so the lower
-        // alpha that reads as a visible glass tile on a large card reads as
-        // nearly invisible here. Border/blur stay matched to the right rail.
+        // Same neutral fill as NavItem above it (0.14 white, not orange) —
+        // an orange-tinted fill reads as warm brown against the right rail's
+        // cool neutral-white cards (OmniSentry/Ops Controls), a real hue
+        // mismatch measured on a live render. Border/blur stay matched to
+        // the right rail; only the fill tint + alpha changed.
         border: `1px solid ${omniRgba('orange', 0.25)}`,
-        background: omniRgba('orange', 0.16),
+        background: 'rgba(255, 255, 255, 0.14)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         overflow: 'hidden',

@@ -227,18 +227,23 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
     // NavItem rows are much smaller than the right-rail cards (OmniTrace/
-    // OmniSentry/Ops Controls/OmniMedia), so the same 0.06 fill alpha that
-    // reads as a visible glass tile on a large card reads as almost nothing
-    // on a compact row — same alpha, far less perceived opacity. Raised so
-    // every rail tile reads as equally "filled" regardless of its size
-    // (owner report: left rail still looked transparent after the 0.06 pass).
+    // OmniSentry/Ops Controls/OmniMedia), so the same fill alpha that reads
+    // as a visible glass tile on a large card reads as far less on a compact
+    // row. An orange-tinted fill also reads as a warm brown against the
+    // right rail's cool neutral-white fill (OmniSentry/Ops Controls) —
+    // measured on a live render: NavItem ~(51,33,32) vs OmniSentry ~(21,31,49),
+    // a real hue mismatch, not just a brightness one. Switched the fill to
+    // the same neutral white tint as the right rail and raised the alpha so
+    // every rail tile reads as an equally visible, equally-toned glass
+    // surface regardless of its smaller footprint (owner report: left rail
+    // still looked visually mismatched after the 0.06 and 0.16 orange passes).
     // Active/hover affordance stays in text, icon, glow, and the active
     // status dot instead of changing opacity.
-    const RAIL_WIDGET_FILL_ALPHA = 0.16;
+    const RAIL_WIDGET_FILL_ALPHA = 0.14;
     const RAIL_WIDGET_BORDER_ALPHA = 0.25;
 
     const resolveTileBackground = () =>
-      `linear-gradient(135deg, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 0%, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 100%)`;
+      `linear-gradient(135deg, rgba(255,255,255,${RAIL_WIDGET_FILL_ALPHA}) 0%, rgba(255,255,255,${RAIL_WIDGET_FILL_ALPHA}) 100%)`;
 
     const resolveTileBorder = () =>
       `1px solid rgba(${ORANGE},${RAIL_WIDGET_BORDER_ALPHA})`;
