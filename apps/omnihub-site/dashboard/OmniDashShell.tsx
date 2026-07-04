@@ -276,8 +276,11 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         fontSize:14.1,
         border: resolveTileBorder(),
         background: resolveTileBackground(),
-        backdropFilter: "blur(10px) saturate(140%)",
-        WebkitBackdropFilter: "blur(10px) saturate(140%)",
+        // Same blur/saturate intensity as the right-rail glass tiles
+        // (OmniTrace/OmniSentry/Ops Controls/OmniMedia/System Status) —
+        // owner request: uniform opacity across all rail widgets.
+        backdropFilter: "blur(16px) saturate(140%)",
+        WebkitBackdropFilter: "blur(16px) saturate(140%)",
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
         boxShadow: resolveTileShadow(isActive, hov),
