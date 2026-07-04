@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "システムステータス",
-      "eventsTracked": "追跡イベント",
+      "flowbillsDemoCount": "FlowBills デモ",
       "systemHealth": "システムヘルス",
-      "guardianLoops": "Guardianループ",
+      "flowbillsPaidAccounts": "FlowBills 有料アカウント",
       "staleChecks": "期限切れチェック",
       "clean": "クリーン",
       "loop": "{{count}}ループ"

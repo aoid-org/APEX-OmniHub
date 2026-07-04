@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "Status do sistema",
-      "eventsTracked": "Eventos rastreados",
+      "flowbillsDemoCount": "Demonstrações FlowBills",
       "systemHealth": "Saúde do sistema",
-      "guardianLoops": "Ciclos Guardian",
+      "flowbillsPaidAccounts": "Contas pagas FlowBills",
       "staleChecks": "Verificações expiradas",
       "clean": "Limpo",
       "loop": "{{count}} ciclo"

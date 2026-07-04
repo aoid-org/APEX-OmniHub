@@ -36,14 +36,14 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
   }, []);
 
   const isHealthy = demoMode ? true : systemHealth === 'healthy';
-  const events    = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
-  const guardian  = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
+  const flowbillsDemoCount = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
+  const flowbillsPaidAccounts = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
   const stale     = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
 
   const tiles: Tile[] = [
-    { key: 'events',   icon: '⚡', value: events,                    label: tx('dashboard.systemHealth.eventsTracked'),  color: T.t2 },
+    { key: 'flowbills-demos', icon: '⚡', value: flowbillsDemoCount,    label: tx('dashboard.systemHealth.flowbillsDemoCount'), color: T.t2 },
     { key: 'health',   icon: '🛡️', value: isHealthy ? '✓' : '!',   label: tx('dashboard.systemHealth.systemHealth'),   color: isHealthy ? T.green : T.warn },
-    { key: 'guardian', icon: '🔄', value: guardian,                  label: tx('dashboard.systemHealth.guardianLoops'),  color: T.orange },
+    { key: 'flowbills-paid',  icon: '🔄', value: flowbillsPaidAccounts, label: tx('dashboard.systemHealth.flowbillsPaidAccounts'), color: T.orange },
     { key: 'stale',    icon: '✅', value: stale === 0 ? '0' : stale, label: tx('dashboard.systemHealth.staleChecks'),    color: stale === 0 ? T.green : T.warn },
   ];
 

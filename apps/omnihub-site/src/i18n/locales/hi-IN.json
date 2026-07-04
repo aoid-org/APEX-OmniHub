@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "सिस्टम स्थिति",
-      "eventsTracked": "ट्रैक किए गए इवेंट",
+      "flowbillsDemoCount": "FlowBills डेमो",
       "systemHealth": "सिस्टम स्वास्थ्य",
-      "guardianLoops": "Guardian लूप",
+      "flowbillsPaidAccounts": "FlowBills भुगतान खाते",
       "staleChecks": "पुरानी जांच",
       "clean": "साफ़",
       "loop": "{{count}} लूप"

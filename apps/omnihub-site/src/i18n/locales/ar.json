@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "حالة النظام",
-      "eventsTracked": "الأحداث المتتبعة",
+      "flowbillsDemoCount": "عروض FlowBills التجريبية",
       "systemHealth": "صحة النظام",
-      "guardianLoops": "دورات Guardian",
+      "flowbillsPaidAccounts": "حسابات FlowBills المدفوعة",
       "staleChecks": "فحوصات منتهية",
       "clean": "نظيف",
       "loop": "{{count}} دورة"

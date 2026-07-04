@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "System Health Overview",
-      "eventsTracked": "Events Tracked",
+      "flowbillsDemoCount": "FlowBills Demos",
       "systemHealth": "System Health",
-      "guardianLoops": "Guardian Loops",
+      "flowbillsPaidAccounts": "FlowBills Paid Accounts",
       "staleChecks": "Stale Checks",
       "clean": "Clean",
       "loop": "{{count}} loop"
