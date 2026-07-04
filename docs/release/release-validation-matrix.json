@@ -362,6 +362,38 @@
       "liveProductionTouched": false,
       "backendPersistenceProven": false,
       "connector": "Slack"
+    },
+    {
+      "id": "OMNIBOARD_CHAT_INTENTS_V3",
+      "area": "OmniBoard chat-native connector intents",
+      "status": "REPO_VALIDATED",
+      "environment": "local",
+      "commandOrProcedure": "npm run test:py -- test_universal_intents.py and npm run test -- tests/omniconnect/connector-scaffold.test.ts",
+      "evidenceArtifactPathOrUrl": "orchestrator/tests/test_universal_intents.py; tests/omniconnect/connector-scaffold.test.ts",
+      "owner": "Platform",
+      "blocker": null,
+      "waiverReason": null,
+      "waiverExpiry": null,
+      "lastValidatedTimestamp": null,
+      "confidenceLevel": "MEDIUM",
+      "liveProductionTouched": false,
+      "backendPersistenceProven": false
+    },
+    {
+      "id": "OMNIBOARD_CONNECTOR_SCAFFOLD_V3",
+      "area": "Proprietary custom connector scaffold",
+      "status": "REPO_VALIDATED",
+      "environment": "local",
+      "commandOrProcedure": "Vitest scaffold template and SSRF rejection tests",
+      "evidenceArtifactPathOrUrl": "tests/omniconnect/connector-scaffold.test.ts",
+      "owner": "Platform",
+      "blocker": null,
+      "waiverReason": null,
+      "waiverExpiry": null,
+      "lastValidatedTimestamp": null,
+      "confidenceLevel": "MEDIUM",
+      "liveProductionTouched": false,
+      "backendPersistenceProven": false
     }
   ]
 }

@@ -680,6 +680,50 @@ plain-language remediation, never raw Supabase transport or stack errors.
 OmniBoard tests, and Deno check for `supabase/functions/omnilink-port/index.ts` in an environment
 with Deno installed.
 
+
+### 9.12.2 OmniBoard chat-native connector intents — Intent Registry / MCP path (2026-07-04)
+
+**Changed critical runtime paths:** `orchestrator/activities/universal_intents.py`,
+`orchestrator/main.py`.
+
+OmniBoard connector operations are now addressable through the existing Universal Intent Registry
+and the existing MCP `omnihub_execute_intent` tool. The registered intent ids are:
+
+- `connector.list` — returns the OmniConnect connector catalog subset with `status` and `health`.
+- `connector.status` — returns one connector's health/status payload.
+- `connector.connect` — starts the chat-native connect bridge and returns the same readiness copy
+  used by ConnectorKit.
+- `connector.test` — returns the same plain-language Test Connection success/failure copy used by
+  ConnectorKit; it does not mint credentials.
+- `connector.disconnect` — routes disconnect/revoke intent through the registry path.
+- `connector.create_custom` — creates a proprietary custom-connector scaffold request as
+  `status: beta`; it must never auto-promote a connector to `ga`.
+
+The MCP gateway remains generic: callers still invoke `omnihub_execute_intent` with `intent_id` and
+optional `payload`. No new MCP tool, dispatcher, vendor bridge, queue, database table, migration,
+secret, env var, or start command was added. Unregistered connector intents must continue to fail
+closed through `core.intent_registry.resolve_or_offline` with `status='offline'` before any Temporal
+workflow activity runs.
+
+`orchestrator/main.py` imports these six activities and registers them in the existing Temporal
+worker activity list. Therefore both Render orchestrator services keep their existing deployment
+topology and start commands (`python main.py api`, `python main.py worker`), but the worker must be
+redeployed after merge so the new registry-routable activities are available on the
+`apex-orchestrator` task queue.
+
+**Required configuration / topology:** unchanged. No new secrets or env vars. Existing requirements
+still apply: `ORCHESTRATOR_URL` on the calling edge function, `ORCHESTRATOR_SHARED_SECRET` for
+`/api/v1/intents`, and the existing Temporal queue/env configuration on the Render worker.
+
+**Failure contract:** no fake OAuth or connection success. Invalid connector names return
+plain-language retry copy. Custom scaffolds are beta/raw-events-only until explicit human promotion.
+If the intent id is absent from the registry, the orchestrator returns the existing fail-closed
+offline payload.
+
+**Verification gate:** run `node scripts/ci/check-ops-doc-drift.mjs`,
+`cd orchestrator && python -m pytest -q tests/test_universal_intents.py`, and a deployed smoke via
+`omnihub_execute_intent(intent_id="connector.list")` after the worker has redeployed.
+
 ---
 
 ## 9.13 Audit readiness closure — 2026-06-23 (PR #1483)

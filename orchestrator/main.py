@@ -71,6 +71,12 @@ from activities.tools import (
     update_agent_run_completion,
 )
 from activities.universal_intents import (
+    connector_connect,
+    connector_create_custom,
+    connector_disconnect,
+    connector_list,
+    connector_status,
+    connector_test,
     system_echo,
     system_health_check,
     system_list_intents,
@@ -210,6 +216,12 @@ async def start_worker() -> None:
             system_health_check,
             system_echo,
             system_list_intents,
+            connector_list,
+            connector_status,
+            connector_connect,
+            connector_test,
+            connector_disconnect,
+            connector_create_custom,
             # PhysiOmni Pilot activities
             compute_14_day_baseline,
             evaluate_baseline,
