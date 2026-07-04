@@ -9,6 +9,8 @@
  * APEX STANDARDS: No workflow questions. Connect only. Output Connection Spec.
  */
 import { useState, useCallback, useEffect } from 'react';
+import { ConnectorKit } from '../../../../src/components/ConnectorKit';
+import { availableIntegrations, type IntegrationDef } from '../../../../src/omniconnect/core/registry';
 import { supabase } from '@/lib/supabase';
 // Relative import (not '@/hooks/...'): the root vitest config resolves '@' to
 // the root src tree, so an alias here would break under the test harness.
@@ -75,7 +77,18 @@ interface WizardProps {
   readonly onDismiss: () => void;
 }
 
+function getHealthBadge(integration: IntegrationDef): { label: string; className: string } {
+  if (integration.health?.lastSuccessAt) {
+    return { label: 'Healthy', className: 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' };
+  }
+  if (integration.health?.lastFailureAt) {
+    return { label: 'Needs Attention', className: 'border-orange-400/50 bg-orange-500/10 text-orange-200' };
+  }
+  return { label: 'Never Connected', className: 'border-slate-400/40 bg-slate-500/10 text-slate-200' };
+}
+
 export function OmniBoardWizard({ onComplete }: WizardProps) {
+  const [selectedIntegration, setSelectedIntegration] = useState<IntegrationDef | null>(availableIntegrations[0] ?? null);
   const [context, setContext] = useState<FSMContext | null>(null);
   const [message, setMessage] = useState<string>('Tell OmniBoard what app or provider you want to connect.');
   const [input, setInput] = useState('');
@@ -142,7 +155,7 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
   }, [startSession]);
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border border-border/40 max-w-md w-[400px]">
+    <div className="flex max-h-[min(82vh,760px)] w-[min(92vw,920px)] flex-col gap-4 overflow-y-auto rounded-xl border border-border/40 bg-card p-4">
       <div className="flex items-center">
         <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
       </div>
@@ -150,6 +163,48 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
       <div className="rounded-lg bg-muted/20 p-3 text-xs text-foreground leading-relaxed min-h-[60px]">
         {message}
       </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Available third-party integrations">
+        {availableIntegrations.map((integration) => {
+          const Icon = integration.icon;
+          const badge = getHealthBadge(integration);
+          const selected = selectedIntegration?.id === integration.id;
+          return (
+            <button
+              key={integration.id}
+              type="button"
+              onClick={() => setSelectedIntegration(integration)}
+              className={`min-h-24 rounded-xl border p-3 text-left transition hover:border-primary/70 ${selected ? 'border-primary/80 bg-primary/10' : 'border-border/40 bg-background/40'}`}
+            >
+              <span className="flex items-start gap-2">
+                <Icon className="mt-0.5 h-4 w-4 text-primary" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold text-foreground">{integration.name}</span>
+                  <span className="mt-1 line-clamp-2 block text-[11px] text-muted-foreground">{integration.description}</span>
+                </span>
+              </span>
+              <span className={`mt-3 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>
+                {badge.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {selectedIntegration && (
+        <div className="rounded-xl border border-border/40 bg-background/30 p-3">
+          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="text-sm font-bold text-foreground">Connect {selectedIntegration.name}</h4>
+              <p className="text-xs text-muted-foreground">Test the connector, then generate a production key. No app is marked connected until the test passes.</p>
+            </div>
+            {selectedIntegration.docsUrl && (
+              <a className="text-xs font-semibold text-primary underline-offset-4 hover:underline" href={selectedIntegration.docsUrl} target="_blank" rel="noreferrer">
+                Setup docs
+              </a>
+            )}
+          </div>
+          <ConnectorKit integration={selectedIntegration} onConnect={() => onComplete({ provider: selectedIntegration.type, integration_id: selectedIntegration.id })} />
+        </div>
+      )}
       {context && context.state !== 'COMPLETION' && (
         <div className="flex gap-2">
           <input

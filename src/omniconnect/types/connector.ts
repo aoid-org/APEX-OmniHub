@@ -16,6 +16,14 @@ export interface SessionToken {
   scopes: string[];
 }
 
+export interface ConnectorHealth {
+  lastSuccessAt?: string;
+  lastFailureAt?: string;
+  lastFailureReason?: string;
+}
+
+export type ConnectorStatus = 'beta' | 'ga' | 'deprecated' | 'internal';
+
 export interface ConnectorConfig {
   provider: string;
   clientId: string;
@@ -23,6 +31,11 @@ export interface ConnectorConfig {
   redirectUri: string;
   scopes: string[];
   baseUrl: string;
+  category?: string;
+  version?: string;
+  status?: ConnectorStatus;
+  docsUrl?: string;
+  health?: ConnectorHealth;
 }
 
 export interface RawEvent {
@@ -46,6 +59,11 @@ export interface NormalizationContext {
  */
 export interface Connector {
   readonly provider: string;
+  readonly category?: string;
+  readonly version?: string;
+  readonly status?: ConnectorStatus;
+  readonly docsUrl?: string;
+  readonly health?: ConnectorHealth;
 
   /**
    * Initialize OAuth2/PKCE handshake for user

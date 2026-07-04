@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Copy, Key, RefreshCw, Server, AlertTriangle, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { IntegrationDef } from '@/omniconnect/core/registry'; // Use explicit path to avoid ambiguity
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { CheckCircle2, Copy, Key, RefreshCw, Server, AlertTriangle, ExternalLink, ShieldCheck } from 'lucide-react';
+import { supabase } from '../integrations/supabase/client';
+import { IntegrationDef } from '../omniconnect/core/registry'; // Use explicit path to avoid ambiguity
 import { toast } from 'sonner';
 
 interface ConnectorKitProps {
@@ -17,21 +17,88 @@ interface ConnectorKitProps {
 export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [generatedKey, setGeneratedKey] = useState<{ key: string; prefix: string } | null>(null);
+    const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'passed' | 'failed'>('idle');
+    const [testMessage, setTestMessage] = useState<string>('Test the connector before generating a production key.');
 
     const serverUrl = import.meta.env.VITE_SUPABASE_URL || 'https://api.apexomnihub.icu'; // Fallback or env
     const publicUrl = import.meta.env.VITE_PUBLIC_URL || globalThis.location.origin;
 
+    const requireSession = async () => {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session) {
+            toast.error('You must be logged in');
+            return null;
+        }
+        return session;
+    };
+
+    const parseResponse = async (response: Response) => {
+        try {
+            return await response.json() as Record<string, unknown>;
+        } catch {
+            return {};
+        }
+    };
+
+    const plainError = (value: unknown) => {
+        const raw = typeof value === 'string' ? value : 'We could not verify this connector.';
+        if (/unauthorized|auth/i.test(raw)) return 'Please sign in again, then retry the connection test.';
+        if (/forbidden/i.test(raw)) return 'Your account needs admin access to connect this app. Ask an administrator to grant access.';
+        if (/network|fetch|failed/i.test(raw)) return 'We could not reach the connection service. Check your internet connection, then retry.';
+        if (/invalid|integration_id/i.test(raw)) return 'We could not verify that connector. Choose the app again and retry.';
+        return `${raw} Check the app details, then retry.`;
+    };
+
+    const handleTestConnection = async () => {
+        setTestStatus('testing');
+        setTestMessage('Testing connector readiness…');
+        try {
+            const session = await requireSession();
+            if (!session) {
+                setTestStatus('failed');
+                setTestMessage('Please sign in again, then retry the connection test.');
+                return;
+            }
+            const response = await fetch(`${serverUrl}/functions/v1/omnilink-port/keys/test`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    integration_id: integration.id,
+                    integration_type: integration.type,
+                    name: integration.name,
+                    scopes: integration.scopes ?? [],
+                }),
+            });
+            const responseData = await parseResponse(response);
+            if (!response.ok) throw new Error(String(responseData.message || responseData.error || 'Connector readiness test failed'));
+            setTestStatus('passed');
+            setTestMessage('Connection test passed. This app is ready for a production key.');
+            toast.success('Connection test passed');
+        } catch (error: unknown) {
+            const message = plainError(error instanceof Error ? error.message : error);
+            setTestStatus('failed');
+            setTestMessage(message);
+            toast.error(message);
+        }
+    };
+
     const handleGenerateKey = async () => {
+        if (testStatus !== 'passed') {
+            const message = 'Run Test Connection successfully before generating a production key.';
+            setTestMessage(message);
+            toast.error(message);
+            return;
+        }
         setIsLoading(true);
         try {
             // NOTE: The edge function expects the subrouting /keys.
             // We use raw fetch to be safe and precise, relying on the session.
 
-            const session = (await supabase.auth.getSession()).data.session;
-            if (!session) {
-                toast.error("You must be logged in");
-                return;
-            }
+            const session = await requireSession();
+            if (!session) return;
 
             const response = await fetch(`${serverUrl}/functions/v1/omnilink-port/keys`, {
                 method: 'POST',
@@ -41,20 +108,21 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
                 },
                 body: JSON.stringify({
                     integration_id: integration.id,
+                    integration_type: integration.type,
                     name: `${integration.name} Connector`,
-                    scopes: integration.scopes
+                    scopes: integration.scopes ?? []
                 })
             });
 
-            const responseData = await response.json();
+            const responseData = await parseResponse(response);
 
             if (!response.ok) {
-                throw new Error(responseData.error || responseData.message || 'Failed to generate key');
+                throw new Error(String(responseData.error || responseData.message || 'Failed to generate key'));
             }
 
             setGeneratedKey({
-                key: responseData.key,
-                prefix: responseData.key_prefix
+                key: String(responseData.key),
+                prefix: String(responseData.key_prefix),
             });
 
             toast.success("New API Key generated successfully");
@@ -62,7 +130,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
 
         } catch (error: unknown) {
             console.error('Error generating key:', error);
-            const message = error instanceof Error ? error.message : 'Failed to generate key';
+            const message = plainError(error instanceof Error ? error.message : 'Failed to generate key');
             toast.error(message);
         } finally {
             setIsLoading(false);
@@ -113,6 +181,18 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
 
                 <div className="space-y-4">
                     <div className="space-y-2">
+                        <Label>Test Connection</Label>
+                        <Alert className={testStatus === 'passed' ? 'border-emerald-500/50 bg-emerald-500/10' : testStatus === 'failed' ? 'border-orange-500/50 bg-orange-500/10' : ''}>
+                            {testStatus === 'passed' ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <ShieldCheck className="h-4 w-4" />}
+                            <AlertTitle>{testStatus === 'passed' ? 'Ready to connect' : testStatus === 'failed' ? 'Needs attention' : 'Required before save'}</AlertTitle>
+                            <AlertDescription>{testMessage}</AlertDescription>
+                        </Alert>
+                        <Button onClick={handleTestConnection} disabled={testStatus === 'testing' || isLoading} variant="outline" className="w-full">
+                            {testStatus === 'testing' ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                            Test Connection
+                        </Button>
+                    </div>
+                    <div className="space-y-2">
                         <Label>Authentication</Label>
                         <div className="space-y-3">
                             {generatedKey ? (
@@ -139,14 +219,14 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
                                             <Copy className="h-4 w-4 mr-1" /> Copy
                                         </Button>
                                     </div>
-                                    <Button onClick={handleGenerateKey} variant="outline" size="sm" className="w-full text-xs h-8">
+                                    <Button onClick={handleGenerateKey} disabled={isLoading || testStatus !== 'passed'} variant="outline" size="sm" className="w-full text-xs h-8">
                                         <RefreshCw className="mr-2 h-3 w-3" />
                                         Regenerate (Rotates Key)
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-2">
-                                    <Button onClick={handleGenerateKey} disabled={isLoading} className="w-full">
+                                    <Button onClick={handleGenerateKey} disabled={isLoading || testStatus !== 'passed'} className="w-full">
                                         {isLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Key className="mr-2 h-4 w-4" />}
                                         Generate New API Key
                                     </Button>

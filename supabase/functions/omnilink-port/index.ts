@@ -784,6 +784,83 @@ async function handleModuleState(req: Request, _corsHeaders: HeadersInit): Promi
 
 // ── API key management handlers ───────────────────────────────────────────────
 
+async function resolveIntegrationForKey(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  userId: string,
+  payload: Record<string, unknown>,
+): Promise<{ id: string } | { error: Response }> {
+  const integrationKey = String(payload.integration_id ?? '').trim();
+  const integrationType = String(payload.integration_type ?? integrationKey).trim();
+  const name = String(payload.name ?? integrationType ?? 'OmniBoard Connector').trim();
+  if (!integrationKey || !integrationType) {
+    return { error: jsonResponse({ error: 'invalid_request', message: 'Choose an app before testing the connection.' }, 400, {}) };
+  }
+
+  const { data: existing, error: selectError } = await serviceClient
+    .from('integrations')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('type', integrationType)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (selectError) {
+    return { error: jsonResponse({ error: 'server_error', message: 'Could not verify this connector. Please retry.' }, 500, {}) };
+  }
+  if (existing?.id) return { id: String(existing.id) };
+
+  const { data: created, error: insertError } = await serviceClient
+    .from('integrations')
+    .insert({
+      user_id: userId,
+      name,
+      type: integrationType,
+      status: 'active',
+      config: { source: 'omniboard', integration_key: integrationKey },
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !created?.id) {
+    return { error: jsonResponse({ error: 'server_error', message: 'Could not prepare this connector. Please retry.' }, 500, {}) };
+  }
+  return { id: String(created.id) };
+}
+
+async function handleKeyTest(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized', message: 'Please sign in again, then retry the connection test.' }, 401, corsHeaders);
+
+  const serviceClient = createServiceClient();
+  const userClient = createAnonClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized', message: 'Please sign in again, then retry the connection test.' }, 401, corsHeaders);
+
+  const { data: roles } = await serviceClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .limit(1);
+
+  if (!roles?.length) {
+    return jsonResponse({ error: 'forbidden', message: 'Your account needs admin access to connect this app.' }, 403, corsHeaders);
+  }
+
+  const { body } = await parseJsonBody(req);
+  const integration = await resolveIntegrationForKey(serviceClient, user.id, body as Record<string, unknown>);
+  if ('error' in integration) {
+    return integration.error;
+  }
+
+  return jsonResponse({
+    status: 'ok',
+    integration_id: integration.id,
+    message: 'Connection readiness verified.',
+  }, 200, corsHeaders);
+}
+
 async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
@@ -810,10 +887,12 @@ async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promis
 
   const { body } = await parseJsonBody(req);
   const payload = body as Record<string, unknown>;
-  const integrationId = payload?.integration_id as string | undefined;
-  if (!integrationId) {
-    return jsonResponse({ error: 'invalid_request', message: 'integration_id is required' }, 400, corsHeaders);
+  const integration = await resolveIntegrationForKey(serviceClient, user.id, payload);
+  if ('error' in integration) {
+    const responseBody = await integration.error.json().catch(() => ({ error: 'invalid_request' }));
+    return jsonResponse(responseBody, integration.error.status, corsHeaders);
   }
+  const integrationId = integration.id;
 
   const { key, prefix } = generateKey();
   const keyHash = await hashKey(key);
@@ -1340,6 +1419,7 @@ async function handleKeysRequest(route: string, req: Request, corsHeaders: Heade
   const subRoute = route.split('/')[1] || '';
   if (req.method === 'POST') {
     if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);
+    if (subRoute === 'test') return handleKeyTest(req, corsHeaders);
     if (subRoute === 'revoke') return handleKeyRevoke(req, corsHeaders);
     if (subRoute === 'rotate') return handleKeyRotate(req, corsHeaders);
   } else if (req.method === 'GET' && subRoute === 'list') {

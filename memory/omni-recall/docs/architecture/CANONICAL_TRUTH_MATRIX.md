@@ -63,3 +63,11 @@ The following may not appear without status label, artifact reference, and scope
 - "mathematically proven determinism"
 - "$150M valuation"
 - "production ready" in simulation-only docs
+
+
+## OmniBoard Connector Canon (2026-07-04)
+
+- OmniBoard third-party connector catalog source: `src/omniconnect/core/registry.ts::availableIntegrations`.
+- Live OmniBoard surface: `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, which mounts `src/components/ConnectorKit.tsx`.
+- Retired duplicate model: `packages/core/src/omniBoardIntegrations.ts` (must not be restored).
+- Required UX: visible health badge, `Test Connection` before key generation, plain-language failure copy, no fake success.
