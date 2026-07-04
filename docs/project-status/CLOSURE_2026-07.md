@@ -44,7 +44,7 @@ PHASE 0 FINDINGS:
 
 ---
 
-## FR-A — Certification authority file: **UNCERTAIN: canonical path — STOPPED, no file created**
+## FR-A — Certification authority file: **RESOLVED (2026-07-04): canonical = `docs/release/release-validation-matrix.json` per `CI_STATUS_POLICY.md`; stale pointer at `.agents/omnihub-orchestrator-core.md:11` fixed.**
 
 Decision rule fired: **rule 3** (evidence contradicting rule 2; escalate rather than pick). Rule 1 did not fire — no runtime reader of either candidate committed path exists. Rule 2's premise ("both references are aspirational, not implemented; this file has never existed") is **false in a material way**, on four independent axes:
 
