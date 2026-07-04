@@ -36,13 +36,13 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   systemHealth?: SystemHealthState;
 }) {
   const { tx } = useAppTranslation();
-  const eventsTracked = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
+  const flowbillsDemoCount = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
   const healthDisplay = demoMode
     ? tx('dashboard.footer.healthy')
     : systemHealth
       ? tx(`dashboard.footer.${systemHealth}`, { defaultValue: systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) })
       : tx('dashboard.footer.unknown');
-  const guardianLoops = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
+  const flowbillsPaidAccounts = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
   const staleChecks = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
   const healthIsGreen = demoMode || systemHealth === 'healthy';
   const simSuffix = demoMode ? ` ${tx('dashboard.footer.simulated')}` : '';
@@ -74,11 +74,11 @@ export const SystemHealthRow = memo(function SystemHealthRow({
         {tx('dashboard.systemHealth.title')}
       </div>
     <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
-      {/* Row 1 — Events + Health */}
+      {/* Row 1 — FlowBills demos + Health */}
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard
-          value={eventsTracked}
-          label={`${tx('dashboard.systemHealth.eventsTracked')}${simSuffix}`}
+          value={flowbillsDemoCount}
+          label={`${tx('dashboard.systemHealth.flowbillsDemoCount')}${simSuffix}`}
           valueColor="var(--od-text-primary)"
         />
         <MetricCard
@@ -87,11 +87,11 @@ export const SystemHealthRow = memo(function SystemHealthRow({
           valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
         />
       </div>
-      {/* Row 2 — Guardian + Stale */}
+      {/* Row 2 — FlowBills paid accounts + Stale */}
       <div className="sentinel-metric-row">
         <MetricCard
-          value={tx('dashboard.systemHealth.loop', { count: guardianLoops, defaultValue: `${guardianLoops} loop` })}
-          label={`${tx('dashboard.systemHealth.guardianLoops')}${simSuffix}`}
+          value={flowbillsPaidAccounts}
+          label={`${tx('dashboard.systemHealth.flowbillsPaidAccounts')}${simSuffix}`}
           valueColor="var(--od-accent)"
         />
         <MetricCard

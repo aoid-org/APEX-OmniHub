@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "État du système",
-      "eventsTracked": "Événements suivis",
+      "flowbillsDemoCount": "Démos FlowBills",
       "systemHealth": "Santé du système",
-      "guardianLoops": "Boucles Guardian",
+      "flowbillsPaidAccounts": "Comptes payants FlowBills",
       "staleChecks": "Contrôles périmés",
       "clean": "OK",
       "loop": "{{count}} boucle"

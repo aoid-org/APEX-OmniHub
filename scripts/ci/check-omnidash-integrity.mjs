@@ -192,6 +192,22 @@ if (existsSync(FOOTER)) {
     !/label="Events"/.test(f) && !/label="Loops"/.test(f) && !/flowbills_/.test(f),
     'footer must not render flowbills_* as "Events"/"Loops" — use real signals only');
 }
+
+const SYSTEM_HEALTH_SURFACES = [
+  ['SystemHealthRow', resolve(ROOT, 'apps/omnihub-site/dashboard/components/SystemHealthRow.tsx')],
+  ['SidebarKpiBar', resolve(ROOT, 'apps/omnihub-site/dashboard/components/SidebarKpiBar.tsx')],
+];
+
+for (const [name, file] of SYSTEM_HEALTH_SURFACES) {
+  check(`${name} exists`, existsSync(file));
+  if (!existsSync(file)) continue;
+  const source = readFileSync(file, 'utf8');
+  const mapsFlowBillsToTelemetry = /flowbills_[\s\S]{0,240}(eventsTracked|guardianLoops|Events|Loops)/.test(source)
+    || /(eventsTracked|guardianLoops|Events|Loops)[\s\S]{0,240}flowbills_/.test(source);
+  check(`${name} does not label FlowBills business KPIs as system telemetry`,
+    !mapsFlowBillsToTelemetry,
+    `${name} must not map flowbills_* values to Events/Loops or old telemetry i18n keys`);
+}
 console.log(`\n  ${passed} passed, ${failed} failed\n`);
 if (failed > 0) { console.error('[APEX OmniDash] INTEGRITY FAILURE\n'); process.exit(1); }
 console.log('[APEX OmniDash] All invariants satisfied.\n');

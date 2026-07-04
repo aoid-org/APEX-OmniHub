@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "系统状态",
-      "eventsTracked": "已追踪事件",
+      "flowbillsDemoCount": "FlowBills 演示",
       "systemHealth": "系统健康",
-      "guardianLoops": "Guardian 循环",
+      "flowbillsPaidAccounts": "FlowBills 付费账户",
       "staleChecks": "过期检查",
       "clean": "无异常",
       "loop": "{{count}} 次循环"

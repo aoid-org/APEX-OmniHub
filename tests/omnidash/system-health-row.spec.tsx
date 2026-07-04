@@ -10,8 +10,8 @@ vi.mock('../../apps/omnihub-site/src/i18n/useAppTranslation', () => ({
         'dashboard.footer.unknown': 'Unknown',
         'dashboard.footer.simulated': '(Simulated)',
         'dashboard.systemHealth.title': 'System Health Overview',
-        'dashboard.systemHealth.eventsTracked': 'Events Tracked',
-        'dashboard.systemHealth.guardianLoops': 'Guardian Loops',
+        'dashboard.systemHealth.flowbillsDemoCount': 'FlowBills Demos',
+        'dashboard.systemHealth.flowbillsPaidAccounts': 'FlowBills Paid Accounts',
         'dashboard.systemHealth.staleChecks': 'Stale Checks',
         'dashboard.systemHealth.clean': 'Clean',
       };
@@ -47,19 +47,19 @@ describe('SystemHealthRow', () => {
     expect(screen.getByText('Degraded')).toBeTruthy();
   });
 
-  it('renders zero events tracked in demo mode', () => {
+  it('renders zero FlowBills demos in demo mode', () => {
     render(<SystemHealthRow demoMode={true} kpi={kpiWithIncidents} />);
-    expect(screen.getByText('Events Tracked (Simulated)')).toBeTruthy();
+    expect(screen.getByText('FlowBills Demos (Simulated)')).toBeTruthy();
   });
 
-  it('renders real event count in live mode', () => {
+  it('renders real FlowBills demo count in live mode', () => {
     render(<SystemHealthRow demoMode={false} kpi={kpiWithIncidents} />);
     expect(screen.getByText('10')).toBeTruthy();
   });
 
-  it('renders guardian loops label', () => {
+  it('renders FlowBills paid accounts label', () => {
     render(<SystemHealthRow demoMode={true} kpi={EMPTY_KPI_SUMMARY} />);
-    expect(screen.getByText('Guardian Loops (Simulated)')).toBeTruthy();
+    expect(screen.getByText('FlowBills Paid Accounts (Simulated)')).toBeTruthy();
   });
 
   it('renders stale checks as Clean when 0', () => {
@@ -72,8 +72,9 @@ describe('SystemHealthRow', () => {
     expect(screen.getByText('2')).toBeTruthy();
   });
 
-  it('renders 1 loop in demo mode', () => {
+  it('renders 1 paid account in demo mode without loop copy', () => {
     render(<SystemHealthRow demoMode={true} kpi={EMPTY_KPI_SUMMARY} />);
-    expect(screen.getByText('1 loop')).toBeTruthy();
+    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.queryByText('1 loop')).toBeNull();
   });
 });

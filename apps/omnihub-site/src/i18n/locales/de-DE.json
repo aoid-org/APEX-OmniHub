@@ -424,9 +424,9 @@
     },
     "systemHealth": {
       "title": "Systemstatus",
-      "eventsTracked": "Erfasste Ereignisse",
+      "flowbillsDemoCount": "FlowBills-Demos",
       "systemHealth": "Systemzustand",
-      "guardianLoops": "Guardian-Zyklen",
+      "flowbillsPaidAccounts": "FlowBills-Bezahlkonten",
       "staleChecks": "Abgelaufene Prüfungen",
       "clean": "Sauber",
       "loop": "{{count}} Zyklus"

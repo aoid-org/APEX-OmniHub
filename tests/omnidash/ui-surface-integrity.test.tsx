@@ -32,9 +32,9 @@ describe('OmniDash UI Surface Integrity', () => {
 
     render(<SystemHealthRow demoMode={true} kpi={mockKpi} />);
     
-    expect(screen.getByText('Events Tracked (Simulated)')).toBeTruthy();
+    expect(screen.getByText('FlowBills Demos (Simulated)')).toBeTruthy();
     expect(screen.getByText('System Health (Simulated)')).toBeTruthy();
-    expect(screen.getByText('Guardian Loops (Simulated)')).toBeTruthy();
+    expect(screen.getByText('FlowBills Paid Accounts (Simulated)')).toBeTruthy();
     expect(screen.getByText('Stale Checks (Simulated)')).toBeTruthy();
   });
 

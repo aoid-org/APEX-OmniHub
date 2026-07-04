@@ -110,6 +110,40 @@ The SkillForge generation flow routes through `_shared/llm.ts` (Groq + Anthropic
 
 Deploy: `supabase functions deploy generate-business-skills --project-ref rtopreovkywofgwgmozi`.
 
+### 3.5 Supabase Vault — workflow scheduler database secrets
+
+Scheduled Workflows are dispatched by Postgres (`pg_cron` + `pg_net`) through
+`public.dispatch_scheduled_workflows()`, not by a Supabase Edge Function runtime.
+The SQL function reads its own secrets from Supabase Vault at execution time:
+
+| Vault secret | Required value | If missing |
+|---|---|---|
+| `project_url` | Environment-specific Supabase project URL, no trailing slash preferred (example shape: `https://<project-ref>.supabase.co`) | Scheduler raises a Postgres `WARNING` and skips dispatch; no workflow HTTP calls are sent |
+| `cron_shared_secret` | Same value as Edge Function secret `CRON_SHARED_SECRET` | Scheduler raises a Postgres `WARNING` and skips dispatch; no workflow HTTP calls are sent |
+
+**Critical environment boundary:** set `project_url` separately in each Supabase
+environment before enabling/running the scheduler. Staging/recovery databases
+must point to their own project URL, never to production. The forward migration
+`20260704230000_workflow_scheduler_vault_project_url.sql` removed the prior
+hardcoded production URL from the scheduler function and now reads `project_url`
+from Vault.
+
+Provision / verify per environment:
+
+```sql
+select vault.create_secret('https://<project-ref>.supabase.co', 'project_url');
+
+select jobname, command
+from cron.job
+where jobname ilike '%workflow%';
+```
+
+Expected `workflow-scheduler` command:
+
+```sql
+SELECT public.dispatch_scheduled_workflows();
+```
+
 ---
 
 ## 4. Required database objects
@@ -121,6 +155,7 @@ Deploy: `supabase functions deploy generate-business-skills --project-ref rtopre
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
 | `user_generated_skills` + `check_skill_entitlement()` / `enforce_skill_entitlement` trigger (migrations `20260214000001`, `20260610000000`; free cap raised 3→5 by `20260622000000_skill_entitlement_free_cap_5.sql`) | SkillForge generation + paywall (BASIC = 5 active skills, 6th = 402) | SkillForge create + paywall breaks |
+| `workflows.schedule` constraint + `public.dispatch_scheduled_workflows()` + `workflow-scheduler` cron job (migrations `20260701200000_workflow_scheduler.sql`, `20260704230000_workflow_scheduler_vault_project_url.sql`) | Scheduled Workflows autonomous execution; dispatches due active workflows to `execute-workflow` with `X-Cron-Secret` | Scheduled workflows stop dispatching; manual Trigger Run path remains separate |
 
 **Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
 
@@ -151,6 +186,7 @@ Normal `create_record` / `send_email` / `call_webhook` have no policy → defaul
 | Edge `create-checkout` | code deploy: `supabase functions deploy create-checkout --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUS`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` at runtime |
 | Edge `stripe-webhook` | code deploy: `supabase functions deploy stripe-webhook --project-ref rtopreovkywofgwgmozi`; requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` at runtime |
 | Orchestrator API / Worker | push to `main` under `orchestrator/` → Render auto-deploys; or service → Manual Deploy → Deploy latest commit; env change → Save Changes redeploys |
+| Supabase DB migrations | apply only new additive/idempotent migrations with `supabase db push` after verifying target environment; scheduler migrations require Vault `project_url` to match that environment before enabling autonomous dispatch |
 
 ---
 

@@ -72,7 +72,10 @@ User selected option 1 explicitly ("OPTION 1").
   pinned): runs every 5 minutes via `cron.schedule('workflow-scheduler',
   '*/5 * * * *', ...)`, finds active/scheduled/due workflows (due = no run
   yet, or last run older than the preset's interval), fires an async
-  `net.http_post` to `execute-workflow` per workflow.
+  `net.http_post` to `execute-workflow` per workflow. As of
+  `supabase/migrations/20260704230000_workflow_scheduler_vault_project_url.sql`,
+  the Edge Function base URL is read from the per-environment Vault secret
+  `project_url` instead of being hardcoded in migration SQL.
 - `execute-workflow` gains a second auth path: `X-Cron-Secret` header
   matching `CRON_SHARED_SECRET` (a Function secret), used instead of a user
   JWT. The workflow is looked up **by id only** on that path (no user to
@@ -110,6 +113,9 @@ identical to a manual run) → writes a real `workflow_runs` row
 - New Vault secret: `cron_shared_secret` (same value, read by the SQL
   function so the plaintext secret is never embedded in the committed
   migration file or visible in `cron.job`'s stored command text).
+- New Vault secret: `project_url` (per-environment Supabase project URL used
+  as the base for `execute-workflow`; required to avoid staging/recovery cron
+  dispatching to the production project URL).
 - Changed: `execute-workflow`'s `supabase/config.toml` entry,
   `verify_jwt: true → false` (own internal auth now handles both callers —
   same pattern `omnilink-port` already uses).
@@ -117,8 +123,9 @@ identical to a manual run) → writes a real `workflow_runs` row
 ## 11. Failure Modes
 
 - **Vault secret missing/misconfigured:** `dispatch_scheduled_workflows()`
-  raises a `WARNING` and returns without calling anything — fails closed,
-  no requests sent, visible in Postgres logs.
+  raises a `WARNING` and returns without calling anything when either
+  `project_url` or `cron_shared_secret` is missing — fails closed, no requests
+  sent, visible in Postgres logs.
 - **`execute-workflow` unreachable/erroring:** `net.http_post` is
   fire-and-forget; failures are visible in `net._http_response` (used
   during verification) but the cron job itself never fails or blocks on
