@@ -53,13 +53,11 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       style={{
         margin: '0 0 8px',
         borderRadius: 11,
-        // Same neutral fill as NavItem above it (0.14 white, not orange) —
-        // an orange-tinted fill reads as warm brown against the right rail's
-        // cool neutral-white cards (OmniSentry/Ops Controls), a real hue
-        // mismatch measured on a live render. Border/blur stay matched to
-        // the right rail; only the fill tint + alpha changed.
+        // Same fill alpha as NavItem above it. Owner directive: opacity
+        // only, orange tint stays — raised alpha again (0.16 -> 0.30)
+        // rather than changing fill color.
         border: `1px solid ${omniRgba('orange', 0.25)}`,
-        background: 'rgba(255, 255, 255, 0.14)',
+        background: omniRgba('orange', 0.30),
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         overflow: 'hidden',
