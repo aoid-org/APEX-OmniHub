@@ -53,10 +53,12 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       style={{
         margin: '0 0 8px',
         borderRadius: 11,
-        // Uniform rail/sidebar glassmorph tile — same orange border, fill opacity,
-        // and blur as the right-rail tiles and System Status (owner request).
+        // Same fill alpha as NavItem above it (0.16, not the right rail's 0.06) —
+        // this tile is much smaller than the right-rail cards, so the lower
+        // alpha that reads as a visible glass tile on a large card reads as
+        // nearly invisible here. Border/blur stay matched to the right rail.
         border: `1px solid ${omniRgba('orange', 0.25)}`,
-        background: omniRgba('orange', 0.06),
+        background: omniRgba('orange', 0.16),
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         overflow: 'hidden',
