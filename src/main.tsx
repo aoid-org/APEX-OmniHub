@@ -7,6 +7,7 @@ import '../apps/omnihub-site/src/styles/globals.css';
 import '../apps/omnihub-site/src/styles/theme.css';
 import '../apps/omnihub-site/src/styles/components.css';
 import '../apps/omnihub-site/src/styles/omnidash-layout.css';
+import '../apps/omnihub-site/dashboard/omniSkin.css';
 // APEX PWA INVARIANT: SW registration lives in swInit.ts (testable).
 // Guarded by: scripts/ci/check-pwa-integrity.mjs
 import { registerServiceWorker } from './swInit';
