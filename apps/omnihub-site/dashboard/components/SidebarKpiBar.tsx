@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { T, omniRgba } from '../omniSkinTokens';
 import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
+import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 const STORAGE_KEY = 'apex.sidebar.kpi.collapsed';
 
@@ -9,6 +10,7 @@ function getSavedCollapsed(): boolean {
 }
 
 interface Tile {
+  key: string;
   icon: string;
   value: string | number;
   label: string;
@@ -22,6 +24,7 @@ interface SidebarKpiBarProps {
 }
 
 export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProps) {
+  const { tx } = useAppTranslation();
   const [collapsed, setCollapsed] = useState(getSavedCollapsed);
 
   const toggle = useCallback(() => {
@@ -38,10 +41,10 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
   const stale     = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
 
   const tiles: Tile[] = [
-    { icon: '⚡', value: events,                          label: 'Events Tracked',  color: T.t2 },
-    { icon: '🛡️', value: isHealthy ? '✓' : '!', label: 'System Health', color: isHealthy ? T.green : T.warn },
-    { icon: '🔄', value: guardian,                  label: 'Guardian Loops',  color: T.orange },
-    { icon: '✅', value: stale === 0 ? '0' : stale,       label: 'Stale Checks',    color: stale === 0 ? T.green : T.warn },
+    { key: 'events',   icon: '⚡', value: events,                    label: tx('dashboard.systemHealth.eventsTracked'),  color: T.t2 },
+    { key: 'health',   icon: '🛡️', value: isHealthy ? '✓' : '!',   label: tx('dashboard.systemHealth.systemHealth'),   color: isHealthy ? T.green : T.warn },
+    { key: 'guardian', icon: '🔄', value: guardian,                  label: tx('dashboard.systemHealth.guardianLoops'),  color: T.orange },
+    { key: 'stale',    icon: '✅', value: stale === 0 ? '0' : stale, label: tx('dashboard.systemHealth.staleChecks'),    color: stale === 0 ? T.green : T.warn },
   ];
 
   return (
@@ -70,7 +73,7 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
           textTransform: 'uppercase' as const,
         }}
       >
-        <span>System KPIs</span>
+        <span>{tx('dashboard.sidebar.systemKpis')}</span>
         <span aria-hidden="true" style={{ fontSize: 8 }}>{collapsed ? '▸' : '▾'}</span>
       </button>
 
@@ -84,7 +87,7 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
         >
           {tiles.map(tile => (
             <div
-              key={tile.label}
+              key={tile.key}
               title={tile.label}
               aria-label={`${tile.label}: ${tile.value}`}
               style={{

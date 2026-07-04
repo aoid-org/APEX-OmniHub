@@ -24,6 +24,7 @@ export type OmniDashSidebarWidgetLabel =
 export interface OmniDashSidebarWidget {
   readonly id: OmniDashSidebarWidgetId;
   readonly label: OmniDashSidebarWidgetLabel;
+  readonly labelKey?: string;
   readonly iconIdx: number;
   readonly moduleKey: OmniDashSidebarWidgetId;
 }
@@ -33,13 +34,13 @@ export const OMNIDASH_SIDEBAR_WIDGET_COUNT = 9;
 export const OMNIDASH_SIDEBAR_WIDGETS = [
   { id: 'omniboard', label: 'OmniBoard', iconIdx: 0, moduleKey: 'omniboard' },
   { id: 'physiomni', label: 'PhysiOmni', iconIdx: 5, moduleKey: 'physiomni' },
-  { id: 'audits', label: 'Audits', iconIdx: 1, moduleKey: 'audits' },
-  { id: 'links', label: 'Links', iconIdx: 4, moduleKey: 'links' },
-  { id: 'automations', label: 'Automations', iconIdx: 7, moduleKey: 'automations' },
-  { id: 'workflows', label: 'Workflows', iconIdx: 6, moduleKey: 'workflows' },
-  { id: 'files', label: 'Files', iconIdx: 8, moduleKey: 'files' },
-  { id: 'billing', label: 'Billing', iconIdx: 3, moduleKey: 'billing' },
-  { id: 'settings', label: 'Settings', iconIdx: 2, moduleKey: 'settings' },
+  { id: 'audits', label: 'Audits', labelKey: 'dashboard.sidebarWidgets.audits', iconIdx: 1, moduleKey: 'audits' },
+  { id: 'links', label: 'Links', labelKey: 'dashboard.sidebarWidgets.links', iconIdx: 4, moduleKey: 'links' },
+  { id: 'automations', label: 'Automations', labelKey: 'dashboard.sidebarWidgets.automations', iconIdx: 7, moduleKey: 'automations' },
+  { id: 'workflows', label: 'Workflows', labelKey: 'dashboard.sidebarWidgets.workflows', iconIdx: 6, moduleKey: 'workflows' },
+  { id: 'files', label: 'Files', labelKey: 'dashboard.sidebarWidgets.files', iconIdx: 8, moduleKey: 'files' },
+  { id: 'billing', label: 'Billing', labelKey: 'dashboard.sidebarWidgets.billing', iconIdx: 3, moduleKey: 'billing' },
+  { id: 'settings', label: 'Settings', labelKey: 'dashboard.sidebarWidgets.settings', iconIdx: 2, moduleKey: 'settings' },
 ] as const satisfies readonly OmniDashSidebarWidget[];
 
 export const FORBIDDEN_OMNIDASH_SIDEBAR_LABELS = [

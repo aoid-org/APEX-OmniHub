@@ -11,6 +11,7 @@ const PAGES = [
   { url: '/omniport',       priority: '0.8', changefreq: 'monthly' },
   { url: '/story',          priority: '0.7', changefreq: 'monthly' },
   { url: '/request-access', priority: '0.8', changefreq: 'monthly' },
+  { url: '/pricing',        priority: '0.9', changefreq: 'monthly' },
 ];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

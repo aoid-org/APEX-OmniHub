@@ -6,7 +6,11 @@
       "line3": "Orchestrator."
     },
     "subtitle": "The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible.",
-    "tiles": ["DIRECT", "AUDIT", "DEDUCE"],
+    "tiles": [
+      "DIRECT",
+      "AUDIT",
+      "DEDUCE"
+    ],
     "cta": {
       "primary": "Request Early Access",
       "secondary": "Watch Demo"
@@ -302,6 +306,163 @@
     "playLabel": "Play {{title}}",
     "deleteLabel": "Delete {{title}}",
     "firstParty": "First-Party",
-    "external": "External"
+    "external": "External",
+    "open": "Open"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "All Systems Operational",
+      "companyName": "APEX Business Systems Ltd. · Edmonton, AB",
+      "signOut": "Sign out",
+      "signingOut": "Signing out…",
+      "systemKpis": "System KPIs"
+    },
+    "header": {
+      "searchPlaceholder": "Search OmniHub…",
+      "zeroTrustActive": "Zero Trust Active",
+      "connectAi": "Connect AI",
+      "notifications": "Notifications",
+      "noNotifications": "You have no pending notifications or approvals.",
+      "recentActivity": "Recent activity across your APEX workspace.",
+      "workspaceSettings": "Workspace Settings",
+      "billingPlans": "Billing & Plans",
+      "inviteMembers": "Invite Members",
+      "inviteSent": "Invitation sent successfully to {{email}}.",
+      "orgEnterprise": "Enterprise",
+      "omniSkills": "OmniSkills"
+    },
+    "agent": {
+      "session": "SESSION",
+      "chooseAvatar": "Choose Agent Avatar",
+      "cancel": "Cancel",
+      "pause": "Pause",
+      "start": "Start",
+      "reset": "RESET",
+      "longPressHint": "Long press to change avatar",
+      "title": "APEX Agent"
+    },
+    "slate": {
+      "demoSession": "Starting demo session…",
+      "startSession": "Start a session to begin",
+      "placeholder": "Ask APEX Agent anything…",
+      "execute": "Execute",
+      "stop": "Stop",
+      "contextSources": "Context Sources",
+      "removeContext": "Remove context",
+      "fillSuggestion": "Fill suggestion",
+      "viewContext": "View context",
+      "systemError": "System Error: Unable to reach APEX Agent. Guardian audit logged.",
+      "responseStopped": "Response stopped by user.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
+    },
+    "ecosystem": {
+      "addApp": "Add APEX App",
+      "title": "APEX Ecosystem"
+    },
+    "appGallery": {
+      "title": "App Gallery",
+      "awaiting": "AWAITING",
+      "awaitingSlot": "App Slot {{n}} — awaiting connection"
+    },
+    "trace": {
+      "live": "Live",
+      "connecting": "Connecting",
+      "demoSimulated": "Demo (Simulated)",
+      "noEvents": "No events yet",
+      "replayWorkflows": "Replay Workflows",
+      "closeReplay": "Close Replay",
+      "replayMode": "Replay Mode"
+    },
+    "sentry": {
+      "enable": "Enable to activate circuit-breaker monitoring.",
+      "initializing": "Initializing…",
+      "disableLabel": "Disable OmniSentry",
+      "enableLabel": "Enable OmniSentry",
+      "circuit": "Circuit",
+      "errorsMin": "Errors/min",
+      "memory": "Memory",
+      "uptime": "Uptime",
+      "probeCircuit": "Probe Circuit",
+      "probing": "Probing…",
+      "circuitClosed": "✓ Circuit Closed",
+      "circuitOpen": "⚡ Circuit Open",
+      "probeFailed": "✗ Probe Failed",
+      "flushOffline": "Flush {{count}} Offline Error",
+      "flushOffline_plural": "Flush {{count}} Offline Errors",
+      "flushing": "Flushing…",
+      "flushed": "✓ Flushed {{count}}"
+    },
+    "ops": {
+      "title": "Ops Controls",
+      "demoMode": "Demo Mode",
+      "demoModeSub": "Simulated data feed",
+      "autoPilot": "Auto-Pilot",
+      "autoPilotSub": "Autonomous task handling",
+      "guardianMode": "Guardian Mode",
+      "guardianModeSub": "AI policy enforcement",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "Health",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "incident": "Incident",
+      "unknown": "Unknown",
+      "sev1": "SEV-1",
+      "incidents": "Incidents",
+      "sync": "Sync",
+      "syncLive": "Live",
+      "syncDemo": "Demo",
+      "syncSyncing": "Syncing",
+      "syncError": "Sync error",
+      "guardianActive": "Guardian: ACTIVE",
+      "simulated": "(Simulated)"
+    },
+    "systemHealth": {
+      "title": "System Health Overview",
+      "eventsTracked": "Events Tracked",
+      "systemHealth": "System Health",
+      "guardianLoops": "Guardian Loops",
+      "staleChecks": "Stale Checks",
+      "clean": "Clean",
+      "loop": "{{count}} loop"
+    },
+    "sidebarWidgets": {
+      "audits": "Audits",
+      "links": "Links",
+      "automations": "Automations",
+      "workflows": "Workflows",
+      "files": "Files",
+      "billing": "Billing",
+      "settings": "Settings"
+    },
+    "media": {
+      "open": "Open"
+    },
+    "mobile": {
+      "home": "Home",
+      "slate": "Slate",
+      "apps": "Apps",
+      "insights": "Insights",
+      "more": "More",
+      "insightsControls": "Insights & Controls",
+      "switchLight": "Switch to light theme",
+      "switchDark": "Switch to dark theme",
+      "signOut": "Sign out",
+      "openInsights": "Open insights panel",
+      "dashboardNav": "Dashboard navigation",
+      "closePanel": "Close panel"
+    }
+  },
+  "translation": {
+    "source_text": "Source Text",
+    "target_language": "Target Language",
+    "translate": "Translate",
+    "translated_text": "Translated Output",
+    "copy": "Copy"
   }
 }

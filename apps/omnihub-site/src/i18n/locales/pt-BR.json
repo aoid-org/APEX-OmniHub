@@ -6,7 +6,11 @@
       "line3": "Orquestrador."
     },
     "subtitle": "A superfície de comando governada para IA empresarial. Unifique software, agentes de IA e plataformas empresariais em uma camada orquestrada onde cada ação é autorizada, registrada e reversível.",
-    "tiles": ["DIRECIONAR", "AUDITAR", "DEDUZIR"],
+    "tiles": [
+      "DIRECIONAR",
+      "AUDITAR",
+      "DEDUZIR"
+    ],
     "cta": {
       "primary": "Solicitar acesso antecipado",
       "secondary": "Ver demonstração"
@@ -302,6 +306,163 @@
     "playLabel": "Reproduzir {{title}}",
     "deleteLabel": "Excluir {{title}}",
     "firstParty": "Própria",
-    "external": "Externa"
+    "external": "Externa",
+    "open": "Abrir"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "Todos os sistemas operacionais",
+      "companyName": "APEX Business Systems Ltd. · Edmonton, AB",
+      "signOut": "Sair",
+      "signingOut": "Saindo…",
+      "systemKpis": "KPIs do sistema"
+    },
+    "header": {
+      "searchPlaceholder": "Pesquisar no OmniHub…",
+      "zeroTrustActive": "Zero Trust ativo",
+      "connectAi": "Conectar IA",
+      "notifications": "Notificações",
+      "noNotifications": "Nenhuma notificação ou aprovação pendente.",
+      "recentActivity": "Atividade recente no seu espaço APEX.",
+      "workspaceSettings": "Configurações do espaço",
+      "billingPlans": "Faturamento e planos",
+      "inviteMembers": "Convidar membros",
+      "inviteSent": "Convite enviado com sucesso para {{email}}.",
+      "orgEnterprise": "Empresa",
+      "omniSkills": "OmniSkills"
+    },
+    "agent": {
+      "session": "SESSÃO",
+      "chooseAvatar": "Escolher avatar do agente",
+      "cancel": "Cancelar",
+      "pause": "Pausar",
+      "start": "Iniciar",
+      "reset": "REST.",
+      "longPressHint": "Pressione e segure para trocar avatar",
+      "title": "APEX Agent"
+    },
+    "slate": {
+      "demoSession": "Iniciando sessão demo…",
+      "startSession": "Inicie uma sessão para começar",
+      "placeholder": "Pergunte ao APEX Agent…",
+      "execute": "Executar",
+      "stop": "Parar",
+      "contextSources": "Fontes de contexto",
+      "removeContext": "Remover contexto",
+      "fillSuggestion": "Preencher sugestão",
+      "viewContext": "Ver contexto",
+      "systemError": "Erro do sistema: Não foi possível contatar o APEX Agent. Auditoria Guardian registrada.",
+      "responseStopped": "Resposta interrompida pelo usuário.",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
+    },
+    "ecosystem": {
+      "addApp": "Adicionar app APEX",
+      "title": "APEX Ecosystem"
+    },
+    "appGallery": {
+      "title": "Galeria de apps",
+      "awaiting": "AGUARDANDO",
+      "awaitingSlot": "Slot {{n}} — aguardando conexão"
+    },
+    "trace": {
+      "live": "Ao vivo",
+      "connecting": "Conectando",
+      "demoSimulated": "Demo (Simulado)",
+      "noEvents": "Sem eventos ainda",
+      "replayWorkflows": "Reproduzir workflows",
+      "closeReplay": "Fechar reprodução",
+      "replayMode": "Modo de reprodução"
+    },
+    "sentry": {
+      "enable": "Ativar para iniciar monitoramento do disjuntor.",
+      "initializing": "Inicializando…",
+      "disableLabel": "Desativar OmniSentry",
+      "enableLabel": "Ativar OmniSentry",
+      "circuit": "Circuito",
+      "errorsMin": "Erros/min",
+      "memory": "Memória",
+      "uptime": "Tempo ativo",
+      "probeCircuit": "Testar circuito",
+      "probing": "Testando…",
+      "circuitClosed": "✓ Circuito fechado",
+      "circuitOpen": "⚡ Circuito aberto",
+      "probeFailed": "✗ Teste falhou",
+      "flushOffline": "Limpar {{count}} erro offline",
+      "flushOffline_plural": "Limpar {{count}} erros offline",
+      "flushing": "Limpando…",
+      "flushed": "✓ {{count}} limpo(s)"
+    },
+    "ops": {
+      "title": "Controles de Ops",
+      "demoMode": "Modo demo",
+      "demoModeSub": "Fluxo de dados simulado",
+      "autoPilot": "Piloto automático",
+      "autoPilotSub": "Processamento autônomo de tarefas",
+      "guardianMode": "Modo Guardian",
+      "guardianModeSub": "Aplicação de políticas de IA",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "Saúde",
+      "healthy": "Saudável",
+      "degraded": "Degradado",
+      "incident": "Incidente",
+      "unknown": "Desconhecido",
+      "sev1": "SEV-1",
+      "incidents": "Incidentes",
+      "sync": "Sincronia",
+      "syncLive": "Ao vivo",
+      "syncDemo": "Demo",
+      "syncSyncing": "Sincronizando",
+      "syncError": "Erro de sincronia",
+      "guardianActive": "Guardian: ATIVO",
+      "simulated": "(Simulado)"
+    },
+    "systemHealth": {
+      "title": "Status do sistema",
+      "eventsTracked": "Eventos rastreados",
+      "systemHealth": "Saúde do sistema",
+      "guardianLoops": "Ciclos Guardian",
+      "staleChecks": "Verificações expiradas",
+      "clean": "Limpo",
+      "loop": "{{count}} ciclo"
+    },
+    "media": {
+      "open": "Abrir"
+    },
+    "mobile": {
+      "home": "Início",
+      "slate": "Slate",
+      "apps": "Apps",
+      "insights": "Insights",
+      "more": "Mais",
+      "insightsControls": "Insights e controles",
+      "switchLight": "Mudar para tema claro",
+      "switchDark": "Mudar para tema escuro",
+      "signOut": "Sair",
+      "openInsights": "Abrir painel de insights",
+      "dashboardNav": "Navegação do painel",
+      "closePanel": "Fechar painel"
+    },
+    "sidebarWidgets": {
+      "audits": "Auditorias",
+      "links": "Links",
+      "automations": "Automações",
+      "workflows": "Fluxos de trabalho",
+      "files": "Arquivos",
+      "billing": "Faturamento",
+      "settings": "Configurações"
+    }
+  },
+  "translation": {
+    "source_text": "Texto de origem",
+    "target_language": "Idioma de destino",
+    "translate": "Traduzir",
+    "translated_text": "Texto traduzido",
+    "copy": "Copiar"
   }
 }

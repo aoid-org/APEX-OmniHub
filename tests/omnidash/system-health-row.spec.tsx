@@ -1,5 +1,25 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+vi.mock('../../apps/omnihub-site/src/i18n/useAppTranslation', () => ({
+  useAppTranslation: () => ({
+    tx: (key: string, opts?: any) => {
+      const map: Record<string, string> = {
+        'dashboard.footer.healthy': 'Healthy',
+        'dashboard.footer.degraded': 'Degraded',
+        'dashboard.footer.unknown': 'Unknown',
+        'dashboard.footer.simulated': '(Simulated)',
+        'dashboard.systemHealth.title': 'System Health Overview',
+        'dashboard.systemHealth.eventsTracked': 'Events Tracked',
+        'dashboard.systemHealth.guardianLoops': 'Guardian Loops',
+        'dashboard.systemHealth.staleChecks': 'Stale Checks',
+        'dashboard.systemHealth.clean': 'Clean',
+      };
+      return map[key] || opts?.defaultValue || key;
+    },
+  }),
+}));
+
 import { SystemHealthRow } from '../../apps/omnihub-site/dashboard/components/SystemHealthRow';
 import { EMPTY_KPI_SUMMARY } from '../../apps/omnihub-site/dashboard/types/dashboard.types';
 import type { KpiSummary } from '../../apps/omnihub-site/dashboard/types/dashboard.types';

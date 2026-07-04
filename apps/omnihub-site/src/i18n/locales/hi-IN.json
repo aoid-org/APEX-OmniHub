@@ -6,7 +6,11 @@
       "line3": "सार्वभौमिक।"
     },
     "subtitle": "एंटरप्राइज़ AI के लिए शासित कमांड सर्फ़ेस। सॉफ़्टवेयर, AI एजेंट और एंटरप्राइज़ प्लेटफ़ॉर्म को एक व्यवस्थित परत में एकीकृत करें जहाँ हर कार्रवाई अधिकृत, लॉग की गई और प्रतिवर्ती है।",
-    "tiles": ["प्रत्यक्ष", "लेखापरीक्षा", "अनुमान"],
+    "tiles": [
+      "प्रत्यक्ष",
+      "लेखापरीक्षा",
+      "अनुमान"
+    ],
     "cta": {
       "primary": "शीघ्र पहुँच का अनुरोध करें",
       "secondary": "डेमो देखें"
@@ -302,6 +306,163 @@
     "playLabel": "{{title}} चलाएँ",
     "deleteLabel": "{{title}} हटाएँ",
     "firstParty": "प्रथम-पक्ष",
-    "external": "बाहरी"
+    "external": "बाहरी",
+    "open": "खोलें"
+  },
+  "dashboard": {
+    "sidebar": {
+      "allSystemsOperational": "सभी सिस्टम चालू हैं",
+      "companyName": "APEX Business Systems Ltd. · एडमंटन, AB",
+      "signOut": "साइन आउट",
+      "signingOut": "साइन आउट हो रहा है…",
+      "systemKpis": "सिस्टम KPIs"
+    },
+    "header": {
+      "searchPlaceholder": "OmniHub में खोजें…",
+      "zeroTrustActive": "Zero Trust सक्रिय",
+      "connectAi": "AI कनेक्ट करें",
+      "notifications": "सूचनाएं",
+      "noNotifications": "कोई लंबित सूचना या अनुमोदन नहीं है।",
+      "recentActivity": "आपके APEX कार्यक्षेत्र की हालिया गतिविधि।",
+      "workspaceSettings": "कार्यक्षेत्र सेटिंग्स",
+      "billingPlans": "बिलिंग और योजनाएं",
+      "inviteMembers": "सदस्यों को आमंत्रित करें",
+      "inviteSent": "{{email}} को आमंत्रण सफलतापूर्वक भेजा गया।",
+      "orgEnterprise": "एंटरप्राइज़",
+      "omniSkills": "OmniSkills"
+    },
+    "agent": {
+      "session": "सत्र",
+      "chooseAvatar": "एजेंट अवतार चुनें",
+      "cancel": "रद्द करें",
+      "pause": "रोकें",
+      "start": "शुरू करें",
+      "reset": "रीसेट",
+      "longPressHint": "अवतार बदलने के लिए देर तक दबाएं",
+      "title": "APEX Agent"
+    },
+    "slate": {
+      "demoSession": "डेमो सत्र शुरू हो रहा है…",
+      "startSession": "शुरू करने के लिए एक सत्र आरंभ करें",
+      "placeholder": "APEX Agent से कुछ भी पूछें…",
+      "execute": "निष्पादित करें",
+      "stop": "रोकें",
+      "contextSources": "संदर्भ स्रोत",
+      "removeContext": "संदर्भ हटाएं",
+      "fillSuggestion": "सुझाव भरें",
+      "viewContext": "संदर्भ देखें",
+      "systemError": "सिस्टम त्रुटि: APEX Agent से संपर्क नहीं हो सका। Guardian ऑडिट लॉग किया गया।",
+      "responseStopped": "उपयोगकर्ता द्वारा प्रतिक्रिया रोकी गई।",
+      "title": "OmniSlate",
+      "cleanSlate": "CleanSlate"
+    },
+    "ecosystem": {
+      "addApp": "APEX ऐप जोड़ें",
+      "title": "APEX Ecosystem"
+    },
+    "appGallery": {
+      "title": "ऐप गैलरी",
+      "awaiting": "प्रतीक्षा में",
+      "awaitingSlot": "ऐप स्लॉट {{n}} — कनेक्शन की प्रतीक्षा में"
+    },
+    "trace": {
+      "live": "लाइव",
+      "connecting": "कनेक्ट हो रहा है",
+      "demoSimulated": "डेमो (सिमुलेटेड)",
+      "noEvents": "अभी तक कोई इवेंट नहीं",
+      "replayWorkflows": "वर्कफ़्लो रीप्ले करें",
+      "closeReplay": "रीप्ले बंद करें",
+      "replayMode": "रीप्ले मोड"
+    },
+    "sentry": {
+      "enable": "सर्किट-ब्रेकर मॉनिटरिंग सक्रिय करने के लिए सक्षम करें।",
+      "initializing": "आरंभ हो रहा है…",
+      "disableLabel": "OmniSentry निष्क्रिय करें",
+      "enableLabel": "OmniSentry सक्रिय करें",
+      "circuit": "सर्किट",
+      "errorsMin": "त्रुटियां/मिनट",
+      "memory": "मेमोरी",
+      "uptime": "अपटाइम",
+      "probeCircuit": "सर्किट जांचें",
+      "probing": "जांच हो रही है…",
+      "circuitClosed": "✓ सर्किट बंद",
+      "circuitOpen": "⚡ सर्किट खुला",
+      "probeFailed": "✗ जांच विफल",
+      "flushOffline": "{{count}} ऑफ़लाइन त्रुटि फ्लश करें",
+      "flushOffline_plural": "{{count}} ऑफ़लाइन त्रुटियां फ्लश करें",
+      "flushing": "फ्लश हो रहा है…",
+      "flushed": "✓ {{count}} फ्लश किया गया"
+    },
+    "ops": {
+      "title": "Ops नियंत्रण",
+      "demoMode": "डेमो मोड",
+      "demoModeSub": "सिमुलेटेड डेटा फ़ीड",
+      "autoPilot": "ऑटो-पायलट",
+      "autoPilotSub": "स्वायत्त कार्य प्रबंधन",
+      "guardianMode": "Guardian मोड",
+      "guardianModeSub": "AI नीति प्रवर्तन",
+      "toggleDemoMode": "Toggle demo mode",
+      "toggleAutoPilot": "Toggle auto pilot",
+      "toggleGuardianMode": "Toggle guardian mode"
+    },
+    "footer": {
+      "copyright": "© 2026 APEX Business Systems Ltd.",
+      "health": "स्वास्थ्य",
+      "healthy": "स्वस्थ",
+      "degraded": "क्षीण",
+      "incident": "घटना",
+      "unknown": "अज्ञात",
+      "sev1": "SEV-1",
+      "incidents": "घटनाएं",
+      "sync": "सिंक",
+      "syncLive": "लाइव",
+      "syncDemo": "डेमो",
+      "syncSyncing": "सिंक हो रहा है",
+      "syncError": "सिंक त्रुटि",
+      "guardianActive": "Guardian: सक्रिय",
+      "simulated": "(सिमुलेटेड)"
+    },
+    "systemHealth": {
+      "title": "सिस्टम स्थिति",
+      "eventsTracked": "ट्रैक किए गए इवेंट",
+      "systemHealth": "सिस्टम स्वास्थ्य",
+      "guardianLoops": "Guardian लूप",
+      "staleChecks": "पुरानी जांच",
+      "clean": "साफ़",
+      "loop": "{{count}} लूप"
+    },
+    "media": {
+      "open": "खोलें"
+    },
+    "mobile": {
+      "home": "होम",
+      "slate": "Slate",
+      "apps": "ऐप्स",
+      "insights": "इनसाइट्स",
+      "more": "अधिक",
+      "insightsControls": "इनसाइट्स और नियंत्रण",
+      "switchLight": "लाइट थीम पर स्विच करें",
+      "switchDark": "डार्क थीम पर स्विच करें",
+      "signOut": "साइन आउट",
+      "openInsights": "इनसाइट्स पैनल खोलें",
+      "dashboardNav": "डैशबोर्ड नेविगेशन",
+      "closePanel": "पैनल बंद करें"
+    },
+    "sidebarWidgets": {
+      "audits": "ऑडिट",
+      "links": "लिंक्स",
+      "automations": "स्वचालन",
+      "workflows": "कार्यप्रवाह",
+      "files": "फ़ाइलें",
+      "billing": "बिलिंग",
+      "settings": "सेटिंग्स"
+    }
+  },
+  "translation": {
+    "source_text": "स्रोत पाठ",
+    "target_language": "लक्ष्य भाषा",
+    "translate": "अनुवाद करें",
+    "translated_text": "अनूदित आउटपुट",
+    "copy": "कॉपी करें"
   }
 }

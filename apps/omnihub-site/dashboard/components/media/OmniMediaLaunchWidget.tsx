@@ -11,12 +11,14 @@
 
 import { useOmniModal } from '@/stores/omniModalStore';
 import { Video } from 'lucide-react';
+import { useAppTranslation } from '../../../src/i18n/useAppTranslation';
 import { OmniMediaGallery } from './OmniMediaGallery';
 
 const OMNIMEDIA_MODULE_KEY = 'omnimedia';
 
 export function OmniMediaLaunchWidget() {
   const { invoke } = useOmniModal();
+  const { tx } = useAppTranslation();
 
   const openOmniMedia = () => {
     invoke({
@@ -69,7 +71,7 @@ export function OmniMediaLaunchWidget() {
             padding: '2px 4px',
           }}
         >
-          Open
+          {tx('omnimedia.open', { defaultValue: 'Open' })}
         </button>
       </div>
 

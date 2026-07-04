@@ -1,6 +1,7 @@
 export interface OmniDashSidebarWidget {
   readonly id: string;
   readonly label: string;
+  readonly labelKey?: string;
   readonly iconIdx: number;
   readonly moduleKey: string;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { ReactNode } from 'react';
 
@@ -111,37 +111,64 @@ beforeEach(() => {
   document.body.innerHTML = '<div id="omni-portal-root"></div>';
 });
 
-describe('Connect AI / BYOM Contract', () => {
-  it('Header Connect AI opens ConnectAiAuthModal and does not query the agent registry', () => {
-    render(<OmniDashShell />);
-    fireEvent.click(screen.getByRole('button', { name: 'Connect AI' }));
-    expect(screen.getByRole('dialog', { name: 'Connect AI credentials' })).toBeTruthy();
-    expect(queryAgentRegistryMock).not.toHaveBeenCalled();
-  });
+/** Open the palette through the real header trigger and return its searchbox. */
+async function openSearch() {
+  fireEvent.click(screen.getByTestId('omnidash-search-trigger'));
+  return await screen.findByRole('searchbox', { name: 'Search OmniHub' });
+}
 
-  it('successful modal callback updates provider label from sessionStorage', async () => {
+describe('OmniDash header search (real shell + ⌘K palette)', () => {
+  it('renders a real trigger and the truthful keyboard shortcut opens + focuses the searchbox', async () => {
     render(<OmniDashShell />);
-    fireEvent.click(screen.getByRole('button', { name: 'Connect AI' }));
-    sessionStorage.setItem('omni_ai_provider', 'OpenAI');
-    fireEvent.click(screen.getByText('Complete BYOM'));
-    expect(await screen.findByRole('button', { name: 'OpenAI' })).toBeTruthy();
-  });
+    expect(screen.getByTestId('omnidash-search-trigger')).toBeTruthy();
+    expect(screen.getByText(/⌘K|Ctrl\+K/)).toBeTruthy();
+    // Closed by default — no orphaned searchbox in the header.
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
 
-  it('closing the modal leaves provider state unchanged', () => {
-    render(<OmniDashShell />);
-    fireEvent.click(screen.getByRole('button', { name: 'Connect AI' }));
-    sessionStorage.setItem('omni_ai_provider', 'Anthropic');
-    fireEvent.click(screen.getByText('Close BYOM'));
-    expect(screen.getByRole('button', { name: 'Connect AI' })).toBeTruthy();
-  });
-
-  it('search interactions do not open or mutate Connect AI state', async () => {
-    render(<OmniDashShell />);
-    fireEvent.click(screen.getByTestId('omnidash-search-trigger'));
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
     const search = await screen.findByRole('searchbox', { name: 'Search OmniHub' });
+    await waitFor(() => expect(document.activeElement).toBe(search));
+  });
+
+  it('filters real OmniDash registry surfaces and opens the selected module by keyboard', async () => {
+    render(<OmniDashShell />);
+    const search = await openSearch();
+    fireEvent.change(search, { target: { value: 'pipeline' } });
+    expect(await screen.findByRole('option', { name: /Pipeline/ })).toBeTruthy();
+
+    fireEvent.keyDown(search, { key: 'Enter' });
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'omni-search-pipeline',
+      title: 'Pipeline',
+      contextData: { moduleKey: 'pipeline' },
+    })));
+  });
+
+  it('opens a clicked result, supports Escape close, and shows an empty state for unknown queries', async () => {
+    render(<OmniDashShell />);
+    let search = await openSearch();
     fireEvent.change(search, { target: { value: 'billing' } });
-    expect(screen.queryByRole('dialog', { name: 'Connect AI credentials' })).toBeNull();
-    expect(sessionStorage.getItem('omni_ai_provider')).toBeNull();
+    fireEvent.click(await screen.findByRole('option', { name: /Billing/ }));
+    expect(invokeMock).toHaveBeenCalledWith(expect.objectContaining({ id: 'omni-search-billing' }));
+    // Selecting a result closes the palette.
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
+
+    search = await openSearch();
+    fireEvent.change(search, { target: { value: 'not-a-real-surface' } });
+    expect(await screen.findByText(/No OmniHub surface matches/i)).toBeTruthy();
+    expect(screen.queryByRole('option')).toBeNull();
+
+    fireEvent.keyDown(search, { key: 'Escape' });
+    expect(screen.queryByRole('searchbox', { name: 'Search OmniHub' })).toBeNull();
+    // Trigger survives for the next open.
+    expect(screen.getByTestId('omnidash-search-trigger')).toBeTruthy();
+  });
+
+  it('does not call agent registry or BYOM credential routes during search', async () => {
+    render(<OmniDashShell />);
+    const search = await openSearch();
+    fireEvent.change(search, { target: { value: 'billing' } });
     expect(queryAgentRegistryMock).not.toHaveBeenCalled();
+    expect(byomInvokeMock).not.toHaveBeenCalled();
   });
 });

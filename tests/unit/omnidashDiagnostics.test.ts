@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { collectDiagnostics } from '../../apps/omnihub-site/dashboard/lib/omnidashDiagnostics';
 
 describe('omnidashDiagnostics', () => {
@@ -57,9 +57,13 @@ describe('omnidashDiagnostics', () => {
   });
 
   it('flags all default to false (safe-off)', () => {
+    vi.stubEnv('VITE_MAESTRO_ENABLED', 'false');
+    vi.stubEnv('VITE_CONNECT_AI_ENABLED', 'false');
+    vi.stubEnv('VITE_DEMO_MODE', 'false');
     const snap = collectDiagnostics();
     for (const [, value] of Object.entries(snap.flags)) {
       expect(value).toBe(false);
     }
+    vi.unstubAllEnvs();
   });
 });

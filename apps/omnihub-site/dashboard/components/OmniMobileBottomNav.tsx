@@ -6,6 +6,7 @@
  * ≥44×44px touch targets, env(safe-area-inset-bottom) aware.
  */
 import type { FC } from "react";
+import { useAppTranslation } from "../../src/i18n/useAppTranslation";
 
 export type MobileTab = "home" | "slate" | "apps" | "insights" | "more";
 
@@ -63,36 +64,33 @@ const TAB_ICONS: Record<MobileTab, FC> = {
   more: IconMore,
 };
 
-const TABS: readonly { readonly id: MobileTab; readonly label: string }[] = [
-  { id: "home",     label: "Home" },
-  { id: "slate",    label: "Slate" },
-  { id: "apps",     label: "Apps" },
-  { id: "insights", label: "Insights" },
-  { id: "more",     label: "More" },
-];
+const TAB_IDS: readonly MobileTab[] = ["home", "slate", "apps", "insights", "more"];
 
 export function OmniMobileBottomNav({ activeTab, onSelect }: OmniMobileBottomNavProps) {
+  const { tx } = useAppTranslation();
+
   return (
     <div
       className="omni-mobile-bottom-nav"
       role="tablist"
-      aria-label="Dashboard navigation"
+      aria-label={tx("dashboard.mobile.dashboardNav", { defaultValue: "Dashboard navigation" })}
     >
-      {TABS.map((tab) => {
-        const isActive = activeTab === tab.id;
-        const Icon = TAB_ICONS[tab.id];
+      {TAB_IDS.map((tabId) => {
+        const isActive = activeTab === tabId;
+        const Icon = TAB_ICONS[tabId];
+        const label = tx(`dashboard.mobile.${tabId}`, { defaultValue: tabId });
         return (
           <button
-            key={tab.id}
+            key={tabId}
             role="tab"
             aria-selected={isActive}
-            aria-label={tab.label}
+            aria-label={label}
             className={`omni-mobile-tab${isActive ? " omni-mobile-tab--active" : ""}`}
-            onClick={() => onSelect(tab.id)}
+            onClick={() => onSelect(tabId)}
             type="button"
           >
             <span className="omni-mobile-tab__icon"><Icon /></span>
-            <span className="omni-mobile-tab__label">{tab.label}</span>
+            <span className="omni-mobile-tab__label">{label}</span>
             {isActive && <span className="omni-mobile-tab__indicator" />}
           </button>
         );

@@ -52,13 +52,18 @@ class LiteEmbedder:
     def get_sentence_embedding_dimension(self) -> int:
         return self._dim
 
-    def encode(self, text: str, convert_to_numpy: bool = True) -> np.ndarray:  # noqa: ARG002
+    def encode(self, text: str, convert_to_numpy: bool = True) -> np.ndarray:
         """
         Encode text into a normalized float32 vector.
 
         `convert_to_numpy` is accepted for SentenceTransformer signature
-        compatibility; output is always a numpy array.
+        compatibility (cache.py passes it to whichever embedder is active);
+        output is always a numpy array, so tensor output is refused fail-closed.
         """
+        if not convert_to_numpy:
+            raise NotImplementedError(
+                "LiteEmbedder always returns numpy arrays; convert_to_numpy=False is not supported"
+            )
         vec = np.zeros(self._dim, dtype=np.float64)
 
         for feature, weight in self._features(text):

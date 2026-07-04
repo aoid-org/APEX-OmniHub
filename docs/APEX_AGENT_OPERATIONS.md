@@ -1397,3 +1397,63 @@ one new shared helper, one new CI gate. No change to start commands, orchestrato
   transaction; follows the in-production `tenant_entitlements` table/RLS pattern.
 
 **Operational impact:** one additive migration, one frontend component. No edge/secret/start-command change.
+
+## 9.28 Orchestrator — BYOM model registry quarantined (S5, cert C9) — 2026-07-02 (PR #1558)
+
+**Changed critical runtime paths:** `orchestrator/core/model_registry.py` (deprecation only).
+
+### Operational change summary
+
+- **`orchestrator/core/model_registry.py` is QUARANTINED** per owner ruling S5
+  (`orchestrator/ORCHESTRATOR_CERTIFICATION.md` C9): the module has **zero runtime
+  callers** (`orchestrator/AUDIT_2026-07.md` §3.3) — its AEGIS/VERITAS/RSI BYOM
+  governance was never wired into any production path and enforces nothing.
+  Wiring it was ruled out-of-scope (A3/B3 scope-creep guard); deleting it was
+  ruled out too — code and its 10 tests are retained.
+- Change is a module-level deprecation docstring plus a `logger.warning` emitted
+  if `ModelProviderRegistry` is ever instantiated, so the dead governance layer
+  cannot be mistaken for live enforcement. **No behavior change on any active
+  code path** — `core/__init__.py`, `main.py`, and `server.py` import nothing
+  from this module.
+
+### Environment / topology impact
+
+- **None.** No service, env var, DB object, or start command changes. Live BYOM
+  enforcement remains where it always was: `supabase/functions/byom-login` /
+  `byom-proxy` + `omnihub_model_registry` (see §9.7).
+- **Operator note:** if `core.model_registry is QUARANTINED` warnings ever appear
+  in orchestrator logs, something started instantiating the dead registry —
+  treat as a regression and trace the importer; do not silence the warning.
+
+**Operational impact:** documentation/deprecation only. Un-quarantining requires a new
+owner-authorized task.
+
+## 9.29 Orchestrator — LiteEmbedder tensor-output refused fail-closed (2026-07-02, PR #1562)
+
+**Changed critical runtime paths:** `orchestrator/infrastructure/lite_embedder.py` (guard only).
+
+- Sonar unused-param fix: `LiteEmbedder.encode(convert_to_numpy=...)` is retained for
+  SentenceTransformer duck-type compatibility (`infrastructure/cache.py:406,502`) and now
+  raises `NotImplementedError` when called with `convert_to_numpy=False` instead of
+  silently returning numpy. All in-tree callers pass `True`; no live path changes.
+- Also in this PR: real CI/Sonar run links attached to `orchestrator/ORCHESTRATOR_CERTIFICATION.md`;
+  §4 S5 escalation closed (C9). **No service, env var, DB, or start-command change.**
+
+## 9.30 Orchestrator — S6 structural split to the 600-line law (2026-07-02)
+
+**Changed critical runtime paths:** `orchestrator/workflows/agent_saga.py`,
+`orchestrator/activities/tools.py` (split, zero behavior change) + six new sibling
+modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
+`workflows/agent_saga_execution.py`, `activities/plan_generation.py`,
+`activities/tool_executors.py`, `activities/tool_network.py`).
+
+- Owner-authorized S6 exception: pure structural split of the two files exceeding the
+  600-line law (1487/1176 ln → max 494/422 ln; CI APEX policy gate enforces a stricter 500-line ceiling than the 600-line law — all new modules comply). **No service, env var, DB object,
+  start command, or activity-name change** — every Temporal activity keeps its
+  registered name and every import path (`main.py`, `server.py`, tests) is preserved
+  via facade re-exports from the original modules.
+- Moved code resolves the original module namespaces late (via `sys.modules`), so
+  operational monkey-patching/hotfix conventions targeting `activities.tools.*` or
+  `workflows.agent_saga.*` continue to govern the moved implementations.
+- Proof: `pytest -q` 981 passed / 20 skipped with **zero test-file edits**; ruff +
+  format clean; CI gating mypy pass green (33 files).
