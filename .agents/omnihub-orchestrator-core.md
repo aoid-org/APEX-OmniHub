@@ -8,7 +8,7 @@ You MUST read, parse, and strictly adhere to the following execution protocols a
 - CI pipelines may produce factual validation evidence (linting, typechecks, tests).
 - CI must **never** approve, certify, or declare production certified.
 - Never invent file paths, test results, or claims about release certification without verifiable evidence.
-- The canonical production certification document is `memory/omni-recall/docs/project-status/release-validation-summary.json`. 
+- The canonical production certification document is `docs/release/release-validation-matrix.json`, governed by `CI_STATUS_POLICY.md`.
 
 ## 2. Destructive Actions & Hallucinations
 - **NEVER** blindly patch or append markdown artifacts, historical notes, or commentary blocks into non-markdown source files (`.ts`, `.tsx`, `.sql`, `.py`, `.js`, etc.).
