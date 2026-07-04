@@ -366,12 +366,12 @@
     {
       "id": "OMNIBOARD_CHAT_INTENTS_V3",
       "area": "OmniBoard chat-native connector intents",
-      "status": "REPO_VALIDATED",
+      "status": "REQUIRES_MANUAL_VALIDATION",
       "environment": "local",
       "commandOrProcedure": "npm run test:py -- test_universal_intents.py and npm run test -- tests/omniconnect/connector-scaffold.test.ts",
       "evidenceArtifactPathOrUrl": "orchestrator/tests/test_universal_intents.py; tests/omniconnect/connector-scaffold.test.ts",
       "owner": "Platform",
-      "blocker": null,
+      "blocker": "Required command `npm run test:py -- test_universal_intents.py` failed in this session because orchestrator pytest could not find test_universal_intents.py at the orchestrator root; the file exists at orchestrator/tests/test_universal_intents.py. Vitest connector scaffold command passed.",
       "waiverReason": null,
       "waiverExpiry": null,
       "lastValidatedTimestamp": null,
@@ -382,7 +382,7 @@
     {
       "id": "OMNIBOARD_CONNECTOR_SCAFFOLD_V3",
       "area": "Proprietary custom connector scaffold",
-      "status": "REPO_VALIDATED",
+      "status": "VERIFIED",
       "environment": "local",
       "commandOrProcedure": "Vitest scaffold template and SSRF rejection tests",
       "evidenceArtifactPathOrUrl": "tests/omniconnect/connector-scaffold.test.ts",
@@ -390,7 +390,7 @@
       "blocker": null,
       "waiverReason": null,
       "waiverExpiry": null,
-      "lastValidatedTimestamp": null,
+      "lastValidatedTimestamp": "2026-07-04T22:12:48.000Z",
       "confidenceLevel": "MEDIUM",
       "liveProductionTouched": false,
       "backendPersistenceProven": false
