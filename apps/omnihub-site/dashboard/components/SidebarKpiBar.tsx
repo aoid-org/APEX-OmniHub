@@ -53,10 +53,12 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       style={{
         margin: '0 0 8px',
         borderRadius: 11,
-        // Uniform rail/sidebar glassmorph tile — same orange border + fill opacity
-        // as the right-rail tiles and System Status (owner request).
+        // Uniform rail/sidebar glassmorph tile — same orange border, fill opacity,
+        // and blur as the right-rail tiles and System Status (owner request).
         border: `1px solid ${omniRgba('orange', 0.25)}`,
         background: omniRgba('orange', 0.06),
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         overflow: 'hidden',
       }}
     >
@@ -91,8 +93,10 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
               title={tile.label}
               aria-label={`${tile.label}: ${tile.value}`}
               style={{
-                background: omniRgba('orange', 0.072),
-                border: `1px solid ${omniRgba('orange', 0.12)}`,
+                // Matches .sentinel-metric — the equivalent stat tile inside the
+                // right-rail System Status widget (owner request: uniform opacity).
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid var(--od-border-subtle)',
                 borderRadius: 7,
                 padding: '5px 7px',
                 display: 'flex', flexDirection: 'column',
