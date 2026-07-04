@@ -141,6 +141,8 @@ If any other document conflicts with this file, this file wins unless explicitly
 
 **OmniBoard connect-wizard errors are honest (refines Statement 21 taxonomy).** `OmniBoardWizard.describeConnectionError` maps opaque Supabase transport strings ("Edge Function returned a non-2xx status code", relay/fetch failures) to user-facing copy and never leaks them; genuinely descriptive errors still pass through. The retry control reads "Retry Connection" after a failure. The underlying `omniboard-start` edge availability remains a separate backend item.
 
+**OmniBoard connector catalog is single-sourced from omniconnect (2026-07-04).** JR sign-off ("yes, connect it") ungated the previous empty-state design. The live OmniBoard wizard now renders third-party connector tiles from `src/omniconnect/core/registry.ts::availableIntegrations` and mounts `src/components/ConnectorKit.tsx` for the selected `IntegrationDef`. `IntegrationDef` / `ConnectorConfig` / `Connector` carry only additive optional metadata (`category`, `version`, `status`, `docsUrl`, `health`). The duplicate `packages/core/src/omniBoardIntegrations.ts` manifest is retired; do not recreate a parallel connector model. ConnectorKit must test connection readiness through `omnilink-port/keys/test` before generating an OmniLink API key, and user-facing errors must remain plain-language.
+
 ## Source-of-Truth Statement 25 (2026-06-24)
 
 **PR #1482 production-readiness — 3 pre-existing TypeScript defects resolved + OmniBoard FSM contract hardened.**

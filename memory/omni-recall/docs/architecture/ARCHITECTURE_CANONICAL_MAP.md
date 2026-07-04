@@ -159,3 +159,11 @@ To preserve prior detail and historical operational context, legacy full-length 
 - `docs/archive/legacy-runbooks/MIGRATION_RUNBOOK_legacy.md`
 - `docs/archive/legacy-runbooks/OPS_RUNBOOK_legacy_2026-01-25.md`
 
+
+
+## OmniBoard Connector Canon (2026-07-04)
+
+- OmniBoard third-party connector catalog source: `src/omniconnect/core/registry.ts::availableIntegrations`.
+- Live OmniBoard surface: `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, which mounts `src/components/ConnectorKit.tsx`.
+- Retired duplicate model: `packages/core/src/omniBoardIntegrations.ts` (must not be restored).
+- Required UX: visible health badge, `Test Connection` before key generation, plain-language failure copy, no fake success.

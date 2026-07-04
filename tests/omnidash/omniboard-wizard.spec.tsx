@@ -11,6 +11,16 @@ const { mockInvoke } = vi.hoisted(() => ({
   mockInvoke: vi.fn(),
 }));
 
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    auth: { getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: 'token-abc' } } }) },
+  },
+}));
+
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {

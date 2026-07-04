@@ -1,12 +1,11 @@
 /**
  * ConnectorKit — Unit Tests
- * Tests API key generation flow, loading state, error handling, and config copy.
+ * Tests pre-save connection test, API key generation flow, loading state,
+ * plain-language error handling, and config copy.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-
-// ─── Mocks ────────────────────────────────────────────────────────────────
 
 const mockGetSession = vi.fn();
 const mockToastSuccess = vi.fn();
@@ -25,172 +24,152 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Mock clipboard
 Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: vi.fn().mockResolvedValue(undefined) },
   writable: true,
   configurable: true,
 });
 
-// Mock fetch
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
-// ─── Import after mocks ───────────────────────────────────────────────────
-
 import { ConnectorKit } from '@/components/ConnectorKit';
 
-// ─── Fixtures ─────────────────────────────────────────────────────────────
+const MockIcon = () => <svg aria-hidden="true" />;
 
-const mockIntegration: any = {
+const mockIntegration = {
   id: 'meta-business',
   name: 'Meta Business',
-  provider: 'meta',
   description: 'Connect Meta Business Suite',
   scopes: ['pages_read', 'ads_read'],
-  authType: 'oauth2' as const,
-  icon: '/icons/meta.svg',
+  icon: MockIcon,
   type: 'meta',
   requiresApiKey: true,
 };
 
-// ─── Tests ────────────────────────────────────────────────────────────────
+async function passConnectionTest() {
+  fireEvent.click(screen.getByRole('button', { name: /test connection/i }));
+  await screen.findByText(/connection test passed/i);
+}
 
 describe('ConnectorKit', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  describe('rendering', () => {
-    it('renders integration id in config JSON', () => {
-      render(<ConnectorKit integration={mockIntegration} />);
-      // Integration id appears in the JSON config block
-      expect(screen.getByText(/meta-business/)).toBeInTheDocument();
-    });
+  it('renders integration id in config JSON and server URL config', () => {
+    render(<ConnectorKit integration={mockIntegration} />);
+    expect(screen.getByText(/meta-business/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /generate new api key/i })).toBeDisabled();
+    expect(screen.getAllByRole('textbox').length).toBeGreaterThan(0);
+  });
 
-    it('renders Generate New API Key button', () => {
-      render(<ConnectorKit integration={mockIntegration} />);
-      expect(screen.getByRole('button', { name: /generate new api key/i })).toBeInTheDocument();
-    });
+  it('requires authentication before testing a connection', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    render(<ConnectorKit integration={mockIntegration} />);
+    fireEvent.click(screen.getByRole('button', { name: /test connection/i }));
+    await waitFor(() => expect(mockToastError).toHaveBeenCalledWith('You must be logged in'));
+  });
 
-    it('shows server URL config', () => {
-      render(<ConnectorKit integration={mockIntegration} />);
-      // Server URL input should be rendered
-      const inputs = screen.getAllByRole('textbox');
-      expect(inputs.length).toBeGreaterThan(0);
+  it('blocks key generation until Test Connection passes', () => {
+    render(<ConnectorKit integration={mockIntegration} />);
+    expect(screen.getByRole('button', { name: /generate new api key/i })).toBeDisabled();
+    expect(screen.getByText(/required before save/i)).toBeInTheDocument();
+  });
+
+  it('shows plain-language copy when Test Connection fails', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
+    mockFetch.mockResolvedValue({ ok: false, json: async () => ({ error: 'forbidden' }) });
+    render(<ConnectorKit integration={mockIntegration} />);
+    fireEvent.click(screen.getByRole('button', { name: /test connection/i }));
+    expect(await screen.findByText(/account needs admin access/i)).toBeInTheDocument();
+  });
+
+  it('calls key generation endpoint with auth header after connection test passes', async () => {
+    const accessToken = 'test-access-token';
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: accessToken } } });
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ok' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ key: 'sk-test-12345', key_prefix: 'sk-test' }) });
+
+    render(<ConnectorKit integration={mockIntegration} />);
+    await passConnectionTest();
+    fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        expect.stringMatching(/\/functions\/v1\/omnilink-port\/keys$/),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: `Bearer ${accessToken}` }),
+        }),
+      );
     });
   });
 
-  describe('handleGenerateKey', () => {
-    it('shows error toast when user is not authenticated', async () => {
-      mockGetSession.mockResolvedValue({ data: { session: null } });
-      render(<ConnectorKit integration={mockIntegration} />);
-      fireEvent.click(screen.getByRole('button', { name: /generate.*key/i }));
-      await waitFor(() => {
-        expect(mockToastError).toHaveBeenCalledWith('You must be logged in');
-      });
-    });
+  it('shows success toast and calls onConnect on successful key generation', async () => {
+    const onConnect = vi.fn();
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ok' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ key: 'sk-generated-key', key_prefix: 'sk-gen' }) });
 
-    it('calls fetch with correct endpoint and auth header', async () => {
-      const accessToken = 'test-access-token';
-      mockGetSession.mockResolvedValue({
-        data: { session: { access_token: accessToken } },
-      });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ key: 'sk-test-12345', key_prefix: 'sk-test' }),
-      });
+    render(<ConnectorKit integration={mockIntegration} onConnect={onConnect} />);
+    await passConnectionTest();
+    fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
 
-      render(<ConnectorKit integration={mockIntegration} />);
-      fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/functions/v1/omnilink-port/keys'),
-          expect.objectContaining({
-            method: 'POST',
-            headers: expect.objectContaining({
-              Authorization: `Bearer ${accessToken}`,
-            }),
-          })
-        );
-      });
-    });
-
-    it('shows success toast and calls onConnect on successful key generation', async () => {
-      const onConnect = vi.fn();
-      mockGetSession.mockResolvedValue({
-        data: { session: { access_token: 'token-abc' } },
-      });
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ key: 'sk-generated-key', key_prefix: 'sk-gen' }),
-      });
-
-      render(<ConnectorKit integration={mockIntegration} onConnect={onConnect} />);
-      fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
-
-      await waitFor(() => {
-        expect(mockToastSuccess).toHaveBeenCalledWith('New API Key generated successfully');
-        expect(onConnect).toHaveBeenCalledOnce();
-      });
-    });
-
-    it('shows error toast when fetch returns non-ok response', async () => {
-      mockGetSession.mockResolvedValue({
-        data: { session: { access_token: 'token-abc' } },
-      });
-      mockFetch.mockResolvedValue({
-        ok: false,
-        json: async () => ({ error: 'Forbidden' }),
-      });
-
-      render(<ConnectorKit integration={mockIntegration} />);
-      fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
-
-      await waitFor(() => {
-        expect(mockToastError).toHaveBeenCalledWith('Forbidden');
-      });
-    });
-
-    it('shows error toast when fetch throws network error', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockGetSession.mockResolvedValue({
-        data: { session: { access_token: 'token-abc' } },
-      });
-      mockFetch.mockRejectedValue(new Error('Network failure'));
-
-      render(<ConnectorKit integration={mockIntegration} />);
-      fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
-
-      await waitFor(() => {
-        expect(mockToastError).toHaveBeenCalledWith('Network failure');
-      });
-      consoleError.mockRestore();
-    });
-
-    it('disables Generate Key button while loading', async () => {
-      mockGetSession.mockResolvedValue({
-        data: { session: { access_token: 'token-abc' } },
-      });
-      // Hang the fetch indefinitely
-      mockFetch.mockImplementation(() => new Promise(() => {}));
-
-      render(<ConnectorKit integration={mockIntegration} />);
-      const btn = screen.getByRole('button', { name: /generate new api key/i });
-      fireEvent.click(btn);
-
-      // Button becomes disabled during loading
-      await waitFor(() => {
-        expect(btn).toBeDisabled();
-      });
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith('New API Key generated successfully');
+      expect(onConnect).toHaveBeenCalledOnce();
     });
   });
 
-  describe('copy config', () => {
-    it('shows Copy JSON button (disabled when no key generated)', () => {
-      render(<ConnectorKit integration={mockIntegration} />);
-      const copyBtn = screen.getByRole('button', { name: /copy json/i });
-      // Without a key, the button is disabled
-      expect(copyBtn).toBeDisabled();
+  it('shows plain-language error toast when key generation returns non-ok', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ok' }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Forbidden' }) });
+
+    render(<ConnectorKit integration={mockIntegration} />);
+    await passConnectionTest();
+    fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('Your account needs admin access to connect this app. Ask an administrator to grant access.');
     });
+  });
+
+  it('shows plain-language error toast when fetch throws network error', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ok' }) })
+      .mockRejectedValueOnce(new Error('Network failure'));
+
+    render(<ConnectorKit integration={mockIntegration} />);
+    await passConnectionTest();
+    fireEvent.click(screen.getByRole('button', { name: /generate new api key/i }));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('We could not reach the connection service. Check your internet connection, then retry.');
+    });
+    consoleError.mockRestore();
+  });
+
+  it('disables Generate Key button while loading', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'token-abc' } } });
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ok' }) })
+      .mockImplementationOnce(() => new Promise(() => {}));
+
+    render(<ConnectorKit integration={mockIntegration} />);
+    await passConnectionTest();
+    const btn = screen.getByRole('button', { name: /generate new api key/i });
+    fireEvent.click(btn);
+
+    await waitFor(() => expect(btn).toBeDisabled());
+  });
+
+  it('shows Copy JSON button disabled when no key is generated', () => {
+    render(<ConnectorKit integration={mockIntegration} />);
+    expect(screen.getByRole('button', { name: /copy json/i })).toBeDisabled();
   });
 });

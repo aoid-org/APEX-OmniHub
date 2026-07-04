@@ -4,17 +4,27 @@
  */
 
 import { Connector, ConnectorRegistry } from '../types/connector';
-import { MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera } from 'lucide-react';
+import type { ElementType } from 'react';
+import { MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera, DollarSign, BriefcaseBusiness, Building2 } from 'lucide-react';
 
 export interface IntegrationDef {
   id: string;
   name: string;
   type: string;
   description: string;
-  icon: React.ElementType;
+  icon: ElementType;
   requiresApiKey: boolean;
   requiresUsername?: boolean;
   scopes?: string[];
+  category?: 'control-plane' | 'security' | 'automation' | 'operations' | 'platform' | 'communication' | 'marketing' | 'ai' | 'media';
+  version?: string;
+  status?: 'beta' | 'ga' | 'deprecated' | 'internal';
+  docsUrl?: string;
+  health?: {
+    lastSuccessAt?: string;
+    lastFailureAt?: string;
+    lastFailureReason?: string;
+  };
 }
 
 export const availableIntegrations: IntegrationDef[] = [
@@ -32,7 +42,11 @@ export const availableIntegrations: IntegrationDef[] = [
   { id: '13', name: 'Webnames.ca', type: 'webnames', description: 'Domain management', icon: Globe, requiresApiKey: true, requiresUsername: true },
   { id: '14', name: 'Samsung Apps', type: 'samsung', description: 'Native Samsung integrations', icon: Smartphone, requiresApiKey: false },
   { id: '15', name: 'ChatGPT', type: 'chatgpt', description: 'AI assistant integration', icon: Bot, requiresApiKey: true },
-  { id: '16', name: 'Grok', type: 'grok', description: 'AI assistant by xAI', icon: Bot, requiresApiKey: true },
+  { id: '16', name: 'Grok', type: 'grok', description: 'AI assistant by xAI', icon: Bot, requiresApiKey: true, category: 'ai', status: 'ga', version: '1.0' },
+  { id: 'quickbooks', name: 'QuickBooks', type: 'quickbooks', description: 'Accounting and finance sync for invoices, customers, and books', icon: DollarSign, requiresApiKey: true, category: 'operations', status: 'ga', version: '1.0', docsUrl: 'https://developer.intuit.com/app/developer/qbo/docs/get-started' },
+  { id: 'salesforce', name: 'Salesforce', type: 'salesforce', description: 'CRM account, contact, and opportunity integration', icon: BriefcaseBusiness, requiresApiKey: true, category: 'operations', status: 'ga', version: '1.0', docsUrl: 'https://developer.salesforce.com/docs' },
+  { id: 'sap', name: 'SAP', type: 'sap', description: 'Enterprise resource planning connector for SAP landscapes', icon: Building2, requiresApiKey: true, category: 'operations', status: 'beta', version: '0.1', docsUrl: 'https://developers.sap.com' },
+  { id: 'slack', name: 'Slack', type: 'slack', description: 'Team messaging and collaboration event streaming', icon: MessageCircle, requiresApiKey: true, category: 'operations', status: 'ga', version: '1.0', docsUrl: 'https://api.slack.com/docs' },
 ];
 
 class ConnectorRegistryImpl implements ConnectorRegistry {
