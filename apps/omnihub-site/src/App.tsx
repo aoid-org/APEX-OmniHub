@@ -37,6 +37,7 @@ import { EyesVisionPage } from "@/pages/EyesVision";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
 import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
+import { PricingPage } from "@/pages/Pricing";
 import { ManifestoPage } from "@/pages/Manifesto";
 
 type AppRoute = {
@@ -122,6 +123,8 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
   { path: "/physiomni-pilot", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
   { path: "/physiomni-pilot.html", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
+  { path: "/pricing", element: <PricingPage />, isPublic: true, routeName: "Pricing" },
+  { path: "/pricing.html", element: <PricingPage />, isPublic: true, routeName: "Pricing" },
   // ── APEX Manifesto ──────────────────────────────────────────────────────
   { path: "/manifesto",           element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
   { path: "/manifesto.html",      element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
