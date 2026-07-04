@@ -649,6 +649,37 @@ honest taxonomy: 401 unauthorized, 503 `connect_unavailable` (no `ORCHESTRATOR_U
 - `deno check supabase/functions/omnilink-port/index.ts` (could not run in the agent sandbox — no deno binary).
 - Staging e2e: wizard `start` → `next` turns → `COMPLETION` with a Connection Spec.
 
+### 9.12.1 OmniBoard ConnectorKit readiness route — `omnilink-port/keys/test` (2026-07-04)
+
+**Changed critical runtime path:** `supabase/functions/omnilink-port/index.ts`.
+
+OmniBoard now mounts the existing `src/components/ConnectorKit.tsx` against the canonical
+`src/omniconnect/core/registry.ts::availableIntegrations` catalog. ConnectorKit calls
+`POST /functions/v1/omnilink-port/keys/test` before it allows a user to generate an OmniLink
+API key. This is a readiness probe only: it validates the caller's JWT, checks admin role via
+`public.user_roles`, resolves or creates the backing `public.integrations` row for the selected
+connector, and returns `{ status: 'ok', integration_id, message }`. It does **not** mint a secret,
+mark a connector connected, fake OAuth success, or add a new telemetry/storage table.
+
+Key creation through `POST /functions/v1/omnilink-port/keys` now reuses the same integration-row
+resolution path before inserting into `public.omnilink_api_keys`. This preserves the existing
+`omnilink_api_keys.integration_id -> public.integrations.id` UUID foreign-key contract even when
+frontend connector ids are stable catalog keys such as `salesforce`, `quickbooks`, `sap`, or
+`slack`.
+
+**Required configuration / topology:** unchanged. No new secrets, env vars, Supabase functions,
+DB migrations, external vendors, or start commands. Deploy remains:
+`supabase functions deploy omnilink-port --project-ref rtopreovkywofgwgmozi`.
+
+**Failure contract:** unauthenticated callers receive 401 with sign-in copy; non-admin callers
+receive 403 with admin-access copy; invalid connector payloads return a plain-language 400;
+server-side lookup/insert failures return sanitized retry copy. Browser UI must continue to show
+plain-language remediation, never raw Supabase transport or stack errors.
+
+**Verification gate:** run `node scripts/ci/check-ops-doc-drift.mjs`, targeted ConnectorKit /
+OmniBoard tests, and Deno check for `supabase/functions/omnilink-port/index.ts` in an environment
+with Deno installed.
+
 ---
 
 ## 9.13 Audit readiness closure — 2026-06-23 (PR #1483)
