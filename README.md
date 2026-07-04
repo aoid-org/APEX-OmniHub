@@ -18,6 +18,11 @@ status: verified
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
+
+## OmniBoard Chat-Native Connection Layer (v3.1)
+
+OmniBoard now exposes connector operations through the existing APEX agent path instead of adding new chat infrastructure. The registered universal intents are `connector.list`, `connector.status`, `connector.connect`, `connector.test`, `connector.disconnect`, and `connector.create_custom`; they route through the existing Intent Registry and MCP `omnihub_execute_intent` dispatcher. The proprietary custom connector scaffold lives at `src/omniconnect/scaffold/`, validates every user-supplied URL through the shared SSRF guard, and always creates raw-events-only `beta` connectors until an explicit human promotion occurs.
+
 **Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-01
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)

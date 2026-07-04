@@ -12,6 +12,12 @@ import pytest
 from temporalio import activity
 
 from activities.universal_intents import (
+    connector_connect,
+    connector_create_custom,
+    connector_disconnect,
+    connector_list,
+    connector_status,
+    connector_test,
     system_echo,
     system_health_check,
     system_list_intents,
@@ -120,3 +126,53 @@ async def test_system_list_intents_count_matches_registry():
 async def test_system_list_intents_timestamp_is_zulu():
     result = await system_list_intents({})
     assert result["timestamp"].endswith("Z")
+
+
+# ---------------------------------------------------------------------------
+# connector.* chat-native bridges
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_connector_intents_registered():
+    registered = set((await system_list_intents({}))["intents"])
+    assert {
+        "connector.list",
+        "connector.status",
+        "connector.connect",
+        "connector.test",
+        "connector.disconnect",
+        "connector.create_custom",
+    }.issubset(registered)
+
+
+@pytest.mark.asyncio
+async def test_connector_list_returns_status_and_health():
+    result = await connector_list({})
+    assert result["count"] >= 1
+    assert all("status" in item and "health" in item for item in result["availableIntegrations"])
+
+
+@pytest.mark.asyncio
+async def test_connector_chat_flow_slack_connect_test_disconnect():
+    connected = await connector_connect({"connector": "slack"})
+    assert connected["status"] == "ready_for_test"
+    assert connected["message"] == "Connection readiness verified."
+
+    tested = await connector_test({"connector": "slack"})
+    assert tested["status"] == "ok"
+    assert tested["message"] == "Connection test passed. This app is ready for a production key."
+
+    status = await connector_status({"connector": "slack"})
+    assert status["status"] == "ok"
+
+    disconnected = await connector_disconnect({"connector": "slack"})
+    assert disconnected["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_connector_create_custom_is_beta_only():
+    result = await connector_create_custom({"name": "Partner API", "authType": "oauth2"})
+    assert result["status"] == "beta"
+    assert result["connector"]["status"] == "beta"
+    assert "Human promotion" in result["message"]

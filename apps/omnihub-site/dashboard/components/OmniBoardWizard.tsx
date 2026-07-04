@@ -9,6 +9,7 @@
  * APEX STANDARDS: No workflow questions. Connect only. Output Connection Spec.
  */
 import { useState, useCallback, useEffect } from 'react';
+import ApexAgentAvatar from './ApexAgentAvatar';
 import { ConnectorKit } from '../../../../src/components/ConnectorKit';
 import { availableIntegrations, type IntegrationDef } from '../../../../src/omniconnect/core/registry';
 import { supabase } from '@/lib/supabase';
@@ -156,8 +157,12 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
 
   return (
     <div className="flex max-h-[min(82vh,760px)] w-[min(92vw,920px)] flex-col gap-4 overflow-y-auto rounded-xl border border-border/40 bg-card p-4">
-      <div className="flex items-center">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
+      <div className="flex items-center gap-3">
+        <ApexAgentAvatar size="sm" showStatus={true} />
+        <div>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">OmniBoard — App Integration</h3>
+          <p className="text-[11px] text-muted-foreground">Chat-native connector actions use the existing APEX agent and OmniConnect paths.</p>
+        </div>
       </div>
       {error && <p className="text-xs text-red-400">{error}</p>}
       <div className="rounded-lg bg-muted/20 p-3 text-xs text-foreground leading-relaxed min-h-[60px]">

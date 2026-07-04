@@ -6,6 +6,7 @@ Backfill 2026-07-03: entries for every PR merged to `main` after the last record
 
 ### Minor Changes
 
+- feat(omniboard): registered connector.* chat intents, mounted ApexAgentAvatar in OmniBoard, and added the proprietary guided connector scaffold with no bridge vendor and beta-only custom connectors.
 - feat(omniboard): extend the existing `omniconnect` IntegrationDef with category/version/status/docs/health metadata, mount ConnectorKit into OmniBoard, retire the orphaned `omniBoardIntegrations.ts`, and add Test Connection UX with plain-language errors.
 - feat(omnihub-site): 100% surface localization remediation across OmniDash and all 9 enterprise locales (PR #1565).
 - fix(omnidash): wire the header search bar — functional ⌘K/Ctrl+K search palette across all surfaces (PR #1564), building on the restored functional header search from PR #1563.

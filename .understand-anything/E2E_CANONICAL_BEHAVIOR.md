@@ -55,3 +55,8 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 11. OmniMedia images + Files pipeline + server-side caps (PR #1516)
 **Invariant:** OmniMedia is a Files-fed mini-gallery for video/audio/image, and its upload caps must be real (server-side), never client-only.
 **Rule:** `omnimedia_assets.kind ∈ {video,audio,image}`; bucket allows image MIME types; per-file limit 25 MB (migration `20260629120000_omnimedia_images_and_caps.sql`). Upload caps (5 uploads / 24h, 25 MB cumulative per user) are enforced in `omnilink-port/omnimedia-ingest-from-upload` and return `429` on breach — do not move them client-side. Files routes media uploads through `getPlayableMediaKind` into the same pipeline; images included.
+
+
+## 12. OmniBoard Chat-Native Connector Actions
+**Invariant:** OmniBoard chat actions must reuse the existing APEX agent UI, Intent Registry, MCP `omnihub_execute_intent` dispatcher, OmniConnect connector model, and shared SSRF guard.
+**Rule:** E2E coverage for chat-native connector work must prove a full connect/test/confirm flow for an existing integration and a beta-only custom scaffold path. Do not accept tests that create a parallel dispatcher, bypass the fail-closed registry, auto-promote custom connectors to GA, or validate custom URLs outside the shared SSRF utilities.

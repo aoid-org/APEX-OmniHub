@@ -143,6 +143,9 @@ If any other document conflicts with this file, this file wins unless explicitly
 
 **OmniBoard connector catalog is single-sourced from omniconnect (2026-07-04).** JR sign-off ("yes, connect it") ungated the previous empty-state design. The live OmniBoard wizard now renders third-party connector tiles from `src/omniconnect/core/registry.ts::availableIntegrations` and mounts `src/components/ConnectorKit.tsx` for the selected `IntegrationDef`. `IntegrationDef` / `ConnectorConfig` / `Connector` carry only additive optional metadata (`category`, `version`, `status`, `docsUrl`, `health`). The duplicate `packages/core/src/omniBoardIntegrations.ts` manifest is retired; do not recreate a parallel connector model. ConnectorKit must test connection readiness through `omnilink-port/keys/test` before generating an OmniLink API key, and user-facing errors must remain plain-language.
 
+
+**OmniBoard chat-native connector layer is canonical (2026-07-04).** The existing `ApexAgentAvatar` is mounted inside `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`; no new chat infrastructure owns OmniBoard connector actions. The universal intent registry in `orchestrator/activities/universal_intents.py` registers `connector.list`, `connector.status`, `connector.connect`, `connector.test`, `connector.disconnect`, and `connector.create_custom`; the MCP gateway remains the generic `omnihub_execute_intent` dispatcher. Proprietary custom connector scaffolding lives at `src/omniconnect/scaffold/`, reuses `IntegrationDef`/`ConnectorConfig`/`RawEvent`, validates user URLs through the shared SSRF guard, and persists only beta/raw-events-only telemetry until human promotion. No scaffold may auto-promote to `ga`.
+
 ## Source-of-Truth Statement 25 (2026-06-24)
 
 **PR #1482 production-readiness — 3 pre-existing TypeScript defects resolved + OmniBoard FSM contract hardened.**
