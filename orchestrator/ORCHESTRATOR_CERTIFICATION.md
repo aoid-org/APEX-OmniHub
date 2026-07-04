@@ -55,21 +55,25 @@ can now route universal intents. Post-merge smoke test:
 *Honest boundary:* OmniDash frontend surfaces still dispatch via the goal path, not
 intents (frontend work excluded by contract A3).
 
-### C3. "Semantic caching (70% LLM-call reduction)" — **CAPABILITY PROVEN; the number is NOT certified**
+### C3. "Semantic caching (70% LLM-call reduction)" — **ACTIVATED IN PROD 2026-07-04; hit-rate NOT yet measured**
 - Mechanism real and tested: `infrastructure/cache.py` (+ `test_cache.py`, 44 tests).
-- Prod history: disabled since commit `be04b92` (512 MB worker OOM; AUDIT §4).
+- Prod history: disabled since commit `be04b92` (512 MB worker OOM; AUDIT §4). **Re-enabled
+  2026-07-04**: `SEMANTIC_CACHE_ENABLED=true` + `SEMANTIC_CACHE_MODE=lite` set on the
+  `apex-orchestrator-worker` Render service via the Render API; worker redeployed
+  (`dep-d94d89i8qa3s73cdspvg`), confirmed `live` and stable (no crash-loop redeploy since).
 - **FR4 resolution (zero cost):** `SEMANTIC_CACHE_MODE=lite` runs caching in-process
   via the proprietary stdlib `infrastructure/lite_embedder.py` — **measured 50 MB peak
   RSS, torch never imported** (test: `test_semantic_cache_lite.py`, 8 tests; memory
   proof in EXECUTION_LOG Task 3). Redis vector namespaces are isolated per encoder.
-- **Hit rate is now measurable, not assumed:** `semantic_cache_lookups_total{result}`
-  (`metrics.py`); rate = hit ÷ (hit+miss).
+- **Hit rate is measurable but not yet captured:** `semantic_cache_lookups_total{result}`
+  (`metrics.py`) is served on the worker's `:9090` metrics port, which is not externally
+  reachable (Render Background Workers expose no public port; no SSH credentials
+  available in this session). The literal metric value is still outstanding evidence.
 - The "70%" figure in `README.md:22`/`ARCHITECTURE.md:21` remains a **projection**
-  until prod metrics exist. Do not quote it as measured in investor material; quote
-  the metric endpoint instead.
-- Enable in prod (env-only, no spend): `SEMANTIC_CACHE_ENABLED=true` +
-  `SEMANTIC_CACHE_MODE=lite` (`docs/APEX_AGENT_OPERATIONS.md` env table). `full` mode
-  still requires a ≥2 GB worker — optional BLOCKED-COST decision, no longer blocking.
+  until prod metrics are actually scraped. Do not quote it as measured in investor
+  material; quote the metric endpoint instead — and note the endpoint itself still
+  needs a reachable scrape path (SSH tunnel, private-network scrape job, or an
+  authenticated MCP gateway call) before a real figure can be recorded here.
 
 ### C4. "Zero-trust security plane" — **PROVEN**
 HMAC request signing (`security/request_signing.py`), prompt-injection defense

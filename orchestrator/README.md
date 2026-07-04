@@ -12,7 +12,7 @@ status: verified
 Production-grade AI Agent Orchestration Platform with Temporal.io, Event Sourcing, and Saga Patterns.
 
 > **Production runtime note (2026-06-21).** The canonical, anti-drift source for the *live* orchestrator deployment (services, env vars, Temporal/Redis/Supabase wiring, deploy, smoke test, incident playbook) is **`memory/omni-recall/docs/APEX_AGENT_OPERATIONS.md`** + `memory/omni-recall/docs/operations/APEX_AGENT_RUNBOOK.md`. This README is the developer setup/architecture guide. Two facts to keep in mind against the docs below:
-> - **Semantic caching is disabled in the current production deploy** (`SEMANTIC_CACHE_ENABLED=false` on the 512 MB Render Starter worker) — the "70% reduction" figure describes the feature when enabled, not current prod behaviour.
+> - **Semantic caching was activated in the production deploy on 2026-07-04** (`SEMANTIC_CACHE_ENABLED=true`, `SEMANTIC_CACHE_MODE=lite` on the 512 MB Render Starter worker; confirmed via Render API, worker redeployed and stable). The real hit-rate is not yet captured here — `semantic_cache_lookups_total` is served on the worker's private `:9090` metrics port, which has no external network path from this environment; the "70% reduction" figure remains a projection until that metric is actually scraped (see `ORCHESTRATOR_CERTIFICATION.md` C3).
 > - APEX Agent was verified **LIVE / demo-ready end-to-end on 2026-06-19**; Temporal runs on **Temporal Cloud** (ns `apex-omnihub-temporal.i7ero`, ca-central-1, API-key auth), not a self-hosted cluster.
 > Repository orchestrator Python file count at last audit: **103** (`find orchestrator -name '*.py'`, 2026-06-21). The dated pytest counts further below are labelled point-in-time notes; the live test tally is tracked in CI, not here.
 
