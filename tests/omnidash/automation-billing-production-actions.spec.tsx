@@ -147,7 +147,7 @@ describe('production module actions', () => {
     expect(window.location.assign).not.toHaveBeenCalled();
   });
 
-  it('BillingModule offers setup via the checkout flow on BILLING_CUSTOMER_NOT_FOUND', async () => {
+  it('BillingModule routes to Pricing & Payments on BILLING_CUSTOMER_NOT_FOUND', async () => {
     mockState.mockReturnValue({
       ...baseState('billing'),
       actions: [{ id: 'billing-portal', label: 'Billing Portal', variant: 'primary' }],
@@ -158,7 +158,7 @@ describe('production module actions', () => {
     fireEvent.click(screen.getByRole('button', { name: /billing portal/i }));
 
     expect(await screen.findByText(/no stripe billing profile is linked/i)).toBeInTheDocument();
-    expect(window.location.assign).toHaveBeenCalledWith('/launch');
+    expect(window.location.assign).toHaveBeenCalledWith('/pricing');
   });
 
   it('BillingModule never leaks the raw non-2xx SDK string for an opaque/unmapped failure', async () => {

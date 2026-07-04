@@ -28,7 +28,7 @@ function extractPortalUrl(data: unknown): string | null {
 }
 
 const SIGN_IN_MESSAGE = 'Sign in to manage billing.';
-const NO_CUSTOMER_MESSAGE = 'No Stripe billing profile is linked to this account yet. Opening plan setup…';
+const NO_CUSTOMER_MESSAGE = 'No Stripe billing profile is linked to this account yet. Opening Pricing & Payments…';
 const GENERIC_UNAVAILABLE_MESSAGE = 'Billing portal is unavailable. No billing page was opened.';
 
 /**
@@ -91,7 +91,8 @@ export default function BillingModule({ onClose }: Props) {
     if (error) {
       const described = await describeBillingError(error as { context?: Response; message?: string });
       if (described.code === 'BILLING_CUSTOMER_NOT_FOUND') {
-        window.location.assign('/launch');
+        // No Stripe customer yet — send the user to plan selection, not onboarding.
+        window.location.assign('/pricing');
       }
       return described.message;
     }
