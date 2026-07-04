@@ -226,10 +226,15 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     // invalid CSS and silently paints a transparent, borderless tile.
     const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
-    // Left rail widget chrome matches the right rail widgets exactly:
-    // 0.06 fill alpha and 0.25 orange border alpha. Active/hover affordance stays
-    // in text, icon, glow, and the active status dot instead of changing opacity.
-    const RAIL_WIDGET_FILL_ALPHA = 0.06;
+    // NavItem rows are much smaller than the right-rail cards (OmniTrace/
+    // OmniSentry/Ops Controls/OmniMedia), so the same 0.06 fill alpha that
+    // reads as a visible glass tile on a large card reads as almost nothing
+    // on a compact row — same alpha, far less perceived opacity. Raised so
+    // every rail tile reads as equally "filled" regardless of its size
+    // (owner report: left rail still looked transparent after the 0.06 pass).
+    // Active/hover affordance stays in text, icon, glow, and the active
+    // status dot instead of changing opacity.
+    const RAIL_WIDGET_FILL_ALPHA = 0.16;
     const RAIL_WIDGET_BORDER_ALPHA = 0.25;
 
     const resolveTileBackground = () =>
