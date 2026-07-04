@@ -134,9 +134,7 @@ if (existsSync(SHELL)) {
 
 // ── Rail-width parity: left and right rails MUST share one width token ───────
 // CRITICAL: the rules must live in a stylesheet that the PRODUCTION entry
-// (root src/main.tsx, per index.html) actually imports. omniSkin.css is imported
-// only by the orphaned apps/omnihub-site/src/main.tsx, so its rules never reach
-// the bundle — the authoritative, runtime-loaded home is omnidash-layout.css.
+// (root src/main.tsx, per index.html) actually imports.
 const LAYOUT_CSS = resolve(ROOT, 'apps/omnihub-site/src/styles/omnidash-layout.css');
 const ROOT_MAIN = resolve(ROOT, 'src/main.tsx');
 check('runtime-loaded layout stylesheet exists (omnidash-layout.css)', existsSync(LAYOUT_CSS));
@@ -151,9 +149,23 @@ if (existsSync(LAYOUT_CSS)) {
 }
 // And that stylesheet must actually be imported by the production root entry.
 if (existsSync(ROOT_MAIN)) {
+  const rootMainSrc = readFileSync(ROOT_MAIN, 'utf8');
   check('omnidash-layout.css is imported by the production root entry (src/main.tsx)',
-    /omnidash-layout\.css/.test(readFileSync(ROOT_MAIN, 'utf8')),
+    /omnidash-layout\.css/.test(rootMainSrc),
     'root src/main.tsx must import omnidash-layout.css so the rail-parity rules reach the production bundle');
+
+  // omniSkin.css (keyframes, .ose-avatar-button, .ose-icon-button,
+  // .ose-integrated-apps-gallery) was for a long time imported only by the
+  // orphaned apps/omnihub-site/src/main.tsx (never used as an entry — index.html
+  // loads root src/main.tsx), so none of its rules ever reached production: the
+  // header avatar/icon buttons rendered as unstyled text, and every OSE
+  // keyframe animation (apexPulse, navGlow, ringBreath, scanLine, etc.) was
+  // silently absent from the shipped bundle. Regression-guard the fix.
+  const OMNI_SKIN_CSS = resolve(ROOT, 'apps/omnihub-site/dashboard/omniSkin.css');
+  check('omniSkin.css static asset exists', existsSync(OMNI_SKIN_CSS));
+  check('omniSkin.css is imported by the production root entry (src/main.tsx)',
+    /omniSkin\.css/.test(rootMainSrc),
+    'root src/main.tsx must import apps/omnihub-site/dashboard/omniSkin.css so its keyframes and .ose-* component classes reach the production bundle');
 }
 
 // ── Glass/tile integrity: dashboard Tailwind utilities MUST be generated ─────
