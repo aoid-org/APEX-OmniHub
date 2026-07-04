@@ -40,6 +40,13 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
         }
     };
 
+    const responseMessage = (data: Record<string, unknown>, fallback: string) => {
+        const candidate = data.message ?? data.error;
+        if (typeof candidate === 'string') return candidate;
+        if (typeof candidate === 'number' || typeof candidate === 'boolean') return String(candidate);
+        return fallback;
+    };
+
     const plainError = (value: unknown) => {
         const raw = typeof value === 'string' ? value : 'We could not verify this connector.';
         if (/unauthorized|auth/i.test(raw)) return 'Please sign in again, then retry the connection test.';
@@ -73,7 +80,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
                 }),
             });
             const responseData = await parseResponse(response);
-            if (!response.ok) throw new Error(String(responseData.message || responseData.error || 'Connector readiness test failed'));
+            if (!response.ok) throw new Error(responseMessage(responseData, 'Connector readiness test failed'));
             setTestStatus('passed');
             setTestMessage('Connection test passed. This app is ready for a production key.');
             toast.success('Connection test passed');
@@ -117,7 +124,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
             const responseData = await parseResponse(response);
 
             if (!response.ok) {
-                throw new Error(String(responseData.error || responseData.message || 'Failed to generate key'));
+                throw new Error(responseMessage(responseData, 'Failed to generate key'));
             }
 
             setGeneratedKey({
@@ -143,6 +150,21 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
         authorization: generatedKey ? `Bearer ${generatedKey.key}` : 'Bearer <YOUR_API_KEY>',
         integrationId: integration.id,
     };
+
+    let testAlertClassName = '';
+    if (testStatus === 'passed') testAlertClassName = 'border-emerald-500/50 bg-emerald-500/10';
+    if (testStatus === 'failed') testAlertClassName = 'border-orange-500/50 bg-orange-500/10';
+    const isTestPassed = testStatus === 'passed';
+    const isTestRunning = testStatus === 'testing';
+    const TestAlertIcon = isTestPassed ? CheckCircle2 : ShieldCheck;
+    const testAlertIconClassName = isTestPassed ? 'h-4 w-4 text-emerald-500' : 'h-4 w-4';
+    const TestButtonIcon = isTestRunning ? RefreshCw : ShieldCheck;
+    const testButtonIconClassName = isTestRunning ? 'mr-2 h-4 w-4 animate-spin' : 'mr-2 h-4 w-4';
+    const GenerateButtonIcon = isLoading ? RefreshCw : Key;
+    const generateButtonIconClassName = isLoading ? 'mr-2 h-4 w-4 animate-spin' : 'mr-2 h-4 w-4';
+    let testAlertTitle = 'Required before save';
+    if (testStatus === 'passed') testAlertTitle = 'Ready to connect';
+    if (testStatus === 'failed') testAlertTitle = 'Needs attention';
 
     const copyConfig = () => {
         navigator.clipboard.writeText(JSON.stringify(config, null, 2));
@@ -182,13 +204,13 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label>Test Connection</Label>
-                        <Alert className={testStatus === 'passed' ? 'border-emerald-500/50 bg-emerald-500/10' : testStatus === 'failed' ? 'border-orange-500/50 bg-orange-500/10' : ''}>
-                            {testStatus === 'passed' ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <ShieldCheck className="h-4 w-4" />}
-                            <AlertTitle>{testStatus === 'passed' ? 'Ready to connect' : testStatus === 'failed' ? 'Needs attention' : 'Required before save'}</AlertTitle>
+                        <Alert className={testAlertClassName}>
+                            <TestAlertIcon className={testAlertIconClassName} />
+                            <AlertTitle>{testAlertTitle}</AlertTitle>
                             <AlertDescription>{testMessage}</AlertDescription>
                         </Alert>
-                        <Button onClick={handleTestConnection} disabled={testStatus === 'testing' || isLoading} variant="outline" className="w-full">
-                            {testStatus === 'testing' ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                        <Button onClick={handleTestConnection} disabled={isTestRunning || isLoading} variant="outline" className="w-full">
+                            <TestButtonIcon className={testButtonIconClassName} />
                             Test Connection
                         </Button>
                     </div>
@@ -227,7 +249,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
                             ) : (
                                 <div className="flex flex-col gap-2">
                                     <Button onClick={handleGenerateKey} disabled={isLoading || testStatus !== 'passed'} className="w-full">
-                                        {isLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Key className="mr-2 h-4 w-4" />}
+                                        <GenerateButtonIcon className={generateButtonIconClassName} />
                                         Generate New API Key
                                     </Button>
                                     <p className="text-xs text-muted-foreground text-center">
