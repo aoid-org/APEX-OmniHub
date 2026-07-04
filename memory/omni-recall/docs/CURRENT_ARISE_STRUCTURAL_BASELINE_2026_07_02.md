@@ -8,7 +8,7 @@ Phase 0 (Structural Observatory). Measurement only. No code changes proposed.
 |---|---|---|
 | Acyclicity | 0.33 | 2 circular dependency chain(s) found |
 | Modularity | 1.00 | no rule violations found |
-| Redundancy | 0.99 | 113 duplicate block(s) found, 1.44% of scanned lines duplicated (1130 lines) |
+| Redundancy | 0.98 | 118 duplicate block(s) found, 1.55% of scanned lines duplicated (1288 lines) |
 | Depth | 0.25 | max nesting depth 10 in src/components/VoiceInterface.tsx; 3 file(s) exceed depth 4 |
 | Equality | 0.11 | largest file apps/omnihub-site/src/pages/Home.tsx (2456 LOC); 8 file(s) exceed 600 LOC across 472 files (avg 142 LOC) |
 
