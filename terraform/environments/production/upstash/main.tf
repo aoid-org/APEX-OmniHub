@@ -12,9 +12,13 @@ terraform {
 
 resource "upstash_redis_database" "main" {
   database_name = var.database_name
-  region        = var.region
-  tls           = true
-  eviction      = true
+  # Upstash deprecated regional database creation (HTTP 400: "regional db creation is deprecated").
+  # All new databases must use region = "global". The primary_region field pins the
+  # nearest write region for global databases.
+  region         = "global"
+  primary_region = "us-east-1"
+  tls            = true
+  eviction       = var.eviction_policy
 
-  # Provider now enables multi-zone automatically for paid databases.
+  # Provider >= 1.x enables multi-zone automatically for paid databases.
 }
