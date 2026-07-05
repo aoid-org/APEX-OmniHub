@@ -123,8 +123,7 @@ The SQL function reads its own secrets from Supabase Vault at execution time:
 
 **Critical environment boundary:** set `project_url` separately in each Supabase
 environment before enabling/running the scheduler. Staging/recovery databases
-must point to their own project URL, never to production. The forward migration
-`20260704230000_workflow_scheduler_vault_project_url.sql` removed the prior
+must point to their own project URL, never to production. The forward migration `20260704184149_dynamic_workflow_scheduler_url.sql` (along with `20260704230000_workflow_scheduler_vault_project_url.sql`) removed the prior
 hardcoded production URL from the scheduler function and now reads `project_url`
 from Vault.
 
@@ -155,7 +154,7 @@ SELECT public.dispatch_scheduled_workflows();
 | `omni_policies` (**provisioned 2026-06-19**, migration `20260619211500_omni_policies.sql`) | OmniPolicy `evaluate_policy` | 7 tailored policies active; loader still degrades to ALLOW if ever unreachable |
 | `idempotency_ledger`, `pilot_sessions` | activity idempotency / BYOM | activity-level degradation |
 | `user_generated_skills` + `check_skill_entitlement()` / `enforce_skill_entitlement` trigger (migrations `20260214000001`, `20260610000000`; free cap raised 3→5 by `20260622000000_skill_entitlement_free_cap_5.sql`) | SkillForge generation + paywall (BASIC = 5 active skills, 6th = 402) | SkillForge create + paywall breaks |
-| `workflows.schedule` constraint + `public.dispatch_scheduled_workflows()` + `workflow-scheduler` cron job (migrations `20260701200000_workflow_scheduler.sql`, `20260704230000_workflow_scheduler_vault_project_url.sql`) | Scheduled Workflows autonomous execution; dispatches due active workflows to `execute-workflow` with `X-Cron-Secret` | Scheduled workflows stop dispatching; manual Trigger Run path remains separate |
+| `workflows.schedule` constraint + `public.dispatch_scheduled_workflows()` + `workflow-scheduler` cron job (migrations `20260701200000_workflow_scheduler.sql`, `20260704230000_workflow_scheduler_vault_project_url.sql`, `20260704184149_dynamic_workflow_scheduler_url.sql`) | Scheduled Workflows autonomous execution; dispatches due active workflows to `execute-workflow` with `X-Cron-Secret` | Scheduled workflows stop dispatching; manual Trigger Run path remains separate |
 
 **Note:** `omni_policies` was provisioned 2026-06-19 (migration `20260619211500_omni_policies.sql`) with a tailored APEX policy set (block destructive/secret ops, defer PII/financial + deletions, allow reads/conversation/normal writes). The loader remains hardened to tolerate the table being absent/unreachable (degrades to default ALLOW). A separate `agent_policies` table exists with a *different* schema and is unrelated to OmniPolicy. To change rules, edit the migration and re-apply (the seed uses `ON CONFLICT (name) DO UPDATE`); changes take effect within the loader's 60s cache TTL.
 
