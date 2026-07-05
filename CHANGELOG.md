@@ -32,7 +32,7 @@ Backfill 2026-07-03: entries for every PR merged to `main` after the last record
 - UI polish, PWA/WebAuthn tweaks, SSG WebSocket shim, and typing/path fixes (PR #1537).
 - UI and SSR fixes: rail styling, media fallbacks, WebAuthn/PWA tweaks, and SSG WebSocket polyfill (PR #1535).
 - fix(omnihub-site): stabilize Space Grotesk font fallback stack (PR #1545).
-- docs: sync README-cited current state and add the 2026-06-30 platform snapshot (PR #1533).
+- docs: sync README-cited current state and add the 2026-07-04 platform snapshot (PR #1533).
 - Direct commits to `main` (no PR): remove the orphaned static /launch page that shadowed the SPA onboarding route (`845fced`); optimize Jaccard similarity and string tokenization in `src/core/cognition/compressionEngine.ts` (`cd6e4d7`).
 
 ## 1.8.3

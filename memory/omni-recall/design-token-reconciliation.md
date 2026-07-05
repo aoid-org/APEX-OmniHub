@@ -110,7 +110,7 @@ The dual-`T`-definition and invalid-CSS hazards are resolved via a 4-layer engin
   not removed (contract instructed leaving these untouched).
 - Layer 4 (Surface Snapshot Registry) — future contract.
 
-## Update — OSE governance drift follow-up (2026-06-30)
+## Update — OSE governance drift follow-up (2026-07-04)
 
 - `apps/omnihub-site/src/styles/omnidash-layout.css` now keeps the default
   runtime rail variables (`--omni-rail-width`, `--omni-rail-pad-x`) inside the

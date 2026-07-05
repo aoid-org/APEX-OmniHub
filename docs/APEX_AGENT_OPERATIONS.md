@@ -1120,7 +1120,7 @@ The production-safe Playwright suite is read-only by default. It captures saniti
 
 ## 9.21 OmniSkin Engine (OSE v1.0) — OSE Guard CI gate (2026-06-28, CCEX-OSE-001)
 
-> **⚠️ Production-reach correction (PR #1525, 2026-06-30):** this contract governs
+> **⚠️ Production-reach correction (PR #1525, 2026-07-04):** this contract governs
 > `apps/omnihub-site/dashboard/omniSkin.css` being imported by
 > `apps/omnihub-site/src/main.tsx` — but that file is **not** the Vite production
 > entry. Per `index.html` (`<script type="module" src="/src/main.tsx">`), the real
@@ -1235,7 +1235,7 @@ tests under `tests/omnidash/` and `tests/e2e-playwright/`.
 
 ---
 
-## 9.23 Billing — `create-checkout` / `stripe-webhook` wired into production deploy, auth fix ported (2026-06-30)
+## 9.23 Billing — `create-checkout` / `stripe-webhook` wired into production deploy, auth fix ported (2026-07-04)
 
 **Root cause:** every row in production `subscriptions` had `stripe_customer_id =
 NULL`, so `create-billing-portal` correctly returned `BILLING_CUSTOMER_NOT_FOUND`
@@ -1265,7 +1265,7 @@ deploy. Both already existed in the Supabase secrets/service inventory tables in
 
 ---
 
-## 9.24 Orchestrator — OmniBoard Redis env-var hardened to fail closed (2026-06-30)
+## 9.24 Orchestrator — OmniBoard Redis env-var hardened to fail closed (2026-07-04)
 
 **Root cause:** `orchestrator/omniboard/router.py` and `service.py` read
 `os.environ["UPSTASH_REDIS_URL"]` as a hard dict subscript. A missing env var

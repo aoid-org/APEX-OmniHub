@@ -60,3 +60,7 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 12. OmniBoard Chat-Native Connector Actions
 **Invariant:** OmniBoard chat actions must reuse the existing APEX agent UI, Intent Registry, MCP `omnihub_execute_intent` dispatcher, OmniConnect connector model, and shared SSRF guard.
 **Rule:** E2E coverage for chat-native connector work must prove a full connect/test/confirm flow for an existing integration and a beta-only custom scaffold path. Do not accept tests that create a parallel dispatcher, bypass the fail-closed registry, auto-promote custom connectors to GA, or validate custom URLs outside the shared SSRF utilities.
+
+## 13. OmniDash Left Sidebar Visual Parity
+**Invariant:** OmniTrace (`OmniTraceFeed.tsx`) is the source of truth for left/right sidebar visual styling.
+**Rule:** The left sidebar components (such as `OmniDashShell` NavItems and `SidebarKpiBar`) must explicitly copy OmniTrace's design language: `borderRadius: 10`, `border: '1px solid rgba(249,115,22,0.25)'`, `background: 'rgba(249,115,22,0.06)'`, and `backdropFilter: 'blur(16px) saturate(140%)'`. Do not invert this relationship (OmniTrace never copies the left sidebar).

@@ -1,10 +1,10 @@
 ---
 version: 1.0.0
-last_audited: 2026-06-30
+last_audited: 2026-07-04
 status: implemented
 ---
 
-# RFC 2026-06-30 — README-Cited Documentation Current-State Sync
+# RFC 2026-07-04 — README-Cited Documentation Current-State Sync
 
 ## 1. Context
 
@@ -26,7 +26,7 @@ and to preserve the decision trail for future maintainers.
   RLS policy, or package dependency was changed by this remediation.
 - **Architecture authority pointers changed.** README-cited docs now defer
   branch/head/package/count facts to
-  `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md`.
+  `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md`.
 - **Certification boundary clarified.** Production certification remains gated by
   `docs/release/release-validation-matrix.json` plus owner/live evidence for
   unresolved `BLOCKED` or `REQUIRES_MANUAL_VALIDATION` items.
@@ -36,7 +36,7 @@ and to preserve the decision trail for future maintainers.
 
 ## 3. Implementation Summary
 
-- Added `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md` with
+- Added `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` with
   repo-verified counts, package versions, latest audited HEAD, and validation
   commands.
 - Updated README and documentation index pointers to the current snapshot and to
@@ -52,7 +52,7 @@ and to preserve the decision trail for future maintainers.
 - `npm run docs:check` — passed link and file-pointer validation.
 - `git diff --check` — passed whitespace/conflict-marker validation.
 - Repo count commands recorded in
-  `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md` generated the
+  `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` generated the
   updated counts.
 
 ## 5. Rollback Plan

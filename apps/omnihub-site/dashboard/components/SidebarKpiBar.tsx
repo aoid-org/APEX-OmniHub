@@ -52,12 +52,9 @@ export function SidebarKpiBar({ kpi, systemHealth, demoMode }: SidebarKpiBarProp
       data-testid="sidebar-kpi-bar"
       style={{
         margin: '0 0 8px',
-        borderRadius: 11,
-        // Same fill alpha as NavItem above it. Owner directive: opacity
-        // only, orange tint stays — raised alpha again (0.16 -> 0.30)
-        // rather than changing fill color.
+        borderRadius: 10,
         border: `1px solid ${omniRgba('orange', 0.25)}`,
-        background: omniRgba('orange', 0.30),
+        background: omniRgba('orange', 0.06),
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         overflow: 'hidden',

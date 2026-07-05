@@ -1,4 +1,4 @@
-# OmniDash Surface — Release 1.8.3 Frozen Baseline (2026-06-30)
+# OmniDash Surface — Release 1.8.3 Frozen Baseline (2026-07-04)
 
 **Release:** `1.8.3` (patch) · **Branch:** `claude/omnidash-surface-alignment-fsrs31` · **PR:** #1529 (base `main`)
 **Status:** RELEASE-READY — all widget surfaces validated. Owner cuts the final gate by merging the PR.

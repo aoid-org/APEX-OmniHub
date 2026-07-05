@@ -1,21 +1,21 @@
 ---
 version: 1.9.0
-created: 2026-06-30
-last_audited: 2026-06-30
+created: 2026-07-04
+last_audited: 2026-07-04
 status: verified
 supersedes: CURRENT_PLATFORM_STATE_2026_06_26.md
 ---
 
-# Current Platform State — 2026-06-30
+# Current Platform State — 2026-07-04
 
-> **CURRENT AUTHORITY (2026-06-30):** local `work` branch at `7f498b6` after fetching all remotes and verifying the working-tree facts below. This is a repository-state and documentation-truth snapshot, not live-production proof.
+> **CURRENT AUTHORITY (2026-07-04):** local `work` branch at `d22ddcf` after fetching all remotes and verifying the working-tree facts below. This is a repository-state and documentation-truth snapshot, not live-production proof.
 
 ## Verification Metadata
 
 | Field | Value |
 |---|---|
-| Snapshot date | 2026-06-30 |
-| Verified HEAD | `7f498b6` — fix(omnidash): surface alignment + glassmorphism repair pass (#1529) |
+| Snapshot date | 2026-07-04 |
+| Verified HEAD | `d22ddcf` — fix(omnidash): surface alignment + glassmorphism repair pass (#1529) |
 | Active branch in local audit environment | `work` |
 | Remote check | `git fetch --all --prune` completed before this snapshot |
 | Live/production state | Not verified by this documentation sync; owner/live evidence is still required for production certification gaps |
@@ -33,7 +33,7 @@ supersedes: CURRENT_PLATFORM_STATE_2026_06_26.md
 ## Latest Verified Git History
 
 ```text
-7f498b6 fix(omnidash): surface alignment + glassmorphism repair pass (#1529)
+d22ddcf fix(omnidash): surface alignment + glassmorphism repair pass (#1529)
 26bbf7f fix(omnidash): increase left/right rail widget opacity by 25%
 edea8b4 docs: sync omni-recall/README/registry to merged PR #1525 + #1527 state
 0a2919e fix(omnidash): footer data honesty — drop mislabelled FlowBills KPIs (reviewer item 4)
@@ -51,11 +51,11 @@ b780c98 Repair OSE governance drift
 
 - Release line and root `package.json` are **1.8.3**; README and current docs must not continue to state `1.8.2`.
 - App package remains **1.3.10**.
-- The latest local audited baseline is **`7f498b6`**, not `fba4e2f`; the recent sequence includes OmniDash surface alignment/glassmorphism repair, rail opacity, claim-hygiene cleanup, OSE governance drift repair, and PR #1516 layout/sidebar/mobile enhancements.
+- The latest local audited baseline is **`d22ddcf`**, not `fba4e2f`; the recent sequence includes OmniDash surface alignment/glassmorphism repair, rail opacity, claim-hygiene cleanup, OSE governance drift repair, and PR #1516 layout/sidebar/mobile enhancements.
 - Full production certification remains **not established by this documentation pass**. Repo-level evidence can support release readiness, but live/owner validation is still required wherever `docs/release/release-validation-matrix.json` records `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`.
 - Canonical live OmniHub app paths remain `apps/omnihub-site/` and `apps/omnihub-site/dashboard/`; avoid `src/components/dashboard/` for OmniDash production remediation unless a current import trace proves it is live.
 
-## Documentation Sync Scope (2026-06-30)
+## Documentation Sync Scope (2026-07-04)
 
 This pass updates README-cited living documents and adds this dated current-state snapshot. Older dated release notes and historical audits remain historical evidence; they must not be reinterpreted as current production proof.
 

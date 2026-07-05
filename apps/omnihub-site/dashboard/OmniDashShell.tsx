@@ -226,25 +226,21 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     // invalid CSS and silently paints a transparent, borderless tile.
     const ORANGE = "249,115,22"; // --omni-orange (#f97316) channels
 
-    // NavItem rows are much smaller than the right-rail cards (OmniTrace/
-    // OmniSentry/Ops Controls/OmniMedia), so the same fill alpha that reads
-    // as a visible glass tile on a large card reads as far less on a compact
-    // row. Owner directive: opacity only, orange tint stays — raised alpha
-    // again (0.16 -> 0.30) rather than changing fill color.
-    const RAIL_WIDGET_FILL_ALPHA = 0.30;
-    const RAIL_WIDGET_BORDER_ALPHA = 0.25;
+    const RAIL_WIDGET_FILL_ALPHA = 0.06;
 
-    const resolveTileBackground = () =>
-      `linear-gradient(135deg, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 0%, rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA}) 100%)`;
-
-    const resolveTileBorder = () =>
-      `1px solid rgba(${ORANGE},${RAIL_WIDGET_BORDER_ALPHA})`;
-
-    const resolveTileShadow = (active: boolean, hover: boolean) => {
-      if (active) return `0 0 18px rgba(${ORANGE},0.30), 0 2px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)`;
-      if (hover)  return `0 0 14px rgba(${ORANGE},0.22), 0 2px 6px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06)`;
-      return `0 1px 3px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)`;
+    const resolveTileBackground = (active: boolean, hover: boolean) => {
+      if (active) return `rgba(${ORANGE},0.08)`;
+      if (hover) return `rgba(${ORANGE},0.07)`;
+      return `rgba(${ORANGE},${RAIL_WIDGET_FILL_ALPHA})`;
     };
+
+    const resolveTileBorder = (active: boolean, hover: boolean) => {
+      if (active) return `1px solid rgba(${ORANGE},0.40)`;
+      if (hover) return `1px solid rgba(${ORANGE},0.32)`;
+      return `1px solid rgba(${ORANGE},0.25)`;
+    };
+
+    const resolveTileShadow = (active: boolean, hover: boolean) => "none";
 
     const resolveBorder = (isActive: boolean, hov: boolean) => {
       if (isActive) return `2.5px solid rgba(255,255,255,0.90)`;
@@ -276,8 +272,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        border: resolveTileBorder(),
-        background: resolveTileBackground(),
+        border: resolveTileBorder(isActive, hov),
+        background: resolveTileBackground(isActive, hov),
         // Same blur/saturate intensity as the right-rail glass tiles
         // (OmniTrace/OmniSentry/Ops Controls/OmniMedia/System Status) —
         // owner request: uniform opacity across all rail widgets.

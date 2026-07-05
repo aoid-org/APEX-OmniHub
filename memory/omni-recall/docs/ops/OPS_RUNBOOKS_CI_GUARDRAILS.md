@@ -4,7 +4,7 @@ last_audited: 2026-06-12
 status: verified
 ---
 
-> **Current-state note (2026-06-30):** Current repo facts: package `1.8.3`, 20 workflow files, and production certification remains gated by `../../../docs/release/release-validation-matrix.json` plus owner/live evidence.
+> **Current-state note (2026-07-04):** Current repo facts: package `1.8.3`, 20 workflow files, and production certification remains gated by `../../../docs/release/release-validation-matrix.json` plus owner/live evidence.
 
 
 # OPS_RUNBOOKS.md — APEX-OmniHub Operations Runbooks

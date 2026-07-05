@@ -1,6 +1,6 @@
 ---
 version: 1.4.0
-last_audited: 2026-06-30
+last_audited: 2026-07-04
 status: verified
 ---
 
@@ -40,13 +40,13 @@ https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/<workflow
 Static `img.shields.io/badge/...` badges are forbidden for CI/security/test status claims.
 The License badge is exempt (it is not a CI claim).
 
-## Current CI / Certification State (repo-verified 2026-06-30)
+## Current CI / Certification State (repo-verified 2026-07-04)
 
-Local audit branch: `work` at `7f498b6` after `git fetch --all --prune`. The repo contains **20** GitHub Actions workflow files. This documentation pass did **not** verify GitHub branch-protection settings or live Actions conclusions via admin/API evidence.
+Local audit branch: `work` at `d22ddcf` after `git fetch --all --prune`. The repo contains **20** GitHub Actions workflow files. This documentation pass did **not** verify GitHub branch-protection settings or live Actions conclusions via admin/API evidence.
 
 Current verdict: `NO_GO_FOR_FULL_PRODUCTION_CERTIFICATION__HARNESS_READY_LIVE_GAPS_HONEST`, matching `docs/release/release-validation-matrix.json`. CI can validate release readiness and attach evidence, but CI does not certify production and cannot create release tags.
 
-## Workflow Registry (verified 2026-06-30)
+## Workflow Registry (verified 2026-07-04)
 
 The repository has **20** active GitHub Actions workflow files in `.github/workflows/`. `production-readiness.yml`, `dependency-review.yml`, and `security-guards.yml` are not present in the current tree; do not cite them as required active gates unless they are reintroduced and branch-protection evidence is attached.
 
