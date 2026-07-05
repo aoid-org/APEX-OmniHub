@@ -463,6 +463,12 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+      - name: Setup k6
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
+        with:
+          k6-version: '1.3.0'
+
       - name: Run K6 Performance Tests (SOFT gate / p99<800ms)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         # ci-integrity-allow: intentional SOFT gate — K6 perf smoke is advisory (p99<800ms target). A perf-smoke blip must not block the release; regressions are reviewed from the uploaded performance-summary evidence, not by failing the gate.

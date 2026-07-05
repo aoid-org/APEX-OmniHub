@@ -61,8 +61,8 @@
     },
     {
       "area": "performance/load",
-      "classification": "BLOCKED_BY_ENVIRONMENT",
-      "reason": "Requires k6 binary or equivalent load tool; a skipped placeholder is not a pass."
+      "classification": "RUNNABLE_IN_CI",
+      "reason": "ci-runtime-gates.yml provisions k6 with grafana/setup-k6-action before running npm run perf:k6:smoke; certification still requires the smoke to execute and upload performance-summary.json."
     },
     {
       "area": "branch protection/release gates",
@@ -271,11 +271,11 @@
       "commandOrProcedure": "npm run perf:k6:smoke",
       "evidenceArtifactPathOrUrl": "artifacts/production-validation/performance-summary.json",
       "owner": "QA + Security/Ops",
-      "blocker": "k6 must be installed and the smoke must actually execute; skipped placeholders are not accepted.",
+      "blocker": "Awaiting the next main/master CI execution to run the provisioned k6 smoke and upload performance-summary.json; skipped placeholders remain unacceptable.",
       "waiverReason": null,
       "waiverExpiry": null,
       "lastValidatedTimestamp": null,
-      "confidenceLevel": "LOW",
+      "confidenceLevel": "MEDIUM",
       "liveProductionTouched": false,
       "backendPersistenceProven": false
     },
