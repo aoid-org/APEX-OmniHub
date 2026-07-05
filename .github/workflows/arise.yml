@@ -89,11 +89,11 @@ jobs:
           retention-days: 90
 
   publish-snapshot:
-    name: "Publish dated snapshot PR"
+    name: "Publish dated snapshot rolling PR"
     needs: [structural-observatory, diagnosis-observatory]
     # Protected branches reject direct pushes. Publish generated snapshots by
-    # opening a pull request so branch protection and required checks remain
-    # authoritative.
+    # updating one rolling pull request so branch protection and required checks
+    # remain authoritative without creating one new PR per push.
     if: |
       always() &&
       github.event_name == 'push' &&
@@ -127,7 +127,7 @@ jobs:
           name: arise-diagnosis-report
           path: memory/omni-recall/docs
 
-      - name: Commit dated snapshot and diagnosis report to PR branch
+      - name: Commit dated snapshot and diagnosis report to rolling PR branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -144,24 +144,47 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          branch="automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}"
+          branch="automation/arise-snapshot-current"
           case "$branch" in
             main|master|refs/heads/main|refs/heads/master|origin/main|origin/master)
               echo "Refusing to publish A.R.I.S.E. snapshots to protected branch target: $branch" >&2
               exit 1
               ;;
-            automation/arise-snapshot-*) ;;
+            automation/arise-snapshot-current) ;;
             *)
               echo "Refusing to publish A.R.I.S.E. snapshots to unexpected branch target: $branch" >&2
               exit 1
               ;;
           esac
-          git checkout -b "$branch"
+
+          workdir="$(mktemp -d)"
+          cp "${files[@]}" "$workdir/"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch origin "$branch"
+            git checkout -B "$branch" "origin/$branch"
+            git merge --no-edit "origin/${{ github.ref_name }}"
+          else
+            git checkout -b "$branch"
+          fi
+          cp "$workdir"/* memory/omni-recall/docs/
+          rm -rf "$workdir"
+
+          files=(memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_*.md memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_*.md)
+          if [ -z "$(git status --porcelain -- "${files[@]}")" ]; then
+            echo "No snapshot or diagnosis changes to publish after switching to rolling branch."
+            exit 0
+          fi
           git add "${files[@]}"
-          git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report [skip ci]"
+          git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report"
           git push origin "HEAD:refs/heads/$branch"
+
+          existing_pr_url="$(gh pr list --state open --base "${{ github.ref_name }}" --head "$branch" --json url --jq '.[0].url // empty')"
+          if [ -n "$existing_pr_url" ]; then
+            echo "Updated existing A.R.I.S.E. snapshot PR: $existing_pr_url"
+            exit 0
+          fi
           gh pr create \
             --base "${{ github.ref_name }}" \
             --head "$branch" \
             --title "chore(arise): publish structural baseline snapshot" \
-            --body "Automated A.R.I.S.E. snapshot publication. Opened as a pull request to comply with protected-branch rules and required status checks."
+            --body "Automated A.R.I.S.E. snapshot publication. This rolling pull request is updated by subsequent A.R.I.S.E. runs to avoid duplicate snapshot PRs while preserving protected-branch checks."

@@ -13,12 +13,13 @@ The unsafe failure mode is any A.R.I.S.E. snapshot publisher that commits genera
 The live workflow now publishes generated snapshots by:
 
 1. downloading scan artifacts into `memory/omni-recall/docs`,
-2. creating a unique `automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}` branch,
-3. fail-closing unless the target matches `automation/arise-snapshot-*`,
-4. pushing only `HEAD:refs/heads/$branch`, and
-5. opening a pull request back to the protected base branch with `gh pr create`.
+2. updating the single rolling `automation/arise-snapshot-current` branch,
+3. fail-closing unless the target is exactly `automation/arise-snapshot-current`,
+4. pushing only `HEAD:refs/heads/$branch`,
+5. searching for an existing open snapshot PR from that branch before creating one, and
+6. opening a pull request back to the protected base branch with `gh pr create` only when no matching open PR exists.
 
-A regression test now reads `.github/workflows/arise.yml` and verifies the workflow keeps PR publishing semantics while rejecting direct `git push origin main`, `git push origin master`, or push-to-current-ref patterns.
+A regression test now reads `.github/workflows/arise.yml` and verifies the workflow keeps rolling-PR publishing semantics, dedupes existing open snapshot PRs, avoids `[skip ci]`, and rejects direct `git push origin main`, `git push origin master`, or push-to-current-ref patterns.
 
 ## Validation
 
@@ -30,8 +31,8 @@ If this workflow needs rollback, do not restore direct protected-branch pushes. 
 
 ## Ops-doc drift guard follow-up
 
-The repository's `ops-doc-guard` treats `.github/workflows/**` as critical-path operational source-of-truth. Because `.github/workflows/arise.yml` changed, `docs/APEX_AGENT_OPERATIONS.md` must be updated in the same PR. The operations doc now records the protected-branch-safe A.R.I.S.E. publisher contract: scan and diagnosis jobs upload artifacts with read-only permissions, while `publish-snapshot` uses `contents: write` plus `pull-requests: write` only to push a unique automation branch and open a PR instead of writing directly to `main`/`master`.
+The repository's `ops-doc-guard` treats `.github/workflows/**` as critical-path operational source-of-truth. Because `.github/workflows/arise.yml` changed, `docs/APEX_AGENT_OPERATIONS.md` must be updated in the same PR. The operations doc now records the protected-branch-safe A.R.I.S.E. publisher contract: scan and diagnosis jobs upload artifacts with read-only permissions, while `publish-snapshot` uses `contents: write` plus `pull-requests: write` only to update the single rolling automation branch, dedupe the existing open PR, and avoid writing directly to `main`/`master`.
 
 ## Fail-closed hardening follow-up
 
-The publisher now validates the computed target before checkout/push. It refuses `main`, `master`, `refs/heads/main`, `refs/heads/master`, `origin/main`, `origin/master`, and any target that does not match `automation/arise-snapshot-*`; the push destination is fully qualified as `HEAD:refs/heads/$branch` so the job cannot degrade into `HEAD -> main` publication.
+The publisher now validates the computed target before checkout/push. It refuses `main`, `master`, `refs/heads/main`, `refs/heads/master`, `origin/main`, `origin/master`, and any target other than `automation/arise-snapshot-current`; the push destination is fully qualified as `HEAD:refs/heads/$branch` so the job cannot degrade into `HEAD -> main` publication.
