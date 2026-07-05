@@ -32,34 +32,13 @@ resource "cloudflare_record" "www" {
   comment         = "WWW subdomain pointing to Cloudflare Pages origin"
 }
 
-# WAF Custom Rules
-# Uses http_request_firewall_custom phase (not managed) for custom block/challenge expressions.
-# Account-owned API tokens are supported here.
-resource "cloudflare_ruleset" "waf" {
-  zone_id     = var.zone_id
-  name        = "OmniHub WAF Rules"
-  description = "Web Application Firewall custom rules for OmniHub"
-  kind        = "zone"
-  phase       = "http_request_firewall_custom"
-
-  rules {
-    action      = "block"
-    expression  = "(cf.threat_score gt 14)"
-    description = "Block high threat score"
-    enabled     = true
-  }
-
-  rules {
-    action      = "managed_challenge"
-    expression  = "(cf.threat_score gt 5 and cf.threat_score le 14)"
-    description = "Challenge medium threat score"
-    enabled     = true
-  }
-}
+# NOTE: cloudflare_ruleset.waf (http_request_firewall_custom phase) is intentionally
+# omitted from Terraform management because a ruleset for this phase already exists
+# in the zone and Cloudflare does not allow duplicate rulesets per phase.
+# WAF custom rules are managed directly in the Cloudflare dashboard.
 
 # Rate Limiting Rules (Cloudflare Ruleset Engine)
-# Free plan allows max 1 rule in http_ratelimit phase.
-# Consolidating API + sensitive endpoint protection into a single rule.
+# Free plan: max 1 rule in http_ratelimit phase, period must be 10 seconds.
 resource "cloudflare_ruleset" "rate_limits" {
   zone_id     = var.zone_id
   name        = "OmniHub Rate Limits"
@@ -74,7 +53,7 @@ resource "cloudflare_ruleset" "rate_limits" {
     enabled     = true
     ratelimit {
       characteristics     = ["cf.colo.id", "ip.src"]
-      period              = 60
+      period              = 10
       requests_per_period = var.rate_limit_threshold
       mitigation_timeout  = 3600
     }
