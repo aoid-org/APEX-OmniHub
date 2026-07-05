@@ -38,7 +38,10 @@ resource "cloudflare_record" "www" {
 # WAF custom rules are managed directly in the Cloudflare dashboard.
 
 # Rate Limiting Rules (Cloudflare Ruleset Engine)
-# Free plan: max 1 rule in http_ratelimit phase, period must be 10 seconds.
+# Free plan constraints:
+#   - max 1 rule in http_ratelimit phase
+#   - period must be 10 (seconds)
+#   - mitigation_timeout must be 10 (seconds)
 resource "cloudflare_ruleset" "rate_limits" {
   zone_id     = var.zone_id
   name        = "OmniHub Rate Limits"
@@ -55,7 +58,7 @@ resource "cloudflare_ruleset" "rate_limits" {
       characteristics     = ["cf.colo.id", "ip.src"]
       period              = 10
       requests_per_period = var.rate_limit_threshold
-      mitigation_timeout  = 3600
+      mitigation_timeout  = 10
     }
   }
 }
