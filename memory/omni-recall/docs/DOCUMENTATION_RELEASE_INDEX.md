@@ -482,3 +482,41 @@ Full repo-truth documentation sync performed against the working tree after E2E 
 | SQL migrations | 102 (98 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
 | Spec/test source files | 386 | `find tests e2e sim apps orchestrator packages ...` |
 
+
+## 2026-07-05 CI-Gate Remediation Pass — PR #1602 red-to-green (HEAD `1d666bf2`)
+
+Seven red CI checks on PR #1602 (`antigravity/cp-16-doc-sync-remediation`) fixed: `build-and-test`
+(secret-scan false positives), `Dependency vulnerability scan` (osv-scanner bun.lockb crash),
+`Governance gate` (downstream of the above), `Operations doc drift guard` (8 new undocumented
+edge functions), `RSI Governance Gate` (missing protected-path evidence in PR body — `terraform/modules/vercel/**`
+is new/unwired), `Lighthouse Audit` and `Cloudflare Pages: apex-omnihub` (both broken by the same
+root cause: `vite.config.ts` was missing the `@omnihub` alias that `tsconfig.app.json` already
+declared, so `tsc`/Vitest resolved `@omnihub/stores/omniSlateStore` but the production `vite build`
+could not). Full root-cause detail and the corrected verification claim: see
+`CURRENT_PLATFORM_STATE_2026_07_05.md` §"CI Pipeline / Governance Gates — VERIFIED (corrected 2026-07-05)".
+
+| File | Change |
+|---|---|
+| `vite.config.ts` | Added missing `@omnihub` alias to `resolve.alias`, mirroring the existing `@`/`@omniconnect` entries and the pre-existing `tsconfig.app.json` path mapping |
+| `.github/workflows/apex-governance.yml` | osv-scanner trigger no longer matches `*bun.lockb` (binary, unparseable by the pinned v1.9.2 — crashed with exit 127 on any PR touching it); `package-lock.json` remains the scanned `release_lockfile` per `policy/rsi-policy.yaml` |
+| `omnihub-landing/apps/omnihub-site/package-lock.json` | `npm audit fix` — 11 transitive dev-dependency CVEs patched (picomatch, postcss, rollup, vite, ws); `package.json` unchanged; 0 production runtime exposure |
+| `scripts/secret-scan.mjs` | Added `docs/architecture/TECHNICAL_ENHANCEMENTS.md`, `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`, `omnidev/references/testing.md` to `SYNTHETIC_FIXTURE_FILES` — illustrative/mock values, consistent with existing allowlisted sibling docs |
+| `docs/APEX_AGENT_OPERATIONS.md` | §9.31 added — documents the 8 new Supabase edge functions (Lovable-API replacement + `omnilink-agent` proxy/guardian) and shared rate-limiter this PR introduces |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` | Corrected an inaccurate "VERIFIED" claim about the `@omnihub` alias (typecheck/Vitest passing had been conflated with a working production build); HEAD, edge-function count, and outstanding-operator-actions updated |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This entry |
+| PR #1602 description (GitHub, not a repo file) | Added the RSI Governance Gate's required protected-path evidence checklist for `terraform/modules/vercel/**` (new, unwired module — zero live plan diff expected, unverified against real HCP state) |
+
+### Outstanding — not closed by this pass
+
+Two items are explicitly filed as **not yet performed** in the PR #1602 RSI evidence and in
+`CURRENT_PLATFORM_STATE_2026_07_05.md`: a live `terraform plan` confirmation for
+`terraform/environments/staging`, and a manual user-shoes validation pass of the dashboard flows
+on a real preview/staging deploy. Neither was fabricated as complete — both require operator
+access this remediation pass did not have.
+
+### Current count corrections (2026-07-05, post-remediation)
+
+| Metric | Current | Evidence command |
+|---|---:|---|
+| Supabase function dirs | 41 (40 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d \| wc -l` |
+| Terraform modules | +1 new, unwired (`terraform/modules/vercel/`) | `grep -rn 'module "vercel"' terraform/` (0 references — not called by any environment root module) |
