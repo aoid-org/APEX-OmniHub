@@ -490,6 +490,20 @@ class TestSemanticCacheServiceMocked:
         assert "secret-pass" not in log_output
         assert "token=abc123" not in log_output
 
+    async def test_initialize_omits_ssl_when_disabled(self, cache):
+        """initialize() omits the ssl kwarg entirely when Redis SSL is disabled."""
+        assert cache.redis_ssl is False
+        mock_redis_instance = MagicMock()
+
+        from_url = AsyncMock(return_value=mock_redis_instance)
+        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
+            with patch("infrastructure.cache.validate_redis_search_compatibility"):
+                with patch.object(cache, "_create_index", new=AsyncMock()):
+                    await cache.initialize()
+
+        _, kwargs = from_url.call_args
+        assert "ssl" not in kwargs
+
     async def test_initialize_passes_ssl_only_when_enabled(self, cache):
         """initialize() passes ssl kwarg only when Redis SSL is enabled."""
         cache.redis_ssl = True

@@ -429,13 +429,17 @@ class SemanticCacheService:
 
         This MUST be called before using the cache (typically in main.py startup).
         """
-        # Connect to Redis
+        # Connect to Redis. Only pass `ssl` when enabled -- omitting it when
+        # disabled (rather than passing ssl=False) avoids relying on
+        # redis-py's ssl kwarg handling across the v5/v6 API boundary.
+        # See requirements.txt pin note (redis[hiredis]>=5.0.0,<6.0.0).
+        redis_connection_kwargs = {"ssl": self.redis_ssl} if self.redis_ssl else {}
         self.redis = await aioredis.from_url(
             self.redis_url,
             password=self.redis_password,
-            ssl=self.redis_ssl,
             encoding="utf-8",
             decode_responses=True,
+            **redis_connection_kwargs,
         )
         logger.info(f"Connected to Redis: {_safe_redis_url(self.redis_url)}")
 
