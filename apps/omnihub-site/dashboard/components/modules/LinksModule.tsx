@@ -2,6 +2,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useOmniSlateStore } from '@/stores/omniSlateStore';
 
 interface Props {
   readonly onClose: () => void;
@@ -39,9 +40,17 @@ export default function LinksModule({ onClose }: Props) {
   const [url, setUrl] = useState('');
   const [touched, setTouched] = useState(false);
   const [omniSlateBlocked, setOmniSlateBlocked] = useState(false);
+  const [omniSlateSuccess, setOmniSlateSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localLinks, setLocalLinks] = useState<readonly LocalStagedLink[]>([]);
+  const [localLinks, setLocalLinks] = useState<readonly LocalStagedLink[]>(() => {
+    try {
+      const saved = localStorage.getItem('apex.staged.links');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const trimmedUrl = url.trim();
   const urlIsValid = isValidHttpUrl(trimmedUrl);
@@ -58,24 +67,69 @@ export default function LinksModule({ onClose }: Props) {
   // reach OmniBoard or trigger-workflow. add-link/send-to-omnislate are handled
   // entirely in local component state here (return true so ModuleShell does not
   // dispatch them to the backend).
-  const handleAction = async (actionId: string, _selected: string[]) => {
+  const handleAction = async (actionId: string, selected: string[]) => {
     if (actionId === 'add-link' || actionId === 'add_link') {
       setOmniSlateBlocked(false);
+      setOmniSlateSuccess(null);
       setIsStaging(true);
       return true;
     }
     if (actionId === 'send-to-omnislate' || actionId === 'send_to_omnislate') {
-      setOmniSlateBlocked(true);
+      const addContext = useOmniSlateStore.getState().addContext;
+      let sentCount = 0;
+      
+      selected.forEach(id => {
+        const item = state.items.find(i => i.id === id);
+        if (item) {
+          addContext({
+            id: item.id,
+            kind: 'link',
+            label: item.label,
+            source: 'handoff',
+            health: 'healthy',
+            metadata: { url: item.label },
+            droppedAt: new Date().toISOString()
+          });
+          sentCount++;
+          return;
+        }
+        
+        const local = localLinks.find(l => l.id === id);
+        if (local) {
+          addContext({
+            id: local.id,
+            kind: 'link',
+            label: local.url,
+            source: 'handoff',
+            health: 'healthy',
+            metadata: { url: local.url },
+            droppedAt: new Date().toISOString()
+          });
+          sentCount++;
+        }
+      });
+
+      if (sentCount > 0) {
+        setOmniSlateSuccess(`Successfully sent ${sentCount} link(s) to OmniSlate.`);
+        setOmniSlateBlocked(false);
+      } else {
+        setOmniSlateBlocked(true);
+        setOmniSlateSuccess(null);
+      }
       return true;
     }
     return false;
   };
 
-  /** Stage a URL into visible, session-only local state — never a fake persist. */
+  /** Stage a URL into visible, persistent local state. */
   const stageLocally = () => {
-    setLocalLinks((prev) =>
-      [{ id: `local-${Date.now()}`, url: trimmedUrl }, ...prev].slice(0, 12),
-    );
+    const next = [{ id: `local-${Date.now()}`, url: trimmedUrl }, ...localLinks].slice(0, 12);
+    setLocalLinks(next);
+    try {
+      localStorage.setItem('apex.staged.links', JSON.stringify(next));
+    } catch {
+      // noop
+    }
     setUrl('');
     setTouched(false);
     setSubmitError(null);
@@ -142,7 +196,13 @@ export default function LinksModule({ onClose }: Props) {
 
       {omniSlateBlocked && (
         <div className="rounded-lg border border-red-400/30 px-3 py-2 bg-red-400/5 text-[11px] text-red-400">
-          OmniSlate context handoff is not connected yet.
+          Please select at least one link to send to OmniSlate.
+        </div>
+      )}
+
+      {omniSlateSuccess && (
+        <div className="rounded-lg border border-emerald-400/30 px-3 py-2 bg-emerald-400/5 text-[11px] text-emerald-400">
+          {omniSlateSuccess}
         </div>
       )}
 

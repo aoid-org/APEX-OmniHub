@@ -379,10 +379,7 @@ function CreateWorkflowForm({
 function actionDisabledReason(actionId: string, selectedItems: readonly string[]): string | null {
   if (actionId !== 'trigger_run') return null;
   if (selectedItems.length !== 1) {
-    return 'Select exactly one saved workflow to run.';
-  }
-  if (!UUID_RE.test(selectedItems[0])) {
-    return 'Only saved live workflows can be run. Demo rows are not executable.';
+    return 'Select exactly one workflow to run.';
   }
   return null;
 }
@@ -415,8 +412,16 @@ export default function WorkflowsModule({ onClose }: Props) {
     if (actionId === 'trigger_run') {
       const disabledReason = actionDisabledReason(actionId, selectedItems);
       if (disabledReason) return disabledReason;
+      const targetId = selectedItems[0];
+      if (!UUID_RE.test(targetId)) {
+        // Simulated execution for demo workflow row
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const item = state.items.find(i => i.id === targetId);
+        const name = item?.label ?? 'Demo Workflow';
+        return `[SIMULATED] Demo workflow "${name}" completed successfully (all steps passed).`;
+      }
       const { data, error } = await supabase.functions.invoke('execute-workflow', {
-        body: { workflowId: selectedItems[0] },
+        body: { workflowId: targetId },
       });
       if (error) throw new Error(error.message || 'Workflow run failed.');
       state.refetch?.();

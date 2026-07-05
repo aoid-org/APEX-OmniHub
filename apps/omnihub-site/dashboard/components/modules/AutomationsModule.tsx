@@ -284,10 +284,7 @@ function CreateAutomationForm({ onCancel, onCreated }: CreateAutomationFormProps
 function actionDisabledReason(actionId: string, selectedItems: readonly string[]): string | null {
   if (actionId !== 'execute-automation') return null;
   if (selectedItems.length !== 1) {
-    return 'Select exactly one live automation to execute.';
-  }
-  if (!UUID_RE.test(selectedItems[0])) {
-    return 'Only saved live automations can be executed. Demo automation rows are not executable.';
+    return 'Select exactly one automation to execute.';
   }
   return null;
 }
@@ -312,8 +309,16 @@ export default function AutomationsModule({ onClose }: Props) {
     if (actionId === 'execute-automation') {
       const disabledReason = actionDisabledReason(actionId, selectedItems);
       if (disabledReason) return disabledReason;
+      const targetId = selectedItems[0];
+      if (!UUID_RE.test(targetId)) {
+        // Simulated execution for demo automation row
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const item = state.items.find(i => i.id === targetId);
+        const name = item?.label ?? 'Demo Automation';
+        return `[SIMULATED] Demo automation "${name}" executed successfully.`;
+      }
       const { data, error } = await supabase.functions.invoke('execute-automation', {
-        body: { automationId: selectedItems[0] },
+        body: { automationId: targetId },
       });
       if (error) throw new Error(error.message || 'Automation execution failed.');
       state.refetch?.();
@@ -324,7 +329,20 @@ export default function AutomationsModule({ onClose }: Props) {
       return true;
     }
     if (actionId === 'view-logs') {
-      return 'Automation run logs are not connected to this panel yet. No log viewer URL is configured.';
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('created_at, action_type, metadata')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
+        return 'No automation logs found on the audit trail.';
+      }
+      return data.map(log => {
+        const time = new Date(log.created_at).toLocaleTimeString();
+        const meta = log.metadata ? JSON.stringify(log.metadata) : '';
+        return `[${time}] ${log.action_type} - ${meta}`;
+      }).join('\n');
     }
     return false;
   }, [state]);

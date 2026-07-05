@@ -53,6 +53,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
     // width — the rail's flex column stretches it to full rail width like its
     // siblings (OmniSentry / Ops Controls / OmniMedia).
     <div
+      data-testid="rt_analytics"
       style={{
         borderRadius: 11,
         // Uniform rail/sidebar glassmorph tile — same orange border, fill opacity,
@@ -73,7 +74,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
       >
         {tx('dashboard.systemHealth.title')}
       </div>
-    <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
+    <div className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
       {/* Row 1 — FlowBills demos + Health */}
       <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
         <MetricCard

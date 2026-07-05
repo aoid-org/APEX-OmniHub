@@ -71,7 +71,7 @@ describe('production module actions', () => {
     expect(await screen.findByText(/automation executed successfully/i)).toBeInTheDocument();
   });
 
-  it('AutomationsModule refuses demo/non-UUID item IDs', async () => {
+  it('AutomationsModule executes demo/non-UUID item IDs as simulation', async () => {
     mockState.mockReturnValue({
       ...baseState('automations'),
       items: [{ id: 'auto-lead', label: 'Demo Lead Sync', status: 'active', detail: 'Trigger: demo | Runs: 1/day' }],
@@ -83,7 +83,7 @@ describe('production module actions', () => {
     fireEvent.click(screen.getByRole('button', { name: /execute automation/i }));
 
     expect(mockInvoke).not.toHaveBeenCalled();
-    expect(await screen.findByText(/only saved live automations/i)).toBeInTheDocument();
+    expect(await screen.findByText(/\[SIMULATED\] Demo automation "Demo Lead Sync" executed successfully/i)).toBeInTheDocument();
   });
 
   it('BillingModule opens only the returned Stripe portal URL', async () => {
@@ -211,7 +211,7 @@ describe('production module actions', () => {
     expect(await screen.findByText(/run success: 2\/2 steps completed/i)).toBeInTheDocument();
   });
 
-  it('WorkflowsModule refuses demo/non-UUID item IDs for trigger_run', async () => {
+  it('WorkflowsModule executes demo/non-UUID item IDs for trigger_run as simulation', async () => {
     mockState.mockReturnValue({
       ...baseState('workflows'),
       items: [{ id: 'demo-workflow', label: 'Demo Flow', status: 'active', detail: '3 steps' }],
@@ -223,6 +223,6 @@ describe('production module actions', () => {
     fireEvent.click(screen.getByRole('button', { name: /trigger run/i }));
 
     expect(mockInvoke).not.toHaveBeenCalled();
-    expect(await screen.findByText(/only saved live workflows/i)).toBeInTheDocument();
+    expect(await screen.findByText(/\[SIMULATED\] Demo workflow "Demo Flow" completed successfully/i)).toBeInTheDocument();
   });
 });
