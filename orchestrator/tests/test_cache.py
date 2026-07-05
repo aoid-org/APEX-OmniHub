@@ -62,6 +62,7 @@ class TestRedisSearchCompatibility:
 
         class RejectingIndexDefinition:
             def __init__(self, prefix, index_type):
+                assert prefix == ["apex-compatibility-check:"]
                 raise TypeError(f"unsupported index type: {index_type}")
 
         with patch("infrastructure.cache.IndexType", new=FakeIndexType):

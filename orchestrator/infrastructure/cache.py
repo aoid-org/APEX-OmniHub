@@ -175,10 +175,7 @@ def _safe_redis_url(redis_url: str) -> str:
         if parts.port is not None:
             host_display = f"{host_display}:{parts.port}"
 
-        if parts.username or parts.password:
-            netloc = f"<redacted>@{host_display}"
-        else:
-            netloc = host_display
+        netloc = f"<redacted>@{host_display}" if parts.username or parts.password else host_display
 
         return urlunsplit((parts.scheme, netloc, parts.path, "", ""))
     except Exception:  # noqa: BLE001 - logging sanitizer must never crash startup
