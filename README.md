@@ -147,7 +147,6 @@ Client-side infrastructure for deterministic media delivery:
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
-| `apex-assistant`         | AI handler (deprecated — returns 410, use apex-agent) |
 | `apex-voice`             | Real-time voice processing |
 | `apex-agent`             | APEX Agent — primary AI orchestration endpoint |
 | `omnilink-port`          | Universal connector        |
