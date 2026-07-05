@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export interface DraftStep {
+interface DraftStep {
+  id: string;
   actionType: StepActionType;
   fields: Record<string, string>;
 }
 
-export type StepActionType = 'webhook' | 'notification' | 'send_email' | 'create_record';
+type StepActionType = 'webhook' | 'notification' | 'send_email' | 'create_record';
 
 const STEP_TYPE_LABELS: Readonly<Record<StepActionType, string>> = {
   webhook: 'Webhook (POST to a URL)',
@@ -17,7 +18,7 @@ const STEP_TYPE_LABELS: Readonly<Record<StepActionType, string>> = {
 
 const CREATE_RECORD_TABLES = ['invoices', 'logs', 'tasks', 'notifications'] as const;
 
-export const SCHEDULE_LABELS: Readonly<Record<'manual' | 'every_5_min' | 'hourly' | 'daily', string>> = {
+const SCHEDULE_LABELS: Readonly<Record<'manual' | 'every_5_min' | 'hourly' | 'daily', string>> = {
   manual: 'Manual only (click Trigger Run)',
   every_5_min: 'Every 5 minutes',
   hourly: 'Hourly',
@@ -76,11 +77,11 @@ function StepEditor({
   onRemove,
   canRemove,
 }: {
-  step: DraftStep;
-  index: number;
-  onChange: (next: DraftStep) => void;
-  onRemove: () => void;
-  canRemove: boolean;
+  readonly step: DraftStep;
+  readonly index: number;
+  readonly onChange: (next: DraftStep) => void;
+  readonly onRemove: () => void;
+  readonly canRemove: boolean;
 }) {
   const setField = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     onChange({ ...step, fields: { ...step.fields, [key]: e.target.value } });
@@ -96,7 +97,7 @@ function StepEditor({
       <select
         className={fieldClass}
         value={step.actionType}
-        onChange={(e) => onChange({ actionType: e.target.value as StepActionType, fields: {} })}
+        onChange={(e) => onChange({ ...step, actionType: e.target.value as StepActionType, fields: {} })}
       >
         {Object.entries(STEP_TYPE_LABELS).map(([value, label]) => (
           <option key={value} value={value}>{label}</option>
@@ -136,12 +137,12 @@ export default function CreateWorkflowForm({
   onCancel,
   onCreated,
 }: {
-  onCancel: () => void;
-  onCreated: (message: string) => void;
+  readonly onCancel: () => void;
+  readonly onCreated: (message: string) => void;
 }) {
   const [name, setName] = useState('');
   const [schedule, setSchedule] = useState<'manual' | 'every_5_min' | 'hourly' | 'daily'>('manual');
-  const [steps, setSteps] = useState<DraftStep[]>([{ actionType: 'notification', fields: {} }]);
+  const [steps, setSteps] = useState<DraftStep[]>([{ id: 'step-0', actionType: 'notification', fields: {} }]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,7 +151,7 @@ export default function CreateWorkflowForm({
 
   const addStep = () => {
     if (steps.length >= MAX_STEPS) return;
-    setSteps((prev) => [...prev, { actionType: 'notification', fields: {} }]);
+    setSteps((prev) => [...prev, { id: `step-${Date.now()}-${Math.random()}`, actionType: 'notification', fields: {} }]);
   };
 
   const removeStep = (i: number) => setSteps((prev) => prev.filter((_, idx) => idx !== i));
@@ -222,7 +223,7 @@ export default function CreateWorkflowForm({
 
       {steps.map((step, i) => (
         <StepEditor
-          key={i}
+          key={step.id}
           step={step}
           index={i}
           onChange={(next) => updateStep(i, next)}

@@ -29,10 +29,10 @@ function WorkflowLane({
   selected,
   onToggle,
 }: {
-  item: ModuleListItem;
-  y: number;
-  selected: boolean;
-  onToggle: () => void;
+  readonly item: ModuleListItem;
+  readonly y: number;
+  readonly selected: boolean;
+  readonly onToggle: () => void;
 }) {
   const steps      = parseSteps(item.detail);
   const color      = STATUS_COLOR[item.status] ?? '#6b7280';
