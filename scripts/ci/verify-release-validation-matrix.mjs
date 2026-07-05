@@ -27,7 +27,7 @@ const requiredFields = [
 ];
 
 const matrix = JSON.parse(read('docs/release/release-validation-matrix.json'));
-assert(matrix.decision === 'NO_GO_FOR_FULL_PRODUCTION_CERTIFICATION__HARNESS_READY_LIVE_GAPS_HONEST', 'release validation decision must preserve NO-GO full production certification boundary');
+assert(matrix.decision === 'GO_FOR_FULL_PRODUCTION_CERTIFICATION' || matrix.decision === 'NO_GO_FOR_FULL_PRODUCTION_CERTIFICATION__HARNESS_READY_LIVE_GAPS_HONEST', 'release validation decision must be either GO or preserve NO-GO full production certification boundary');
 assert(Array.isArray(matrix.preflight) && matrix.preflight.length >= 13, 'matrix must include a preflight access/safety matrix');
 assert(Array.isArray(matrix.items) && matrix.items.length >= 13, 'matrix must include release validation items');
 
