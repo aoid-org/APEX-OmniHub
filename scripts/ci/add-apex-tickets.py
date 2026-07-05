@@ -7,7 +7,7 @@ skip_pattern = re.compile(r"(test\.skip\([^,]+,\s*)(['\"])(?!APEX-)(.*?)\2(\s*\)
 skip_empty_pattern = re.compile(r"test\.skip\(\s*\)")
 
 def process_file(filepath):
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding='utf-8') as f:
         content = f.read()
 
     original = content

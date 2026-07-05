@@ -29,7 +29,9 @@ import hashlib
 import json
 import logging
 import re
+from importlib import metadata
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 import numpy as np
 import redis.asyncio as aioredis
@@ -53,16 +55,134 @@ try:
 except ImportError:
     try:
         # Try redis-py v5.x alternate path
-        from redis.commands.search.indexDefinition import (
+        from redis.commands.search.indexDefinition import (  # type: ignore[no-redef]
             IndexDefinition,
             IndexType,
         )
     except ImportError:
-        # Fallback: define minimal stubs for typing (tests can mock these)
-        IndexDefinition = type("IndexDefinition", (), {})
-        IndexType = type("IndexType", (), {})
+        # Fallback: define minimal stubs for typing (tests can mock these).
+        # Intentional runtime redefinition across a version-compat try/except
+        # ladder -- mypy cannot narrow this statically across branches.
+        IndexDefinition = type("IndexDefinition", (), {})  # type: ignore[misc,assignment]
+        IndexType = type("IndexType", (), {})  # type: ignore[misc,assignment]
 
 logger = logging.getLogger(__name__)
+
+REDIS_SEARCH_COMPATIBILITY_REMEDIATION = (
+    "Update orchestrator Redis Search compatibility helper or pin redis to a version that "
+    "provides the expected IndexDefinition/IndexType API."
+)
+
+
+def _qualified_name(obj: Any) -> str:
+    """Return a best-effort import path for diagnostics without raising."""
+    module = getattr(obj, "__module__", None)
+    qualname = getattr(obj, "__qualname__", None) or getattr(obj, "__name__", None)
+    if module and qualname:
+        return f"{module}.{qualname}"
+    return repr(obj)
+
+
+def _package_version(package_name: str) -> str:
+    """Return installed package version for startup diagnostics."""
+    try:
+        return metadata.version(package_name)
+    except metadata.PackageNotFoundError:
+        return "not installed"
+    except Exception as exc:  # noqa: BLE001 - diagnostic helper must never mask root cause
+        return f"unknown ({exc.__class__.__name__}: {exc})"
+
+
+def _redis_hash_index_type() -> Any:
+    """
+    Select the RediSearch HASH index type across redis-py API variants.
+
+    redis-py releases disagree on whether ``IndexType.HASH`` is present while
+    still accepting the literal ``"HASH"``. Never dereference the enum member
+    without this guard; Render workers must not crash-loop on import/API drift.
+    """
+    hash_index_type = getattr(IndexType, "HASH", None)
+    return hash_index_type if hash_index_type is not None else "HASH"
+
+
+def validate_redis_search_compatibility() -> None:
+    """
+    Fail fast with actionable diagnostics if the installed Redis Search API drifts.
+
+    This deliberately constructs an IndexDefinition using the compatibility
+    helper before startup creates the real vector index. Any dependency mismatch
+    should become one clear RuntimeError instead of an opaque AttributeError in
+    Render crash-loop logs.
+    """
+    missing_classes = [
+        name
+        for name, value in {
+            "IndexDefinition": IndexDefinition,
+            "IndexType": IndexType,
+            "TextField": TextField,
+            "NumericField": NumericField,
+            "VectorField": VectorField,
+            "Query": Query,
+        }.items()
+        if value is None or (isinstance(value, type) and value.__module__ == "builtins")
+    ]
+
+    hash_index_type: Any = None
+    invalid_api: str | None = None
+    try:
+        hash_index_type = _redis_hash_index_type()
+        IndexDefinition(prefix=["apex-compatibility-check:"], index_type=hash_index_type)
+    except Exception as exc:  # noqa: BLE001 - convert all API drift into clear RuntimeError
+        invalid_api = (
+            f"IndexDefinition rejected selected HASH index type {hash_index_type!r}: "
+            f"{exc.__class__.__name__}: {exc}"
+        )
+
+    if missing_classes or invalid_api:
+        details = []
+        if missing_classes:
+            details.append(f"missing required RediSearch API: {', '.join(missing_classes)}")
+        if invalid_api:
+            details.append(invalid_api)
+        raise RuntimeError(
+            "Redis Search compatibility check failed; "
+            f"redis={_package_version('redis')}; "
+            f"redisvl={_package_version('redisvl')}; "
+            f"redis-om={_package_version('redis-om')}; "
+            f"IndexDefinition={_qualified_name(IndexDefinition)}; "
+            f"IndexType={_qualified_name(IndexType)}; "
+            f"issue={' | '.join(details)}. "
+            f"Remediation: {REDIS_SEARCH_COMPATIBILITY_REMEDIATION}"
+        )
+
+
+def _safe_redis_url(redis_url: str) -> str:
+    """
+    Return a log-safe Redis URL preserving endpoint shape while redacting secrets.
+
+    Preserves scheme, host, port, and path; removes query strings; redacts any
+    username/password/token present in the authority. Invalid URLs are handled
+    without raising and without echoing possible credentials.
+    """
+    try:
+        parts = urlsplit(redis_url)
+        if not parts.scheme or not parts.netloc:
+            return "<invalid-redis-url>"
+
+        host = parts.hostname
+        if not host:
+            return f"{parts.scheme}://<invalid-host>{parts.path or ''}"
+
+        host_display = f"[{host}]" if ":" in host and not host.startswith("[") else host
+        if parts.port is not None:
+            host_display = f"{host_display}:{parts.port}"
+
+        netloc = f"<redacted>@{host_display}" if parts.username or parts.password else host_display
+
+        return urlunsplit((parts.scheme, netloc, parts.path, "", ""))
+    except Exception:  # noqa: BLE001 - logging sanitizer must never crash startup
+        return "<invalid-redis-url>"
+
 
 # ============================================================================
 # DATA MODELS
@@ -277,7 +397,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis[bytes] | None = None
+        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
         if isinstance(embedding_model, str):
             # Heavy path: lazy import so injected-encoder deployments never
@@ -311,15 +431,23 @@ class SemanticCacheService:
 
         This MUST be called before using the cache (typically in main.py startup).
         """
-        # Connect to Redis
+        # Connect to Redis. Only pass `ssl` when enabled -- omitting it when
+        # disabled (rather than passing ssl=False) avoids relying on
+        # redis-py's ssl kwarg handling across the v5/v6 API boundary.
+        # See requirements.txt pin note (redis[hiredis]>=5.0.0,<6.0.0).
+        redis_connection_kwargs = {"ssl": self.redis_ssl} if self.redis_ssl else {}
         self.redis = await aioredis.from_url(
             self.redis_url,
             password=self.redis_password,
-                        **(({"ssl": self.redis_ssl} if self.redis_ssl else {})),  # v5/v6 compat: ssl kwarg removed in v6
             encoding="utf-8",
             decode_responses=True,
+            **redis_connection_kwargs,
         )
-        logger.info(f"Connected to Redis: {self.redis_url}")
+        logger.info(f"Connected to Redis: {_safe_redis_url(self.redis_url)}")
+
+        # Validate RediSearch client API before index creation so dependency
+        # drift fails once with a clear RuntimeError instead of a Render crash loop.
+        validate_redis_search_compatibility()
 
         # Create vector search index (idempotent)
         await self._create_index()
@@ -375,7 +503,9 @@ class SemanticCacheService:
         # Create index
         await self.redis.ft(self.index_name).create_index(
             fields=schema,
-            definition=IndexDefinition(prefix=[self.key_prefix], index_type=IndexType.HASH),
+            definition=IndexDefinition(
+                prefix=[self.key_prefix], index_type=_redis_hash_index_type()
+            ),
         )
         logger.info(f"Created vector index: {self.index_name}")
 
@@ -436,7 +566,9 @@ class SemanticCacheService:
 
         # Step 5: Rehydrate plan with actual parameters
         template_id = best_match.template_id
-        plan_steps_json = await self.redis.hget(f"{self.key_prefix}{template_id}", "plan_steps")
+        plan_steps_json = await self.redis.hget(  # type: ignore[misc]
+            f"{self.key_prefix}{template_id}", "plan_steps"
+        )
 
         if not plan_steps_json:
             return None
@@ -447,7 +579,9 @@ class SemanticCacheService:
         injected_steps = self._inject_parameters(plan_steps, parameters)
 
         # Increment hit count
-        await self.redis.hincrby(f"{self.key_prefix}{template_id}", "hit_count", 1)
+        await self.redis.hincrby(  # type: ignore[misc]
+            f"{self.key_prefix}{template_id}", "hit_count", 1
+        )
 
         logger.info(f"Cache HIT (similarity={similarity:.3f}, template={template_id})")
 
@@ -535,7 +669,7 @@ class SemanticCacheService:
         )
 
         # Store in Redis as hash
-        await self.redis.hset(
+        await self.redis.hset(  # type: ignore[misc]
             f"{self.key_prefix}{template_id}",
             mapping={
                 "template_id": plan_template.template_id,

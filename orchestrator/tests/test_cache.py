@@ -7,7 +7,92 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from infrastructure.cache import CachedPlan, EntityExtractor, PlanTemplate, SemanticCacheService
+from infrastructure.cache import (
+    CachedPlan,
+    EntityExtractor,
+    PlanTemplate,
+    SemanticCacheService,
+    _redis_hash_index_type,
+    _safe_redis_url,
+    validate_redis_search_compatibility,
+)
+
+
+class TestRedisSearchCompatibility:
+    """Regression coverage for Redis Search API drift on Render."""
+
+    def test_redis_hash_index_type_uses_enum_hash_when_available(self):
+        """_redis_hash_index_type returns IndexType.HASH when the API exposes it."""
+
+        class FakeIndexType:
+            HASH = "enum-hash"
+
+        with patch("infrastructure.cache.IndexType", new=FakeIndexType):
+            assert _redis_hash_index_type() == "enum-hash"
+
+    def test_redis_hash_index_type_falls_back_to_literal_when_hash_missing(self):
+        """_redis_hash_index_type returns literal HASH when IndexType.HASH is missing."""
+
+        class FakeIndexType:
+            JSON = "json"
+
+        with patch("infrastructure.cache.IndexType", new=FakeIndexType):
+            assert _redis_hash_index_type() == "HASH"
+
+    def test_validate_redis_search_compatibility_passes_when_literal_hash_works(self):
+        """Compatibility check passes when IndexType.HASH is absent but literal HASH is accepted."""
+
+        class FakeIndexType:
+            JSON = "json"
+
+        class FakeIndexDefinition:
+            def __init__(self, prefix, index_type):
+                assert prefix == ["apex-compatibility-check:"]
+                assert index_type == "HASH"
+
+        with patch("infrastructure.cache.IndexType", new=FakeIndexType):
+            with patch("infrastructure.cache.IndexDefinition", new=FakeIndexDefinition):
+                validate_redis_search_compatibility()
+
+    def test_validate_redis_search_compatibility_raises_clear_runtime_error(self):
+        """Compatibility check converts invalid RediSearch APIs into actionable RuntimeError."""
+
+        class FakeIndexType:
+            JSON = "json"
+
+        class RejectingIndexDefinition:
+            def __init__(self, prefix, index_type):
+                assert prefix == ["apex-compatibility-check:"]
+                raise TypeError(f"unsupported index type: {index_type}")
+
+        with patch("infrastructure.cache.IndexType", new=FakeIndexType):
+            with patch("infrastructure.cache.IndexDefinition", new=RejectingIndexDefinition):
+                with pytest.raises(RuntimeError) as excinfo:
+                    validate_redis_search_compatibility()
+
+        message = str(excinfo.value)
+        assert "Redis Search compatibility check failed" in message
+        assert "redis=" in message
+        assert "IndexDefinition=" in message
+        assert "IndexType=" in message
+        assert "unsupported index type: HASH" in message
+        assert "Update orchestrator Redis Search compatibility helper" in message
+
+    def test_safe_redis_url_redacts_credentials_and_query(self):
+        """Redis URL logs must never expose username, password, or query tokens."""
+
+        safe = _safe_redis_url("rediss://user:secret-pass@redis.example.com:6380/0?token=abc123")
+
+        assert safe == "rediss://<redacted>@redis.example.com:6380/0"
+        assert "user" not in safe
+        assert "secret-pass" not in safe
+        assert "token" not in safe
+        assert "abc123" not in safe
+
+    def test_safe_redis_url_handles_invalid_url_without_leaking(self):
+        """Invalid Redis URLs should not be echoed into logs."""
+
+        assert _safe_redis_url("not a redis url with secret") == "<invalid-redis-url>"
 
 
 class TestEntityExtractor:
@@ -342,31 +427,96 @@ class TestSemanticCacheServiceMocked:
         # info() raises → index not found → create
         mock_redis.ft.return_value.info = AsyncMock(side_effect=Exception("index not found"))
         mock_redis.ft.return_value.create_index = AsyncMock()
-        # Patch IndexType so it has a HASH attribute (fallback stub may not)
-        with patch("infrastructure.cache.IndexType", new=MagicMock(HASH="hash")):
-            with patch("infrastructure.cache.IndexDefinition", new=MagicMock()):
+
+        class FakeIndexType:
+            JSON = "json"
+
+        index_definition = MagicMock()
+        with patch("infrastructure.cache.IndexType", new=FakeIndexType):
+            with patch("infrastructure.cache.IndexDefinition", new=index_definition):
                 await cache._create_index()
         mock_redis.ft.return_value.create_index.assert_called_once()
+        _, kwargs = mock_redis.ft.return_value.create_index.call_args
+        index_definition.assert_called_once_with(prefix=[cache.key_prefix], index_type="HASH")
+        assert kwargs["definition"] is index_definition.return_value
 
     # ------------------------------------------------------------------
     # initialize
     # ------------------------------------------------------------------
 
-    async def test_initialize_connects_and_creates_index(self, cache):
-        """initialize() connects to Redis and calls _create_index."""
+    async def test_initialize_connects_validates_and_creates_index_in_order(self, cache):
+        """initialize() validates Redis Search compatibility before creating the index."""
         mock_redis_instance = MagicMock()
-        ft_mock = MagicMock()
-        ft_mock.info = AsyncMock(return_value={})  # info succeeds → index already exists → return
-        ft_mock.create_index = AsyncMock()
-        mock_redis_instance.ft.return_value = ft_mock
+        call_order = []
+
+        async def fake_create_index():
+            call_order.append("create_index")
+
+        def fake_validate():
+            call_order.append("validate")
 
         with patch(
             "infrastructure.cache.aioredis.from_url",
             new=AsyncMock(return_value=mock_redis_instance),
         ):
-            await cache.initialize()
+            with patch(
+                "infrastructure.cache.validate_redis_search_compatibility",
+                side_effect=fake_validate,
+            ):
+                with patch.object(
+                    cache, "_create_index", new=AsyncMock(side_effect=fake_create_index)
+                ):
+                    await cache.initialize()
 
         assert cache.redis is mock_redis_instance
+        assert call_order == ["validate", "create_index"]
+
+    async def test_initialize_logs_redacted_redis_url(self, cache, caplog):
+        """initialize() must not print Redis credentials into logs."""
+        cache.redis_url = "rediss://user:secret-pass@redis.example.com:6380/0?token=abc123"
+        mock_redis_instance = MagicMock()
+
+        with patch(
+            "infrastructure.cache.aioredis.from_url",
+            new=AsyncMock(return_value=mock_redis_instance),
+        ):
+            with patch("infrastructure.cache.validate_redis_search_compatibility"):
+                with patch.object(cache, "_create_index", new=AsyncMock()):
+                    with caplog.at_level("INFO", logger="infrastructure.cache"):
+                        await cache.initialize()
+
+        log_output = caplog.text
+        assert "rediss://<redacted>@redis.example.com:6380/0" in log_output
+        assert "secret-pass" not in log_output
+        assert "token=abc123" not in log_output
+
+    async def test_initialize_omits_ssl_when_disabled(self, cache):
+        """initialize() omits the ssl kwarg entirely when Redis SSL is disabled."""
+        assert cache.redis_ssl is False
+        mock_redis_instance = MagicMock()
+
+        from_url = AsyncMock(return_value=mock_redis_instance)
+        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
+            with patch("infrastructure.cache.validate_redis_search_compatibility"):
+                with patch.object(cache, "_create_index", new=AsyncMock()):
+                    await cache.initialize()
+
+        _, kwargs = from_url.call_args
+        assert "ssl" not in kwargs
+
+    async def test_initialize_passes_ssl_only_when_enabled(self, cache):
+        """initialize() passes ssl kwarg only when Redis SSL is enabled."""
+        cache.redis_ssl = True
+        mock_redis_instance = MagicMock()
+
+        from_url = AsyncMock(return_value=mock_redis_instance)
+        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
+            with patch("infrastructure.cache.validate_redis_search_compatibility"):
+                with patch.object(cache, "_create_index", new=AsyncMock()):
+                    await cache.initialize()
+
+        _, kwargs = from_url.call_args
+        assert kwargs["ssl"] is True
 
     # ------------------------------------------------------------------
     # close

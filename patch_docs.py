@@ -118,7 +118,7 @@ def scan_all():
         if os.name == 'nt':
             git_cmd = 'git.exe'
             
-        files = subprocess.check_output([git_cmd, 'ls-files'], text=True).splitlines()
+        files = subprocess.check_output([git_cmd, 'ls-files'], text=True).splitlines()  # noqa: S603
         for file in files:
             if file in IGNORED_FILES:
                 continue

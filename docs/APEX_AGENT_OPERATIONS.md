@@ -84,7 +84,7 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `SUPABASE_DB_URL` | Settings → Database → Connection string (URI) | **required always** — missing = pydantic crash |
 | `REDIS_URL` | `rediss://default:<pw>@peaceful-chipmunk-151408.upstash.io:6379` | |
 | `REDIS_PASSWORD` | the token between `default:` and `@` in `REDIS_URL` | required in prod |
-| `REDIS_SSL` | `true` | |
+| `REDIS_SSL` | `true` | passed to redis client only when enabled; omitted when false for redis-py v5/v6 compatibility |
 | `ANTHROPIC_API_KEY` | planner key | required in prod |
 | `ORCHESTRATOR_SHARED_SECRET` | same value as edge secret | |
 | `ORCHESTRATOR_REQUIRE_SIGNATURE` | `true` | config refuses to boot if `false` in prod |
@@ -218,6 +218,7 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 | boot `pydantic ValidationError` | required env var missing | add per §3.2 |
 | boot fails on Temporal connect | cert vs API-key mismatch | use `TEMPORAL_API_KEY` + `…api.temporal.io:7233` |
 | stuck `running`; worker `Instance restarted` loop | worker OOM (512 MB + embedding model) | `SEMANTIC_CACHE_ENABLED=false` or ≥2 GB |
+| worker boot `AttributeError: type object 'IndexType' has no attribute 'HASH'` | Redis Search client API drift during semantic-cache index setup | deploy the `infrastructure/cache.py` compatibility guard; post-fix failures should be clear `Redis Search compatibility check failed` RuntimeErrors with package/import diagnostics |
 | `failed: Activity task failed`, log `update_agent_run_completion … not registered` | completion activity not registered on worker | ensure it's in `main.py` activities list |
 | `failed: Activity task failed`, log `Could not find the table 'public.omni_policies'` | policy table missing crashed `evaluate_policy` | loader now degrades to no-policies (`b10aaa72`); or provision `omni_policies` |
 | `completed` but reply is a generic template | conversational answer not surfaced | planner must use `respond_to_user`; reply bubbles via `_handle_success` (`6eaff80`) |
@@ -1599,3 +1600,22 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   `workflows.agent_saga.*` continue to govern the moved implementations.
 - Proof: `pytest -q` 981 passed / 20 skipped with **zero test-file edits**; ruff +
   format clean; CI gating mypy pass green (33 files).
+
+## 9.32 Orchestrator — Redis Search compatibility guard for Render worker startup (2026-07-05)
+
+**Changed critical runtime paths:** `orchestrator/infrastructure/cache.py` (semantic-cache startup guard only).
+
+- Root cause remediated: some Redis/RediSearch dependency sets do not expose
+  `IndexType.HASH`, which previously made the Render background worker crash-loop
+  while creating the semantic-cache vector index.
+- Operational contract: semantic-cache startup now selects the HASH index type through
+  the Redis Search compatibility helper, validates `IndexDefinition`, `IndexType`,
+  `TextField`, `NumericField`, `VectorField`, and `Query` before creating the index,
+  and converts future API drift into a single actionable `RuntimeError` beginning
+  `Redis Search compatibility check failed` with package/import diagnostics.
+- Logging contract: Redis connection logs must use the safe URL form; credentials and
+  query tokens from `REDIS_URL` must not appear in Render logs.
+- Deployment: no env var, DB schema, service topology, or start-command change. Deploy
+  the worker, restart `apex-orchestrator-worker`, and confirm logs show Redis connects
+  plus vector index creation succeeds or reports `already exists`; the previous
+  `IndexType.HASH` AttributeError must not recur.
