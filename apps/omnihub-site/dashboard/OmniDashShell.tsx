@@ -268,7 +268,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display:"flex", alignItems:"center", gap:10,
-        padding:"7px 10px", borderRadius:11,
+        padding:"7px 10px", 
+        borderRadius: 10,
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
