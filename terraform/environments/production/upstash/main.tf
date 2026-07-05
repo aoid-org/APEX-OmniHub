@@ -10,17 +10,17 @@ terraform {
   }
 }
 
-resource "upstash_redis_database" "main" {
-  database_name = var.database_name
-  # Upstash deprecated regional database creation (HTTP 400: "regional db creation is deprecated").
-  # All new databases must use region = "global". The primary_region field pins the
-  # nearest write region for global databases.
-  region         = "global"
-  primary_region = "us-east-1"
-  tls            = true
-  # eviction is a bool (true = enable LRU eviction). The eviction policy is
-  # managed at the Upstash console level, not via Terraform.
-  eviction       = true
-
-  # Provider >= 1.x enables multi-zone automatically for paid databases.
-}
+# NOTE: upstash_redis_database is intentionally omitted from Terraform management.
+# The Upstash free plan allows only 1 database and one already exists in the account.
+# To bring the existing database under Terraform management, run:
+#
+#   terraform import module.redis.upstash_redis_database.main <DATABASE_ID>
+#
+# where DATABASE_ID is the Upstash database ID from the Upstash console.
+# Until then, the database is managed directly via the Upstash console.
+#
+# When creating a new database (e.g., after upgrading the Upstash plan), use:
+#   region         = "global"
+#   primary_region = "us-east-1"
+#   tls            = true
+#   eviction       = true   # bool, not string
