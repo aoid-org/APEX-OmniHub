@@ -49,7 +49,7 @@ SentenceTransformer: Any = None
 # Redis search imports - handle multiple redis-py versions
 try:
     # Try redis-py v4.x path
-    from redis.commands.search.index import IndexDefinition, IndexType
+    from redis.commands.search.index_definition import IndexDefinition, IndexType
 except ImportError:
     try:
         # Try redis-py v5.x alternate path
