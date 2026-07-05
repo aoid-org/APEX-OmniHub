@@ -14,7 +14,7 @@ terraform {
 resource "cloudflare_record" "root" {
   zone_id = var.zone_id
   name    = "@"
-  value   = var.origin_cname
+      content  = var.origin_cname
   type    = "CNAME"
   proxied = true
   comment = "Root domain pointing to Cloudflare Pages origin"
@@ -23,7 +23,7 @@ resource "cloudflare_record" "root" {
 resource "cloudflare_record" "www" {
   zone_id = var.zone_id
   name    = "www"
-  value   = var.origin_cname
+      content  = var.origin_cname
   type    = "CNAME"
   proxied = true
   comment = "WWW subdomain pointing to Cloudflare Pages origin"
