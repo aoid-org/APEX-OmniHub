@@ -491,7 +491,7 @@ class TestSemanticCacheServiceMocked:
         assert "token=abc123" not in log_output
 
     async def test_initialize_omits_ssl_when_disabled(self, cache):
-        """initialize() omits the ssl kwarg entirely when Redis SSL is disabled."""
+        """initialize() never forwards an ssl kwarg when Redis SSL is disabled."""
         assert cache.redis_ssl is False
         mock_redis_instance = MagicMock()
 
@@ -504,8 +504,15 @@ class TestSemanticCacheServiceMocked:
         _, kwargs = from_url.call_args
         assert "ssl" not in kwargs
 
-    async def test_initialize_passes_ssl_only_when_enabled(self, cache):
-        """initialize() passes ssl kwarg only when Redis SSL is enabled."""
+    async def test_initialize_omits_ssl_when_enabled(self, cache):
+        """initialize() never forwards an ssl kwarg even when redis_ssl=True.
+
+        The rediss:// URL scheme alone selects SSLConnection inside redis-py.
+        An explicit ssl= kwarg survives from_url()'s URL-derived kwargs merge
+        and is forwarded to SSLConnection/AbstractConnection.__init__(), which
+        rejects it (redis[hiredis]>=5.0.0,<6.0.0) -- this crashed every worker
+        boot in production. redis_ssl is retained for logging/back-compat only.
+        """
         cache.redis_ssl = True
         mock_redis_instance = MagicMock()
 
@@ -516,7 +523,7 @@ class TestSemanticCacheServiceMocked:
                     await cache.initialize()
 
         _, kwargs = from_url.call_args
-        assert kwargs["ssl"] is True
+        assert "ssl" not in kwargs
 
     # ------------------------------------------------------------------
     # close
