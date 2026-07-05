@@ -110,7 +110,15 @@ jobs:
           changed_lockfiles=""
           for f in $changed_files; do
             case "$f" in
-              *package-lock.json|*pnpm-lock.yaml|*yarn.lock|*bun.lockb|*requirements.txt|*Pipfile.lock|*poetry.lock|*Cargo.lock|*go.sum|*Gemfile.lock)
+              # NOTE: bun.lockb/bun.lock are intentionally NOT scanned here — osv-scanner
+              # v1.9.2 (pinned above) cannot parse either Bun lockfile format (binary .lockb
+              # or plaintext .lock; both fail with "could not determine extractor"). Per
+              # policy/rsi-policy.yaml, package-lock.json is the designated release_lockfile
+              # for OSV purposes — bun.lock/bun.lockb are dev-parity files only. Verified
+              # 2026-07-05: root and nested package-lock.json changes in this PR scan clean
+              # with this scanner version. Re-add Bun lockfiles here once the pinned
+              # osv-scanner version adds Bun lockfile support.
+              *package-lock.json|*pnpm-lock.yaml|*yarn.lock|*requirements.txt|*Pipfile.lock|*poetry.lock|*Cargo.lock|*go.sum|*Gemfile.lock)
                 changed_lockfiles="$changed_lockfiles $f"
                 ;;
             esac

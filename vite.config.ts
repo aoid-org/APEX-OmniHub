@@ -46,6 +46,12 @@ export default defineConfig(({ mode }) => {
       // all apps/omnihub-site/src/lib/* imports — so we alias only this one file.
       "@/lib/omni-sentry": path.resolve(__dirname, "./src/lib/omni-sentry"),
       "@omniconnect": path.resolve(__dirname, "./src/omniconnect"),
+      // Mirrors the "@omnihub/*" -> "./apps/omnihub-site/src/*" mapping already
+      // declared in tsconfig.app.json. tsc resolves this for type-checking, but
+      // Vite/Rollup needs its own alias entry or it fails at build time with
+      // "Rollup failed to resolve import" (surfaced by LinksModule.tsx's
+      // `@omnihub/stores/omniSlateStore` import). Keep both configs in sync.
+      "@omnihub": path.resolve(__dirname, "./apps/omnihub-site/src"),
       "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },
     // Dedupe React to prevent multiple instances (fixes createContext undefined)

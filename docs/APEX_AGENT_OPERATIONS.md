@@ -1599,3 +1599,57 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   `workflows.agent_saga.*` continue to govern the moved implementations.
 - Proof: `pytest -q` 981 passed / 20 skipped with **zero test-file edits**; ruff +
   format clean; CI gating mypy pass green (33 files).
+
+## 9.31 New edge functions — Lovable API replacement + omnilink-agent hardening (2026-07-05, PR #1602)
+
+**Changed critical runtime paths:** `supabase/functions/_shared/rate-limiting.ts` (new,
+shared),  `supabase/functions/lovable-audit/index.ts` (new),
+`supabase/functions/lovable-device/index.ts` (new),
+`supabase/functions/lovable-healthcheck/index.ts` (new),
+`supabase/functions/omnilink-agent/index.ts` (new),
+`supabase/functions/omnilink-agent/guardian.ts` (new),
+`supabase/functions/supabase_healthcheck/index.ts` (new),
+`supabase/functions/test-integration/index.ts` (new). Also `bun.lockb` regenerated
+(dev-toolchain lockfile bump — no dependency version change to production bundle;
+see §"Dependency vulnerability scan" fix in PR #1602).
+
+### Operational change summary
+
+- **`lovable-audit`, `lovable-device`**: replace calls to the third-party Lovable
+  API with direct reads/writes against existing Supabase tables — `audit_logs`
+  (write) and `device_registry` (read), both already provisioned by prior
+  migrations (`20260621000002_omnitrace_audit_read_contract.sql`,
+  `20251218000001_create_device_registry_table.sql`). No new tables.
+- **`lovable-healthcheck`**: reports whether the legacy Lovable API proxy is
+  configured (`LOVABLE_API_BASE` / `LOVABLE_API_KEY` / `LOVABLE_SERVICE_ROLE_KEY`
+  — pre-existing env vars, not newly introduced); returns a clear "not configured"
+  state rather than failing when unset.
+- **`omnilink-agent`**: authenticated proxy that validates the caller's Supabase
+  session, marks the corresponding `agent_runs` row `running`, and hands the
+  request off to the orchestrator (`ORCHESTRATOR_URL/api/v1/goals`).
+  `guardian.ts` provides a fast, pre-orchestrator content/spam validation layer
+  (`checkRequest`) so malformed or abusive input is rejected before an
+  expensive orchestrator call is made.
+- **`supabase_healthcheck`**: authenticated platform health probe with its own
+  in-memory rate limiter (10 req/min/identifier).
+- **`_shared/rate-limiting.ts`**: shared in-memory rate-limit helper
+  (`RateLimitConfig` / `RateLimitResult`) extracted to remove duplicated
+  rate-limiting logic across functions. Resets on cold start — acceptable for
+  the abuse-mitigation use case, not a durability guarantee.
+- **`test-integration`**: already exempted under
+  `policy/rsi-policy.yaml` → `critical_paths` (`!supabase/functions/test-integration/**`);
+  documented here for completeness since it is new.
+
+### Environment / topology impact
+
+- No new environment variables, secrets, or database migrations. `lovable-*`
+  functions consume env vars that already exist in the Supabase secrets set
+  (§3.1); if `LOVABLE_API_BASE`/`LOVABLE_API_KEY` are unset, `lovable-healthcheck`
+  degrades to a documented "not configured" response rather than throwing.
+- `omnilink-agent` requires `ORCHESTRATOR_URL` to be set in the Supabase Edge
+  secrets — this was already a required secret for the existing orchestrator
+  integration (§3.2); no new deploy step is introduced.
+- **Owner action:** confirm these eight new functions are deployed via the
+  existing `supabase functions deploy` step in CI/CD (§5) — no changes were
+  required there since deploy is directory-driven and picks up new function
+  folders automatically.
