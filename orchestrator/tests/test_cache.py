@@ -335,26 +335,10 @@ class TestEntityExtractorExtra:
 
     def test_create_template_no_entities(self):
         """Template with no recognizable entities leaves params empty or minimal."""
-        from_url = AsyncMock(return_value=mock_redis_instance)
-        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
-        _, kwargs = from_url.call_args
-        assert "ssl" not in kwargs
-
-    async def test_initialize_passes_ssl_only_when_enabled(self, cache):
-        """initialize() passes ssl kwarg only when Redis SSL is enabled."""
-        cache.redis_ssl = True
-        mock_redis_instance = MagicMock()
-        ft_mock = MagicMock()
-        ft_mock.info = AsyncMock(return_value={})
-        ft_mock.create_index = AsyncMock()
-        mock_redis_instance.ft.return_value = ft_mock
-
-        from_url = AsyncMock(return_value=mock_redis_instance)
-        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
-            await cache.initialize()
-
-        _, kwargs = from_url.call_args
-        assert kwargs["ssl"] is True
+        # Note: PERSON pattern uses IGNORECASE so some words may be matched.
+        # We just verify the function runs and returns a tuple.
+        text = "launch rocket"
+        template, params = EntityExtractor.create_template(text)
         assert isinstance(template, str)
         assert isinstance(params, dict)
 
@@ -505,6 +489,20 @@ class TestSemanticCacheServiceMocked:
         assert "rediss://<redacted>@redis.example.com:6380/0" in log_output
         assert "secret-pass" not in log_output
         assert "token=abc123" not in log_output
+
+    async def test_initialize_passes_ssl_only_when_enabled(self, cache):
+        """initialize() passes ssl kwarg only when Redis SSL is enabled."""
+        cache.redis_ssl = True
+        mock_redis_instance = MagicMock()
+
+        from_url = AsyncMock(return_value=mock_redis_instance)
+        with patch("infrastructure.cache.aioredis.from_url", new=from_url):
+            with patch("infrastructure.cache.validate_redis_search_compatibility"):
+                with patch.object(cache, "_create_index", new=AsyncMock()):
+                    await cache.initialize()
+
+        _, kwargs = from_url.call_args
+        assert kwargs["ssl"] is True
 
     # ------------------------------------------------------------------
     # close
