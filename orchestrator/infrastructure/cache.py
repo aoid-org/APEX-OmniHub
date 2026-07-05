@@ -35,6 +35,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 import numpy as np
 import redis.asyncio as aioredis
+import redis.exceptions
 from pydantic import BaseModel, Field
 from redis.commands.search.field import NumericField, TextField, VectorField
 from redis.commands.search.query import Query
@@ -114,6 +115,12 @@ def validate_redis_search_compatibility() -> None:
     should become one clear RuntimeError instead of an opaque AttributeError in
     Render crash-loop logs.
     """
+    # If the module is missing entirely (e.g. mocking in test), skip
+    if getattr(IndexDefinition, "__name__", "") == "IndexDefinition" and not hasattr(
+        IndexDefinition, "prefix"
+    ):
+        pass
+
     missing_classes = [
         name
         for name, value in {
@@ -398,6 +405,7 @@ class SemanticCacheService:
 
         # Redis client (async)
         self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
+        self._search_supported: bool = True
 
         if isinstance(embedding_model, str):
             # Heavy path: lazy import so injected-encoder deployments never
@@ -478,6 +486,19 @@ class SemanticCacheService:
             await self.redis.ft(self.index_name).info()
             logger.info(f"Vector index already exists: {self.index_name}")
             return
+        except redis.exceptions.ResponseError as e:
+            err_msg = str(e).lower()
+            if (
+                "unknown command" in err_msg
+                or "not available" in err_msg
+                or "unsupported" in err_msg
+            ):
+                logger.warning(
+                    f"RediSearch not supported by provider ({e}), disabling semantic cache queries."
+                )
+                self._search_supported = False
+                return
+            logger.info(f"Vector index not found, creating: {self.index_name}")
         except Exception:  # noqa: S110 - Expected: index may not exist yet
             # Index doesn't exist - will be created below
             logger.info(f"Vector index not found, creating: {self.index_name}")
@@ -503,13 +524,27 @@ class SemanticCacheService:
         ]
 
         # Create index
-        await self.redis.ft(self.index_name).create_index(
-            fields=schema,
-            definition=IndexDefinition(
-                prefix=[self.key_prefix], index_type=_redis_hash_index_type()
-            ),
-        )
-        logger.info(f"Created vector index: {self.index_name}")
+        try:
+            await self.redis.ft(self.index_name).create_index(
+                fields=schema,
+                definition=IndexDefinition(
+                    prefix=[self.key_prefix], index_type=_redis_hash_index_type()
+                ),
+            )
+            logger.info(f"Created vector index: {self.index_name}")
+        except redis.exceptions.ResponseError as e:
+            err_msg = str(e).lower()
+            if (
+                "unknown command" in err_msg
+                or "not available" in err_msg
+                or "unsupported" in err_msg
+            ):
+                logger.warning(
+                    f"RediSearch not supported during FT.CREATE ({e}), disabling caching."
+                )
+                self._search_supported = False
+            else:
+                raise
 
     async def get_plan(self, goal: str) -> CachedPlan | None:
         """
@@ -530,6 +565,9 @@ class SemanticCacheService:
         """
         if not self.redis:
             raise RuntimeError("Redis not initialized")
+
+        if not getattr(self, "_search_supported", True):
+            return None
 
         # Step 1: Extract template and parameters
         template_text, parameters = EntityExtractor.create_template(goal)
@@ -628,12 +666,6 @@ class SemanticCacheService:
         # Generate template ID (deterministic hash)
         template_id = hashlib.sha256(template_text.encode()).hexdigest()[:16]
 
-        # Check if template already exists
-        exists = await self.redis.exists(f"{self.key_prefix}{template_id}")
-        if exists:
-            logger.info(f"Template already cached: {template_id}")
-            return template_id
-
         # Embed template
         embedding = self.embedding_model.encode(template_text, convert_to_numpy=True)
 
@@ -654,6 +686,18 @@ class SemanticCacheService:
         except Exception as e:
             # Fail-safe: don't block caching if persistence fails
             logger.warning(f"TiDB persistence failed (non-blocking): {e}")
+
+        if not getattr(self, "_search_supported", True):
+            logger.info(
+                f"RediSearch not supported, skipping Redis storage for template {template_id}"
+            )
+            return template_id
+
+        # Check if template already exists
+        exists = await self.redis.exists(f"{self.key_prefix}{template_id}")
+        if exists:
+            logger.info(f"Template already cached: {template_id}")
+            return template_id
 
         # Parameterize plan steps (reverse of injection)
         parameterized_steps = self._parameterize_steps(plan_steps, parameters)
