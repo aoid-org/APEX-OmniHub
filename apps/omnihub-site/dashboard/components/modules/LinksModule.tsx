@@ -2,8 +2,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useOmniSlateStore } from '@/stores/omniSlateStore';
-
+import { useOmniSlateStore } from '@omnihub/stores/omniSlateStore';
 interface Props {
   readonly onClose: () => void;
 }

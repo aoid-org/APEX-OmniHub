@@ -187,10 +187,10 @@ describe('LinksModule', () => {
     expect(addButton.disabled).toBe(false);
   });
 
-  it('send-to-omnislate shows the not-connected handoff copy and never stages a link', () => {
+  it('send-to-omnislate requires selection before staging a link', () => {
     render(<LinksModule onClose={vi.fn()} />);
     fireEvent.click(screen.getByTestId('trigger-send-omnislate'));
-    expect(screen.getByText('OmniSlate context handoff is not connected yet.')).toBeTruthy();
+    expect(screen.getByText('Please select at least one link to send to OmniSlate.')).toBeTruthy();
   });
 
   it('never references OmniBoard (the wizard is the app-integration surface, not Links)', () => {

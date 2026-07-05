@@ -59,6 +59,13 @@ The platform has successfully resolved the E2E verification boundaries, performa
 - **Status:** **VERIFIED**
 - **Details:** Programmatically verified least-privilege RLS constraints showing that Tenant A cannot query or mutate Tenant B's data rows.
 
+### 5. CI Pipeline / Governance Gates — VERIFIED
+- **Status:** **VERIFIED**
+- **Details:** 
+  - **Typecheck & Tests:** Corrected module aliases (`@omnihub/stores/omniSlateStore`) avoiding Vite/Vitest conflicts and resolved `handoff` string union type errors in `LinksModule`.
+  - **Architecture Review:** Committed `RFC-999-OMNIDASH-REMEDIATION` providing durable architecture-review evidence.
+  - **Module Limits:** Refactored `WorkflowsModule` to 243 lines, complying with APEX 500-line module policy.
+
 ### 5. Automated/Simulated Run Alignment — WIRED
 - **Status:** **VERIFIED**
 - **Details:** 

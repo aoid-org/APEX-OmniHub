@@ -1,6 +1,6 @@
 ---
 version: 1.3.5
-last_audited: 2026-07-01
+last_audited: 2026-07-05
 status: verified
 ---
 
@@ -25,7 +25,7 @@ OmniBoard now exposes connector operations through the existing APEX agent path 
 
 **Verification (CP-16):** OmniBoard's chat-native integration pathways are structurally proven via the `cp-16` E2E test matrix across 4 diverse topologies: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**. This matrix strictly enforces the **Honest Gateway Law**, ensuring the FSM gracefully fails closed and reports accurate unavailability when the backend orchestrator is unreachable, without leaking trace errors.
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-01
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-05
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
@@ -62,7 +62,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-07-04, git-verified)
+## Platform Statistics (Repository Snapshot 2026-07-05, git-verified)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |

@@ -1,0 +1,118 @@
+{
+  "name": "APEX OmniLink",
+  "short_name": "OmniLink",
+  "description": "Your portal to observability, integrations, and operational control.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/icons/pwa/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/pwa/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/ios/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app_icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
+  "shortcuts": [
+    {
+      "name": "OmniDash",
+      "short_name": "Dash",
+      "description": "Open OmniDash",
+      "url": "/omnidash",
+      "icons": [{ "src": "/icons/pwa/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Integrations",
+      "short_name": "Connect",
+      "description": "Manage integrations",
+      "url": "/integrations",
+      "icons": [{ "src": "/icons/pwa/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Agent",
+      "short_name": "Agent",
+      "description": "Voice agent",
+      "url": "/agent",
+      "icons": [{ "src": "/icons/pwa/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "share_target": {
+    "action": "/integrations",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
