@@ -1331,7 +1331,7 @@ executes:
 |---|---|---|---|
 | `structural-observatory` | push/PR to `main`/`master`; `workflow_dispatch` | `contents: read` | Installs deps, runs `arise:scan`, uploads the dated structural snapshot as a build artifact (`arise-structural-baseline`, 90-day retention). |
 | `diagnosis-observatory` | push/PR to `main`/`master`; `workflow_dispatch` | `contents: read` | Installs deps, runs `arise:diagnose`, uploads the dated diagnosis report as a build artifact (`arise-diagnosis-report`, 90-day retention). |
-| `publish-snapshot` | push to `main`/`master` only (never on `pull_request`) | `contents: write`, `pull-requests: write` | Downloads whichever generated artifacts exist and, if they differ from committed docs, creates `automation/arise-snapshot-${{ github.run_id }}-${{ github.run_attempt }}`, refuses protected/unexpected branch targets, pushes only to `HEAD:refs/heads/$branch`, and opens a PR back to the protected base branch. It must not push generated commits directly to `main` or `master`. |
+| `publish-snapshot` | push to `main`/`master` only (never on `pull_request`) | `contents: write`, `pull-requests: write` | Downloads whichever generated artifacts exist and, if they differ from committed docs, updates the single rolling branch `automation/arise-snapshot-current`, refuses protected/unexpected branch targets, pushes only to `HEAD:refs/heads/$branch`, searches for an existing open `chore(arise): publish structural baseline snapshot` PR from that branch, and only creates a PR when none exists. It must not push generated commits directly to `main` or `master`, and snapshot commits intentionally do not include `[skip ci]` so required checks can run. |
 
 | Property | Value |
 |---|---|
@@ -1339,7 +1339,7 @@ executes:
 | Job timeout | 25 minutes (scan), 5 minutes (publish) |
 | Build status | **always exits 0** (`continue-on-error: true` on both jobs and all steps) |
 | Required check? | **No** — informational only; never blocks merge |
-| Artifacts proposed | `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md` and `memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_YYYY_MM_DD.md`, proposed by `publish-snapshot` via automation PR on protected-branch pushes when generated content changes |
+| Artifacts proposed | `memory/omni-recall/docs/CURRENT_ARISE_STRUCTURAL_BASELINE_YYYY_MM_DD.md` and `memory/omni-recall/docs/CURRENT_ARISE_DIAGNOSIS_REPORT_YYYY_MM_DD.md`, proposed by `publish-snapshot` via the rolling automation PR on protected-branch pushes when generated content changes |
 
 Before artifact publication, the scan ran and wrote the snapshot to the
 ephemeral runner filesystem only — nothing committed it back, so the "dated
