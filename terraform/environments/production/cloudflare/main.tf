@@ -42,6 +42,7 @@ resource "cloudflare_record" "www" {
 #   - max 1 rule in http_ratelimit phase
 #   - period must be 10 (seconds)
 #   - mitigation_timeout must be 10 (seconds)
+#   - action must be "block" or "log" (managed_challenge not available on free)
 resource "cloudflare_ruleset" "rate_limits" {
   zone_id     = var.zone_id
   name        = "OmniHub Rate Limits"
@@ -50,7 +51,7 @@ resource "cloudflare_ruleset" "rate_limits" {
   phase       = "http_ratelimit"
 
   rules {
-    action      = "managed_challenge"
+    action      = "block"
     expression  = "(http.host eq \"${var.domain}\" and (starts_with(http.request.uri.path, \"/api/\") or starts_with(http.request.uri.path, \"/functions/v1/\")))"
     description = "Rate limit API and sensitive Edge Function endpoints"
     enabled     = true
