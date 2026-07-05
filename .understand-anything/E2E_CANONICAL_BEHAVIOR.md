@@ -66,3 +66,13 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 13. OmniDash Left Sidebar Visual Parity
 **Invariant:** OmniTrace (`OmniTraceFeed.tsx`) is the source of truth for left/right sidebar visual styling.
 **Rule:** The left sidebar components (such as `OmniDashShell` NavItems and `SidebarKpiBar`) must explicitly copy OmniTrace's design language: `borderRadius: 10`, `border: '1px solid rgba(249,115,22,0.25)'`, `background: 'rgba(249,115,22,0.06)'`, and `backdropFilter: 'blur(16px) saturate(140%)'`. Do not invert this relationship (OmniTrace never copies the left sidebar).
+
+## 14. CP-16 Authenticated OmniDash Remediation (PR #1602)
+**Invariant:** Authenticated widgets and local flows must run with honest simulated feedback when live connections/persistence are missing, and fully synchronize state to local/remote storage when available.
+**Rule:** 
+- **Links Module**: Must stage items to `localStorage` (`omnilink_staged_urls`) when sync is unavailable to ensure user sync state persists through reload, rather than remaining memory-only.
+- **OmniSlate Integration**: Must bind the system health indicators directly to the global `useOmniSlateStore` state (e.g. `isConnected`), removing static "Disconnected" indicators.
+- **Automations Logging**: "View Logs" action in `AutomationsModule` must fetch from the live `audit_logs` table via Supabase, with simulated fallback logs if executing in demo/local mode.
+- **Honest Simulations**: In both `AutomationsModule` and `WorkflowsModule`, executing demo/non-UUID item rows runs an honest simulated visual execution trail, showing `[SIMULATED]` status updates rather than hard blocking errors.
+- **Request Access**: Set `VITE_ENABLE_REQUEST_ACCESS=true` to ensure access requests write directly to the Supabase backend instead of failing back to a `mailto` link.
+
