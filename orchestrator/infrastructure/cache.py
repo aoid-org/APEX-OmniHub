@@ -315,7 +315,7 @@ class SemanticCacheService:
         self.redis = await aioredis.from_url(
             self.redis_url,
             password=self.redis_password,
-            ssl=self.redis_ssl,
+                        **(({"ssl": self.redis_ssl} if self.redis_ssl else {})),  # v5/v6 compat: ssl kwarg removed in v6
             encoding="utf-8",
             decode_responses=True,
         )
