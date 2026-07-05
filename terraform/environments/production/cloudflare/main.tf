@@ -11,118 +11,83 @@ terraform {
 }
 
 # DNS Records
+# allow_overwrite = true because records already exist in zone
 resource "cloudflare_record" "root" {
-  zone_id = var.zone_id
-  name    = "@"
-      content  = var.origin_cname
-  type    = "CNAME"
-  proxied = true
-  comment = "Root domain pointing to Cloudflare Pages origin"
+  zone_id         = var.zone_id
+  name            = "@"
+  content         = var.origin_cname
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+  comment         = "Root domain pointing to Cloudflare Pages origin"
 }
 
 resource "cloudflare_record" "www" {
-  zone_id = var.zone_id
-  name    = "www"
-      content  = var.origin_cname
-  type    = "CNAME"
-  proxied = true
-  comment = "WWW subdomain pointing to Cloudflare Pages origin"
+  zone_id         = var.zone_id
+  name            = "www"
+  content         = var.origin_cname
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+  comment         = "WWW subdomain pointing to Cloudflare Pages origin"
 }
 
-# WAF Rules (OWASP Top 10 Protection)
-resource "cloudflare_ruleset" "waf" {
-  zone_id     = var.zone_id
-  name        = "OmniHub WAF Rules"
-  description = "Web Application Firewall rules for OmniHub"
-  kind        = "zone"
-  phase       = "http_request_firewall_managed"
-
-  rules {
-    action      = "block"
-    expression  = "(cf.threat_score > 14)"
-    description = "Block high threat score"
-  }
-
-  rules {
-    action      = "challenge"
-    expression  = "(cf.threat_score > 5)"
-    description = "Challenge medium threat score"
-  }
-}
+# NOTE: cloudflare_ruleset.waf (http_request_firewall_custom phase) is intentionally
+# omitted from Terraform management because a ruleset for this phase already exists
+# in the zone and Cloudflare does not allow duplicate rulesets per phase.
+# WAF custom rules are managed directly in the Cloudflare dashboard.
 
 # Rate Limiting Rules (Cloudflare Ruleset Engine)
-locals {
-  # Keep endpoint list centralized so per-path rules are generated deterministically.
-  sensitive_function_paths = toset([
-    "/functions/v1/web3-verify",
-    "/functions/v1/web3-nonce",
-    "/functions/v1/apex-voice",
-  ])
-}
-
+# Free plan constraints:
+#   - max 1 rule in http_ratelimit phase
+#   - period must be 10 (seconds)
+#   - mitigation_timeout must be 10 (seconds)
+#   - action must be "block" or "log" (managed_challenge not available on free)
 resource "cloudflare_ruleset" "rate_limits" {
   zone_id     = var.zone_id
   name        = "OmniHub Rate Limits"
-  description = "Rate limiting rules for API and sensitive Edge Function endpoints"
+  description = "Rate limiting for API and sensitive endpoints"
   kind        = "zone"
   phase       = "http_ratelimit"
 
-  # General API rate limit.
   rules {
-    action      = "managed_challenge"
-    # Contract: only match same-host API prefix traffic.
-    expression  = "(http.host eq \"${var.domain}\" and starts_with(http.request.uri.path, \"/api/\"))"
-    description = "Challenge high-rate API traffic"
+    action      = "block"
+    expression  = "(http.host eq \"${var.domain}\" and (starts_with(http.request.uri.path, \"/api/\") or starts_with(http.request.uri.path, \"/functions/v1/\")))"
+    description = "Rate limit API and sensitive Edge Function endpoints"
     enabled     = true
-
     ratelimit {
       characteristics     = ["cf.colo.id", "ip.src"]
-      period              = 60
+      period              = 10
       requests_per_period = var.rate_limit_threshold
-      mitigation_timeout  = 86400
+      mitigation_timeout  = 10
     }
   }
+}
 
-  # Sensitive endpoint limits are stricter and generated per endpoint path.
-  dynamic "rules" {
-    for_each = local.sensitive_function_paths
-    content {
-      action      = "block"
-      # Contract: only match exact sensitive path on configured host (no wildcard drift).
-      expression  = "(http.host eq \"${var.domain}\" and http.request.uri.path eq \"${rules.value}\")"
-      description = "Block burst traffic on sensitive endpoint: ${rules.value}"
-      enabled     = true
+# Cache Rules (replaces deprecated Page Rules)
+# Account-owned tokens are supported with cloudflare_ruleset.
+resource "cloudflare_ruleset" "cache_rules" {
+  zone_id     = var.zone_id
+  name        = "OmniHub Cache Rules"
+  description = "Cache rules for static assets - replaces deprecated Page Rules"
+  kind        = "zone"
+  phase       = "http_request_cache_settings"
 
-      ratelimit {
-        characteristics     = ["cf.colo.id", "ip.src"]
-        period              = 60
-        requests_per_period = 50
-        mitigation_timeout  = 60
+  rules {
+    action      = "set_cache_settings"
+    expression  = "(http.host eq \"${var.domain}\" and starts_with(http.request.uri.path, \"/assets/\"))"
+    description = "Cache static assets"
+    enabled     = true
+    action_parameters {
+      cache = true
+      edge_ttl {
+        mode    = "override_origin"
+        default = 7200
+      }
+      browser_ttl {
+        mode    = "override_origin"
+        default = 14400
       }
     }
-  }
-
-}
-
-# Page Rules
-resource "cloudflare_page_rule" "cache_static" {
-  zone_id  = var.zone_id
-  target   = "${var.domain}/assets/*"
-  priority = 1
-
-  actions {
-    cache_level       = "cache_everything"
-    edge_cache_ttl    = 7200
-    browser_cache_ttl = 14400
-  }
-}
-
-resource "cloudflare_page_rule" "security_headers" {
-  zone_id  = var.zone_id
-  target   = "${var.domain}/*"
-  priority = 2
-
-  actions {
-    security_level = var.security_level
   }
 }

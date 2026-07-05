@@ -8,10 +8,8 @@ output "zone_id" {
   value       = var.zone_id
 }
 
-output "waf_ruleset_id" {
-  description = "WAF ruleset ID"
-  value       = cloudflare_ruleset.waf.id
-}
+# waf_ruleset_id output removed because cloudflare_ruleset.waf is intentionally
+# omitted from Terraform management (see main.tf for details).
 
 data "cloudflare_zone" "main" {
   zone_id = var.zone_id
