@@ -287,7 +287,8 @@ class EntityExtractor:
             matches = []
             for pattern in patterns:
                 found = pattern.findall(text)
-                if found:
+        redis_connection_kwargs = {"ssl": self.redis_ssl} if self.redis_ssl else {}
+            **redis_connection_kwargs,
                     # Handle both string matches and tuple matches from groups
                     matches.extend(found if isinstance(found[0], str) else [m for m in found if m])
 
