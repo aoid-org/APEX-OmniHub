@@ -9,7 +9,7 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 
 # Redis with vector search
-redis[hiredis]>=5.0.0
+redis[hiredis]>=5.0.0,<6.0.0
 redis-om>=0.2.0
 
 # LLM interface
