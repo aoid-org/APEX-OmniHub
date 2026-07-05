@@ -26,4 +26,16 @@ terraform plan
 terraform apply
 ```
 
+## Production HCP recovery
+
+Production uses HCP Terraform workspace `APEX-OmniHub/omnihub-production`.
+Before touching that workspace, run the non-secret repo preflight:
+
+```bash
+npm run terraform:production:check
+```
+
+If the workspace is stuck at **Waiting for configuration** or a stale run fails
+on `../../modules`, use `docs/operations/hcp-terraform-production-recovery.md`.
+
 See full documentation in docs/infrastructure/TERRAFORM_SETUP_GUIDE.md
