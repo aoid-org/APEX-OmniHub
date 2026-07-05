@@ -240,7 +240,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       return `1px solid rgba(${ORANGE},0.25)`;
     };
 
-    const resolveTileShadow = (active: boolean, hover: boolean) => "none";
+    const resolveTileShadow = () => "none";
 
     const resolveBorder = (isActive: boolean, hov: boolean) => {
       if (isActive) return `2.5px solid rgba(255,255,255,0.90)`;
@@ -281,7 +281,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         WebkitBackdropFilter: "blur(16px) saturate(140%)",
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
-        boxShadow: resolveTileShadow(isActive, hov),
+        boxShadow: resolveTileShadow(),
       }}>
 
   {/* Icon badge — iOS-style white frame, orange glow on active */}
