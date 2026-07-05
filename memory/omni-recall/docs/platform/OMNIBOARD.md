@@ -47,7 +47,14 @@ The FSM allows only these states. One concept per state. One decision per user t
 5.  **VERIFY_CONNECTION**: Performing least-privilege ping (profile/introspection).
 6.  **REGISTER_CONNECTION**: Persisting to OmniPort registry and Vault.
 7.  **COMPLETION**: Returning the Spec and ending the session.
-8.  **RECOVERY_RETRY**: Handling failures with non-blaming prompts.
+8.  **RECOVERY_RETRY**: Handling failures with non-blaming prompts. (Enforces the **Honest Gateway** UI contract upon unreachability).
+
+## Verification & Testing (CP-16)
+
+OmniBoard's integration surface and FSM behaviors are continuously protected by the `cp-16-omniboard-chat-integrations.spec.ts` test matrix. This suite:
+- Runs cross-browser (Chromium, Firefox, Mobile, Tablet viewports).
+- Systematically validates the 4 core tiers: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**.
+- Enforces safe, fail-closed handling without leaking trace errors during backend disconnection.
 
 ## Connection Spec (Schema)
 
