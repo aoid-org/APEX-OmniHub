@@ -60,6 +60,8 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 12. OmniBoard Chat-Native Connector Actions
 **Invariant:** OmniBoard chat actions must reuse the existing APEX agent UI, Intent Registry, MCP `omnihub_execute_intent` dispatcher, OmniConnect connector model, and shared SSRF guard.
 **Rule:** E2E coverage for chat-native connector work must prove a full connect/test/confirm flow for an existing integration and a beta-only custom scaffold path. Do not accept tests that create a parallel dispatcher, bypass the fail-closed registry, auto-promote custom connectors to GA, or validate custom URLs outside the shared SSRF utilities.
+- **Matrix Coverage (CP-16):** The conversational FSM must be validated across varied topologies (Legacy Software, Web 3 App, AI App, Web 2 App) as proven in `cp-16-omniboard-chat-integrations.spec.ts`.
+- **Honest Gateway Fallback:** Tests must use `locator.or()` (e.g., `await expect(inputLocator.or(errorLocator).first()).toBeVisible()`) to deterministically handle the race condition between successful input renders and backend unavailability fallbacks, ensuring clean fail-closed states in unconfigured environments.
 
 ## 13. OmniDash Left Sidebar Visual Parity
 **Invariant:** OmniTrace (`OmniTraceFeed.tsx`) is the source of truth for left/right sidebar visual styling.

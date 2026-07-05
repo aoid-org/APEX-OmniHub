@@ -23,6 +23,8 @@ status: verified
 
 OmniBoard now exposes connector operations through the existing APEX agent path instead of adding new chat infrastructure. The registered universal intents are `connector.list`, `connector.status`, `connector.connect`, `connector.test`, `connector.disconnect`, and `connector.create_custom`; they route through the existing Intent Registry and MCP `omnihub_execute_intent` dispatcher. The proprietary custom connector scaffold lives at `src/omniconnect/scaffold/`, validates every user-supplied URL through the shared SSRF guard, and always creates raw-events-only `beta` connectors until an explicit human promotion occurs.
 
+**Verification (CP-16):** OmniBoard's chat-native integration pathways are structurally proven via the `cp-16` E2E test matrix across 4 diverse topologies: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**. This matrix strictly enforces the **Honest Gateway Law**, ensuring the FSM gracefully fails closed and reports accurate unavailability when the backend orchestrator is unreachable, without leaking trace errors.
+
 **Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-01
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
