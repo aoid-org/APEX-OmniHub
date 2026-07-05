@@ -1118,6 +1118,38 @@ The production-safe Playwright suite is read-only by default. It captures saniti
 
 ---
 
+## 9.31 CI dependency-audit resilience and k6 provisioning (2026-07-05)
+
+**Changed files:** `.github/workflows/security-regression-guard.yml`, `.github/workflows/ci-runtime-gates.yml`, `.npmrc`, `docs/release/release-validation-matrix.json`, `memory/omni-recall/dependency-audit-install-resilience-2026-07-05.md`, and `memory/omni-recall/k6-ci-binary-provisioning-2026-07-05.md`.
+
+### Dependency Security Audit install contract
+
+`security-regression-guard.yml` keeps `Dependency Security Audit` as the canonical production dependency gate. The audit job now:
+
+- uses Node 24 with `actions/setup-node` npm caching keyed by the root `package-lock.json`;
+- runs `npm ci --ignore-scripts` in a bounded three-attempt retry loop;
+- verifies the npm cache between failed attempts and backs off before retrying;
+- still fails closed after the third failed install;
+- then runs the existing production-only `npm audit --omit=dev --audit-level=high` gate.
+
+The root `.npmrc` sets conservative npm fetch retry and timeout values so CI npm operations tolerate transient registry read resets such as `ECONNRESET` without weakening lockfile reproducibility or audit severity enforcement.
+
+**Operational impact:** CI dependency installation is more resilient to transient npm registry/network failures. The dependency audit remains fail-closed for real install failures and for high/critical production dependency vulnerabilities. No deployed service, runtime app behavior, secrets, DB tables/migrations, or production start command changed.
+
+### k6 performance-smoke runner contract
+
+`ci-runtime-gates.yml` now provisions the `k6` binary before the existing soft `npm run perf:k6:smoke` step on `main`/`master` by using pinned `grafana/setup-k6-action` and pinned `k6-version: '1.3.0'`. The smoke command and artifact path remain unchanged:
+
+```bash
+npm run perf:k6:smoke
+# writes artifacts/production-validation/performance-summary.json
+```
+
+The release validation matrix now classifies performance/load as runnable in CI after provisioning, but `PERFORMANCE_LOAD_K6` remains `BLOCKED` until a real main/master run executes the smoke and uploads `artifacts/production-validation/performance-summary.json`. Skipped or missing-binary placeholders remain non-certifying.
+
+**Operational impact:** CI can now execute the existing production-safe k6 smoke instead of producing a missing-binary `BLOCKED` summary on GitHub-hosted runners. The k6 gate remains advisory/soft (`continue-on-error: true`), and its evidence must be reviewed as release-validation input rather than full production certification. No credentials are required for the default public `https://apexomnihub.icu` smoke; `APEX_PROD_URL` may still override the target for a shadow slot.
+---
+
 ## 9.21 OmniSkin Engine (OSE v1.0) — OSE Guard CI gate (2026-06-28, CCEX-OSE-001)
 
 > **⚠️ Production-reach correction (PR #1525, 2026-07-04):** this contract governs
