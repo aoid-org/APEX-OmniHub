@@ -10,7 +10,7 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-01** (release gate audit pass at HEAD `845fced`: full `verify:release` matrix + PR-blocking guards executed non-fail-fast, **GATE: PASS** — see `docs/audits/release-gate-audit-2026-07-01.md`; audit-document inventory corrected to reflect the `memory/omni-recall/archive/docs/audits/` relocation; source-file counts re-verified). Previous refresh: 2026-07-04 (README-cited documentation sync to HEAD `d22ddcf`, package `1.8.3`, OmniDash surface repair baseline). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_04.md`.
+> Current repo-truth index refreshed **2026-07-01** (release gate audit pass at HEAD `845fced`: full `verify:release` matrix + PR-blocking guards executed non-fail-fast, **GATE: PASS** — see `docs/audits/release-gate-audit-2026-07-01.md`; audit-document inventory corrected to reflect the `memory/omni-recall/archive/docs/audits/` relocation; source-file counts re-verified). Previous refresh: 2026-07-05 (README-cited documentation sync to HEAD `77bd77b`, package `1.8.3`, OmniDash surface repair baseline & CP-16 E2E chat connections). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_05.md`.
 
 ## Current Repo Facts Verified in This Pass (2026-07-01)
 
@@ -23,7 +23,7 @@ status: verified
 | Source files under `src/` | **322** TypeScript/TSX (230 `.ts` + 92 `.tsx`) |
 | GitHub workflow files | **22** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`; `arise-propose.yml` added in PR #1546 — A.R.I.S.E. Phase 1b propose engine, `workflow_dispatch` only) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_04.md`. |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not decide or certify releases. See `CURRENT_PLATFORM_STATE_2026_07_05.md`. |
 | SQL migrations | **102** `.sql` files = **98 forward** + **4 rollback** (`migrations/rollback/`) |
 | Edge function dirs | **34** (33 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
@@ -41,7 +41,7 @@ status: verified
 
 ## Documentation Authority Order
 
-0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
+0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
 1. `docs/release/release-validation-matrix.json` for current release evidence boundaries and production-certification gaps.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -59,7 +59,7 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` _(current — supersedes 2026-06-25 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` _(current — supersedes 2026-07-04 and all prior snapshots)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(historical — 2026-06-25 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(historical — 2026-06-24 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
@@ -161,7 +161,7 @@ Legacy audits (17 files, relocated to `memory/omni-recall/archive/docs/audits/` 
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 17 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_04.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_04.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 18 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_05.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_05.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
@@ -457,23 +457,22 @@ Batch 2 of the PR #1477 fix session. Three code files changed; six doc files upd
 | `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path |
 
 ### Current canonical start point
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` (2026-07-04 README-cited documentation anti-drift sync is the latest state)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` (2026-07-05 README-cited documentation anti-drift sync is the latest state)
 
 
-## 2026-07-04 Documentation Anti-Drift Sync — README-cited current-state repair
+## 2026-07-05 Documentation Anti-Drift Sync — CP-16 E2E Connections & matrix sync
 
-Full repo-truth documentation sync performed against the working tree after release remediation baseline `d22ddcf` and ops-doc repair `e0c1739`. Counts were re-verified with `find`/`git` commands in the local repository. Live infrastructure health, GitHub branch-protection settings, Cloudflare deployed env, Supabase production/staging migrations, provider OAuth, billing, BYOM, native mobile, and real-device WebAuthn were **not** re-verified in this documentation pass.
+Full repo-truth documentation sync performed against the working tree after E2E chat connection matrix implementation and document reconciliation at HEAD `77bd77b`. Counts were re-verified in the local repository. 
 
 | File | Change |
 |---|---|
-| `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` | Added repo-evidence vs live-proof doctrine and local-launch truthfulness rule |
-| `README.md` | Current platform-state pointer → 2026-07-04; edge function dirs 34 (33 + `_shared`); test spec count 385; release evidence boundary points to validation matrix |
-| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` | Updated remediation baseline, counts, fail-closed env contract, dependency branch-only behavior, and manual/live validation boundary |
-| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — v1.8.0 facts table and authority pointers updated to 2026-07-04 |
-| `memory/omni-recall/docs/README.md` | Current platform snapshot/certification boundary updated to 2026-07-04 validation matrix |
-| `docs/audits/documentation-drift-assessment-2026-07-04.md` | New dated report documenting scope, evidence, updates, validation, and remaining manual/live gaps |
+| `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` | Added cp-16 verification coverage and `locator.or()` pattern |
+| `README.md` | Stats updated; current platform-state pointer → 2026-07-05 |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` | **NEW** — Updated remediation baseline, counts, and uncertified gaps |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — refreshed authority pointers and sync table to 2026-07-05 |
+| `memory/omni-recall/docs/platform/OMNIBOARD.md` | Refreshed verification status mapping for CP-16 E2E |
 
-### Current count corrections (2026-07-04, repo-verified)
+### Current count corrections (2026-07-05, repo-verified)
 
 | Metric | Current | Evidence command |
 |---|---:|---|
@@ -481,4 +480,5 @@ Full repo-truth documentation sync performed against the working tree after rele
 | `src` TypeScript/TSX files | 328 (234 `.ts` + 94 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
 | Supabase function dirs | 34 (33 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
 | SQL migrations | 102 (98 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
-| Spec/test source files | 385 | `find tests e2e sim apps orchestrator packages ...` |
+| Spec/test source files | 386 | `find tests e2e sim apps orchestrator packages ...` |
+

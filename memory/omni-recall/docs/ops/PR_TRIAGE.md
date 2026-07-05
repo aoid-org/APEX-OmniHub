@@ -4,7 +4,7 @@ last_audited: 2026-06-12
 status: verified
 ---
 
-> **Current-state note (2026-07-04):** Current branch/head facts defer to `../CURRENT_PLATFORM_STATE_2026_07_04.md`; open PR status requires live GitHub verification and is not certified by this historical triage table alone.
+> **Current-state note (2026-07-05):** Current branch/head facts defer to `../CURRENT_PLATFORM_STATE_2026_07_05.md`; open PR status requires live GitHub verification and is not certified by this historical triage table alone.
 
 
 # Open PR Triage — APEX-OmniHub v1.6.0

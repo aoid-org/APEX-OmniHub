@@ -1,15 +1,15 @@
 ---
 version: 1.3.2
-last_audited: 2026-07-04
+last_audited: 2026-07-05
 status: verified
 ---
 
 # Canonical Truth File — Platform Topology & Deployment
 
 **Version:** 1.8.3
-**Last Updated:** 2026-07-04
+**Last Updated:** 2026-07-05
 
-**Latest verified branch/head:** local `work` @ `d22ddcf` after `git fetch --all --prune` (`fix(omnidash): surface alignment + glassmorphism repair pass (#1529)`). Release line `1.8.3`; app package `1.3.10`; current authoritative platform snapshot: `docs/CURRENT_PLATFORM_STATE_2026_07_04.md`. This is repo-state evidence, not live-production certification. Releases remain manual/owner-driven (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence only after a tag already exists.
+**Latest verified branch/head:** local `antigravity/cp-16-omniboard-chat-integrations` @ `77bd77b` after `git fetch --all --prune` (`test(omniboard): cp-16 e2e matrix for chat-native integration connections & doc sync`). Release line `1.8.3`; app package `1.3.10`; current authoritative platform snapshot: `docs/CURRENT_PLATFORM_STATE_2026_07_05.md`. This is repo-state evidence, not live-production certification. Releases remain manual/owner-driven (`changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence only after a tag already exists.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -79,7 +79,7 @@ status: verified
 
 ## Conflict Resolution Rule
 
-If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` (latest snapshot) before dated audit reports.
+If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` (latest snapshot) before dated audit reports.
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 
@@ -107,7 +107,7 @@ If any other document conflicts with this file, this file wins unless explicitly
 - 18-test smoke suite at `tests/omnidash/omni-sentry-widget.spec.tsx` covers all 5 wired capabilities.
 - Release gate `tests/release/omni-sentry-surface.spec.ts` — all 4 assertions pass.
 
-**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` (latest snapshot) before prior dated snapshots.
+**Conflict Resolution Rule (updated):** If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` (latest snapshot) before prior dated snapshots.
 
 ## Source-of-Truth Statement 23 (2026-06-23)
 
@@ -131,7 +131,7 @@ If any other document conflicts with this file, this file wins unless explicitly
 - `src/lib/omni-sentry.ts` stores all state in `sessionStorage` — enforced by security rule NS-M-008 (no cross-tab persistence of error/circuit state).
 - `OMNISENTRY.md` has been corrected to reflect this (was incorrectly documented as `localStorage`).
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` for the current canonical snapshot.
 
 ## Source-of-Truth Statement 24 (2026-06-23)
 
@@ -209,6 +209,6 @@ directory is no longer present.
 skill routing updated: `apex-dev` is superseded by `apex-boost-claude`,
 `apex-master-debug-claude`, and `omnidev-apex-pro-1.0.0` (all in `.claude/skills/`).
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` for the current canonical snapshot.
 
-**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the current canonical snapshot.
+**Conflict Resolution Rule (updated):** Consult `docs/CURRENT_PLATFORM_STATE_2026_07_05.md` for the current canonical snapshot.

@@ -38,7 +38,7 @@ OmniBoard now exposes connector operations through the existing APEX agent path 
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_30.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_07_05.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/release/release-validation-matrix.json)** (Current Release Evidence Boundary)
@@ -76,7 +76,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~130 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** current audited baseline before this documentation sync is `d22ddcfbf60a8dedbdd6126afdcd0fca41d758b7` — OmniDash surface alignment + OmniTrace left sidebar parity completion, after PR #1516 layout/mobile/sidebar work and follow-up claim-hygiene/OSE governance repairs. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for the items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **20**. Edge function dirs: **34** (33 + `_shared`). SQL migrations: **102** (98 forward + 4 rollback). See [`CURRENT_PLATFORM_STATE_2026_07_04.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md) for the current platform state assessment.
+**Latest repo-history note:** current audited baseline before this documentation sync is `d22ddcfbf60a8dedbdd6126afdcd0fca41d758b7` — OmniDash surface alignment + OmniTrace left sidebar parity completion, after PR #1516 layout/mobile/sidebar work and follow-up claim-hygiene/OSE governance repairs. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence attach-only (gated on the tag already existing — CI can never create a tag). CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for the items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **20**. Edge function dirs: **34** (33 + `_shared`). SQL migrations: **102** (98 forward + 4 rollback). See [`CURRENT_PLATFORM_STATE_2026_07_05.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md) for the current platform state assessment.
 
 ---
 
@@ -283,7 +283,7 @@ Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) dir
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_30.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./memory/omni-recall/archive/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./docs/release/release-validation-matrix.json) | Current certification authority |

@@ -1,6 +1,6 @@
 ---
 version: 1.1.0
-last_audited: 2026-07-04
+last_audited: 2026-07-05
 status: verified
 ---
 
@@ -12,9 +12,9 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 
 > **Version:** 2.4.0<br>
-> **Last updated:** 2026-07-04<br>
+> **Last updated:** 2026-07-05<br>
 > **Status:** Canonical (source of truth)
-> **Current-state addendum (audited 2026-07-04):** local `work` HEAD `d22ddcf` after `git fetch --all --prune`. Package `1.8.3`; app package `1.3.10`; 102 SQL migrations (98 forward + 4 rollback); 20 workflows; 34 Supabase function directories (33 + `_shared`). See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the full drift-control snapshot. This addendum is repo-state evidence, not live-production certification.
+> **Current-state addendum (audited 2026-07-05):** local `antigravity/cp-16-omniboard-chat-integrations` HEAD `77bd77b` after `git fetch --all --prune`. Package `1.8.3`; app package `1.3.10`; 102 SQL migrations (98 forward + 4 rollback); 20 workflows; 34 Supabase function directories (33 + `_shared`). See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` for the full drift-control snapshot. This addendum is repo-state evidence, not live-production certification.
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
 

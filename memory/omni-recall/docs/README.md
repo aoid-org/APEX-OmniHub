@@ -2,11 +2,11 @@
 
 ---
 version: 1.3.3
-last_audited: 2026-07-04
+last_audited: 2026-07-05
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.9-DOC-RELEASE-INDEX | LAST_UPDATED=2026-07-04 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.9-DOC-RELEASE-INDEX | LAST_UPDATED=2026-07-05 -->
 
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
@@ -16,10 +16,10 @@ status: verified
 
 - **Document Version:** 2.10.3
 - **Platform Version:** 1.8.3
-- **Last Updated:** 2026-07-04
+- **Last Updated:** 2026-07-05
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Boundary:** [`docs/release/release-validation-matrix.json`](../../../docs/release/release-validation-matrix.json) records repo-verified remediations; items labeled `BLOCKED` / `REQUIRES_MANUAL_VALIDATION` still require owner/live evidence. CI is validation evidence only ([CI Status Policy](project-status/CI_STATUS_POLICY.md)).
-- **Current Platform Snapshot:** [Current Platform State — 2026-07-04](CURRENT_PLATFORM_STATE_2026_07_04.md) (release remediation gates, local-launch truthfulness, fail-closed release envs; live production checks not re-verified by the doc sync)
+- **Current Platform Snapshot:** [Current Platform State — 2026-07-05](CURRENT_PLATFORM_STATE_2026_07_05.md) (release remediation gates, local-launch truthfulness, fail-closed release envs; live production checks not re-verified by the doc sync)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](../archive/docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -304,8 +304,8 @@ docs/
 
 ---
 
-**Last Updated:** June 24, 2026
-**Release:** v1.8.3 (HEAD `8bfb1a6`)
+**Last Updated:** July 5, 2026
+**Release:** v1.8.3 (HEAD `77bd77b`)
 
 ## Documentation Governance
 

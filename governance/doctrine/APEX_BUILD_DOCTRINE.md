@@ -4,7 +4,7 @@ last_audited: 2026-06-12
 status: verified
 ---
 
-> **Current-state note (2026-07-04):** Current repo-state evidence is `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md`; governance doctrine remains normative, while release/production status is governed by `docs/release/release-validation-matrix.json` plus owner/live evidence.
+> **Current-state note (2026-07-05):** Current repo-state evidence is `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md`; governance doctrine remains normative, while release/production status is governed by `docs/release/release-validation-matrix.json` plus owner/live evidence.
 
 
 # APEX Build Doctrine

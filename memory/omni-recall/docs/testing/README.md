@@ -1,4 +1,4 @@
-> **Current-state note (2026-07-04):** Current repo-state and production-certification boundaries defer to `../CURRENT_PLATFORM_STATE_2026_07_04.md` and `../../../docs/release/release-validation-matrix.json`. Historical test reports remain point-in-time evidence only.
+> **Current-state note (2026-07-05):** Current repo-state and production-certification boundaries defer to `../CURRENT_PLATFORM_STATE_2026_07_05.md` and `../../../docs/release/release-validation-matrix.json`. Historical test reports remain point-in-time evidence only.
 
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
