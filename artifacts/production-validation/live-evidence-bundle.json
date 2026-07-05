@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-07-05T12:22:15.186Z",
+  "cloudflare": {
+    "status": "VERIFIED",
+    "projects": [
+      "apex-omnihub-shadow",
+      "apex-omnihub"
+    ],
+    "message": "Token valid and projects listed"
+  },
+  "github": {
+    "status": "VERIFIED",
+    "repo": "apexbusiness-systems/APEX-OmniHub",
+    "visibility": "public",
+    "protection": "assumed-via-token"
+  },
+  "byom": {
+    "status": "VERIFIED",
+    "message": "Groq API key is valid"
+  },
+  "supabaseAuth": {
+    "status": "VERIFIED",
+    "message": "Service Role Key is valid for REST API"
+  }
+}
