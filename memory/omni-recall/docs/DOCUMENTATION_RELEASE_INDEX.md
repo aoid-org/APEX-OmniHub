@@ -488,8 +488,8 @@ Full repo-truth documentation sync performed against the working tree after E2E 
 Seven red CI checks on PR #1602 (`antigravity/cp-16-doc-sync-remediation`) fixed: `build-and-test`
 (secret-scan false positives), `Dependency vulnerability scan` (osv-scanner bun.lockb crash),
 `Governance gate` (downstream of the above), `Operations doc drift guard` (8 new undocumented
-edge functions), `RSI Governance Gate` (missing protected-path evidence in PR body — `terraform/modules/vercel/**`
-is new/unwired), `Lighthouse Audit` and `Cloudflare Pages: apex-omnihub` (both broken by the same
+edge functions), `RSI Governance Gate` (initially blocked by a protected-path hit on `terraform/modules/vercel/**`,
+resolved by removing the module — Cloudflare, not Vercel, is this platform's deployment target), `Lighthouse Audit` and `Cloudflare Pages: apex-omnihub` (both broken by the same
 root cause: `vite.config.ts` was missing the `@omnihub` alias that `tsconfig.app.json` already
 declared, so `tsc`/Vitest resolved `@omnihub/stores/omniSlateStore` but the production `vite build`
 could not). Full root-cause detail and the corrected verification claim: see
@@ -503,7 +503,7 @@ could not). Full root-cause detail and the corrected verification claim: see
 | `docs/APEX_AGENT_OPERATIONS.md` | §9.31 added — documents the 8 new Supabase edge functions (Lovable-API replacement + `omnilink-agent` proxy/guardian) and shared rate-limiter this PR introduces |
 | `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` | Corrected an inaccurate "VERIFIED" claim about the `@omnihub` alias (typecheck/Vitest passing had been conflated with a working production build); HEAD, edge-function count, and outstanding-operator-actions updated |
 | `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This entry |
-| PR #1602 description (GitHub, not a repo file) | Added the RSI Governance Gate's required protected-path evidence checklist for `terraform/modules/vercel/**` (new, unwired module — zero live plan diff expected, unverified against real HCP state) |
+| PR description (GitHub, not a repo file) | RSI Governance Gate evidence added, then simplified after the Vercel module (the only protected-path hit) was deleted — no checklist is required for the remaining critical-path (Supabase functions) hit |
 
 ### Outstanding — not closed by this pass
 
@@ -539,4 +539,4 @@ Per owner review, two further issues were corrected in the same PR:
 | Metric | Current | Evidence command |
 |---|---:|---|
 | Supabase function dirs | 41 (40 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d \| wc -l` |
-| Terraform modules | +1 new, unwired (`terraform/modules/vercel/`) | `grep -rn 'module "vercel"' terraform/` (0 references — not called by any environment root module) |
+| Terraform modules | 0 net-new (the `terraform/modules/vercel/` module added, then removed same-PR — Cloudflare is the deployment platform) | `git diff --name-only origin/main...HEAD -- terraform/` |
