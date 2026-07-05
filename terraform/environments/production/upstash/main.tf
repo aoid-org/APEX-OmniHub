@@ -18,7 +18,9 @@ resource "upstash_redis_database" "main" {
   region         = "global"
   primary_region = "us-east-1"
   tls            = true
-  eviction       = var.eviction_policy
+  # eviction is a bool (true = enable LRU eviction). The eviction policy is
+  # managed at the Upstash console level, not via Terraform.
+  eviction       = true
 
   # Provider >= 1.x enables multi-zone automatically for paid databases.
 }
