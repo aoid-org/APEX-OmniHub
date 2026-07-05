@@ -16,9 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_pyproject_caps_redis_below_incompatible_major() -> None:
     """redis-py 7.x rejects the ssl kwarg path used by current TLS startup code."""
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    redis_specs = [
-        dep for dep in pyproject["project"]["dependencies"] if dep.startswith("redis[")
-    ]
+    redis_specs = [dep for dep in pyproject["project"]["dependencies"] if dep.startswith("redis[")]
 
     assert redis_specs == ["redis[hiredis]>=5.0.0,<6.0.0"]
 
