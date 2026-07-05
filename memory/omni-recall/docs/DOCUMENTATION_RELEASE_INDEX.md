@@ -499,7 +499,6 @@ could not). Full root-cause detail and the corrected verification claim: see
 |---|---|
 | `vite.config.ts` | Added missing `@omnihub` alias to `resolve.alias`, mirroring the existing `@`/`@omniconnect` entries and the pre-existing `tsconfig.app.json` path mapping |
 | `.github/workflows/apex-governance.yml` | osv-scanner trigger no longer matches `*bun.lockb` (binary, unparseable by the pinned v1.9.2 — crashed with exit 127 on any PR touching it); `package-lock.json` remains the scanned `release_lockfile` per `policy/rsi-policy.yaml` |
-| `omnihub-landing/apps/omnihub-site/package-lock.json` | `npm audit fix` — 11 transitive dev-dependency CVEs patched (picomatch, postcss, rollup, vite, ws); `package.json` unchanged; 0 production runtime exposure |
 | `scripts/secret-scan.mjs` | Added `docs/architecture/TECHNICAL_ENHANCEMENTS.md`, `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`, `omnidev/references/testing.md` to `SYNTHETIC_FIXTURE_FILES` — illustrative/mock values, consistent with existing allowlisted sibling docs |
 | `docs/APEX_AGENT_OPERATIONS.md` | §9.31 added — documents the 8 new Supabase edge functions (Lovable-API replacement + `omnilink-agent` proxy/guardian) and shared rate-limiter this PR introduces |
 | `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_05.md` | Corrected an inaccurate "VERIFIED" claim about the `@omnihub` alias (typecheck/Vitest passing had been conflated with a working production build); HEAD, edge-function count, and outstanding-operator-actions updated |
@@ -513,6 +512,27 @@ Two items are explicitly filed as **not yet performed** in the PR #1602 RSI evid
 `terraform/environments/staging`, and a manual user-shoes validation pass of the dashboard flows
 on a real preview/staging deploy. Neither was fabricated as complete — both require operator
 access this remediation pass did not have.
+
+### Follow-up — scope cleanup + production-gap correction (same day, PR #1602)
+
+Per owner review, two further issues were corrected in the same PR:
+
+1. **Removed out-of-scope additions:** `omnihub-landing/apps/omnihub-site/**` (a brand-new,
+   unrelated landing-page subproject — 13 files) and six committed lint/typecheck scratch
+   files (`lint-report.json`, `lint_final.json`, `lint_final_clean.json`, `lint_last.json`,
+   `lint_results.json`, `typecheck_output.txt`) were removed. Neither was part of this PR's
+   stated scope; the osv-scanner workflow fix above stands independently of the removed
+   lockfile.
+2. **Corrected an overstated production-readiness claim:** `CURRENT_PLATFORM_STATE_2026_07_05.md`
+   previously marked performance/load and authenticated-OmniDash certification as blanket
+   **VERIFIED**. This did not match the repo's own canonical release authority
+   (`docs/release/release-validation-matrix.json`, `decision:
+   NO_GO_FOR_FULL_PRODUCTION_CERTIFICATION__HARNESS_READY_LIVE_GAPS_HONEST`). Corrected to
+   accurately reflect four open production gaps: performance/load uncertified, authenticated
+   OmniDash uncertified, honestly-labeled mock/demo behavior, and outstanding manual validation
+   across auth/OAuth/passkeys/RLS/BYOM/billing flows. None of these are introduced or closed by
+   PR #1602 — they are pre-existing, and this correction only fixes the documentation's claim
+   about them.
 
 ### Current count corrections (2026-07-05, post-remediation)
 
