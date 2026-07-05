@@ -11,8 +11,12 @@ async def test_cache_unsupported_ft_info():
         patch("infrastructure.cache.aioredis.from_url") as mock_from_url,
         patch("infrastructure.cache.validate_redis_search_compatibility"),
     ):
-        mock_redis = AsyncMock()
-        mock_from_url.return_value = mock_redis
+        mock_redis = MagicMock()
+
+        async def mock_from_url_coro(*_args, **_kwargs):
+            return mock_redis
+
+        mock_from_url.side_effect = mock_from_url_coro
 
         ft_mock = MagicMock()
         ft_mock.info = AsyncMock(
@@ -20,9 +24,9 @@ async def test_cache_unsupported_ft_info():
         )
         mock_redis.ft.return_value = ft_mock
 
-        cache = SemanticCacheService("redis://mock", "pass", False, "mock-model")
-        cache.embedding_model = MagicMock()
-        cache.embedding_model.get_sentence_embedding_dimension.return_value = 384
+        mock_model = MagicMock()
+        mock_model.get_sentence_embedding_dimension.return_value = 384
+        cache = SemanticCacheService("redis://mock", "pass", False, mock_model)
 
         await cache.initialize()
 
@@ -39,8 +43,12 @@ async def test_cache_unsupported_ft_create():
         patch("infrastructure.cache.aioredis.from_url") as mock_from_url,
         patch("infrastructure.cache.validate_redis_search_compatibility"),
     ):
-        mock_redis = AsyncMock()
-        mock_from_url.return_value = mock_redis
+        mock_redis = MagicMock()
+
+        async def mock_from_url_coro(*_args, **_kwargs):
+            return mock_redis
+
+        mock_from_url.side_effect = mock_from_url_coro
 
         # Make info pass to let it reach create_index
         ft_mock = MagicMock()
@@ -50,9 +58,9 @@ async def test_cache_unsupported_ft_create():
         )
         mock_redis.ft.return_value = ft_mock
 
-        cache = SemanticCacheService("redis://mock", "pass", False, "mock-model")
-        cache.embedding_model = MagicMock()
-        cache.embedding_model.get_sentence_embedding_dimension.return_value = 384
+        mock_model = MagicMock()
+        mock_model.get_sentence_embedding_dimension.return_value = 384
+        cache = SemanticCacheService("redis://mock", "pass", False, mock_model)
 
         await cache.initialize()
 
@@ -65,13 +73,17 @@ async def test_cache_store_plan_bypass():
         patch("infrastructure.cache.aioredis.from_url") as mock_from_url,
         patch("infrastructure.cache.validate_redis_search_compatibility"),
     ):
-        mock_redis = AsyncMock()
-        mock_from_url.return_value = mock_redis
+        mock_redis = MagicMock()
+
+        async def mock_from_url_coro(*_args, **_kwargs):
+            return mock_redis
+
+        mock_from_url.side_effect = mock_from_url_coro
 
         # Start without search support
-        cache = SemanticCacheService("redis://mock", "pass", False, "mock-model")
-        cache.embedding_model = MagicMock()
-        cache.embedding_model.encode = MagicMock(return_value=MagicMock())
+        mock_model = MagicMock()
+        mock_model.encode = MagicMock(return_value=MagicMock())
+        cache = SemanticCacheService("redis://mock", "pass", False, mock_model)
         cache.redis = mock_redis
         cache._search_supported = False
 

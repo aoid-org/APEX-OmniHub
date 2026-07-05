@@ -119,7 +119,7 @@ def validate_redis_search_compatibility() -> None:
     if getattr(IndexDefinition, "__name__", "") == "IndexDefinition" and not hasattr(
         IndexDefinition, "prefix"
     ):
-        pass
+        return
 
     missing_classes = [
         name
@@ -826,5 +826,8 @@ class SemanticCacheService:
         """Close Redis connection."""
         if self.redis:
             # aclose() replaced close() in redis-py 5.0.1; CI's stubs lag the API.
-            await self.redis.aclose()  # type: ignore[attr-defined]
+            try:
+                await self.redis.aclose()  # type: ignore[attr-defined]
+            except AttributeError:
+                await self.redis.close()
             logger.info("Redis connection closed")
