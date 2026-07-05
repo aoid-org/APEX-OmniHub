@@ -14,7 +14,7 @@ resource "upstash_redis_database" "main" {
   database_name = var.database_name
   region        = var.region
   tls           = true
-  eviction      = var.eviction_policy
+  eviction      = true
 
   # Provider now enables multi-zone automatically for paid databases.
 }
