@@ -89,4 +89,15 @@ describe('Omnidash Layout Contract', () => {
       expect(app.route).toMatch(/^\/omnidash/);
     }
   });
+
+  it('asserts left sidebar copies OmniTrace design language', () => {
+    const shellSource = readFileSync('apps/omnihub-site/dashboard/OmniDashShell.tsx', 'utf8');
+    expect(shellSource).toContain('const RAIL_WIDGET_FILL_ALPHA = 0.06;');
+    expect(shellSource).not.toContain('const RAIL_WIDGET_FILL_ALPHA = 0.30;');
+
+    const kpiSource = readFileSync('apps/omnihub-site/dashboard/components/SidebarKpiBar.tsx', 'utf8');
+    expect(kpiSource).toContain("background: omniRgba('orange', 0.06)");
+    expect(kpiSource).not.toContain("background: omniRgba('orange', 0.30)");
+  });
 });
+

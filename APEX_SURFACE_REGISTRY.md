@@ -577,7 +577,7 @@ Source: `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts`
 ---
 
 *Last generated: 2026-06-28 from live codebase inspection.*  
-*Updated 2026-06-30 → release `1.8.3` (PR #1529 — OmniDash surface fix pass): canvas-logo asset*
+*Updated 2026-07-04 → release `1.8.3` (PR #1529 — OmniDash surface fix pass): canvas-logo asset*
 *locked + enlarged/faded (`height:92, opacity:0.16`); glass-translucency / no-grid-bleed contract*
 *(`--omni-card` tokens +20% translucent: light 0.96, dark 0.936); ALL rail + sidebar glassmorph*
 *tiles unified — OmniTrace, OmniSentry, Ops Controls, OmniMedia, System Status (newly wrapped), and*
@@ -585,7 +585,7 @@ Source: `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts`
 *additive magnetic widget alignment (`resolveAlignment` before `resolveCollisions`). OmniMedia*
 *VALIDATED_FUNCTIONING — player proven; production backend confirmed (omnilink-port deployed,*
 *`omnimedia_assets` RLS + 4 policies, catalog empty pending owner upload).*
-*Frozen baseline + reproduction: `memory/omni-recall/omnidash-surface-1.8.3-baseline-2026-06-30.md`.*
-*Evidence: `docs/audits/omnidash-surface-alignment-glass-2026-06-30.md`.*  
+*Frozen baseline + reproduction: `memory/omni-recall/omnidash-surface-1.8.3-baseline-2026-07-04.md`.*
+*Evidence: `docs/audits/omnidash-surface-alignment-glass-2026-07-04.md`.*  
 *Update this file whenever surface ownership, module keys, paths, or DB tables change.*  
 *Canonical source files: `AGENTS.md`, `apps/omnihub-site/src/App.tsx`, `dashboard/contracts/omniSurfaceOwnership.ts`, `src/contracts/omnidash-sidebar-widgets.ts`, `dashboard/components/ModuleRenderer.tsx`*

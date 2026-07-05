@@ -191,4 +191,23 @@ describe('OmniTraceFeed', () => {
       expect(screen.getByText(/\ds ago/)).toBeTruthy();
     });
   });
+
+  it('maintains OmniTrace styling as the source of truth for left sidebar parity', () => {
+    render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
+    const feed = screen.getByTestId('omni-trace-feed');
+    
+    expect(feed.style.borderRadius).toBe('10px');
+    expect(feed.style.border).toContain('249, 115, 22, 0.25');
+    
+    // Test flat background color (no gradient)
+    expect(feed.style.background).toContain('rgba(249, 115, 22, 0.06)');
+    
+    // Check backdropFilter
+    const backdropFilter = feed.style.backdropFilter || (feed.style as any).WebkitBackdropFilter;
+    if (backdropFilter) {
+      expect(backdropFilter).toContain('blur(16px)');
+      expect(backdropFilter).toContain('saturate(140%)');
+    }
+  });
 });
+

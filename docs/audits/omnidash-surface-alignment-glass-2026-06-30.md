@@ -2,7 +2,7 @@
 
 **Mandate:** Surgical surface alignment + glassmorphism repair for OmniDash. Patch, not rewrite.
 **Branch:** `claude/omnidash-surface-alignment-fsrs31`
-**Date:** 2026-06-30
+**Date:** 2026-07-04
 **Scope:** App-Gallery brand logo, glass translucency (gallery tiles / primary cards / right-rail cards), Ops Controls card chrome, hero-row header alignment, magnetic widget snapping. No layout-law invariant changed.
 
 ---

@@ -194,7 +194,7 @@ It matches the real constraints:
 **Buyer:** SMB/mid-market ops leaders, founders, agencies, automation leads.  
 **Price:** CAD 5,000-15,000 setup.  
 **Includes:** workflow diagnosis, intelligence framework, OmniHub activation map, trust/resilience review, one working proof workflow plan.  
-**Metric:** two paid sprints by 2026-06-30.
+**Metric:** two paid sprints by 2026-07-04.
 
 ### Offer C - OmniHub Activation Pilot
 
@@ -221,7 +221,7 @@ It matches the real constraints:
 **Buyer:** Canadian O&G finance/vendor ops.  
 **Price:** CAD 5,000 setup + CAD 2,500-7,500/month pilot.  
 **Rule:** no serious outreach until Cloudflare-clean.  
-**Metric:** one discovery by 2026-06-30, one proposal by 2026-07-31.
+**Metric:** one discovery by 2026-07-04, one proposal by 2026-07-31.
 
 ---
 
@@ -280,7 +280,7 @@ It matches the real constraints:
 
 ### Phase 3 - Aggressive No-Cost GTM Activation
 
-**Dates:** 2026-05-29 to 2026-06-30  
+**Dates:** 2026-05-29 to 2026-07-04  
 **Theme:** maximize rejection volume without spending money.
 
 | Date Range | Task | Agent/Owner | Done When |
