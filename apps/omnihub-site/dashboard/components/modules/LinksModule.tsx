@@ -85,7 +85,7 @@ export default function LinksModule({ onClose }: Props) {
             id: item.id,
             kind: 'link',
             label: item.label,
-            source: 'handoff',
+            source: 'system',
             health: 'healthy',
             metadata: { url: item.label },
             droppedAt: new Date().toISOString()
@@ -100,7 +100,7 @@ export default function LinksModule({ onClose }: Props) {
             id: local.id,
             kind: 'link',
             label: local.url,
-            source: 'handoff',
+            source: 'system',
             health: 'healthy',
             metadata: { url: local.url },
             droppedAt: new Date().toISOString()
