@@ -55,14 +55,16 @@ try:
 except ImportError:
     try:
         # Try redis-py v5.x alternate path
-        from redis.commands.search.indexDefinition import (
+        from redis.commands.search.indexDefinition import (  # type: ignore[no-redef]
             IndexDefinition,
             IndexType,
         )
     except ImportError:
-        # Fallback: define minimal stubs for typing (tests can mock these)
-        IndexDefinition = type("IndexDefinition", (), {})
-        IndexType = type("IndexType", (), {})
+        # Fallback: define minimal stubs for typing (tests can mock these).
+        # Intentional runtime redefinition across a version-compat try/except
+        # ladder -- mypy cannot narrow this statically across branches.
+        IndexDefinition = type("IndexDefinition", (), {})  # type: ignore[misc,assignment]
+        IndexType = type("IndexType", (), {})  # type: ignore[misc,assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +397,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis[bytes] | None = None
+        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
         if isinstance(embedding_model, str):
             # Heavy path: lazy import so injected-encoder deployments never
@@ -564,7 +566,9 @@ class SemanticCacheService:
 
         # Step 5: Rehydrate plan with actual parameters
         template_id = best_match.template_id
-        plan_steps_json = await self.redis.hget(f"{self.key_prefix}{template_id}", "plan_steps")
+        plan_steps_json = await self.redis.hget(  # type: ignore[misc]
+            f"{self.key_prefix}{template_id}", "plan_steps"
+        )
 
         if not plan_steps_json:
             return None
@@ -575,7 +579,9 @@ class SemanticCacheService:
         injected_steps = self._inject_parameters(plan_steps, parameters)
 
         # Increment hit count
-        await self.redis.hincrby(f"{self.key_prefix}{template_id}", "hit_count", 1)
+        await self.redis.hincrby(  # type: ignore[misc]
+            f"{self.key_prefix}{template_id}", "hit_count", 1
+        )
 
         logger.info(f"Cache HIT (similarity={similarity:.3f}, template={template_id})")
 
@@ -663,7 +669,7 @@ class SemanticCacheService:
         )
 
         # Store in Redis as hash
-        await self.redis.hset(
+        await self.redis.hset(  # type: ignore[misc]
             f"{self.key_prefix}{template_id}",
             mapping={
                 "template_id": plan_template.template_id,
