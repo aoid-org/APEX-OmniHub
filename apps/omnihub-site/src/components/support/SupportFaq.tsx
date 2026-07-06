@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
 ];
 
 export function SupportFaq() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   return (
     <section
@@ -42,12 +42,12 @@ export function SupportFaq() {
         Frequently Asked Questions
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {FAQ_ITEMS.map((item, idx) => (
+        {FAQ_ITEMS.map((item) => (
           <div
-            key={idx}
+            key={item.q}
             style={{
-              background: openFaq === idx ? 'rgba(196,81,26,0.07)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${openFaq === idx ? 'rgba(196,81,26,0.35)' : 'rgba(255,255,255,0.08)'}`,
+              background: openFaq === item.q ? 'rgba(196,81,26,0.07)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${openFaq === item.q ? 'rgba(196,81,26,0.35)' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: '14px',
               overflow: 'hidden',
               transition: 'all 0.2s',
@@ -55,8 +55,8 @@ export function SupportFaq() {
           >
             <button
               type="button"
-              onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-              aria-expanded={openFaq === idx}
+              onClick={() => setOpenFaq(openFaq === item.q ? null : item.q)}
+              aria-expanded={openFaq === item.q}
               style={{
                 width: '100%',
                 padding: '18px 24px',
@@ -81,13 +81,13 @@ export function SupportFaq() {
                   flexShrink: 0,
                   color: '#C4511A',
                   transition: 'transform 0.2s',
-                  transform: openFaq === idx ? 'rotate(45deg)' : 'rotate(0)',
+                  transform: openFaq === item.q ? 'rotate(45deg)' : 'rotate(0)',
                 }}
               >
                 +
               </span>
             </button>
-            {openFaq === idx && (
+            {openFaq === item.q && (
               <div
                 style={{
                   padding: '0 24px 18px',

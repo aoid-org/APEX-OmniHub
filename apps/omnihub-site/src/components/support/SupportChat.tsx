@@ -39,7 +39,8 @@ export function SupportChat() {
     setIsSending(true);
 
     // Simulate agent response — replace with real AI endpoint when available.
-    await new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
+    const randomVal = window.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295;
+    await new Promise((r) => setTimeout(r, 900 + randomVal * 600));
 
     const agentResponse: ChatMessage = {
       id: `agent-${Date.now()}`,
