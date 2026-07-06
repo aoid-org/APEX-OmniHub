@@ -49,7 +49,7 @@
    * ============================================================ */
   var CAPS = [
     {
-      name: 'OmniPort', tag: 'UNIVERSAL CONNECTOR NETWORK',
+      name: 'OmniBoard', tag: 'UNIVERSAL CONNECTOR NETWORK',
       lead: 'Connect your legacy, Web2, Web3, AI, and blockchain applications with total ease. A single secure doorway links OmniHub to the tools you already rely on. We don\'t replace your systems; we unify them without leaving anything behind.',
       chips: ['Universal Connector Network', 'Single controlled port', 'Legacy \u00b7 Web2 \u00b7 Web3', 'AI \u00b7 NFT \u00b7 Blockchain'],
       demo: 'omniport', pos: [0, 2, 0], size: 1.15
@@ -97,7 +97,7 @@
       demo: 'byom', pos: [-48, -8, -370], size: 1.15
     },
     {
-      name: 'SkillForge / OmniSkills', tag: 'EXPERT SKILLS, GOVERNED',
+      name: 'OmniSkills', tag: 'EXPERT SKILLS, GOVERNED',
       lead: 'Create, install, and manage expert-level OmniSkills. These are packaged sets of expertise that your agents can easily learn and apply, all while following the same consistent rules across the platform.',
       chips: ['Forge', 'Install', 'Govern', 'OmniSkills'],
       demo: 'skillforge', pos: [46, 18, -422], size: 1.1
@@ -396,7 +396,7 @@
       root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
       root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Pick any system and watch it connect through a single controlled port. No custom integration is needed.</div>'));
       var grid = el('div', 'ohsm-dgrid');
-      var p = pipeline(['SYSTEM', 'OMNIPORT', 'OMNIHUB']);
+      var p = pipeline(['SYSTEM', 'OMNIBOARD', 'OMNIHUB']);
       var log = el('div', 'ohsm-log');
       ['Legacy ERP', 'CRM', 'Web3 Wallet', 'LLM API', 'NFT Registry'].forEach(function (name) {
         var b = el('button', 'ohsm-dbtn', name);

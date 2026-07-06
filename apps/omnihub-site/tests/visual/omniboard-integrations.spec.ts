@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -60,7 +60,7 @@ test.describe('OmniBoard Real-World App Integrations', () => {
            await page.screenshot({ path: path.join(snapshotsDir, `omniboard-${app.type}-${app.name.toLowerCase()}-connected.png`) });
         }
       } else {
-        console.log(`Could not find ${app.name} button in OmniBoard.`);
+        console.warn(`Could not find ${app.name} button in OmniBoard.`);
       }
       
       // To reset, we can just click the OmniBoard button again or refresh
