@@ -5,7 +5,7 @@
  * Brand colors:
  * - White: Primary background, clean/premium
  * - APEX Navy: #0f1729 (hsl(216, 65%, 14%))
- * - Burnt Orange: #c4571c (hsl(20, 76%, 44%)) - use sparingly as authorization/energy accent
+ * - Burnt Orange: #be5019 (hsl(20, 76%, 42%)) - use sparingly as authorization/energy accent
  *
  * Fonts: Self-hosted system font stack (no external dependencies)
  * See fonts.css for font-face definitions and feature settings.
@@ -21,7 +21,7 @@
   --color-white: #ffffff;
   --color-navy: #0f1729;
   --color-navy-light: #1e293b;
-  --color-orange: #c4571c;
+  --color-orange: #be5019;
   --color-orange-light: #ea7c44;
 
   /* Semantic tokens */
@@ -30,7 +30,7 @@
   --color-surface-elevated: var(--color-white);
   --color-text-primary: var(--color-navy);
   --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
+  --color-text-muted: #576575;
   --color-border: #e2e8f0;
   --color-border-subtle: #f1f5f9;
   --color-accent: var(--color-orange);

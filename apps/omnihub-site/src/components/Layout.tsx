@@ -278,7 +278,6 @@ function Footer() {
         style={{
           fontSize: "0.75rem",
           color: "var(--color-text-secondary)",
-          opacity: 0.7,
           paddingTop: "var(--space-4)",
           borderTop: "1px solid var(--color-border)",
           marginTop: "var(--space-4)",
