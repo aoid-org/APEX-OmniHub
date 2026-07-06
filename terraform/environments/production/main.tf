@@ -61,7 +61,7 @@ variable "target_slot" {
 }
 
 locals {
-  origin_cname = var.target_slot == "production-shadow" ? "shadow.omnihub.pages.dev" : "active.omnihub.pages.dev"
+  origin_cname = var.target_slot == "production-shadow" ? "omnihub-production-shadow.pages.dev" : "apex-omnihub.pages.dev"
 }
 
 provider "cloudflare" {
