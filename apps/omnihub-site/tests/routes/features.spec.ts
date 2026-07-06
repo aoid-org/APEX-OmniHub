@@ -62,7 +62,7 @@ test.describe('Feature Links', () => {
     // items have `href` property.
 
     await expect(page.locator('a[href="/ai-automation.html#modular-adapters"]')).toBeVisible();
-    await expect(page.locator('a[href="/smart-integrations.html#single-port"]')).toBeVisible();
+    await expect(page.locator('a[href="/omniboard.html"]')).toBeVisible();
     await expect(page.locator('a[href="/advanced-analytics.html#receipts-idempotency"]')).toBeVisible();
   });
 });

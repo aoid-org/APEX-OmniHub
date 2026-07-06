@@ -704,7 +704,7 @@
 }
 
 .nav__btn-pill--orange {
-  background-color: var(--color-orange, #c4571c);
+  background-color: var(--color-orange, #FF6D00);
   color: #ffffff !important;
 }
 

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX Manifesto | We Don't Build Apps. We Build Worlds.</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&display=swap");
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* APEX OmniHub True Brand Colors */
+  --apex:   #FF6D00; /* Vibrant Brand Orange */
+  --apex2:  #FF8E00; /* Hover Orange */
+  --gold:   #38BDF8; /* OmniHub Tech Cyan */
+  --dark:   #060F1A; /* Deep Navy Space */
+  --mid:    #0B1727; /* Raised Navy */
+  --panel:  #112136; /* UI Panel Base */
+  --border: #1E3655; /* Grid / Border Blue */
+  --text:   #F8FAFC; /* Pristine White */
+  --sub:    #94A3B8; /* Slate Gray */
+  --muted:  #475569; /* Muted Slate */
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--dark);
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  overflow-x: hidden;
+}
+
+#progress {
+  position: fixed; top: 0; left: 0;
+  height: 2px; width: 0%;
+  background: linear-gradient(90deg, var(--gold), var(--apex));
+  z-index: 1000; transition: width 0.08s linear;
+  box-shadow: 0 0 12px var(--apex);
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 20px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(6,15,26,0.95), transparent);
+}
+.nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; color: var(--text); }
+.nav-logo span { color: var(--apex); }
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a { font-size: 10px; letter-spacing: 0.25em; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+.nav-links a:hover { color: var(--apex); }
+
+/* ANIMATION SAFEGUARDS (No permanent invisibility) */
+@keyframes riseIn { 
+  0% { opacity: 0; transform: translateY(28px); } 
+  100% { opacity: 1; transform: translateY(0); } 
+}
+@keyframes ping { 
+  0%,100% { box-shadow: 0 0 6px currentColor; } 
+  50% { box-shadow: 0 0 18px currentColor; } 
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  padding: 140px 60px 100px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.hero-glow {
+  position: absolute; top: -300px; right: -300px;
+  width: 900px; height: 900px;
+  background: radial-gradient(circle, rgba(255,109,0,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-glow2 {
+  position: absolute; bottom: -200px; left: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-size: 10px; letter-spacing: 0.35em; color: var(--gold); text-transform: uppercase; margin-bottom: 30px;
+  position: relative; z-index: 1;
+  animation: riseIn 0.9s 0.2s both;
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 13vw, 190px);
+  line-height: 0.88; letter-spacing: 0.02em;
+  position: relative; z-index: 1; color: var(--text);
+  animation: riseIn 1s 0.35s both;
+}
+.hero-title .accent { color: var(--apex); }
+.hero-title .gold   { color: var(--gold); }
+.hero-subtitle {
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  font-size: clamp(16px, 2.2vw, 26px); color: var(--sub);
+  margin-top: 36px; max-width: 680px; line-height: 1.55;
+  position: relative; z-index: 1;
+  animation: riseIn 0.9s 0.6s both;
+}
+.hero-subtitle b { color: var(--text); font-weight: 400; }
+.hero-verdict {
+  margin-top: 56px; display: flex; gap: 40px; flex-wrap: wrap;
+  position: relative; z-index: 1;
+  animation: riseIn 0.9s 0.9s both;
+}
+.verdict-pill { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sub); }
+.verdict-dot { width: 8px; height: 8px; border-radius: 50%; animation: ping 2s ease-in-out infinite; }
+.verdict-dot green  { background: #22C55E; box-shadow: 0 0 10px rgba(34,197,94,0.5); }
+.verdict-dot gold   { background: var(--apex); box-shadow: 0 0 10px rgba(255,109,0,0.5); }
+.verdict-dot red    { background: var(--gold); box-shadow: 0 0 10px rgba(56,189,248,0.5); }
+.hero-scroll {
+  position: absolute; bottom: 40px; left: 60px;
+  font-size: 9px; letter-spacing: 0.3em; color: var(--muted); text-transform: uppercase;
+  display: flex; align-items: center; gap: 14px;
+  animation: riseIn 0.8s 1.4s both;
+}
+
+/* SECTIONS */
+.section { padding: 110px 60px; border-bottom: 1px solid var(--border); position: relative; }
+.section-tag {
+  font-size: 9px; letter-spacing: 0.4em; color: var(--apex); text-transform: uppercase;
+  margin-bottom: 52px; display: flex; align-items: center; gap: 16px;
+}
+.section-tag::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,109,0,0.3), transparent); }
+
+/* THESIS */
+.thesis-body {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 3.2vw, 44px); line-height: 1.35; max-width: 980px;
+}
+.thesis-body strong { color: var(--apex); font-weight: 400; }
+.thesis-body em     { font-style: normal; color: var(--gold); }
+.thesis-pull {
+  margin-top: 64px; padding: 40px 48px;
+  border-left: 3px solid var(--apex); background: var(--panel);
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  font-size: clamp(16px, 1.8vw, 22px); color: var(--sub); line-height: 1.6; max-width: 800px;
+}
+
+/* TRIFORCE */
+.triforce-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+}
+@media(max-width:900px){ .triforce-grid{grid-template-columns:1fr} }
+.triforce-card {
+  background: var(--mid); padding: 48px 40px;
+  position: relative; overflow: hidden; transition: background 0.3s;
+}
+.triforce-card:hover { background: var(--panel); }
+.triforce-card::before {
+  content: ''; position: absolute; top: 0; left: 0; height: 2px; width: 0%;
+  background: linear-gradient(90deg, var(--gold), var(--apex)); transition: width 0.45s;
+}
+.triforce-card:hover::before { width: 100%; }
+.tf-icon   { font-size: 32px; margin-bottom: 24px; display: block; filter: drop-shadow(0 0 8px rgba(255,109,0,0.3)); }
+.tf-number { font-size: 9px; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+.tf-title  { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 0.06em; margin-bottom: 16px; line-height: 1; color: var(--text); }
+.tf-body   { font-size: 12.5px; line-height: 1.75; color: var(--sub); font-weight: 300; }
+
+/* MAESTRO */
+.maestro-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+@media(max-width:900px){ .maestro-layout{grid-template-columns:1fr} }
+.maestro-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 7.5vw, 108px); line-height: 0.88; letter-spacing: 0.03em; margin-bottom: 28px;
+}
+.maestro-headline .m-acc { color: var(--apex); }
+.maestro-desc { font-family: 'DM Serif Display', serif; font-size: clamp(15px, 1.6vw, 20px); color: var(--sub); line-height: 1.65; }
+.maestro-lanes { display: flex; flex-direction: column; gap: 2px; }
+.lane {
+  display: flex; align-items: center; gap: 20px;
+  padding: 18px 24px; background: var(--panel); border: 1px solid var(--border); transition: border-color 0.25s;
+}
+.lane:hover { border-color: rgba(56,189,248,0.2); }
+.lane-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.lane-dot green  { background: #22C55E; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+.lane-dot yellow { background: #FBBF24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+.lane-dot red    { background: #EF4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+.lane-dot blk    { background: var(--muted); }
+.lane-label { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.08em; width: 80px; flex-shrink: 0; }
+.lane-desc  { font-size: 11.5px; color: var(--sub); font-weight: 300; line-height: 1.4; }
+.receipts-box { margin-top: 24px; padding: 24px; background: var(--panel); border: 1px solid var(--border); }
+.receipts-box .rb-label { font-size: 9px; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+.receipts-box p { font-size: 12.5px; color: var(--sub); line-height: 1.75; font-weight: 300; }
+.receipts-box b { color: var(--text); font-weight: 400; }
+
+/* ECOSYSTEM */
+.ecosystem-intro {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(20px, 2.5vw, 32px); line-height: 1.4; max-width: 800px; margin-bottom: 60px;
+}
+.ecosystem-intro em { font-style: normal; color: var(--apex); }
+.products-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+}
+.product-card {
+  background: var(--mid); padding: 32px 32px 28px;
+  position: relative; overflow: hidden; transition: background 0.25s;
+}
+.product-card:hover { background: var(--panel); }
+.product-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--apex), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.product-card:hover::after { opacity: 1; }
+.product-card.hub {
+  background: var(--panel); border: 1px solid rgba(255,109,0,0.3); grid-column: span 2;
+}
+@media(max-width:700px){ .product-card.hub{grid-column:span 1} }
+.product-tag  { font-size: 9px; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+.product-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.06em; margin-bottom: 10px; }
+.product-name.big { font-size: 40px; color: var(--apex); }
+.product-name span { color: var(--apex); }
+.product-pitch { font-size: 12.5px; color: var(--sub); line-height: 1.65; font-weight: 300; }
+.product-pitch.lg { font-size: 14px; max-width: 700px; }
+
+/* DECLARATIONS */
+.decl-item {
+  display: grid; grid-template-columns: 52px 1fr; gap: 28px; align-items: start;
+  padding: 32px 0; border-bottom: 1px solid var(--border);
+}
+.decl-item.reveal {
+  opacity: 1; /* Fallback safe */
+  animation: none;
+}
+.decl-n    { font-size: 10px; color: var(--apex); letter-spacing: 0.15em; padding-top: 6px; }
+.decl-text { font-family: 'DM Serif Display', serif; font-size: clamp(18px, 2.1vw, 26px); line-height: 1.4; }
+.decl-text em     { font-style: normal; color: var(--gold); }
+.decl-text strong { font-weight: 400; color: var(--apex); }
+
+/* PROOF */
+.proof-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+@media(max-width:860px){ .proof-layout{grid-template-columns:1fr} }
+.proof-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(42px, 7vw, 96px); line-height: 0.9; letter-spacing: 0.03em; margin-bottom: 24px;
+}
+.proof-headline .pa { color: var(--apex); }
+.proof-desc { font-size: 13px; color: var(--sub); line-height: 1.75; max-width: 520px; font-weight: 300; }
+.metrics-table { display: flex; flex-direction: column; gap: 2px; }
+.metric-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; background: var(--panel); border: 1px solid var(--border); gap: 20px;
+}
+.metric-label { font-size: 11px; color: var(--text); letter-spacing: 0.05em; font-weight: 300; flex: 1; }
+.metric-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.05em; white-space: nowrap; color: var(--apex); }
+.badge { font-size: 8px; letter-spacing: 0.2em; padding: 3px 8px; border-radius: 2px; text-transform: uppercase; flex-shrink: 0; border: 1px solid var(--border); }
+.b-green { background: rgba(34,197,94,0.1);  color: #22C55E; border-color: rgba(34,197,94,0.2); }
+.b-apex  { background: rgba(255,109,0,0.1);  color: var(--apex); border-color: rgba(255,109,0,0.2); }
+.b-gold  { background: rgba(56,189,248,0.1); color: var(--gold); border-color: rgba(56,189,248,0.2); }
+
+.arma-cert {
+  margin-top: 48px; background: var(--panel); border: 1px solid var(--border);
+  padding: 40px; font-size: 11px; line-height: 2.1; color: var(--sub); font-weight: 300;
+  position: relative; overflow: hidden;
+}
+.arma-cert::before {
+  content: 'ARMAGEDDON';
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: 'Bebas Neue', sans-serif; font-size: 96px; color: var(--apex);
+  opacity: 0.03; pointer-events: none; white-space: nowrap; letter-spacing: 0.1em;
+}
+.arma-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.08em; color: var(--apex); margin-bottom: 20px; }
+.arma-line b { color: var(--text); }
+
+.closing { 
+  padding: 180px 60px; 
+  text-align: center; 
+  position: relative; 
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.closing-bg {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: 'Bebas Neue', sans-serif; 
+  font-size: clamp(200px, 40vw, 600px);
+  color: transparent; 
+  -webkit-text-stroke: 4px rgba(255,109,0,0.06); 
+  pointer-events: none; white-space: nowrap; letter-spacing: 0.02em;
+  z-index: 0;
+}
+.closing-content { position: relative; z-index: 1; }
+.closing-quote {
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  font-size: clamp(24px, 4vw, 42px); line-height: 1.4; 
+  max-width: 900px; margin: 0 auto 30px; color: var(--sub);
+}
+.closing-cta {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(70px, 12vw, 160px); 
+  letter-spacing: 0.02em; line-height: 0.85; 
+  margin: 0; color: var(--text);
+  text-transform: uppercase;
+}
+.closing-cta-sub {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(32px, 5.5vw, 85px); 
+  letter-spacing: 0.04em; line-height: 1; 
+  margin-top: 24px; color: var(--apex);
+  text-transform: uppercase;
+}
+.closing-sig { 
+  margin-top: 80px; font-size: 11px; letter-spacing: 0.35em; 
+  color: var(--muted); text-transform: uppercase; 
+}
+.closing-sig::before { content: '| '; color: var(--apex); font-weight: bold; margin-right: 8px;}
+
+/* FALLBACK REVEAL LOGIC */
+.reveal {
+  opacity: 1; 
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo"><span>APEX</span> BUSINESS SYSTEMS</div>
+  <ul class="nav-links">
+    <li><a href="#thesis">Thesis</a></li>
+    <li><a href="#triforce">Architecture</a></li>
+    <li><a href="#maestro">MAESTRO</a></li>
+    <li><a href="#ecosystem">Ecosystem</a></li>
+    <li><a href="#declarations">Declarations</a></li>
+    <li><a href="#proof">Proof</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-eyebrow">APEX Business Systems Ltd. | Edmonton, Alberta | Founding Manifesto | 2026</div>
+  
+  <h1 class="hero-title">
+    We Don't<br>
+    <span class="accent">Build Apps.</span><br>
+    We Build The<br>
+    <span class="gold">Platform For Your Life.</span>
+  </h1>
+
+  <p class="hero-subtitle">
+    One platform. Every vertical. Every life. <b>Your unfair advantage.</b><br>
+    This is our promise to you. We refuse to be ordinary. We have the architecture, the proof, and the ambition to back it up.
+  </p>
+  <div class="hero-verdict">
+    <div class="verdict-pill"><div class="verdict-dot green"></div>Production Ready</div>
+    <div class="verdict-pill"><div class="verdict-dot gold"></div>485 / 485 Tests Passed</div>
+    <div class="verdict-pill"><div class="verdict-dot red"></div>ARMAGEDDON God Mode Cleared</div>
+  </div>
+  <div class="hero-scroll">scroll to read the manifesto</div>
+</section>
+
+<section class="section reveal" id="thesis">
+  <div class="section-tag">The Thesis</div>
+  <p class="thesis-body">
+    The future belongs to builders who see the <strong>whole picture.</strong><br>
+    Life doesn't happen in neat, separate boxes.<br>
+    The tools you rely on every day should be as <strong>connected as the life you live.</strong>
+  </p>
+  <div class="thesis-pull">
+    "We saw a catastrophic failure in modern software: life is interconnected, but our tools are fragmented. People don't need another siloed app; they need an orchestration engine that deeply understands their context and executes with absolute, provable safety across every area of their lives. So we built the nervous system to connect it all. And we deliver it at a velocity the industry cannot match."
+    <br><br>| APEX OmniLink Investment Memorandum, v1.0.0 (Ascension)
+  </div>
+</section>
+
+<section class="section" id="triforce">
+  <div class="section-tag reveal">The Tri-Force Engine | A Living Ecosystem</div>
+  <div class="triforce-grid">
+    <div class="triforce-card">
+      <span class="tf-icon">🛡️</span>
+      <div class="tf-number">Layer 01 | Guardian</div>
+      <div class="tf-title">Total Safety</div>
+      <p class="tf-body">We built massive defensive walls to protect your data. Every request is filtered instantly. Every single action is scanned to ensure compliance. Your privacy stays private.</p>
+    </div>
+    <div class="triforce-card">
+      <span class="tf-icon">🧠</span>
+      <div class="tf-number">Layer 02 | Planner</div>
+      <div class="tf-title">Deep Logic</div>
+      <p class="tf-body">We take your complex goals and turn them into clear, actionable steps in milliseconds. Our system breaks down what you need, finds the exact right tools for the job, and ensures everything happens in perfect order.</p>
+    </div>
+    <div class="triforce-card">
+      <span class="tf-icon">🔧</span>
+      <div class="tf-number">Layer 03 | Executor</div>
+      <div class="tf-title">Flawless Action</div>
+      <p class="tf-body">Plans become reality through strict retry logic and heavy oversight. Every action leaves a tamper-proof trail. Our system is designed to never crash. Even in the worst-case scenarios, we keep your data secure and controlled.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="maestro">
+  <div class="section-tag reveal">MAESTRO | How We Keep You Safe</div>
+  <div class="maestro-layout">
+    <div class="reveal">
+      <div class="maestro-headline">
+        <span class="m-acc">M</span>emory<br>
+        <span class="m-acc">A</span>ugmented<br>
+        <span class="m-acc">E</span>xecution<br>
+        <span class="m-acc">S</span>ync to<br>
+        <span class="m-acc">R</span>eproduce<br>
+        <span class="m-acc">O</span>rchestration
+      </div>
+      <p class="maestro-desc">MAESTRO is not a buzzword. It is the operating philosophy of everything we build. Your intent becomes safe, auditable action. Every step leaves proof you can trust.</p>
+    </div>
+    <div class="reveal">
+      <p style="font-size:11px;color:var(--gold);letter-spacing:0.2em;margin-bottom:18px;text-transform:uppercase;">Risk Lane Architecture</p>
+      <div class="maestro-lanes">
+        <div class="lane">
+          <div class="lane-dot green"></div>
+          <div class="lane-label">GREEN</div>
+          <div class="lane-desc">Executes automatically. Trusted, low-risk actions flow without friction.</div>
+        </div>
+        <div class="lane">
+          <div class="lane-dot yellow"></div>
+          <div class="lane-label">YELLOW</div>
+          <div class="lane-desc">Runs with amplified tracking and tighter limits. We watch it closely.</div>
+        </div>
+        <div class="lane">
+          <div class="lane-dot red"></div>
+          <div class="lane-label">RED</div>
+          <div class="lane-desc">MAN Mode. Paused completely until a human explicitly approves. You stay in control.</div>
+        </div>
+        <div class="lane">
+          <div class="lane-dot blk"></div>
+          <div class="lane-label">BLOCKED</div>
+          <div class="lane-desc">Hard stop. Security event raised. No side effects. No exceptions.</div>
+        </div>
+      </div>
+      <div class="receipts-box">
+        <div class="rb-label">The Receipts Moat</div>
+        <p>Before any action is taken, OmniHub claims a receipt. If the same request is duplicated, our system stops it dead. <b>No duplicate emails. No double charges. No repeated records. Ever.</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="ecosystem">
+  <div class="section-tag reveal">The Ecosystem, Not An Empire</div>
+  <p class="ecosystem-intro reveal">
+    Fourteen products. One nervous system. Every app in the APEX ecosystem connects back to OmniHub. We built these to serve <em>the actual texture of real human life.</em>
+  </p>
+  <div class="products-grid">
+    <div class="product-card hub reveal">
+      <div class="product-tag">Central Intelligence | Control Tower</div>
+      <div class="product-name big">APEX OmniHub</div>
+      <p class="product-pitch lg">The platform that connects everything. OmniHub orchestrates your life across AI agents and enterprise apps. Powered by MAESTRO and the Tri-Force engine, it promises provable, auditable execution. Optional-by-default. Compliance-ready.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Security | Adversarial Test Suite</div>
+      <div class="product-name">Armageddon<span>L7</span></div>
+      <p class="product-pitch">Compliance is a checklist. Armageddon is a guarantee. This adversarial AI test suite runs 13 rigorous batteries—from prompt injection to memory poisoning—proving your architecture is secure before it ships.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Trades | AI Receptionist</div>
+      <div class="product-name">Trade<span>Line</span>247</div>
+      <p class="product-pitch">Never miss a lead again. TradeLine 24/7 is the always-on AI receptionist built for trade businesses. It answers calls, captures jobs, and books appointments around the clock so you can stay on the tools.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Finance | Oil & Gas Accounts Payable</div>
+      <div class="product-name">FLOW<span>Bills</span></div>
+      <p class="product-pitch">Heavy-duty clarity for complex industries. FlowBills brings precision AP automation specifically to the Oil & Gas sector. We track every expense and put you back in control of your capital without the spreadsheet chaos.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Clarity | Decision Intelligence</div>
+      <div class="product-name">a<span>Spiral</span></div>
+      <p class="product-pitch">Transform confusion into clarity. aSpiral cuts through the noise and gives builders, operators, and thinkers a structured path from overwhelm to decisive, confident action.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Accessibility | AI Vision</div>
+      <div class="product-name">Stride<span>Guide</span>AI</div>
+      <p class="product-pitch">Independence restored. StrideGuideAI is an offline-capable AI vision assistant for blind and low-vision users. Get real-time navigation and scene understanding that works even when connectivity fails.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Automotive | Dealership Operations</div>
+      <div class="product-name">AutoRep<span>AI</span></div>
+      <p class="product-pitch">The AI platform built for the showroom floor. AutoRepAI brings advanced intelligence to automotive dealerships to streamline operations, customer interactions, and sales workflows.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Education | Toddler Mentorship</div>
+      <div class="product-name">Jubee<span>Love</span></div>
+      <p class="product-pitch">Early learning that kids actually love. JubeeLove delivers patient, interactive toddler mentorship. We make education joyful and perfectly tailored for young, growing minds.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Connection | Voice AI Dating</div>
+      <div class="product-name">Tru<span>Talk</span></div>
+      <p class="product-pitch">Voice-first dating reimagined. TruTalk connects people through authentic conversation with AI-powered matching and real-time translation across dozens of languages. Love shouldn't have a barrier.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Security | Digital Vault</div>
+      <div class="product-name">Keep<span>Safe</span></div>
+      <p class="product-pitch">Your digital life, locked down and protected. KeepSafe offers impenetrable storage for your most vital documents and memories, accessible only by you.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Gaming | Kids Rewards</div>
+      <div class="product-name">Robux<span>Miner</span>Pro</div>
+      <p class="product-pitch">Safe, structured gaming rewards. We built a platform that allows kids to earn in-game currency through positive habits and educational milestones, giving parents ultimate peace of mind.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Agriculture | Crop Intelligence</div>
+      <div class="product-name">Agrisense<span>Hub</span></div>
+      <p class="product-pitch">Smart farming from the ground up. Agrisense Hub delivers real-time soil, weather, and crop intelligence directly to the farmers who feed the world.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Productivity | Idea Generation</div>
+      <div class="product-name">Bright<span>B</span></div>
+      <p class="product-pitch">Illuminating your best ideas. Bright B acts as your creative sounding board, helping you organize thoughts, draft concepts, and execute creative projects faster.</p>
+    </div>
+    <div class="product-card reveal">
+      <div class="product-tag">Health | Family Coordination</div>
+      <div class="product-name">Care<span>Connect</span></div>
+      <p class="product-pitch">Bridging the gap between families and healthcare providers. CareConnect organizes medical schedules, medication reminders, and vital updates so you can focus on caring for the people you love.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="declarations">
+  <div class="section-tag reveal">The Declarations</div>
+  <div class="declarations">
+    <div class="decl-item reveal">
+      <div class="decl-n">01</div>
+      <div class="decl-text">We will <strong>never ship slow.</strong> Our proprietary methods compress development from days to hours. We hold ourselves to this baseline every single sprint.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">02</div>
+      <div class="decl-text">We will <strong>never carry technical debt.</strong> Clean code is mandatory. Our architecture will scale as perfectly in year ten as it does on day one.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">03</div>
+      <div class="decl-text">We will <strong>never trust without verification.</strong> Zero Trust is the architecture we build upon. We verify explicitly and protect your environment constantly.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">04</div>
+      <div class="decl-text">We will <strong>never let AI act without a human in the loop</strong> when the stakes are high. Genuine intelligence knows exactly when to pause and ask for permission.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">05</div>
+      <div class="decl-text">We will <strong>never build just for demos.</strong> We build for real life. Every claim we make is backed by rigorous testing and hardcore engineering.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">06</div>
+      <div class="decl-text">We will <strong>never lock our customers in.</strong> Every app we build works beautifully on its own. We earn our place in your life every single day.</div>
+    </div>
+    <div class="decl-item reveal">
+      <div class="decl-n">07</div>
+      <div class="decl-text">We will <strong>build for the whole of life.</strong> Finance, kids, cars, health, and growth. If it matters to you, we are going to build a better way to manage it.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="proof">
+  <div class="section-tag reveal">The Proof | ARMAGEDDON Certified</div>
+  <div class="proof-layout">
+    <div class="reveal">
+      <div class="proof-headline">
+        We Don't<br>Claim<br><span class="pa">Ready.</span><br>We Prove It.
+      </div>
+      <p class="proof-desc">We tested this system to the absolute breaking point so you never have to. Our ARMAGEDDON test suite ran 40,000 extreme scenarios to guarantee your safety. This is a promise backed by math.</p>
+    </div>
+    <div class="reveal">
+      <div class="metrics-table">
+        <div class="metric-row">
+          <div class="metric-label">Total Tests Passed</div>
+          <div class="metric-value">485 / 485</div>
+          <div class="badge b-green">100%</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Test Coverage</div>
+          <div class="metric-value">96.8%</div>
+          <div class="badge b-apex">Elite</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Security Vulnerabilities</div>
+          <div class="metric-value">0</div>
+          <div class="badge b-green">Secure</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">TypeScript Strictness</div>
+          <div class="metric-value">100%</div>
+          <div class="badge b-green">Zero Any</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Adversarial Iterations</div>
+          <div class="metric-value">40,000</div>
+          <div class="badge b-apex">God Mode</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Build Time (Vite + SWC)</div>
+          <div class="metric-value">12.97s</div>
+          <div class="badge b-gold">Optimised</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Avg. API Response</div>
+          <div class="metric-value">&lt; 10ms</div>
+          <div class="badge b-green">Pass</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-label">Security Export Points</div>
+          <div class="metric-value">116</div>
+          <div class="badge b-apex">Hardened</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="arma-cert reveal">
+    <div class="arma-title">⚡ ARMAGEDDON v2.0 | Level 7 God Mode Certification</div>
+    <div class="arma-line">Platform:    <b>APEX-OmniHub</b></div>
+    <div class="arma-line">Certified:   <b>2026-01-25 03:24:00 UTC</b></div>
+    <div class="arma-line">Result:      <b>485 PASSED | 0 FAILED | 0 ERRORS</b></div>
+    <div class="arma-line">Battery 10 | Goal Hijack Protocol:          <b>DEPLOYED | 90% defence rate</b></div>
+    <div class="arma-line">Battery 11 | Tool Misuse Escalation:        <b>DEPLOYED | 95% defence rate</b></div>
+    <div class="arma-line">Battery 12 | Memory Poison Drift:           <b>DEPLOYED | 85% defence rate</b></div>
+    <div class="arma-line">Battery 13 | Supply Chain Protection:       <b>DEPLOYED | 92% defence rate</b></div>
+    <br>
+    <div class="arma-line">Status:      <b>PRODUCTION READY</b></div>
+    <div class="arma-line">Confidence:  <b>MAXIMUM</b></div>
+    <div class="arma-line">Approved by: <b>Distinguished Engineer | APEX Business Systems Ltd., Edmonton, AB</b></div>
+  </div>
+</section>
+
+<section class="closing">
+  <div class="closing-bg">APEX</div>
+  <div class="closing-content reveal">
+    <p class="closing-quote">
+      "We are not building a prototype.<br>We have built a production machine."
+    </p>
+    <div class="closing-cta">
+      WE DON'T<br>BUILD APPS.
+    </div>
+    <div class="closing-cta-sub">
+      WE BUILD THE PLATFORM FOR YOUR LIFE.
+    </div>
+    <div class="closing-sig">APEX Business Systems Ltd. | Edmonton, Alberta, Canada | 2026 | Open For Funding</div>
+  </div>
+</section>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  const pct = (el.scrollTop || document.body.scrollTop) / (el.scrollHeight - el.clientHeight) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+});
+</script>
+</body>
+</html>

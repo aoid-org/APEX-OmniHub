@@ -1,0 +1,203 @@
+{
+  "advancedAnalytics": {
+    "id": "advancedAnalytics",
+    "title": "Clear Visibility",
+    "subtitle": "See what runs. Know what changed. Decide what happens next.",
+    "intro": "OmniHub aggregates operational data from your connected systems into unified views. Track what happened, identify where things changed, and make informed decisions based on actual system behavior.",
+    "iconType": "analytics",
+    "features": [
+      {
+        "title": "360° Operational Visibility",
+        "description": "Gain complete visibility into your operations with unified dashboards and real-time metrics.",
+        "details": "OmniHub aggregates data from all connected systems into a single, comprehensive view. Track KPIs, monitor workflows, and identify bottlenecks across your entire operation in real-time.",
+        "bulletPoints": ["Real-time dashboards with customizable widgets", "Cross-platform metric aggregation and correlation", "Drill-down capabilities for root cause analysis", "Automated anomaly detection and alerts"]
+      },
+      {
+        "title": "Pattern Analysis",
+        "description": "Analyze historical data to identify trends. Spot anomalies before they become problems.",
+        "details": "Track patterns across time. Compare current behavior to historical baselines. Get notified when metrics diverge from expected ranges. Use what happened to inform what comes next.",
+        "bulletPoints": ["Trend analysis across operational metrics", "Anomaly detection based on baselines", "Pattern recognition for recurring issues", "Historical comparison and forecasting"]
+      },
+      {
+        "title": "Reporting & Data Export",
+        "description": "Build custom reports from your operational data. Export to any format you need.",
+        "details": "Create reports that match your needs. Schedule automatic generation. Export to Excel, PDF, or integrate with external tools. Your data remains portable.",
+        "bulletPoints": ["Custom report builder with drag-and-drop interface", "Scheduled report generation and distribution", "Interactive data exploration and visualization", "Export capabilities for Excel, PDF, and standard formats"]
+      }
+    ],
+    "useCases": [
+      { "title": "Executive Performance Dashboards", "description": "Consolidate KPIs from sales, operations, finance, and customer success into executive-ready dashboards with real-time updates." },
+      { "title": "Workflow Performance Optimization", "description": "Analyze workflow execution patterns, identify bottlenecks, and receive AI-driven recommendations for optimization." },
+      { "title": "Customer Journey Analytics", "description": "Track customer interactions across all touchpoints to understand behavior patterns, improve experiences, and increase retention." }
+    ],
+    "specs": [
+      { "label": "Data Processing", "value": "Up to 1 million events/second for analytics" },
+      { "label": "Query Performance", "value": "Sub-second query response on datasets up to 10TB" },
+      { "label": "Dashboard Refresh", "value": "Real-time updates with <100ms latency" },
+      { "label": "Data Retention", "value": "Configurable retention from 30 days to unlimited" },
+      { "label": "Visualization Types", "value": "Charts, graphs, maps, heatmaps, custom widgets" },
+      { "label": "Export Formats", "value": "CSV, Excel, PDF, JSON, API access" }
+    ],
+    "cta": { "title": "See your data clearly?", "description": "Understand how visibility tools help you track and control your systems.", "buttonText": "Watch Demo", "buttonHref": "/demo" }
+  },
+  "aiAutomation": {
+    "id": "aiAutomation",
+    "title": "Portable Automation",
+    "subtitle": "You define what happens. The system runs it. You can change it anytime.",
+    "intro": "OmniHub executes workflows across your platforms using modular adapters. Define your logic once. Run it consistently. Swap underlying tools without rewriting workflows. Automation stays under your control.",
+    "iconType": "automation",
+    "features": [
+      {
+        "title": "Deterministic Workflows",
+        "description": "Define business processes that run the same way every time. No surprises.",
+        "details": "OmniHub executes workflows with receipts and idempotency. Same inputs produce same outputs. Errors get caught and logged. You know exactly what ran and what changed.",
+        "bulletPoints": ["Define workflows using typed schemas", "Execution receipts for every operation", "Automatic retry with idempotency keys", "Error handling with compensation paths"]
+      },
+      {
+        "title": "Smart Task Orchestration",
+        "description": "Coordinate multi-step processes across platforms with intelligent routing and prioritization.",
+        "details": "The orchestration engine analyzes task dependencies, resource availability, and business priorities to optimize workflow execution automatically.",
+        "bulletPoints": ["Dynamic task prioritization and scheduling", "Resource optimization and load balancing", "Parallel execution with dependency management", "Real-time progress tracking and reporting"]
+      },
+      {
+        "title": "Continuous Learning & Optimization",
+        "description": "AI models that continuously improve based on execution patterns and outcomes.",
+        "details": "Every workflow execution generates insights that feed back into the AI models, creating a system that gets smarter over time.",
+        "bulletPoints": ["Pattern recognition and anomaly detection", "Performance optimization recommendations", "Automated workflow refinement suggestions", "Historical trend analysis and forecasting"]
+      }
+    ],
+    "useCases": [
+      { "title": "Customer Onboarding Automation", "description": "Streamline customer onboarding across CRM, billing, support, and communication platforms with intelligent data routing and validation." },
+      { "title": "Incident Response Orchestration", "description": "Automatically detect, categorize, and route incidents to appropriate teams while coordinating cross-platform notifications and escalations." },
+      { "title": "Data Pipeline Management", "description": "Orchestrate complex data workflows across ETL tools, databases, and analytics platforms with intelligent error recovery and data quality checks." }
+    ],
+    "specs": [
+      { "label": "Workflow Capacity", "value": "Up to 50,000 concurrent workflows" },
+      { "label": "Decision Latency", "value": "Sub-50ms AI-driven decision making (p95)" },
+      { "label": "Automation Success Rate", "value": "successful execution target" },
+      { "label": "Learning Models", "value": "Transformer-based NLP, reinforcement learning, pattern recognition" },
+      { "label": "Supported AI Providers", "value": "OpenAI, Anthropic, Google AI, Azure OpenAI, local models" }
+    ],
+    "cta": { "title": "Ready for portable workflows?", "description": "See how modular automation keeps you in control.", "buttonText": "Watch Demo", "buttonHref": "/demo" }
+  },
+  "omniboard": {
+    "id": "omniboard",
+    "title": "OmniBoard",
+    "subtitle": "Third-party provider and SaaS integration gateway.",
+    "intro": "OmniBoard governs SaaS and third-party API connections for Salesforce, Slack, GitHub, Stripe, and more. Manage OAuth handoffs, connector sessions, and credential schemas under a unified compliance layer.",
+    "iconType": "integrations",
+    "features": [
+      {
+        "title": "Universal SaaS Adapters",
+        "description": "Connect Slack, Salesforce, GitHub, and enterprise platforms in minutes.",
+        "details": "OmniBoard handles API authentication, refresh tokens, and rate limits out of the box, ensuring secure and reliable connection states.",
+        "bulletPoints": ["OAuth 2.0 and API Key credential vaulting", "Automatic session refresh and renewal", "Real-time synchronization and webhooks", "Standardized connector schemas"]
+      },
+      {
+        "title": "Unified Connection Registry",
+        "description": "Manage and audit all third-party integrations from a single location.",
+        "details": "Track active integrations, monitor throughput, and enforce data mapping rules to prevent sensitive data leakage.",
+        "bulletPoints": ["Active connection auditing and status checks", "Granular access controls per integration", "Tenant-scoped isolation safeguards", "Encryption at rest for all credentials"]
+      },
+      {
+        "title": "Gateway Availability UX",
+        "description": "Provide clear, honest user states when external APIs are offline.",
+        "details": "OmniBoard detects API network failures, downtime, or rate-limiting blockages and displays detailed diagnostic views.",
+        "bulletPoints": ["Honest failure classification and messages", "Automatic exponential backoff retries", "Fallback to offline mock state", "System health status dashboard"]
+      }
+    ],
+    "useCases": [
+      { "title": "CRM Data Enrichment", "description": "Sync customer records and interaction history from Salesforce into the orchestrator securely." },
+      { "title": "Slack Notification Gateway", "description": "Route governed agent alerts and manual approval prompts to Slack channels with interactive buttons." },
+      { "title": "Repository Event Ingestion", "description": "Listen to GitHub webhook events to trigger automated code quality assessments and CI workflows." }
+    ],
+    "specs": [
+      { "label": "Connector Capacity", "value": "Dozens of pre-built third-party platforms" },
+      { "label": "Session Security", "value": "Encrypted JWT keys, HSM-backed secret storage" },
+      { "label": "Event Latency", "value": "Sub-second webhook propagation and routing" },
+      { "label": "Supported Protocols", "value": "REST, GraphQL, OAuth 2.0, Webhooks" },
+      { "label": "Isolation Model", "value": "Strict tenant and database separation" }
+    ],
+    "cta": { "title": "Ready to unify your systems?", "description": "Discover how OmniBoard can eliminate data silos and boost productivity.", "buttonText": "View Integration Catalog", "buttonHref": "/integrations/web3" }
+  },
+  "omniSkills": {
+    "id": "omniSkills",
+    "title": "OmniSkills",
+    "subtitle": "Forge, install, and govern expert-level agent capabilities.",
+    "intro": "OmniSkills are modular, reusable behavioral packages that give your AI agents specific skills and domain expertise. Define skill schemas, run them deterministically, and share skills across your orchestrator instance.",
+    "iconType": "automation",
+    "features": [
+      {
+        "title": "Skill Forge",
+        "description": "Design and compile custom skills using natural language or structured schemas.",
+        "details": "The Skill Forge translates natural language descriptions into executable skill structures with validation rules, inputs, outputs, and fallback modes.",
+        "bulletPoints": ["Compile skills from natural language descriptions", "Automatic input/output schema generation", "Version control and dependency management", "Dry-run testing sandbox environment"]
+      },
+      {
+        "title": "Deterministic Execution",
+        "description": "Ensure agent actions are predictable, repeatable, and safe.",
+        "details": "Every forged skill executes within strict policy boundaries, providing execution receipts, audit trails, and automatic error handling.",
+        "bulletPoints": ["Schema validation on every execution", "Receipt generation with cryptographic proof", "Idempotency and automatic retry logic", "Human-in-the-loop manual approval gates"]
+      },
+      {
+        "title": "Agent Memory Integration",
+        "description": "Connect skills to persistent memory and vector search databases.",
+        "details": "Skills can read and write to partitioned agent memories, enabling continuous learning and knowledge sharing across execution tasks.",
+        "bulletPoints": ["Context-aware vector database integration", "Partitioned state per user or system", "Shared knowledge base synchronization", "Dynamic semantic retrieval"]
+      }
+    ],
+    "useCases": [
+      { "title": "Automated Code Auditing", "description": "Forge a skill that reads code, checks compliance guidelines, runs tests, and signs off on PRs." },
+      { "title": "Multilingual Support Assistant", "description": "Deploy a customer support skill that integrates translation, knowledge search, and draft generation." },
+      { "title": "Data Analysis Pipeline", "description": "Orchestrate a skill that fetches operational databases, runs statistical analysis, and generates visualization reports." }
+    ],
+    "specs": [
+      { "label": "Execution Latency", "value": "Sub-100ms validation and routing overhead" },
+      { "label": "Skill Registry Capacity", "value": "Unlimited custom skills per instance" },
+      { "label": "Supported Frameworks", "value": "LangChain, AutoGen, LlamaIndex, custom MCP servers" },
+      { "label": "Memory Integration", "value": "Supabase Vector, pgvector, Pinecone, local embeddings" },
+      { "label": "Compliance Auditing", "value": "Automatic logging to central ledger" }
+    ],
+    "cta": { "title": "Ready to forge custom skills?", "description": "See how OmniSkills can automate complex workflows under strict governance.", "buttonText": "Watch Demo", "buttonHref": "/demo" }
+  },
+  "byom": {
+    "id": "byom",
+    "title": "Connect AI / BYOM",
+    "subtitle": "Bring Your Own Model. Zero vendor lock-in, total choice.",
+    "intro": "Connect AI / BYOM (Bring Your Own Model) allows you to connect any LLM provider (OpenAI, Anthropic, Google, Azure, or local open-source models) directly into your governed workflows, switching providers with a single toggle.",
+    "iconType": "automation",
+    "features": [
+      {
+        "title": "Model Independence",
+        "description": "Plug in any LLM provider and switch anytime without rewriting logic.",
+        "details": "OmniHub decouples workflow state from the underlying model provider, allowing you to compare performance, latency, and cost dynamically.",
+        "bulletPoints": ["Supports OpenAI, Anthropic, Google Gemini, and Llama", "Local model support via Ollama or custom endpoints", "Dynamic load balancing and fallback routing", "Zero codebase changes when swapping models"]
+      },
+      {
+        "title": "Governed Prompt Templates",
+        "description": "Store and evaluate system prompts in a secure, audited registry.",
+        "details": "Prompts are managed as code assets under strict version control. All model calls undergo real-time policy checks before execution.",
+        "bulletPoints": ["Versioned prompt registry with template variables", "Vulnerability scanning for prompt injection", "Dynamic evaluation based on user context", "A/B testing and performance tracking"]
+      },
+      {
+        "title": "Unified API Gateway",
+        "description": "Proxy all model calls through a single secure ingress with rate limiting.",
+        "details": "Our model proxy handles rate limits, token counting, retry rules, and cost tracking across all provider keys automatically.",
+        "bulletPoints": ["Centralized API key management with encryption", "Cost tracking and token usage auditing", "Automatic request caching to minimize cost", "Standardized JSON schema outputs"]
+      }
+    ],
+    "useCases": [
+      { "title": "Multi-Model Fallback", "description": "Route lightweight classification to local models while using frontier models for complex planning steps." },
+      { "title": "Prompt Injection Shielding", "description": "Sanitize and validate user inputs before forwarding them to public APIs, protecting enterprise systems." },
+      { "title": "Enterprise Cost Allocation", "description": "Track token usage and expenses per department, application, or workflow run automatically." }
+    ],
+    "specs": [
+      { "label": "Proxy Latency", "value": "<10ms routing and inspection overhead" },
+      { "label": "Supported Providers", "value": "OpenAI, Anthropic, Google, Azure, local APIs" },
+      { "label": "Security Compliance", "value": "No data storage on proxy, end-to-end TLS" },
+      { "label": "Format Guarantee", "value": "Enforced JSON Schema outputs via instructor" },
+      { "label": "Caching Layer", "value": "Redis-backed semantic request caching" }
+    ],
+    "cta": { "title": "Ready to run models under governance?", "description": "Explore how BYOM frees you from provider lock-in.", "buttonText": "Watch Demo", "buttonHref": "/demo" }
+  }
+}
