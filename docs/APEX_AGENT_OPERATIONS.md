@@ -2,7 +2,7 @@
 
 # APEX Agent — Operations & Anti-Drift Reference
 
-**Status:** LIVE / demo-ready · **Last verified end-to-end:** 2026-06-19
+**Status:** LIVE / demo-ready · **Last verified end-to-end:** 2026-07-06
 **Canonical source of truth.** If reality and this document disagree, fix one of them — do not let them drift. Every value here was verified against the running production system.
 
 > This file lives in the repo on purpose. Update it in the **same PR** that changes any service, env var, table, or start command.

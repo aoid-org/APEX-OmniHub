@@ -300,9 +300,6 @@
     "picomatch@^2.0.0": "2.3.2",
     "picomatch@^4.0.0": "4.0.4",
     "tar": "^7.5.11",
-    "vite-react-ssg": {
-      "react-router-dom": "$react-router-dom"
-    },
     "undici": "^6.27.0",
     "hono": "^4.12.25",
     "serialize-javascript": "^7.0.5",
