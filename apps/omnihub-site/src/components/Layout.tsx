@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/useAuth";
 import { BrandAnthemPlayer } from "./BrandAnthemPlayer";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { LanguageSelector } from "./LanguageSelector";
+import { PWAInstallButton } from "./PWAInstallButton";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -265,6 +266,9 @@ function Footer() {
             >
               {tx("layout.footer.web3Integrations")}
             </a>
+          </li>
+          <li>
+            <PWAInstallButton />
           </li>
         </ul>
       </div>

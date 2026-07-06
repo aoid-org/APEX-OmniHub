@@ -5,6 +5,7 @@ import { UploadCloud, FileText, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getPlayableMediaKind, ingestUploadedMedia, sanitizeFilename } from '@/dashboard/lib/omniMediaCatalog';
 import { useOmniMedia } from '../../../src/stores/omniMediaStore';
+import { usePlan, getStorageCapGB } from '@/hooks/usePlan';
 
 interface Props {
   readonly onClose: () => void;
@@ -24,8 +25,10 @@ export default function FilesModule({ onClose }: Props) {
   const totalFiles     = totalFilesStat?.value ?? '—';
 
   const usedGB = Number.parseFloat(storageUsed.replaceAll(/[^0-9.]/g, '')) || 0;
-  const capGB  = 100;
+  const plan = usePlan();
+  const capGB = getStorageCapGB(plan.tier);
   const pct    = Math.min(100, Math.round((usedGB / capGB) * 100));
+  const isOverLimit = usedGB >= capGB;
 
   const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStaged(e.target.files?.[0] ?? null);
@@ -128,14 +131,17 @@ export default function FilesModule({ onClose }: Props) {
           {/* File drop / select zone */}
           <button
             type="button"
-            className="w-full rounded-lg border border-dashed border-border/40 p-5 flex flex-col items-center justify-center bg-muted/5 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/10 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
+            disabled={isOverLimit}
+            className={`w-full rounded-lg border border-dashed border-border/40 p-5 flex flex-col items-center justify-center bg-muted/5 text-center ${isOverLimit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/40 hover:bg-muted/10'} transition-colors`}
+            onClick={() => !isOverLimit && fileInputRef.current?.click()}
             aria-label="Select file to upload"
           >
             <UploadCloud className="text-muted-foreground/50 mb-2 h-6 w-6" />
-            <span className="block text-sm font-medium text-muted-foreground">Click to select a file</span>
+            <span className="block text-sm font-medium text-muted-foreground">
+              {isOverLimit ? 'Storage Limit Reached' : 'Click to select a file'}
+            </span>
             <span className="block text-xs text-muted-foreground/60 mt-0.5">
-              Files upload to your private APEX Storage.
+              {isOverLimit ? 'Please upgrade your plan to upload more files.' : 'Files upload to your private APEX Storage.'}
             </span>
           </button>
 

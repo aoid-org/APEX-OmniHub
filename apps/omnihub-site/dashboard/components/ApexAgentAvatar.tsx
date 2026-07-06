@@ -32,15 +32,27 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
         setCurrentPersona(savedPersona);
       }
 
-      // Listen for persona changes from other tabs
+      // Cross-tab sync: standard storage event fires in OTHER tabs only
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === 'apex.agent.persona' && e.newValue) {
           setCurrentPersona(e.newValue as AgentPersona);
         }
       };
 
+      // Same-tab sync: custom event dispatched by PersonaModal on selection
+      const handleCustomPersonaUpdate = (e: Event) => {
+        const persona = (e as CustomEvent<{ persona: AgentPersona }>).detail?.persona;
+        if (persona && persona in AVATAR_PATH_MAP) {
+          setCurrentPersona(persona);
+        }
+      };
+
       globalThis.addEventListener('storage', handleStorageChange);
-      return () => globalThis.removeEventListener('storage', handleStorageChange);
+      globalThis.addEventListener('apex:persona:updated', handleCustomPersonaUpdate);
+      return () => {
+        globalThis.removeEventListener('storage', handleStorageChange);
+        globalThis.removeEventListener('apex:persona:updated', handleCustomPersonaUpdate);
+      };
     }, []);
 
     const sizeClass = SIZE_CLASSES[size];

@@ -5,15 +5,24 @@
 }
 
 .capability-page--unified {
-  --cap-bg: #0b1f2e;
-  --cap-grid: rgba(100, 180, 220, 0.04);
+  --cap-bg: #ffffff;
+  --cap-grid: rgba(15, 23, 41, 0.04);
+  --cap-text: #0f1729;
+  --cap-text-secondary: rgba(15, 23, 41, 0.6);
   background-color: var(--cap-bg);
   background-image: linear-gradient(var(--cap-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--cap-grid) 1px, transparent 1px);
   background-size: 64px 64px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cap-text);
   padding: 40px 0;
   border-radius: 20px;
+}
+
+[data-theme="dark"] .capability-page--unified {
+  --cap-bg: #0b1f2e;
+  --cap-grid: rgba(100, 180, 220, 0.04);
+  --cap-text: rgba(255, 255, 255, 0.9);
+  --cap-text-secondary: rgba(255, 255, 255, 0.6);
 }
 
 .capability-page__hero {
@@ -42,7 +51,7 @@
 }
 
 .capability-page--unified .section__title {
-  background: linear-gradient(150deg, #fff 0%, #fff 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
+  background: linear-gradient(150deg, var(--color-text-primary) 0%, var(--color-text-primary) 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -53,7 +62,7 @@
 .capability-page__intro {
   font-size: 18px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cap-text-secondary);
   margin-top: 20px;
   max-width: 600px;
 }
@@ -188,8 +197,8 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-6);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   padding: 24px;
   border-radius: 12px;
   backdrop-filter: blur(8px);
@@ -281,24 +290,33 @@
 }
 
 .capability-page--fortress {
-  background-color: #0b1f2e;
-  background-image: linear-gradient(rgba(100, 180, 220, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100, 180, 220, 0.04) 1px, transparent 1px);
+  --cap-bg: #ffffff;
+  --cap-grid: rgba(15, 23, 41, 0.04);
+  --cap-text: #0f1729;
+  background-color: var(--cap-bg);
+  background-image: linear-gradient(var(--cap-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cap-grid) 1px, transparent 1px);
   background-size: 64px 64px;
   padding: 40px 20px;
   border-radius: 20px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cap-text);
+}
+
+[data-theme="dark"] .capability-page--fortress {
+  --cap-bg: #0b1f2e;
+  --cap-grid: rgba(100, 180, 220, 0.04);
+  --cap-text: rgba(255, 255, 255, 0.9);
 }
 
 .capability-page--fortress .section__title {
-  background: linear-gradient(150deg, #fff 0%, #fff 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
+  background: linear-gradient(150deg, var(--color-text-primary) 0%, var(--color-text-primary) 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .capability-page--fortress .card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--color-surface-elevated) !important;
+  border: 1px solid var(--color-border) !important;
   backdrop-filter: blur(8px);
 }

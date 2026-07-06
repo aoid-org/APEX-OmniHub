@@ -65,17 +65,78 @@ export const aiAutomationData = createPageData(
   createCTA('Ready for portable workflows?', 'See how modular automation keeps you in control.', 'Watch Demo', '/demo')
 );
 
-// Integrations page data
-export const smartIntegrationsData = createPageData(
-  'Smart Integrations',
-  'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
-  "OmniHub's Smart Integrations eliminate the complexity of connecting disparate systems by providing a unified integration layer that speaks every platform's language. Whether you're integrating legacy systems, modern SaaS applications, or custom-built tools, OmniHub makes it seamless.",
+// OmniBoard page data
+export const omniboardData = createPageData(
+  'OmniBoard',
+  'Third-party provider and SaaS integration gateway.',
+  "OmniBoard governs SaaS and third-party API connections for Salesforce, Slack, GitHub, Stripe, and more. Manage OAuth handoffs, connector sessions, and credential schemas under a unified compliance layer.",
   [
-    createFeature(<IconIntegrations size={32} />, 'Universal Connectivity', 'Connect to any platform with pre-built adapters and custom integration capabilities.', 'OmniHub provides a comprehensive library of pre-built integrations for enterprise systems, SaaS platforms, and modern APIs, with the flexibility to create custom adapters for proprietary systems.', ['Pre-built adapters for 100+ enterprise platforms', 'Custom adapter creation framework with SDK', 'API-first design supporting REST, GraphQL, gRPC, and WebSocket', 'Legacy system support via SOAP, FTP, and database connectors']),
-    createFeature(<IconIntegrations size={32} />, 'Unified Data Model', 'Break down data silos with a canonical data model that normalizes information across all platforms.', 'The unified data model transforms disparate data formats into a single, consistent representation, enabling seamless data flow and reducing integration complexity.', ['Automatic data transformation and normalization', 'Type-safe data mapping with validation', 'Bidirectional sync with conflict resolution', 'Data quality checks and enrichment']),
-    createFeature(<IconIntegrations size={32} />, 'Real-Time Synchronization', 'Keep data synchronized across all platforms in real-time with intelligent change detection.', 'OmniHub monitors data changes across all connected systems and propagates updates instantly, ensuring consistency while minimizing network overhead through smart batching and deduplication.', ['Event-driven architecture for instant updates', 'Change data capture (CDC) for database sync', 'Intelligent batching and throttling', 'Conflict detection and resolution strategies']),
+    createFeature(<IconIntegrations size={32} />, 'Universal SaaS Adapters', 'Connect Slack, Salesforce, GitHub, and enterprise platforms in minutes.', 'OmniBoard handles API authentication, refresh tokens, and rate limits out of the box, ensuring secure and reliable connection states.', ['OAuth 2.0 and API Key credential vaulting', 'Automatic session refresh and renewal', 'Real-time synchronization and webhooks', 'Standardized connector schemas']),
+    createFeature(<IconIntegrations size={32} />, 'Unified Connection Registry', 'Manage and audit all third-party integrations from a single location.', 'Track active integrations, monitor throughput, and enforce data mapping rules to prevent sensitive data leakage.', ['Active connection auditing and status checks', 'Granular access controls per integration', 'Tenant-scoped isolation safeguards', 'Encryption at rest for all credentials']),
+    createFeature(<IconIntegrations size={32} />, 'Gateway Availability UX', 'Provide clear, honest user states when external APIs are offline.', 'OmniBoard detects API network failures, downtime, or rate-limiting blockages and displays detailed diagnostic views.', ['Honest failure classification and messages', 'Automatic exponential backoff retries', 'Fallback to offline mock state', 'System health status dashboard']),
   ],
-  [createUseCase('CRM-ERP Integration', 'Synchronize customer data, orders, and inventory between CRM and ERP systems in real-time, eliminating data silos and manual data entry.'), createUseCase('Marketing Platform Unification', 'Connect email marketing, social media, analytics, and advertising platforms for a unified view of campaign performance and customer engagement.'), createUseCase('Multi-Cloud Data Integration', 'Integrate data across AWS, Azure, and Google Cloud platforms while maintaining data governance and compliance requirements.')],
-  [createSpec('Integration Capacity', '10,000+ active integrations per instance'), createSpec('Sync Latency', 'Sub-5 second real-time synchronization (p95)'), createSpec('Data Throughput', 'Up to 100,000 records/second'), createSpec('Supported Platforms', 'Salesforce, SAP, Oracle, Microsoft, Google, AWS, Slack, Jira, 100+ more'), createSpec('Protocol Support', 'REST, GraphQL, gRPC, WebSocket, SOAP, MQTT, AMQP, Kafka, SFTP')],
-  createCTA('Ready to unify your systems?', 'Discover how Smart Integrations can eliminate data silos and boost productivity.', 'View Integration Catalog', '/tech-specs')
+  [
+    createUseCase('CRM Data Enrichment', 'Sync customer records and interaction history from Salesforce into the orchestrator securely.'),
+    createUseCase('Slack Notification Gateway', 'Route governed agent alerts and manual approval prompts to Slack channels with interactive buttons.'),
+    createUseCase('Repository Event Ingestion', 'Listen to GitHub webhook events to trigger automated code quality assessments and CI workflows.')
+  ],
+  [
+    createSpec('Connector Capacity', 'Dozens of pre-built third-party platforms'),
+    createSpec('Session Security', 'Encrypted JWT keys, HSM-backed secret storage'),
+    createSpec('Event Latency', 'Sub-second webhook propagation and routing'),
+    createSpec('Supported Protocols', 'REST, GraphQL, OAuth 2.0, Webhooks'),
+    createSpec('Isolation Model', 'Strict tenant and database separation')
+  ],
+  createCTA('Ready to unify your systems?', 'Discover how OmniBoard can eliminate data silos and boost productivity.', 'View Integration Catalog', '/integrations/web3')
 );
+
+// OmniSkills page data
+export const omniSkillsData = createPageData(
+  'OmniSkills',
+  'Forge, install, and govern expert-level agent capabilities.',
+  'OmniSkills are modular, reusable behavioral packages that give your AI agents specific skills and domain expertise. Define skill schemas, run them deterministically, and share skills across your orchestrator instance.',
+  [
+    createFeature(<IconAutomation size={32} />, 'Skill Forge', 'Design and compile custom skills using natural language or structured schemas.', 'The Skill Forge translates natural language descriptions into executable skill structures with validation rules, inputs, outputs, and fallback modes.', ['Compile skills from natural language descriptions', 'Automatic input/output schema generation', 'Version control and dependency management', 'Dry-run testing sandbox environment']),
+    createFeature(<IconAutomation size={32} />, 'Deterministic Execution', 'Ensure agent actions are predictable, repeatable, and safe.', 'Every forged skill executes within strict policy boundaries, providing execution receipts, audit trails, and automatic error handling.', ['Schema validation on every execution', 'Receipt generation with cryptographic proof', 'Idempotency and automatic retry logic', 'Human-in-the-loop manual approval gates']),
+    createFeature(<IconAutomation size={32} />, 'Agent Memory Integration', 'Connect skills to persistent memory and vector search databases.', 'Skills can read and write to partitioned agent memories, enabling continuous learning and knowledge sharing across execution tasks.', ['Context-aware vector database integration', 'Partitioned state per user or system', 'Shared knowledge base synchronization', 'Dynamic semantic retrieval']),
+  ],
+  [
+    createUseCase('Automated Code Auditing', 'Forge a skill that reads code, checks compliance guidelines, runs tests, and signs off on PRs.'),
+    createUseCase('Multilingual Support Assistant', 'Deploy a customer support skill that integrates translation, knowledge search, and draft generation.'),
+    createUseCase('Data Analysis Pipeline', 'Orchestrate a skill that fetches operational databases, runs statistical analysis, and generates visualization reports.')
+  ],
+  [
+    createSpec('Execution Latency', 'Sub-100ms validation and routing overhead'),
+    createSpec('Skill Registry Capacity', 'Unlimited custom skills per instance'),
+    createSpec('Supported Frameworks', 'LangChain, AutoGen, LlamaIndex, custom MCP servers'),
+    createSpec('Memory Integration', 'Supabase Vector, pgvector, Pinecone, local embeddings'),
+    createSpec('Compliance Auditing', 'Automatic logging to central ledger')
+  ],
+  createCTA('Ready to forge custom skills?', 'See how OmniSkills can automate complex workflows under strict governance.', 'Watch Demo', '/demo')
+);
+
+// BYOM page data
+export const byomData = createPageData(
+  'Connect AI / BYOM',
+  'Bring Your Own Model. Zero vendor lock-in, total choice.',
+  'Connect AI / BYOM (Bring Your Own Model) allows you to connect any LLM provider (OpenAI, Anthropic, Google, Azure, or local open-source models) directly into your governed workflows, switching providers with a single toggle.',
+  [
+    createFeature(<IconAutomation size={32} />, 'Model Independence', 'Plug in any LLM provider and switch anytime without rewriting logic.', 'OmniHub decouples workflow state from the underlying model provider, allowing you to compare performance, latency, and cost dynamically.', ['Supports OpenAI, Anthropic, Google Gemini, and Llama', 'Local model support via Ollama or custom endpoints', 'Dynamic load balancing and fallback routing', 'Zero codebase changes when swapping models']),
+    createFeature(<IconAutomation size={32} />, 'Governed Prompt Templates', 'Store and evaluate system prompts in a secure, audited registry.', 'Prompts are managed as code assets under strict version control. All model calls undergo real-time policy checks before execution.', ['Versioned prompt registry with template variables', 'Vulnerability scanning for prompt injection', 'Dynamic evaluation based on user context', 'A/B testing and performance tracking']),
+    createFeature(<IconAutomation size={32} />, 'Unified API Gateway', 'Proxy all model calls through a single secure ingress with rate limiting.', 'Our model proxy handles rate limits, token counting, retry rules, and cost tracking across all provider keys automatically.', ['Centralized API key management with encryption', 'Cost tracking and token usage auditing', 'Automatic request caching to minimize cost', 'Standardized JSON schema outputs']),
+  ],
+  [
+    createUseCase('Multi-Model Fallback', 'Route lightweight classification to local models while using frontier models for complex planning steps.'),
+    createUseCase('Prompt Injection Shielding', 'Sanitize and validate user inputs before forwarding them to public APIs, protecting enterprise systems.'),
+    createUseCase('Enterprise Cost Allocation', 'Track token usage and expenses per department, application, or workflow run automatically.')
+  ],
+  [
+    createSpec('Proxy Latency', '<10ms routing and inspection overhead'),
+    createSpec('Supported Providers', 'OpenAI, Anthropic, Google, Azure, local APIs'),
+    createSpec('Security Compliance', 'No data storage on proxy, end-to-end TLS'),
+    createSpec('Format Guarantee', 'Enforced JSON Schema outputs via instructor'),
+    createSpec('Caching Layer', 'Redis-backed semantic request caching')
+  ],
+  createCTA('Ready to run models under governance?', 'Explore how BYOM frees you from provider lock-in.', 'Watch Demo', '/demo')
+);
+
