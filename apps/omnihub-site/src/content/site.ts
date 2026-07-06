@@ -45,6 +45,7 @@ export const siteConfig = {
     links: [
       buildLink("Tech Specs", "/tech-specs", "layout.nav.techSpecs"),
       buildLink("Story", "/story", "layout.nav.story"),
+      buildLink("Manifesto", "/apex-manifesto", "layout.nav.manifesto"),
     ],
     loginLink: buildLink(
       "Launch Console",
@@ -169,6 +170,7 @@ export const siteConfig = {
       buildLink("Privacy", "/privacy", "layout.footer.privacy"),
       buildLink("Terms", "/terms", "layout.footer.terms"),
       buildLink("Support", "/support", "layout.footer.support"),
+      buildLink("Manifesto", "/apex-manifesto", "layout.footer.manifesto"),
     ],
   },
 } as const;
