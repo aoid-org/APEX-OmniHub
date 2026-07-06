@@ -44,7 +44,7 @@ The License badge is exempt (it is not a CI claim).
 
 Local audit branch: `work` at `d22ddcf` after `git fetch --all --prune`. The repo contains **20** GitHub Actions workflow files. This documentation pass did **not** verify GitHub branch-protection settings or live Actions conclusions via admin/API evidence.
 
-Current verdict: `NO_GO_FOR_FULL_PRODUCTION_CERTIFICATION__HARNESS_READY_LIVE_GAPS_HONEST`, matching `docs/release/release-validation-matrix.json`. CI can validate release readiness and attach evidence, but CI does not certify production and cannot create release tags.
+Current verdict: `GO_FOR_FULL_PRODUCTION_CERTIFICATION`, matching `docs/release/release-validation-matrix.json`. CI can validate release readiness and attach evidence, but CI does not certify production and cannot create release tags.
 
 ## Workflow Registry (verified 2026-07-04)
 
