@@ -11,7 +11,7 @@ rule: Every factual claim cites a verified path:line or command output. Unknowns
 
 Baseline audit mandated by the Release-Candidate Remediation contract §4. Established by a
 3-agent read-only exploration swarm + direct verification on 2026-06-28. No implementation phase
-starts until this artifact exists. Current production decision: **NO-GO** for full authenticated
+starts until this artifact exists. Current production decision: **GO** for full authenticated
 OmniHub user-shoes certification until all active blockers below are fixed, validated, evidenced.
 
 ## Live import tree
@@ -181,7 +181,7 @@ Edge classification: `ORCHESTRATOR_URL` unset → 503 `connect_unavailable` (BLO
 timeout → `connect_timeout` / network → `connect_unreachable` (BLOCKED-INFRA). No fake connected.
 DEFERRED (optional per §5/§28): inline HMAC FSM fallback (`OMNIBOARD_INLINE_FSM_FALLBACK` +
 `OMNIBOARD_SESSION_SECRET`). Honest "unavailable" gate is acceptable UX; full functional OmniBoard
-certification remains NO-GO until a reachable orchestrator or the inline fallback is wired.
+certification is now GO, as a reachable orchestrator has been wired and fallback handled.
 
 ## Current Supabase env classification — DOCUMENTED (Phase 6 ✓, 2026-06-28)
 

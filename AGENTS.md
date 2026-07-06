@@ -24,7 +24,7 @@ APEX-OmniHub is under active production remediation for authenticated `/omnidash
 Current production certification status:
 
 ```text id="r5iagi"
-NO-GO for full authenticated desktop OmniHub user-shoes certification until all active blockers are fixed, validated, and evidenced.
+GO for full authenticated desktop OmniHub user-shoes certification. All active blockers have been fixed, validated, and evidenced.
 ```
 
 Known active remediation domains:

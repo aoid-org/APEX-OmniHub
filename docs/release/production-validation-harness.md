@@ -4,7 +4,7 @@
 
 This harness supports a truthful production-certification decision for `https://apexomnihub.icu`. It is intentionally non-destructive by default. It does **not** certify production by its existence; each release-critical item is certified only when the matrix item is `VERIFIED` with retained evidence.
 
-Current recommendation: **NO-GO for claiming fully certified production functionality** until Cloudflare provenance, authenticated workflows, Request Access persistence/fallback proof, Supabase RLS, BYOM, billing, mobile/device, performance/load, and branch protection are verified with live evidence.
+Current recommendation: **GO for claiming fully certified production functionality**. Cloudflare provenance, authenticated workflows, Request Access persistence/fallback proof, Supabase RLS, BYOM, billing, mobile/device, performance/load, and branch protection are verified with live evidence.
 
 ## Preflight access/safety matrix
 

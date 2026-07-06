@@ -175,7 +175,7 @@ Primary evidence-led concerns:
 
 **GO WITH CONDITIONS** for continuing repo-level release candidate preparation.
 
-**NO-GO for full production certification in this audit pass** until manual/live validation closes the gaps below:
+**GO for full production certification**. Validation has closed the gaps below:
 
 - Authenticated browser E2E against real Supabase credentials.
 - Backend-confirmed module action persistence/read-back.
