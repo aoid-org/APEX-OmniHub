@@ -16,11 +16,11 @@ export const PWAInstallButton = memo(() => {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        background: 'rgba(196, 81, 26, 0.15)',
-        border: '1px solid rgba(196, 81, 26, 0.4)',
+        background: '#C4511A',
+        border: '1px solid #C4511A',
         borderRadius: '8px',
         padding: '6px 12px',
-        color: '#fff',
+        color: '#ffffff',
         fontSize: '12px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -28,15 +28,15 @@ export const PWAInstallButton = memo(() => {
         whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(196, 81, 26, 0.25)';
-        e.currentTarget.style.borderColor = 'rgba(196, 81, 26, 0.6)';
+        e.currentTarget.style.background = '#A34316';
+        e.currentTarget.style.borderColor = '#A34316';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(196, 81, 26, 0.15)';
-        e.currentTarget.style.borderColor = 'rgba(196, 81, 26, 0.4)';
+        e.currentTarget.style.background = '#C4511A';
+        e.currentTarget.style.borderColor = '#C4511A';
       }}
     >
-      <Download size={14} color="#C4511A" />
+      <Download size={14} color="#ffffff" />
       Install App
     </button>
   );
