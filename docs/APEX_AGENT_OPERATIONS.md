@@ -84,7 +84,7 @@ Instance: API = Starter OK · Worker = Starter OK **only with `SEMANTIC_CACHE_EN
 | `SUPABASE_DB_URL` | Settings → Database → Connection string (URI) | **required always** — missing = pydantic crash |
 | `REDIS_URL` | `rediss://default:<pw>@peaceful-chipmunk-151408.upstash.io:6379` | |
 | `REDIS_PASSWORD` | the token between `default:` and `@` in `REDIS_URL` | required in prod |
-| `REDIS_SSL` | `true` | passed to redis client only when enabled; omitted when false for redis-py v5/v6 compatibility |
+| `REDIS_SSL` | `true` | retained for logging/back-compat only. The rediss:// scheme alone enables SSL; the ssl kwarg is never passed to from_url to avoid redis-py v5/v6 crashes. |
 | `ANTHROPIC_API_KEY` | planner key | required in prod |
 | `ORCHESTRATOR_SHARED_SECRET` | same value as edge secret | |
 | `ORCHESTRATOR_REQUIRE_SIGNATURE` | `true` | config refuses to boot if `false` in prod |
