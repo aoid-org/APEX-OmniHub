@@ -192,6 +192,8 @@ class TestSemanticCacheService:
             print(f"Redis connection failed: {e}")
             pytest.skip(f"Redis not available for testing: {e}")
         finally:
+            if cache.redis:
+                await cache.redis.flushdb()
             await cache.close()
 
     async def test_store_and_retrieve_plan(self, cache_service):
