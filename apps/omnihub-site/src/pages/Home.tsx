@@ -461,6 +461,7 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
                   preserveAspectRatio="xMidYMid meet"
                   mask="url(#badgeFadeMask)"
                   filter="url(#dofSoft)"
+                  aria-label="APEX OmniHub core badge"
                 >
                   <title>APEX OmniHub core badge</title>
                   <animate
