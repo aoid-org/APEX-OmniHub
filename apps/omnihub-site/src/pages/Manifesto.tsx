@@ -20,7 +20,7 @@ import { useEffect } from "react";
 export function ManifestoPage(): null {
   useEffect(() => {
     // Replace history entry so back-button returns cleanly to the SPA.
-    globalThis.location.replace("/apex-manifesto.html");
+    globalThis.location.replace("/manifesto.html");
   }, []);
 
   return null;
