@@ -41,7 +41,7 @@ test('OmniBoard Web3 MetaMask integration', async ({ page }) => {
   } else {
     // Dump all button texts for debugging
     const allBtns = await page.locator('button').allTextContents();
-    console.warn('Buttons found:', allBtns);
+    console.log('Buttons found:', allBtns);
 
     // Scroll the grid to find MetaMask
     await page.evaluate(() => {
