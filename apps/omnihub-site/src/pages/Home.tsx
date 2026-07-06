@@ -2220,6 +2220,8 @@ function RequestAccessModal({
       aria-modal="true"
       aria-labelledby="modal-title"
       open={isOpen}
+      // inert prevents focus traversal into hidden modal (fixes aria-hidden-focus)
+      {...(!isOpen ? { inert: '' } : {})}
     >
       <div className="modal-card">
         <button
