@@ -196,6 +196,7 @@
 .landing-root .cta-h2{font-size:clamp(42px,5.2vw,72px);font-weight:700;letter-spacing:-3px;line-height:1.02;margin-bottom:18px;background:linear-gradient(140deg,var(--hero-grad-start) 0%,var(--hero-grad-start) 38%,var(--copper) 63%,var(--gold) 84%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .landing-root .cta-sub{font-size:16px;color:var(--t2);line-height:1.65;margin-bottom:42px;letter-spacing:-.15px}
 .landing-root .cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.landing-root .cta-btns .pill{min-width:182px;justify-content:center;}
 .landing-root .cta-note{font-size:11.5px;color:var(--t3);letter-spacing:.3px}
 /* Footer */
 .landing-root footer{position:relative;z-index:1;border-top:1px solid var(--line);background:var(--bg1);padding:68px 5% 40px}
@@ -227,8 +228,8 @@
 .landing-root .dash-pulse{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--copper),var(--gold),transparent);animation:pulse-bar 2.8s ease-in-out infinite}
 @keyframes pulse-bar{0%,100%{opacity:.35}50%{opacity:1}}
 /* ===== MODAL ===== */
-.landing-root .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(9,24,37,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
-.landing-root .modal-overlay.open{opacity:1;pointer-events:all}
+.landing-root .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(9,24,37,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s ease, visibility .3s ease;}
+.landing-root .modal-overlay.open{opacity:1;visibility:visible;pointer-events:all}
 .landing-root .modal-card{background:var(--bg1);border:1px solid var(--line);border-radius:16px;padding:40px;width:100%;max-width:480px;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;margin:16px;}
 [data-theme="dark"] .landing-root .modal-card{box-shadow:0 40px 120px rgba(0,0,0,0.7);}
 .landing-root .modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.86);font-size:20px;line-height:32px;text-align:center;transition:background .2s;font-family:inherit;}
