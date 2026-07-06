@@ -21,7 +21,7 @@
   --color-white: #ffffff;
   --color-navy: #0f1729;
   --color-navy-light: #1e293b;
-  --color-orange: #be5019;
+  --color-orange: #FF6D00;
   --color-orange-light: #ea7c44;
 
   /* Semantic tokens */
@@ -30,7 +30,7 @@
   --color-surface-elevated: var(--color-white);
   --color-text-primary: var(--color-navy);
   --color-text-secondary: #475569;
-  --color-text-muted: #576575;
+  --color-text-muted: #475569;
   --color-border: #e2e8f0;
   --color-border-subtle: #f1f5f9;
   --color-accent: var(--color-orange);

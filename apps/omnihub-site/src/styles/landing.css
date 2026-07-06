@@ -6,14 +6,14 @@
   --bg2: #f1f5f9;
   --line: rgba(15, 23, 41, 0.08);
   --teal: rgba(196, 87, 28, 0.02);
-  --copper: #be5019;
+  --copper: #FF6D00;
   --gold: #ea7c44;
   --gold2: #f97316;
-  --ember: #be5019;
+  --ember: #FF6D00;
   --ember2: #ea7c44;
   --t1: #0f1729;
   --t2: #475569;
-  --t3: #576575;
+  --t3: #475569;
   --t4: #e2e8f0;
   --font: 'Space Grotesk', sans-serif; --ease: cubic-bezier(0.16,1,0.3,1); --max: 1260px;
   font-family: var(--font);
