@@ -64,7 +64,7 @@ export default defineConfig(
   },
   // Relaxed rules for CLI scripts, simulation, sandbox, and test files
   {
-    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts", "tests/**/*.{ts,tsx}", "packages/infrastructure/tests/**/*.{ts,tsx}"],
+    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts", "tests/**/*.{ts,tsx}", "packages/infrastructure/tests/**/*.{ts,tsx}", "apps/omnihub-site/tests/**/*.{ts,tsx}"],
     rules: {
       "no-console": "off",
       "@typescript-eslint/no-explicit-any": "off",  // Allow any in test/simulation/scripts code
