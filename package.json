@@ -290,6 +290,7 @@
     "typescript-eslint": "^8.38.0",
     "vite": "^7.3.5",
     "vite-plugin-pwa": "^1.2.0",
+    "vite-react-ssg": "^0.9.1-beta.1",
     "vitest": "^4.1.8"
   },
   "overrides": {
