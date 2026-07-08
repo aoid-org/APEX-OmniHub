@@ -10,6 +10,16 @@ function matchesRule(prompt: string, rule: PromptDefenseRule): boolean {
   return rule.pattern.test(prompt);
 }
 
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// ⚡ Bolt: Pre-compiled regex lookup is O(1) compared to O(N) array search inside string traversal
+const HIGH_RISK_KEYWORDS_REGEX = promptDefenseConfig.blockOnHighRiskKeywords.length > 0
+  ? new RegExp(
+      promptDefenseConfig.blockOnHighRiskKeywords.map(escapeRegExp).join('|'),
+      'i'
+    )
+  : null;
+
 export function evaluatePrompt(prompt: string): PromptEvaluation {
   if (!promptDefenseConfig.enabled) {
     return { decision: 'allow' };
@@ -36,12 +46,13 @@ export function evaluatePrompt(prompt: string): PromptEvaluation {
     };
   }
 
-  for (const keyword of promptDefenseConfig.blockOnHighRiskKeywords) {
-    if (prompt.toLowerCase().includes(keyword.toLowerCase())) {
+  if (HIGH_RISK_KEYWORDS_REGEX) {
+    const highRiskMatch = HIGH_RISK_KEYWORDS_REGEX.exec(prompt);
+    if (highRiskMatch) {
       return {
         decision: 'block',
         triggeredRule: 'high-risk-keyword',
-        reason: `High risk keyword detected: ${keyword}`,
+        reason: `High risk keyword detected: ${highRiskMatch[0]}`,
       };
     }
   }
