@@ -295,9 +295,7 @@
     "vitest": "^4.1.8"
   },
   "overrides": {
-    "vite-react-ssg": {
-      "react-router-dom": "$react-router-dom"
-    },
+    "react-router-dom": "$react-router-dom",
     "flatted": "^3.4.2",
     "h3": "1.15.10",
     "lodash": "^4.17.23",
