@@ -84,6 +84,8 @@ interface ModuleShellProps {
   readonly onAction?: (actionId: string, selectedItems: string[]) => Promise<boolean | string | void> | boolean | string | void;
   readonly getActionDisabledReason?: (actionId: string, selectedItems: readonly string[]) => string | null;
   readonly renderItem?: (item: OmniModuleState['items'][number], selected: boolean, toggle: () => void) => React.ReactNode;
+  /** Honest first-run copy shown when the module loads successfully but has no items. */
+  readonly emptyState?: string;
 }
 
 export const ModuleShell = memo(function ModuleShell({
@@ -93,6 +95,7 @@ export const ModuleShell = memo(function ModuleShell({
   onAction,
   getActionDisabledReason,
   renderItem,
+  emptyState,
 }: ModuleShellProps) {
   const [selectedItems, setSelectedItems] = useState<ReadonlySet<string>>(new Set());
   const [actionStatus, setActionStatus] = useState<string | null>(null);
@@ -223,6 +226,13 @@ export const ModuleShell = memo(function ModuleShell({
 
       {/* Custom module content (injected by each module) */}
       {typeof children === 'function' ? children({ selectedItems, toggle: handleToggle }) : children}
+
+      {/* Honest empty state (opt-in per module) */}
+      {emptyState && !state.loading && state.items.length === 0 && (
+        <div className="text-xs px-3 py-2 rounded-lg bg-muted/10 text-muted-foreground border border-border/30">
+          {emptyState}
+        </div>
+      )}
 
       {/* Items list */}
       <div className="flex flex-col gap-1.5 max-h-[240px] overflow-y-auto">

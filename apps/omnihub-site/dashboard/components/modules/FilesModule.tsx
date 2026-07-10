@@ -101,6 +101,33 @@ export default function FilesModule({ onClose }: Props) {
 
   const clearStaged = () => { setStaged(null); setUploadError(null); };
 
+  // Real storage-backed module actions. 'delete_file' removes the selected
+  // objects from the tenant prefix (RLS-scoped) — no fake success states.
+  const handleAction = async (actionId: string, selectedItems: string[]): Promise<boolean | string> => {
+    if (actionId === 'upload_file') {
+      fileInputRef.current?.click();
+      return true;
+    }
+    if (actionId !== 'delete_file') return false;
+    if (selectedItems.length === 0) return 'Select a file first, then Delete File removes it from your APEX Storage.';
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return 'Authentication required to delete files.';
+    const { error } = await supabase.storage
+      .from('omnihub-files')
+      .remove(selectedItems.map((name) => `${userId}/${name}`));
+    if (error) return `Delete failed: ${error.message}`;
+    state.refetch?.();
+    return `Deleted ${selectedItems.length} file${selectedItems.length === 1 ? '' : 's'} from APEX Storage.`;
+  };
+
+  const actionDisabledReason = (actionId: string, selectedItems: readonly string[]): string | null => {
+    if (actionId === 'delete_file' && selectedItems.length === 0) {
+      return 'Select a file to enable deletion.';
+    }
+    return null;
+  };
+
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -108,7 +135,7 @@ export default function FilesModule({ onClose }: Props) {
   };
 
   return (
-    <ModuleShell state={state} onClose={onClose}>
+    <ModuleShell state={state} onClose={onClose} onAction={handleAction} getActionDisabledReason={actionDisabledReason}>
       {!state.loading && (
         <div className="space-y-4">
           <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">

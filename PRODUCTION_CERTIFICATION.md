@@ -43,12 +43,12 @@ The old bun-install failure died before this gate could run; once green, it flag
 ## 5. Environment hygiene — resolved this session
 - Stale `.git/index.lock` **deleted**; local git fully functional.
 - Git-remote PAT scrubbed earlier; **revoke it + all disposable ENV credentials now** (session complete).
-- Files module: one leftover E2E artifact (`1781251436275_test-file-…txt`, PENDING) in the prod tenant. Deletion is a one-click owner action (Files → select → Delete File) — not performed by the agent per data-deletion policy.
+- Files module E2E artifact: **DELETED from production storage** (owner-ordered, verified — tenant bucket list empty). Walk also exposed that the modal's Upload/Delete footer actions were unwired no-ops; both now perform real storage operations (see follow-up PR commit 2).
 
 ## 6. Remaining owner actions
 1. Merge the follow-up PR (claim-hygiene + this report) → Release gate goes green end-to-end.
 2. Revoke the exposed PAT + disposable ENV creds.
-3. One click: delete the E2E test file in Files.
-4. Optional polish: Automations empty-state copy; Files usage "—" until first quota sync.
+3. ~~Delete the E2E test file~~ — DONE (verified in prod storage).
+4. ~~Polish items~~ — DONE in follow-up PR: Automations empty-state copy; Files modal emits real Storage Used/Total Files stats (edge redeploy applies it); Upload/Delete footer actions wired to real storage operations.
 
 **Verdict:** Real, commercially production-grade software with evidence at every layer — CI, code, and live production behavior.
