@@ -1619,3 +1619,31 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   the worker, restart `apex-orchestrator-worker`, and confirm logs show Redis connects
   plus vector index creation succeeds or reports `already exists`; the previous
   `IndexType.HASH` AttributeError must not recur.
+
+## 9.33 Lockfile-sync + sbom-gate remediation & Billing display contract (2026-07-10, PR #1626)
+
+- **Root causes fixed (both reproduced before fixing).** (1) Release/deploy `bun install
+  --frozen-lockfile` failed because `vite-react-ssg@^0.9.1-beta.1` was added to root
+  `package.json` without regenerating `bun.lock`. (2) `sbom-gate` failed with npm
+  `ELSPROBLEMS: invalid react-router-dom@7.17.0` because `vite-react-ssg` declares an
+  optional peer `react-router-dom@^6.14.1` while the repo resolves v7.
+- **Override policy.** The peer conflict is resolved with a **flat** root override
+  (`"react-router-dom": "$react-router-dom"`), pinning all instances to the root
+  dependency's version. Nested per-package overrides are forbidden — bun ignores them
+  and the Security Invariant gate fails the build. npm marks the peer as `overridden`,
+  so `npm ls --package-lock-only` (sbom parity) exits 0.
+- **New CI guard.** `scripts/ci/check-lockfile-sync.mjs` (`npm run check:lockfiles`,
+  first gate in `ci:runtime-gates`): fails when root `package.json` ranges drift from
+  `bun.lock` or when the npm lockfile tree is invalid. No network. Recovery commands
+  are printed in the failure output (`bun install --lockfile-only`,
+  `npm install --package-lock-only --ignore-scripts`).
+- **Billing display contract (`omnilink-port/module-state`, module `billing`).** Raw
+  subscription UUIDs must never reach OmniDash (owner P1, live walk 2026-07-10).
+  `resolveBilling` now formats items via `_shared/billing-display.ts`
+  (`describeBillingSubscription`): item `label` = humanized tier (e.g. `Pro Plan`),
+  `detail` = `Renews <date>` / `Trial ends <date>`, plus `stats` `Plan` and
+  `Next Invoice` consumed by `BillingModule`. `ModuleStateResponse` gained optional
+  `stats`. Regression tests: `tests/omnidash/billing-subscription-display.spec.ts`.
+- **Deployment:** no env var, DB schema, or start-command change. Redeploy the
+  `omnilink-port` edge function (owner-gated) for the Billing fix to take effect;
+  verify the Billing modal shows a plan name, never a UUID.
