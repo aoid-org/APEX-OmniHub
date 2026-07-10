@@ -4,6 +4,7 @@ import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, ty
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { handleOmniMediaRequest } from './omnimedia.ts';
 import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import { describeBillingSubscription } from '../_shared/billing-display.ts';
 import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
   checkRateLimit,
@@ -42,6 +43,8 @@ interface ModuleStateResponse {
   actions: string[];
   count: number;
   message?: string;
+  /** Optional display stats consumed by module modals (e.g. Billing "Plan"). */
+  stats?: ReadonlyArray<{ label: string; value: string }>;
 }
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
@@ -430,21 +433,16 @@ async function resolveBilling(
     trial_end: string | null;
   } | null;
 
-  const items = sub ? [
-    {
-      id: sub.id,
-      tier: sub.tier,
-      status: sub.status,
-      period_end: sub.current_period_end,
-      trial_end: sub.trial_end,
-    },
-  ] : [];
+  // Raw IDs must never reach the UI — format a human plan label + stats.
+  const display = sub ? describeBillingSubscription(sub) : null;
+  const items = display ? [display.item] : [];
 
   return {
     State: sub ? 'Online' : 'NoSubscription',
     items: normalizeModuleItems(items),
     actions: ['manage-plan', 'billing-portal'],
     count: items.length,
+    ...(display ? { stats: display.stats } : {}),
   };
 }
 
