@@ -397,6 +397,15 @@ async function resolveFiles(
     metadata: Record<string, unknown> | null;
   }>;
 
+  // Emit real usage stats so the Files modal never shows "—" for a synced
+  // tenant (owner polish item, 2026-07-10). Usage sums the listed page (50-file
+  // cap) — an honest floor, never an inflated number.
+  const usedBytes = files.reduce(
+    (sum, f) => sum + (typeof f.metadata?.size === 'number' ? (f.metadata.size as number) : 0),
+    0,
+  );
+  const usedGB = usedBytes / (1024 ** 3);
+
   return {
     State: 'Online',
     items: normalizeModuleItems(files.map((f) => ({
@@ -407,6 +416,10 @@ async function resolveFiles(
     }))),
     actions: ['upload_file', 'delete_file'],
     count: files.length,
+    stats: [
+      { label: 'Storage Used', value: `${usedGB < 0.01 && usedBytes > 0 ? '<0.01' : usedGB.toFixed(2)} GB` },
+      { label: 'Total Files', value: String(files.length) },
+    ],
   };
 }
 

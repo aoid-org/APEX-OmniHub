@@ -1647,3 +1647,21 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Deployment:** no env var, DB schema, or start-command change. Redeploy the
   `omnilink-port` edge function (owner-gated) for the Billing fix to take effect;
   verify the Billing modal shows a plan name, never a UUID.
+
+## 9.34 Files module — real storage actions + usage stats contract (2026-07-10, PR #1627)
+
+- **Files display contract (`omnilink-port/module-state`, module `files`).** `resolveFiles`
+  now emits `stats`: `Storage Used` (GB, 2 dp; `<0.01 GB` floor for tiny non-zero usage)
+  and `Total Files`, summed from the listed page (50-object cap — an honest floor, never
+  inflated). Eliminates the permanent "— / cap GB" placeholder in the Files modal.
+- **Client storage actions.** `FilesModule` footer actions were unwired no-ops; both are
+  now real: `upload_file` opens the file picker (same ingest path as the dropzone),
+  `delete_file` removes the selected objects from the tenant prefix of the
+  `omnihub-files` bucket via the RLS-scoped client, with explicit errors and a
+  disabled-reason until a file is selected. No fake success states.
+- **Shared shell.** `ModuleShell` gained an opt-in `emptyState` prop (honest first-run
+  copy when a module loads with zero items); `AutomationsModule` opts in.
+- **Deployment:** no env var, DB schema, or start-command change. Redeploy the
+  `omnilink-port` edge function to activate the stats contract; the client changes ship
+  with the normal web deploy. Verify: Files modal shows `0.00 GB`/file-count instead of
+  an em-dash, and Delete File removes a selected object end-to-end.
