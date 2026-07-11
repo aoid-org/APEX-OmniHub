@@ -1665,3 +1665,16 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   `omnilink-port` edge function to activate the stats contract; the client changes ship
   with the normal web deploy. Verify: Files modal shows `0.00 GB`/file-count instead of
   an em-dash, and Delete File removes a selected object end-to-end.
+
+## 9.35 A.R.I.S.E. snapshot publish — same-day rerun collision fix (2026-07-10)
+
+- **Failure:** `Publish dated snapshot rolling PR` aborted with "untracked working tree
+  files would be overwritten by checkout" on the second A.R.I.S.E. run of a day. The
+  publish job downloads dated snapshot artifacts into `memory/omni-recall/docs/`
+  (untracked), and the rolling branch `automation/arise-snapshot-current` already tracks
+  the same dated filename from the earlier run — `git checkout -B` refuses to overwrite.
+- **Fix:** `arise.yml` now `rm -f`s the untracked generated copies after staging them in
+  the temp workdir and before switching branches; fresh content is restored from the
+  workdir afterward. Idempotent: identical re-published content exits 0 as
+  "no changes to publish."
+- **Deployment:** workflow-only change; no service, env var, DB, or start-command impact.

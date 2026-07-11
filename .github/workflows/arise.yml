@@ -159,6 +159,12 @@ jobs:
 
           workdir="$(mktemp -d)"
           cp "${files[@]}" "$workdir/"
+          # Remove the untracked generated copies before switching branches:
+          # the rolling branch already tracks same-dated snapshot filenames on
+          # repeat runs of the same day, and git refuses to overwrite untracked
+          # working-tree files on checkout ("would be overwritten by checkout").
+          # The fresh content is restored from "$workdir" after the switch.
+          rm -f "${files[@]}"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             git fetch origin "$branch"
             git checkout -B "$branch" "origin/$branch"
