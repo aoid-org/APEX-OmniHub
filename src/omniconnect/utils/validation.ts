@@ -6,6 +6,10 @@ import { CanonicalEvent, EventType } from '../types/canonical';
 import { SessionToken } from '../types/connector';
 import { sanitizeEventPayload as baseSanitizePayload } from '@/lib/sanitization';
 
+// ⚡ Bolt: Pre-calculate valid event types into an O(1) Set lookup to prevent
+// allocating a new array via Object.values() on every single event validation call.
+const VALID_EVENT_TYPES = new Set<string>(Object.values(EventType));
+
 export function validateCanonicalEvent(event: unknown): event is CanonicalEvent {
   if (!event || typeof event !== 'object') return false;
 
@@ -18,7 +22,7 @@ export function validateCanonicalEvent(event: unknown): event is CanonicalEvent 
   if (!e.userId || typeof e.userId !== 'string') return false;
   if (!e.source || typeof e.source !== 'string') return false;
   if (!e.provider || typeof e.provider !== 'string') return false;
-  if (!e.eventType || !Object.values(EventType).includes(e.eventType as EventType)) return false;
+  if (!e.eventType || typeof e.eventType !== 'string' || !VALID_EVENT_TYPES.has(e.eventType)) return false;
   if (!e.timestamp || typeof e.timestamp !== 'string') return false;
 
   // Optional fields with validation
