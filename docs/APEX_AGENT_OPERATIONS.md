@@ -1678,3 +1678,18 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   workdir afterward. Idempotent: identical re-published content exits 0 as
   "no changes to publish."
 - **Deployment:** workflow-only change; no service, env var, DB, or start-command impact.
+
+
+## 2026-07-10 — PR #1629 audit remediation (operational contract changes)
+
+- **Scheduler `public.dispatch_scheduled_workflows()`**: `EXECUTE` is now REVOKED
+  from `PUBLIC`/`anon`/`authenticated` (migration
+  `20260710123000_workflow_scheduler_revoke_public_execute.sql`). Operational
+  impact: none for scheduling — pg_cron runs the function as its job owner. Do NOT
+  add a role GRANT to "fix" a call failure; direct RPC invocation is intentionally
+  denied.
+- **Workflow action `notification`** (`supabase/functions/_shared/action-executor.ts`):
+  `executeNotification` now throws `NOT_IMPLEMENTED` and no longer returns
+  `sent:true`. Operational impact: any workflow/automation whose action type is
+  `notification` will now fail honestly instead of recording fake delivery. Re-enable
+  only after routing delivery through the `send-push-notification` Edge Function.
