@@ -32,7 +32,7 @@ async function runComplianceCheck(): Promise<{ ok: boolean; message: string }> {
   results.push({
     label: 'Zero-Trust Policy',
     pass: false,
-    detail: 'Unverified in client — requires server-side attestation of runtime enforcement',
+    detail: 'Unverified in client — requires server-side validation of runtime enforcement',
   });
 
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
