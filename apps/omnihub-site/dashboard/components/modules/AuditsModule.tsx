@@ -23,13 +23,16 @@ async function runComplianceCheck(): Promise<{ ok: boolean; message: string }> {
 
   const results: ComplianceCheckResult[] = [];
 
-  // Zero-Trust: production builds force demo mode off (DemoModeContext) —
-  // read the same build-time flag directly rather than duplicating that logic.
-  const zeroTrustEnforced = import.meta.env.PROD === true;
+  // Zero-Trust: a production *build* flag is NOT evidence that zero-trust
+  // controls are operating at runtime, and must not inflate this compliance
+  // check to passing. Runtime enforcement (RLS, auth gating, service-role
+  // isolation) can only be attested server-side. Until a real server-side
+  // attestation signal is wired, report this honestly as unverified rather
+  // than deriving a green pass from the client build mode.
   results.push({
     label: 'Zero-Trust Policy',
-    pass: zeroTrustEnforced,
-    detail: zeroTrustEnforced ? 'Enforced (production build)' : 'Not enforced (non-production build)',
+    pass: false,
+    detail: 'Unverified in client — requires server-side attestation of runtime enforcement',
   });
 
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
