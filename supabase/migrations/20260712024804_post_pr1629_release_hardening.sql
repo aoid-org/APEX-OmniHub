@@ -113,6 +113,7 @@ $$;
 CREATE TABLE IF NOT EXISTS public.memories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL,
+-- additive-allow: ON_DELETE_CASCADE Reconciliation: reproduces the already-live FK from 20260303000000_create_memories_table.sql unchanged; cascade delete on account closure is the original canonical design, not a new choice
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   device_id UUID,
   device_trust_level public.device_trust_enum NOT NULL DEFAULT 'unknown',
@@ -149,27 +150,32 @@ CREATE INDEX IF NOT EXISTS idx_memories_provenance ON public.memories(provenance
 
 ALTER TABLE public.memories ENABLE ROW LEVEL SECURITY;
 
+-- additive-allow: DROP_POLICY Reconciliation: CREATE POLICY has no IF NOT EXISTS in Postgres; drop-then-recreate is the standard idempotent pattern and reproduces the already-live policy unchanged
 DROP POLICY IF EXISTS memories_user_select ON public.memories;
 CREATE POLICY memories_user_select ON public.memories
   FOR SELECT TO authenticated
   USING (tenant_id = public.get_jwt_tenant_id() AND user_id = auth.uid() AND NOT is_quarantined);
 
+-- additive-allow: DROP_POLICY Reconciliation: CREATE POLICY has no IF NOT EXISTS in Postgres; drop-then-recreate is the standard idempotent pattern and reproduces the already-live policy unchanged
 DROP POLICY IF EXISTS memories_user_insert ON public.memories;
 CREATE POLICY memories_user_insert ON public.memories
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id = public.get_jwt_tenant_id() AND user_id = auth.uid() AND device_trust_level IN ('trusted', 'suspect'));
 
+-- additive-allow: DROP_POLICY Reconciliation: CREATE POLICY has no IF NOT EXISTS in Postgres; drop-then-recreate is the standard idempotent pattern and reproduces the already-live policy unchanged
 DROP POLICY IF EXISTS memories_user_update ON public.memories;
 CREATE POLICY memories_user_update ON public.memories
   FOR UPDATE TO authenticated
   USING (tenant_id = public.get_jwt_tenant_id() AND user_id = auth.uid())
   WITH CHECK (tenant_id = public.get_jwt_tenant_id() AND user_id = auth.uid());
 
+-- additive-allow: DROP_POLICY Reconciliation: CREATE POLICY has no IF NOT EXISTS in Postgres; drop-then-recreate is the standard idempotent pattern and reproduces the already-live policy unchanged
 DROP POLICY IF EXISTS memories_user_delete ON public.memories;
 CREATE POLICY memories_user_delete ON public.memories
   FOR DELETE TO authenticated
   USING (tenant_id = public.get_jwt_tenant_id() AND user_id = auth.uid());
 
+-- additive-allow: DROP_POLICY Reconciliation: CREATE POLICY has no IF NOT EXISTS in Postgres; drop-then-recreate is the standard idempotent pattern and reproduces the already-live policy unchanged
 DROP POLICY IF EXISTS memories_service_role ON public.memories;
 CREATE POLICY memories_service_role ON public.memories
   FOR ALL TO service_role
@@ -192,27 +198,4 @@ SELECT
   user_id,
   COUNT(*) AS total_memories,
   COUNT(*) FILTER (WHERE memory_type = 'episodic') AS episodic_count,
-  COUNT(*) FILTER (WHERE memory_type = 'semantic') AS semantic_count,
-  COUNT(*) FILTER (WHERE memory_type = 'procedural') AS procedural_count,
-  COUNT(*) FILTER (WHERE memory_type = 'preference') AS preference_count,
-  COUNT(*) FILTER (WHERE embedding IS NOT NULL) AS embedded_count,
-  COUNT(*) FILTER (WHERE expires_at IS NOT NULL AND expires_at < NOW()) AS expired_count,
-  COUNT(*) FILTER (WHERE embedding IS NULL AND embedding_model IS NOT NULL) AS pending_reembed_count,
-  COUNT(*) FILTER (WHERE trust_score < 0.3 AND provenance_type != 'user_confirmed') AS poisoned_candidate_count,
-  COUNT(*) FILTER (WHERE is_quarantined = true) AS quarantined_count,
-  COALESCE(AVG(importance_score), 0) AS avg_importance,
-  COALESCE(AVG(trust_score), 0) AS avg_trust_score,
-  COALESCE(AVG(access_count), 0) AS avg_access_count,
-  MAX(created_at) AS latest_memory_at,
-  MIN(created_at) AS oldest_memory_at,
-  embedding_model AS current_embedding_model
-FROM public.memories
-GROUP BY tenant_id, user_id, embedding_model;
-
-GRANT SELECT ON public.memory_health_stats TO authenticated;
-GRANT SELECT ON public.memory_health_stats TO service_role;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO authenticated;
-GRANT ALL ON public.memories TO service_role;
-
-COMMIT;
+  COUNT(*) FILTER (WHERE memory_type = 'semantic
