@@ -1776,3 +1776,41 @@ production state; no new behavior on any active code path.
 introspection that production already matches this end-state — applying is
 expected to be a no-op there; primarily unblocks `supabase db push` on `main`
 (including the still-pending pg_net migration from §9.36).
+
+## 9.38 Hotfix — truncated migration files from #1632/#1633 (2026-07-12)
+
+**Changed critical runtime paths:** none — replaces file content only, both
+files' intended end-state is unchanged from §9.36/§9.37; this section documents
+why a re-push was necessary.
+
+### Operational change summary
+
+- After #1633 merged, `Deploy Web3 Functions`/`Deploy Supabase Edge Functions`
+  on `main` continued failing — no longer on migration-history drift (that part
+  of #1633 worked), but on a hard Postgres syntax error:
+  `ERROR: unterminated dollar-quoted string`.
+- Root cause: `20260711120000_pg_net_relocate_and_lockdown.sql` (from #1632)
+  and `20260712024804_post_pr1629_release_hardening.sql` (from #1633) were
+  both silently truncated mid-statement when the agent's edit tool and shell
+  fell out of sync during a same-turn edit-then-push sequence. CI's
+  text-based `check-additive-migrations.ts` gate did not catch it — the
+  truncation point was after the last line that gate inspects — but
+  `supabase db push`'s real SQL parser did, once it actually tried to run
+  the file.
+- Fix: both files replaced with their complete, correct content, this time
+  written and integrity-checked (dollar-quote balance, `COMMIT;` terminator)
+  in a single non-interrupted shell pass rather than an edit-tool-then-shell
+  handoff. No content/logic change versus the original intent documented in
+  §9.36 and §9.37 — this is a delivery-mechanism fix, not a design change.
+
+### Environment / topology impact
+
+- **None.** Same DB-side changes as §9.36/§9.37, now delivered intact.
+
+**Operational impact:** re-push of two migration files. Confirms `supabase db
+push` can reach and execute them; does not change what they do.
+**Process lesson:** for any future git-push work in this environment, write
+and read migration/config files intended for a git commit within the same
+tool (shell heredoc end-to-end, or edit-tool-then-edit-tool-read), never
+edit-tool-write then immediately shell-read in the same turn — the two views
+of the filesystem are not guaranteed to be synced yet.

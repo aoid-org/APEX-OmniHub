@@ -6,7 +6,7 @@
 -- Management API, not via a committed file — production's
 -- supabase_migrations.schema_migrations already has a row for version
 -- 20260712024804 / name "post_pr1629_release_hardening", which is why every
--- `supabase db push` since has failed with "Remote migration versions not
+-- `supabase db push` since had failed with "Remote migration versions not
 -- found in local migrations directory."
 --
 -- This file is a RECONSTRUCTION, not a recovered original: it was built by
@@ -17,6 +17,14 @@
 -- it is safe to (re)run on production (already correct — no-op) and on a
 -- fresh/shadow database (where 20260303000000_create_memories_table.sql
 -- already creates all of this correctly — also a no-op).
+--
+-- CORRUPTION NOTE (2026-07-12): the commit merged via PR #1633 was silently
+-- truncated mid-statement (cut off inside the memory_health_stats view body)
+-- by a file-sync issue between the agent's edit tool and its shell. CI's
+-- text-based additive-migrations gate didn't catch it (truncation occurred
+-- after the last line it checked), but `supabase db push` did. This version
+-- was written and verified end-to-end in a single shell pass with explicit
+-- dollar-quote-balance and COMMIT-terminator checks.
 --
 -- Scope, per AUDIT.md's two findings for this session:
 --   1. "Live Supabase exposed internal SECURITY DEFINER worker/control RPCs
@@ -106,9 +114,9 @@ CREATE OR REPLACE FUNCTION public.get_jwt_tenant_id()
 RETURNS UUID
 LANGUAGE sql
 STABLE
-AS $$
+AS $BODY$
   SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'tenant_id')::uuid; -- NOSONAR
-$$;
+$BODY$;
 
 CREATE TABLE IF NOT EXISTS public.memories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -198,4 +206,27 @@ SELECT
   user_id,
   COUNT(*) AS total_memories,
   COUNT(*) FILTER (WHERE memory_type = 'episodic') AS episodic_count,
-  COUNT(*) FILTER (WHERE memory_type = 'semantic
+  COUNT(*) FILTER (WHERE memory_type = 'semantic') AS semantic_count,
+  COUNT(*) FILTER (WHERE memory_type = 'procedural') AS procedural_count,
+  COUNT(*) FILTER (WHERE memory_type = 'preference') AS preference_count,
+  COUNT(*) FILTER (WHERE embedding IS NOT NULL) AS embedded_count,
+  COUNT(*) FILTER (WHERE expires_at IS NOT NULL AND expires_at < NOW()) AS expired_count,
+  COUNT(*) FILTER (WHERE embedding IS NULL AND embedding_model IS NOT NULL) AS pending_reembed_count,
+  COUNT(*) FILTER (WHERE trust_score < 0.3 AND provenance_type != 'user_confirmed') AS poisoned_candidate_count,
+  COUNT(*) FILTER (WHERE is_quarantined = true) AS quarantined_count,
+  COALESCE(AVG(importance_score), 0) AS avg_importance,
+  COALESCE(AVG(trust_score), 0) AS avg_trust_score,
+  COALESCE(AVG(access_count), 0) AS avg_access_count,
+  MAX(created_at) AS latest_memory_at,
+  MIN(created_at) AS oldest_memory_at,
+  embedding_model AS current_embedding_model
+FROM public.memories
+GROUP BY tenant_id, user_id, embedding_model;
+
+GRANT SELECT ON public.memory_health_stats TO authenticated;
+GRANT SELECT ON public.memory_health_stats TO service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO authenticated;
+GRANT ALL ON public.memories TO service_role;
+
+COMMIT;

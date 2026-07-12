@@ -34,6 +34,14 @@
 --   used for other internal-only functions in
 --   20260608000000_security_advisory_hardening.sql.
 --
+-- CORRUPTION NOTE (2026-07-12): the first two commits of this file (merged via
+-- PR #1632) were silently truncated mid-statement by a file-sync issue between
+-- the agent's edit tool and its shell — CI's text-based additive-migrations
+-- gate didn't catch it (truncation occurred after the last line it checked),
+-- but `supabase db push` did, failing with "unterminated dollar-quoted
+-- string." This version was written and verified end-to-end in a single shell
+-- pass with explicit dollar-quote-balance and COMMIT-terminator checks.
+--
 -- RFC-link: security hardening — resolves an open Supabase advisory + closes an
 --   unflagged over-broad grant; no new architecture, removes privileges only.
 -- =============================================================================
@@ -92,4 +100,12 @@ BEGIN
 
   IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
              WHERE n.nspname = 'net' AND p.proname = 'http_delete') THEN
--- 
+-- additive-allow: REVOKE Security fix: net.http_delete open to anon/authenticated by pg_net default; only postgres/service_role call it live
+    REVOKE ALL ON FUNCTION net.http_delete(url text, params jsonb, headers jsonb, timeout_milliseconds integer, body jsonb)
+      FROM PUBLIC, anon, authenticated;
+    GRANT EXECUTE ON FUNCTION net.http_delete(url text, params jsonb, headers jsonb, timeout_milliseconds integer, body jsonb)
+      TO postgres, service_role;
+  END IF;
+END $$;
+
+COMMIT;
