@@ -291,7 +291,8 @@
       "copyright": "© 2026 APEX Business Systems. All rights reserved.",
       "privacy": "プライバシー",
       "terms": "利用規約",
-      "web3Integrations": "Web3 連携"
+      "web3Integrations": "Web3 連携",
+      "support": "Support"
     },
     "maestro": {
       "active": "有効",
@@ -464,5 +465,13 @@
     "translate": "翻訳",
     "translated_text": "翻訳結果",
     "copy": "コピー"
+  },
+  "supportAgent": {
+    "open": "Open Support Agent",
+    "close": "Close",
+    "title": "APEX Support",
+    "subtitle": "How can we help you today?",
+    "greeting": "Hello! I am the APEX-OmniHub Support Agent. How can I assist you with OmniHub, OmniLink, or OmniPort?",
+    "placeholder": "Type your message..."
   }
 }

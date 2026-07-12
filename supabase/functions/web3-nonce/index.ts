@@ -22,7 +22,7 @@
  */
 
 import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts';
-import { encodeHex } from 'https://deno.land/std@0.177.0/encoding/hex.ts';
+import { encodeHex } from 'https://deno.land/std@0.224.0/encoding/hex.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
 import { checkRateLimit, rateLimitExceededResponse, RATE_LIMIT_CONFIGS } from '../_shared/rate-limit.ts';
 import { isValidWalletAddress } from '../_shared/validation.ts';

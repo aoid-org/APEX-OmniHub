@@ -59,6 +59,17 @@ function deriveState(tier: SubscriptionTier): PlanState {
   };
 }
 
+export function getStorageCapGB(tier: SubscriptionTier): number {
+  const tiers: Record<SubscriptionTier, number> = {
+    free: 1,
+    starter: 11,
+    pro: 21,
+    business: 31,
+    enterprise: 41,
+  };
+  return tiers[tier] ?? 1;
+}
+
 export function usePlan(): PlanState {
   const [state, setState] = useState<PlanState>(LOADING_STATE);
 

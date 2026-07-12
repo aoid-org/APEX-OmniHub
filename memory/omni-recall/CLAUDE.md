@@ -1,6 +1,6 @@
 ---
-version: 1.1.0
-last_audited: 2026-06-25
+version: 1.1.1
+last_audited: 2026-07-06
 status: verified
 ---
 
@@ -17,6 +17,7 @@ status: verified
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
+- Audit (2026-07-06): Google Antigravity session. Pushed commits to branch `apex/omnihub/20260706-omniboard-integrations-9f766361`. Verified 0 ESLint warnings workspace-wide (complying with Gate 2). Extended relaxed rule files in `eslint.config.js` to include `apps/omnihub-site/tests/**/*.{ts,tsx}` and removed the unused `expect` import from `omniboard-integrations.spec.ts`. All 3081 unit, integration, and quality tests passed cleanly.
 - Audit (2026-07-04): active dev branch `claude/omnidash-surface-alignment-fsrs31` (PR #1529, OmniDash surface fix pass). **Release line bumped `1.8.2`→`1.8.3`** (patch; UI/glassmorphism refinements, no API/schema/env change). Surface RELEASE-READY: 726 OmniDash tests green, `check:omnidash` 37/37, `check:omni-skin` 6/6, typecheck/build green. OmniMedia VALIDATED_FUNCTIONING — player proven (real media decoded + time-advancing) + production backend confirmed via Supabase Management API (`omnilink-port` deployed; `omnimedia_assets` RLS + 4 policies; catalog empty pending owner upload). Frozen baseline: `omnidash-surface-1.8.3-baseline-2026-07-04.md`. `main` head not re-verified this session (on a feature branch). Owner cuts the final gate by merging the PR.
 - Verified HEAD at this audit (2026-06-25): `main` HEAD `4c0d481` (PR #1488, chore(cert): Production Hardening Sprint & Codebase Determinism); active dev branch `claude/kind-feynman-h5gcbs` @ `6074e0c` (fix(ci): integration-harness playwright hang). Release line `1.8.2`. **Skill routing updated:** root `CLAUDE.md` now routes to `apex-boost-claude`, `apex-master-debug-claude`, `omnidev-apex-pro-1.0.0` — `apex-dev` is superseded. Workflow count corrected to 20; edge function dir count corrected to 33.
 - Prior audit (2026-06-24, Session 3): `main` HEAD `8bfb1a6` (PR #1486, fix(sonar) omnihub-site code-smell closure); development branch tracks `main` at the same commit; no open PRs. Release line `1.8.2` (`package.json` bumped). Release cut is **manual / owner-driven** (`changeset version` → `chore: version packages`); CI validates, `compliance.yml` attaches SBOM **attach-only** (gated on the tag already existing, so CI can never create a tag — resolved 2026-06-24). Owner-approved cert: `docs/release/owner-approved/PRODUCTION_CERTIFICATION_2026_06_24.md`.

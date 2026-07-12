@@ -6,6 +6,7 @@
   "articleSection": "Founder Story",
   "author": {
     "@type": "Person",
+    "name": "JR",
     "jobTitle": "Founder & CTO",
     "worksFor": {
       "@type": "Organization",

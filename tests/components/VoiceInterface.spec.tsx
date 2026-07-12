@@ -32,6 +32,16 @@ vi.mock('@/lib/monitoring', () => ({
   logAnalyticsEvent: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: 'test-access-token' } },
+      }),
+    },
+  },
+}));
+
 vi.mock('@/lib/backoff', () => ({
   calculateBackoffDelay: vi.fn().mockReturnValue(50),
 }));

@@ -8,5 +8,8 @@
 export {
   advancedAnalyticsData,
   aiAutomationData,
-  smartIntegrationsData,
+  omniboardData,
+  omniSkillsData,
+  byomData,
 } from './capability-pages';
+
