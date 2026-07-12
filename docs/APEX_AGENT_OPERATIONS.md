@@ -1693,3 +1693,40 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   `sent:true`. Operational impact: any workflow/automation whose action type is
   `notification` will now fail honestly instead of recording fake delivery. Re-enable
   only after routing delivery through the `send-push-notification` Edge Function.
+
+## 9.36 pg_net relocation + execute lockdown — live audit follow-up (2026-07-11)
+
+**Changed critical runtime paths:** none. `supabase/migrations/20260711120000_pg_net_relocate_and_lockdown.sql` only — not yet applied live (opened for review).
+
+### Operational change summary
+
+- Prior migration `20260608000000_security_advisory_hardening.sql` attempted to
+  relocate `pg_net` out of `public` via `ALTER EXTENSION ... SET SCHEMA`, silently
+  caught by an exception handler. Live verification (2026-07-11, Supabase
+  Management API SQL query) confirmed this always fails — pg_net is a
+  non-relocatable extension (Postgres error `0A000: extension "pg_net" does not
+  support SET SCHEMA`) — and pg_net has remained in `public` in production since
+  2026-06-08. (`vector`'s relocation in the same migration did succeed.)
+- Fix: `DROP EXTENSION pg_net; CREATE EXTENSION pg_net SCHEMA extensions;` in one
+  transaction — the only supported relocation path for a non-relocatable
+  extension. `net.http_post`/`http_get`/`http_delete` call sites are unaffected:
+  pg_net always exposes its functions under its own dedicated `net` schema
+  regardless of the extension's home schema (confirmed against Supabase
+  docs/community guidance).
+- Also revokes EXECUTE on `net.http_post`/`http_get`/`http_delete` from
+  `anon`/`authenticated`/PUBLIC — pg_net's install-time default grant, confirmed
+  live and not previously flagged in `AUDIT.md` (2026-07-11). No live caller
+  needs it: all current callers (`workflow_scheduler`,
+  `physiomni_phase2_intelligence` triggers) are `SECURITY DEFINER` functions
+  owned by `postgres`. Locked to `postgres`/`service_role` only, matching the
+  pattern in `20260608000000_security_advisory_hardening.sql` §4.
+
+### Environment / topology impact
+
+- **None.** No service, env var, DB object addition, or start-command change —
+  pure extension relocation + grant tightening on an existing extension, both
+  additive-allow guarded and idempotent (re-runs safely if already applied).
+
+**Operational impact:** one migration, DB-side only. Requires an explicit
+`supabase db push` (or equivalent) against production by the release owner —
+intentionally not auto-applied by this PR.
