@@ -107,7 +107,7 @@ export const PWAInstallBanner = memo(() => {
             border: 'none',
             cursor: 'pointer',
             color: 'rgba(255,255,255,0.38)',
-            padding: '6px',
+            padding: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

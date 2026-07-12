@@ -66,3 +66,8 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 ## 13. OmniDash Left Sidebar Visual Parity
 **Invariant:** OmniTrace (`OmniTraceFeed.tsx`) is the source of truth for left/right sidebar visual styling.
 **Rule:** The left sidebar components (such as `OmniDashShell` NavItems and `SidebarKpiBar`) must explicitly copy OmniTrace's design language: `borderRadius: 10`, `border: '1px solid rgba(249,115,22,0.25)'`, `background: 'rgba(249,115,22,0.06)'`, and `backdropFilter: 'blur(16px) saturate(140%)'`. Do not invert this relationship (OmniTrace never copies the left sidebar).
+
+## 14. ESLint Quality Gate Enforcement
+**Invariant:** The workspace enforces exactly 0 warnings/errors (Gate 2 of the Platform Quality Gates).
+**Rule:** All test and visual test files under `apps/omnihub-site/tests` are subject to relaxed rules for simulation/testing (e.g. `no-console` is disabled). To avoid code smell/warnings on unused imports (such as unused `@playwright/test` structures), unused imports must be pruned surgically instead of bypassed.
+

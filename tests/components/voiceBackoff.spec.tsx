@@ -17,6 +17,16 @@ vi.mock('@/utils/RealtimeAudio', () => ({
   clearAudioQueue: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { access_token: 'test-access-token' } },
+      }),
+    },
+  },
+}));
+
 vi.mock('@/lib/monitoring', () => ({
   logAnalyticsEvent: vi.fn(),
 }));

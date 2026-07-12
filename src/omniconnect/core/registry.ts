@@ -47,6 +47,7 @@ export const availableIntegrations: IntegrationDef[] = [
   { id: 'salesforce', name: 'Salesforce', type: 'salesforce', description: 'CRM account, contact, and opportunity integration', icon: BriefcaseBusiness, requiresApiKey: true, category: 'operations', status: 'ga', version: '1.0', docsUrl: 'https://developer.salesforce.com/docs' },
   { id: 'sap', name: 'SAP', type: 'sap', description: 'Enterprise resource planning connector for SAP landscapes', icon: Building2, requiresApiKey: true, category: 'operations', status: 'beta', version: '0.1', docsUrl: 'https://developers.sap.com' },
   { id: 'slack', name: 'Slack', type: 'slack', description: 'Team messaging and collaboration event streaming', icon: MessageCircle, requiresApiKey: true, category: 'operations', status: 'ga', version: '1.0', docsUrl: 'https://api.slack.com/docs' },
+  { id: 'metamask', name: 'MetaMask', type: 'web3', description: 'Web3 Wallet connection', icon: Zap, requiresApiKey: false, category: 'security', status: 'ga', version: '1.0' },
 ];
 
 class ConnectorRegistryImpl implements ConnectorRegistry {

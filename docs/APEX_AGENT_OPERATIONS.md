@@ -2,7 +2,7 @@
 
 # APEX Agent — Operations & Anti-Drift Reference
 
-**Status:** LIVE / demo-ready · **Last verified end-to-end:** 2026-06-19
+**Status:** LIVE / demo-ready · **Last verified end-to-end:** 2026-07-06
 **Canonical source of truth.** If reality and this document disagree, fix one of them — do not let them drift. Every value here was verified against the running production system.
 
 > This file lives in the repo on purpose. Update it in the **same PR** that changes any service, env var, table, or start command.
@@ -1619,3 +1619,77 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   the worker, restart `apex-orchestrator-worker`, and confirm logs show Redis connects
   plus vector index creation succeeds or reports `already exists`; the previous
   `IndexType.HASH` AttributeError must not recur.
+
+## 9.33 Lockfile-sync + sbom-gate remediation & Billing display contract (2026-07-10, PR #1626)
+
+- **Root causes fixed (both reproduced before fixing).** (1) Release/deploy `bun install
+  --frozen-lockfile` failed because `vite-react-ssg@^0.9.1-beta.1` was added to root
+  `package.json` without regenerating `bun.lock`. (2) `sbom-gate` failed with npm
+  `ELSPROBLEMS: invalid react-router-dom@7.17.0` because `vite-react-ssg` declares an
+  optional peer `react-router-dom@^6.14.1` while the repo resolves v7.
+- **Override policy.** The peer conflict is resolved with a **flat** root override
+  (`"react-router-dom": "$react-router-dom"`), pinning all instances to the root
+  dependency's version. Nested per-package overrides are forbidden — bun ignores them
+  and the Security Invariant gate fails the build. npm marks the peer as `overridden`,
+  so `npm ls --package-lock-only` (sbom parity) exits 0.
+- **New CI guard.** `scripts/ci/check-lockfile-sync.mjs` (`npm run check:lockfiles`,
+  first gate in `ci:runtime-gates`): fails when root `package.json` ranges drift from
+  `bun.lock` or when the npm lockfile tree is invalid. No network. Recovery commands
+  are printed in the failure output (`bun install --lockfile-only`,
+  `npm install --package-lock-only --ignore-scripts`).
+- **Billing display contract (`omnilink-port/module-state`, module `billing`).** Raw
+  subscription UUIDs must never reach OmniDash (owner P1, live walk 2026-07-10).
+  `resolveBilling` now formats items via `_shared/billing-display.ts`
+  (`describeBillingSubscription`): item `label` = humanized tier (e.g. `Pro Plan`),
+  `detail` = `Renews <date>` / `Trial ends <date>`, plus `stats` `Plan` and
+  `Next Invoice` consumed by `BillingModule`. `ModuleStateResponse` gained optional
+  `stats`. Regression tests: `tests/omnidash/billing-subscription-display.spec.ts`.
+- **Deployment:** no env var, DB schema, or start-command change. Redeploy the
+  `omnilink-port` edge function (owner-gated) for the Billing fix to take effect;
+  verify the Billing modal shows a plan name, never a UUID.
+
+## 9.34 Files module — real storage actions + usage stats contract (2026-07-10, PR #1627)
+
+- **Files display contract (`omnilink-port/module-state`, module `files`).** `resolveFiles`
+  now emits `stats`: `Storage Used` (GB, 2 dp; `<0.01 GB` floor for tiny non-zero usage)
+  and `Total Files`, summed from the listed page (50-object cap — an honest floor, never
+  inflated). Eliminates the permanent "— / cap GB" placeholder in the Files modal.
+- **Client storage actions.** `FilesModule` footer actions were unwired no-ops; both are
+  now real: `upload_file` opens the file picker (same ingest path as the dropzone),
+  `delete_file` removes the selected objects from the tenant prefix of the
+  `omnihub-files` bucket via the RLS-scoped client, with explicit errors and a
+  disabled-reason until a file is selected. No fake success states.
+- **Shared shell.** `ModuleShell` gained an opt-in `emptyState` prop (honest first-run
+  copy when a module loads with zero items); `AutomationsModule` opts in.
+- **Deployment:** no env var, DB schema, or start-command change. Redeploy the
+  `omnilink-port` edge function to activate the stats contract; the client changes ship
+  with the normal web deploy. Verify: Files modal shows `0.00 GB`/file-count instead of
+  an em-dash, and Delete File removes a selected object end-to-end.
+
+## 9.35 A.R.I.S.E. snapshot publish — same-day rerun collision fix (2026-07-10)
+
+- **Failure:** `Publish dated snapshot rolling PR` aborted with "untracked working tree
+  files would be overwritten by checkout" on the second A.R.I.S.E. run of a day. The
+  publish job downloads dated snapshot artifacts into `memory/omni-recall/docs/`
+  (untracked), and the rolling branch `automation/arise-snapshot-current` already tracks
+  the same dated filename from the earlier run — `git checkout -B` refuses to overwrite.
+- **Fix:** `arise.yml` now `rm -f`s the untracked generated copies after staging them in
+  the temp workdir and before switching branches; fresh content is restored from the
+  workdir afterward. Idempotent: identical re-published content exits 0 as
+  "no changes to publish."
+- **Deployment:** workflow-only change; no service, env var, DB, or start-command impact.
+
+
+## 2026-07-10 — PR #1629 audit remediation (operational contract changes)
+
+- **Scheduler `public.dispatch_scheduled_workflows()`**: `EXECUTE` is now REVOKED
+  from `PUBLIC`/`anon`/`authenticated` (migration
+  `20260710123000_workflow_scheduler_revoke_public_execute.sql`). Operational
+  impact: none for scheduling — pg_cron runs the function as its job owner. Do NOT
+  add a role GRANT to "fix" a call failure; direct RPC invocation is intentionally
+  denied.
+- **Workflow action `notification`** (`supabase/functions/_shared/action-executor.ts`):
+  `executeNotification` now throws `NOT_IMPLEMENTED` and no longer returns
+  `sent:true`. Operational impact: any workflow/automation whose action type is
+  `notification` will now fail honestly instead of recording fake delivery. Re-enable
+  only after routing delivery through the `send-push-notification` Edge Function.

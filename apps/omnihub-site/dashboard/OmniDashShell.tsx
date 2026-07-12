@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { LanguageSelector } from '../src/components/LanguageSelector';
 import { SidebarKpiBar } from './components/SidebarKpiBar';
 import { useAppTranslation } from '../src/i18n/useAppTranslation';
+import { PWAInstallButton } from '../src/components/PWAInstallButton';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -646,6 +647,9 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
 
         {/* Divider — separates action buttons from icon tray */}
         <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
+
+        {/* PWA Install Harness */}
+        <PWAInstallButton />
 
         {/* Language Selector */}
         <LanguageSelector className="omni-header-lang" />

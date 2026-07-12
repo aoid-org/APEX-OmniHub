@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Head } from 'vite-react-ssg';
 
 type StructuredDataProps = Readonly<{
   id: string;
@@ -7,6 +8,10 @@ type StructuredDataProps = Readonly<{
 
 export function StructuredData({ id, json }: StructuredDataProps) {
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
     let script = document.querySelector(
       `script[data-schema-id="${id}"]`,
     ) as HTMLScriptElement | null;
@@ -25,5 +30,17 @@ export function StructuredData({ id, json }: StructuredDataProps) {
     };
   }, [id, json]);
 
-  return null;
+  if (typeof window !== 'undefined') {
+    return null;
+  }
+
+  return (
+    <Head>
+      <script
+        type="application/ld+json"
+        data-schema-id={id}
+        dangerouslySetInnerHTML={{ __html: json }}
+      />
+    </Head>
+  );
 }

@@ -5,6 +5,7 @@ import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { AudioRecorder, encodeAudioForAPI, playAudioData, clearAudioQueue } from '@/utils/RealtimeAudio';
 import { calculateBackoffDelay } from '@/lib/backoff';
 import { logAnalyticsEvent } from '@/lib/monitoring';
+import { supabase } from '@/lib/supabase';
 
 interface VoiceInterfaceProps {
   onTranscript?: (text: string, isFinal: boolean) => void;
@@ -129,8 +130,19 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       }
 
-      const wsUrl = WS_URL;
-      
+      // Authenticate the WebSocket upgrade: browsers cannot send an
+      // Authorization header on WS connections, so the Supabase access
+      // token is passed via the `token` query parameter and verified
+      // server-side (verifyWebSocketAuth) before the upgrade completes.
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        handleDegraded('Sign in required to use voice.');
+        logAnalyticsEvent('voice.ws.auth_missing', {});
+        return;
+      }
+      const wsUrl = `${WS_URL}${WS_URL.includes('?') ? '&' : '?'}token=${encodeURIComponent(accessToken)}`;
+
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
