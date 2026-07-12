@@ -64,12 +64,17 @@ GRANT USAGE ON SCHEMA net TO postgres, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 2. Lock outbound-request functions to postgres/service_role only.
--- additive-allow: REVOKE Security fix — pg_net install-time default grants EXECUTE on net.http_get/http_post/http_delete to anon + authenticated; no live caller needs this (all callers are SECURITY DEFINER, owned by postgres), closing an unflagged SSRF-adjacent open grant
+--    pg_net install-time default grants EXECUTE on net.http_get/http_post/
+--    http_delete to anon + authenticated; no live caller needs this (all
+--    callers are SECURITY DEFINER, owned by postgres) — closes an unflagged
+--    SSRF-adjacent open grant. Each REVOKE below is individually annotated
+--    per the additive-migrations gate.
 -- ---------------------------------------------------------------------------
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
              WHERE n.nspname = 'net' AND p.proname = 'http_post') THEN
+-- additive-allow: REVOKE Security fix: net.http_post open to anon/authenticated by pg_net default; only postgres/service_role call it live
     REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer)
       FROM PUBLIC, anon, authenticated;
     GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer)
@@ -78,6 +83,7 @@ BEGIN
 
   IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
              WHERE n.nspname = 'net' AND p.proname = 'http_get') THEN
+-- additive-allow: REVOKE Security fix: net.http_get open to anon/authenticated by pg_net default; only postgres/service_role call it live
     REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer)
       FROM PUBLIC, anon, authenticated;
     GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer)
@@ -86,11 +92,4 @@ BEGIN
 
   IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
              WHERE n.nspname = 'net' AND p.proname = 'http_delete') THEN
-    REVOKE ALL ON FUNCTION net.http_delete(url text, params jsonb, headers jsonb, timeout_milliseconds integer, body jsonb)
-      FROM PUBLIC, anon, authenticated;
-    GRANT EXECUTE ON FUNCTION net.http_delete(url text, params jsonb, headers jsonb, timeout_milliseconds integer, body jsonb)
-      TO postgres, service_role;
-  END IF;
-END $$;
-
-COMMIT;
+-- 
