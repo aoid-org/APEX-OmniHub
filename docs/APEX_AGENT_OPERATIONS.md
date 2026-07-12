@@ -1730,3 +1730,49 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 **Operational impact:** one migration, DB-side only. Requires an explicit
 `supabase db push` (or equivalent) against production by the release owner —
 intentionally not auto-applied by this PR.
+
+## 9.37 Migration history reconciliation — post_pr1629_release_hardening + memory_user_fk_index (2026-07-12)
+
+**Changed critical runtime paths:** none — both new files reproduce already-live
+production state; no new behavior on any active code path.
+
+### Operational change summary
+
+- `supabase db push` has been failing on every push to `main` (e.g. the "Deploy
+  Web3 Functions" workflow) with "Remote migration versions not found in local
+  migrations directory," citing versions `20260712024804`
+  (`post_pr1629_release_hardening`) and `20260712024849`
+  (`memory_user_fk_index`). Root cause: the PR #1629 remediation session
+  (2026-07-10/11) applied both directly to production via the Supabase
+  Management API and never committed the corresponding migration files.
+- Added `supabase/migrations/20260712024804_post_pr1629_release_hardening.sql`
+  and `supabase/migrations/20260712024849_memory_user_fk_index.sql` as
+  **reconciliation files** — reconstructed from live introspection on
+  2026-07-12, not recovered originals. Every statement is idempotent/guarded
+  (`IF NOT EXISTS`, `DROP POLICY IF EXISTS` + recreate, `CREATE OR REPLACE`),
+  confirmed as a no-op against current production and against a fresh/shadow
+  bootstrap (where `20260303000000_create_memories_table.sql` already creates
+  the same objects).
+- Scope: (1) reasserts EXECUTE lockdown (postgres/service_role only) on 7
+  internal RPCs — `activate_client_subscription`, `dispatch_scheduled_workflows`,
+  `enforce_skill_entitlement`, `increment_rate_limit`, `omnitrace_get_run_bundle`,
+  `omnitrace_insert_event`, `omnitrace_upsert_run` — confirmed live to already
+  have no anon/authenticated grant; (2) reasserts the canonical memory
+  subsystem (table, 3 enums, helper function, RLS + 5 policies, 8 core
+  indexes, updated_at trigger, security-invoker `memory_health_stats` view) per
+  AUDIT.md's named-missing objects; (3) reasserts the FK-covering index
+  `idx_memories_user_id` on `memories.user_id`.
+- Explicitly out of scope: encryption/quarantine-lane objects from the same
+  original memories migration (`content_encrypted`, `quarantine_memory()`,
+  etc.) — AUDIT.md did not name these as missing, so they were left untouched
+  rather than guessed at.
+
+### Environment / topology impact
+
+- **None.** No service, env var, or start-command change. Pure DB-side
+  bookkeeping reconciliation; both files are safe to apply anywhere.
+
+**Operational impact:** two migrations, DB-side only, idempotent. Confirmed via
+introspection that production already matches this end-state — applying is
+expected to be a no-op there; primarily unblocks `supabase db push` on `main`
+(including the still-pending pg_net migration from §9.36).
