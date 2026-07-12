@@ -231,9 +231,37 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           return;
         }
 
-        const rawData = (data as { ok?: boolean; data?: unknown }).ok === true 
-          ? (data as { data: unknown }).data 
-          : data;
+        const envelope = data as {
+          ok?: boolean;
+          State?: string;
+          state?: string;
+          data?: unknown;
+        };
+
+        // Honest state mapping: a backend that explicitly signals a non-live
+        // condition (ok:false, or State/state in {Error, Unavailable,
+        // NoSubscription}) must NOT be badged LIVE just because bytes arrived.
+        // Degrade to 'unavailable' so the UI never shows an error/degraded
+        // backend as live.
+        const backendState = String(envelope.State ?? envelope.state ?? "")
+          .trim()
+          .toLowerCase();
+        const isNonLiveEnvelope =
+          envelope.ok === false ||
+          backendState === "error" ||
+          backendState === "unavailable" ||
+          backendState === "nosubscription";
+
+        if (isNonLiveEnvelope) {
+          safeSetLiveState({
+            loading: false,
+            error: null,
+            stateKind: "unavailable",
+          });
+          return;
+        }
+
+        const rawData = envelope.ok === true ? envelope.data : data;
 
         const live = rawData as Partial<ModuleContent>;
         safeSetLiveState({
