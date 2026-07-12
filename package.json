@@ -28,7 +28,7 @@
     "test:infra:coverage": "VITEST_COVERAGE=true vitest run tests/infrastructure/cloudflare-ratelimit-ruleset.test.ts tests/infrastructure/lambda-dispatch-context-branch.test.ts tests/infrastructure/production-domain-alignment.test.ts packages/infrastructure/tests/lambda-dispatch.test.ts --coverage.include=src/omnihub-gateway/lambdaDispatchActivity.ts --coverage.exclude= --coverage.thresholds.lines=85 --coverage.thresholds.functions=85 --coverage.thresholds.branches=70 --coverage.thresholds.statements=85",
     "check:react": "node scripts/check-react-singleton.mjs",
     "docs:check": "node scripts/ci/check_docs_links.mjs && node scripts/ci/check_doc_code_pointers.mjs",
-    "ci:runtime-gates": "node scripts/ci/guard-agent-destructive-actions.mjs && npm run check:react && npm run check:pwa && npm run check:omnidash && npm run test:assets && npm run test:infra && npm run test:e2e",
+    "ci:runtime-gates": "node scripts/ci/guard-agent-destructive-actions.mjs && npm run check:lockfiles && npm run check:react && npm run check:pwa && npm run check:omnidash && npm run test:assets && npm run test:infra && npm run test:e2e",
     "smoke-test": "tsx scripts/smoke-test.ts",
     "guardian:status": "tsx scripts/guardian/status.ts",
     "omnilink:health": "tsx scripts/omnilink/health.ts",
@@ -100,6 +100,7 @@
     "verify:supply-chain": "node scripts/ci/verify-supply-chain.mjs",
     "verify:release": "node scripts/ci/verify-release.mjs",
     "check:pwa": "node scripts/ci/check-pwa-integrity.mjs",
+    "check:lockfiles": "node scripts/ci/check-lockfile-sync.mjs",
     "check:omnidash": "node scripts/ci/check-omnidash-integrity.mjs",
     "check:omni-skin": "node scripts/ci/check-omni-skin.mjs",
     "check:omniskills-rebrand": "node scripts/ci/check-omniskills-rebrand.mjs",
@@ -294,6 +295,7 @@
     "vitest": "^4.1.8"
   },
   "overrides": {
+    "react-router-dom": "$react-router-dom",
     "flatted": "^3.4.2",
     "h3": "1.15.10",
     "lodash": "^4.17.23",
