@@ -61,6 +61,14 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const handleSelect = (persona: AgentPersona) => {
+    localStorage.setItem('apex.agent.persona', persona);
+    // Dispatch a custom event so the avatar in the CURRENT tab updates
+    // immediately. The standard 'storage' event only fires in other tabs.
+    window.dispatchEvent(new CustomEvent('apex:persona:updated', { detail: { persona } }));
+    onSelect(persona);
+  };
+
   return (
     <div
       data-testid="persona-modal"
@@ -106,7 +114,7 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
               <button
                 key={persona.id}
                 data-testid={`persona-option-${persona.id.toLowerCase()}`}
-                onClick={() => onSelect(persona.id)}
+                onClick={() => handleSelect(persona.id)}
                 className={`group relative p-5 rounded-xl border-2 transition-all text-left overflow-hidden ${
                   isSelected
                     ? `border-[#c2501f] bg-[#c2501f]/10 shadow-lg shadow-[#c2501f]/20`

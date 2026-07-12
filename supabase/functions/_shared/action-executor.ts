@@ -211,14 +211,17 @@ async function executeNotification(config: unknown): Promise<Record<string, unkn
   if (!isNotificationConfig(config)) {
     throw new Error("Invalid notification configuration: message is required");
   }
-  // For now, return success - can be extended to push notifications
-  return {
-    message: config.message,
-    channel: config.channel ?? "default",
-    priority: config.priority ?? "normal",
-    sent: true,
-    timestamp: new Date().toISOString(),
-  };
+  // Honest Gateway / Completion Proof: notification delivery is not wired to a
+  // real channel here. Returning `sent: true` without a durable delivery receipt
+  // fabricates completion and lets the workflow record a false success. Until this
+  // action is routed through the real delivery/persistence engine (the
+  // send-push-notification Edge Function), fail loudly so the workflow records an
+  // honest failure instead of fake delivery.
+  throw new Error(
+    "NOT_IMPLEMENTED: notification delivery is not yet wired to a real channel. " +
+      "Route this action through send-push-notification before enabling it. " +
+      "This action must never report success without a durable delivery receipt.",
+  );
 }
 
 /** Runs a single typed action and returns its result. Throws on failure. */

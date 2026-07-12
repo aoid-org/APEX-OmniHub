@@ -1,6 +1,6 @@
 ---
-version: 1.3.2
-last_audited: 2026-07-04
+version: 1.3.3
+last_audited: 2026-07-06
 status: verified
 ---
 
@@ -218,3 +218,12 @@ skill routing updated: `apex-dev` is superseded by `apex-boost-claude`,
 ## Source-of-Truth Statement 28 (2026-07-05)
 
 **Orchestrator Redis Search compatibility guard protects Render worker startup.** The Render orchestrator worker image is built from `orchestrator/Dockerfile`, which installs the orchestrator package from `orchestrator/pyproject.toml` via `pip install --no-cache-dir -e ".[dev]"` rather than installing `orchestrator/requirements.lock`. The committed lockfile remains a CI/security artifact and currently records `redis==7.1.1`, `redis-om==1.0.6`, and `redisvl==0.14.0`; no `redisearch` package is locked. Runtime Redis Search API drift is handled in `orchestrator/infrastructure/cache.py` by `_redis_hash_index_type()` and `validate_redis_search_compatibility()`: production code must not directly dereference `IndexType.HASH` without the helper. Startup validates `IndexDefinition`, `IndexType`, `TextField`, `NumericField`, `VectorField`, and `Query` before vector index creation, and raises an actionable `RuntimeError` with package/import diagnostics and remediation guidance if the installed Redis Search API is incompatible. Redis connection logs must use `_safe_redis_url()` and never print Redis credentials or query tokens.
+
+## Source-of-Truth Statement 29 (2026-07-06)
+
+**ESLint Gate 2 Warning-Free Verification.**
+- The workspace enforces a strict 0-warning quality gate (Gate 2 of `platform-quality-gates.test.ts`).
+- `eslint.config.js` was updated to extend the relaxed overrides for test/simulation files to include `apps/omnihub-site/tests/**/*.{ts,tsx}`, disabling the `no-console` rule.
+- Surgically removed the unused `expect` import from `apps/omnihub-site/tests/visual/omniboard-integrations.spec.ts` to satisfy `@typescript-eslint/no-unused-vars`.
+- `npm run lint` and the Quality Gates test suite pass cleanly with 0 warnings and 0 errors workspace-wide.
+

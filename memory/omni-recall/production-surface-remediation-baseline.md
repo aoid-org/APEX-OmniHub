@@ -337,3 +337,12 @@ service-role key. Built-bundle grep proof deferred to Phase 18 smoke. Original f
 - Certification note: this is CI/API alignment only. It does not add browser
   evidence for modal behavior, UI-005 widget-control obstruction, or UI-020
   network proof for `omnimedia-catalog`.
+
+## ESLint Warning Remediation & Gate 2 Clean Pass — 2026-07-06
+
+- **Problem:** Gate 2 of `platform-quality-gates.test.ts` was failing because the quality gates enforce exactly 0 warnings workspace-wide, and ESLint reported 3 warnings in visual spec files under `apps/omnihub-site/tests/visual/` (`no-console` and `no-unused-vars`).
+- **Remediation:**
+  1. Updated `eslint.config.js` to extend the relaxed overrides for test/simulation files to cover `apps/omnihub-site/tests/**/*.{ts,tsx}`, turning off `no-console`.
+  2. Surgically edited `apps/omnihub-site/tests/visual/omniboard-integrations.spec.ts` to remove the unused `expect` import.
+- **Verification:** Both `npm run lint` and the Quality Gate tests pass cleanly with 0 errors and 0 warnings.
+

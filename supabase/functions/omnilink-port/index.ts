@@ -4,6 +4,7 @@ import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, ty
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { handleOmniMediaRequest } from './omnimedia.ts';
 import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import { describeBillingSubscription } from '../_shared/billing-display.ts';
 import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
   checkRateLimit,
@@ -42,6 +43,8 @@ interface ModuleStateResponse {
   actions: string[];
   count: number;
   message?: string;
+  /** Optional display stats consumed by module modals (e.g. Billing "Plan"). */
+  stats?: ReadonlyArray<{ label: string; value: string }>;
 }
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
@@ -394,6 +397,15 @@ async function resolveFiles(
     metadata: Record<string, unknown> | null;
   }>;
 
+  // Emit real usage stats so the Files modal never shows "—" for a synced
+  // tenant (owner polish item, 2026-07-10). Usage sums the listed page (50-file
+  // cap) — an honest floor, never an inflated number.
+  const usedBytes = files.reduce(
+    (sum, f) => sum + (typeof f.metadata?.size === 'number' ? (f.metadata.size as number) : 0),
+    0,
+  );
+  const usedGB = usedBytes / (1024 ** 3);
+
   return {
     State: 'Online',
     items: normalizeModuleItems(files.map((f) => ({
@@ -404,6 +416,10 @@ async function resolveFiles(
     }))),
     actions: ['upload_file', 'delete_file'],
     count: files.length,
+    stats: [
+      { label: 'Storage Used', value: `${usedGB < 0.01 && usedBytes > 0 ? '<0.01' : usedGB.toFixed(2)} GB` },
+      { label: 'Total Files', value: String(files.length) },
+    ],
   };
 }
 
@@ -430,21 +446,16 @@ async function resolveBilling(
     trial_end: string | null;
   } | null;
 
-  const items = sub ? [
-    {
-      id: sub.id,
-      tier: sub.tier,
-      status: sub.status,
-      period_end: sub.current_period_end,
-      trial_end: sub.trial_end,
-    },
-  ] : [];
+  // Raw IDs must never reach the UI — format a human plan label + stats.
+  const display = sub ? describeBillingSubscription(sub) : null;
+  const items = display ? [display.item] : [];
 
   return {
     State: sub ? 'Online' : 'NoSubscription',
     items: normalizeModuleItems(items),
     actions: ['manage-plan', 'billing-portal'],
     count: items.length,
+    ...(display ? { stats: display.stats } : {}),
   };
 }
 

@@ -463,6 +463,7 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
                   filter="url(#dofSoft)"
                   aria-label="APEX OmniHub core badge"
                 >
+                  <title>APEX OmniHub core badge</title>
                   <animate
                     attributeName="opacity"
                     values="0.82;1;0.82"
@@ -1598,9 +1599,9 @@ function CapabilitiesSection() {
     : [];
   const capabilities = [
     {
-      title: "Universal Connector Network",
-      path: "/smart-integrations",
-      desc: "Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications. Connect and govern from one surface without an arbitrary integration ceiling.",
+      title: "OmniBoard",
+      path: "/omniboard",
+      desc: "Governs all SaaS, Web2, Web3, and third-party API connections under a unified security, authentication, and compliance layer. No arbitrary integration limits.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
           <path
@@ -1625,7 +1626,7 @@ function CapabilitiesSection() {
     },
     {
       title: "OmniDash",
-      path: "/omnidash",
+      path: "/product/omnidash",
       desc: "Your governed intelligence command center. Monitor every agent, workflow, integration, and event from a single real-time surface with role-enforced visibility.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -1704,7 +1705,7 @@ function CapabilitiesSection() {
     },
     {
       title: "OmniSkills",
-      path: "/ai-automation",
+      path: "/product/omniskills",
       desc: "Forge, install, and govern expert-level OmniSkills for any task or business use case, giving users task-ready agents with reusable skill memory and auditable execution paths.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -1803,7 +1804,7 @@ function CapabilitiesSection() {
     },
     {
       title: "PhysiOmni",
-      path: "/physiomni",
+      path: "/physiomni-pilot",
       desc: "The physical AI operations layer. Deploy, govern, and orchestrate embodied AI systems and robotics through the same governed command surface as your digital agents.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -1882,7 +1883,7 @@ function CapabilitiesSection() {
     },
     {
       title: "Connect AI / BYOM",
-      path: "/byom",
+      path: "/product/byom",
       desc: "Bring your own model to the table. You can plug any LLM into your governed workflows and switch providers without rebuilding your system. Enjoy total freedom with zero vendor lock-in.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -2220,6 +2221,8 @@ function RequestAccessModal({
       aria-modal="true"
       aria-labelledby="modal-title"
       open={isOpen}
+      // inert prevents focus traversal into hidden modal (fixes aria-hidden-focus)
+      {...(!isOpen ? { inert: '' } : {})}
     >
       <div className="modal-card">
         <button

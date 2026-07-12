@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 // APEX PWA INVARIANT: PWAInstallBanner MUST remain in App.tsx.
 // Removal silently breaks the live-site install prompt. Guarded by: scripts/ci/check-pwa-integrity.mjs
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import { SupportAgentModal } from "@/components/SupportAgentModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -16,6 +17,7 @@ import OmniDashShell from "@/dashboard/OmniDashShell";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
+import { SupportPage } from "@/pages/Support";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
@@ -29,7 +31,9 @@ import { MaestroPage } from "@/pages/Maestro";
 import { OmniPortPage } from "@/pages/OmniPort";
 import { OrchestratorPage } from "@/pages/Orchestrator";
 import { RequestAccessPage } from "@/pages/RequestAccess";
-import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
+import { OmniBoardPage } from "@/pages/OmniBoard";
+import { OmniSkillsPage } from "@/pages/product/OmniSkills";
+import { BYOMPage } from "@/pages/product/BYOM";
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { OmniSentryPage } from "@/pages/OmniSentry";
 import { OmniTracePage } from "@/pages/OmniTrace";
@@ -97,6 +101,8 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/man-mode.html", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/privacy.html", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
+  { path: "/support", element: <SupportPage />, isPublic: true, routeName: "Support" },
+  { path: "/support.html", element: <SupportPage />, isPublic: true, routeName: "Support" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/terms.html", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },
@@ -113,8 +119,14 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/omniport.html", element: <OmniPortPage />, isPublic: true, routeName: "OmniPort" },
   { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true, routeName: "Orchestrator" },
   { path: "/orchestrator.html", element: <OrchestratorPage />, isPublic: true, routeName: "Orchestrator" },
-  { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true, routeName: "Smart Integrations" },
-  { path: "/smart-integrations.html", element: <SmartIntegrationsPage />, isPublic: true, routeName: "Smart Integrations" },
+  { path: "/omniboard", element: <OmniBoardPage />, isPublic: true, routeName: "OmniBoard" },
+  { path: "/omniboard.html", element: <OmniBoardPage />, isPublic: true, routeName: "OmniBoard" },
+  { path: "/product/omniskills", element: <OmniSkillsPage />, isPublic: true, routeName: "OmniSkills" },
+  { path: "/product/omniskills.html", element: <OmniSkillsPage />, isPublic: true, routeName: "OmniSkills" },
+  { path: "/product/byom", element: <BYOMPage />, isPublic: true, routeName: "BYOM" },
+  { path: "/product/byom.html", element: <BYOMPage />, isPublic: true, routeName: "BYOM" },
+  { path: "/omni-sentry", element: <OmniSentryPage />, isPublic: true, routeName: "OmniSentry" },
+  { path: "/omni-sentry.html", element: <OmniSentryPage />, isPublic: true, routeName: "OmniSentry" },
   { path: "/tri-force", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
   { path: "/tri-force.html", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
   { path: "/integrations/web3", element: <Web3Integrations />, isPublic: true, routeName: "Web3 Integrations" },
@@ -167,6 +179,8 @@ function App() {
         </Routes>
         {/* PWA install banner — renders globally, zero render cost when not installable */}
         <PWAInstallBanner />
+        {/* Support Agent Modal — renders globally */}
+        <SupportAgentModal />
         {/* PRCC-001 WP-1b: global toast renderer. toast.error/success are called
             across OmniDash modules and the Launch wizards, but no Toaster was mounted,
             so every notification fired silently. One app-root renderer surfaces them. */}

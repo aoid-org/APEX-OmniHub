@@ -168,6 +168,7 @@ export const siteConfig = {
     links: [
       buildLink("Privacy", "/privacy", "layout.footer.privacy"),
       buildLink("Terms", "/terms", "layout.footer.terms"),
+      buildLink("Support", "/support", "layout.footer.support"),
     ],
   },
 } as const;
