@@ -170,3 +170,58 @@ export function createInternalErrorResponse(message: string = 'An unexpected err
     }
   );
 }
+
+/**
+ * Error thrown when WebSocket authentication fails.
+ * Callers should map this to a 401 response via unauthorizedWebSocketResponse().
+ */
+export class AuthError extends Error {
+  constructor(message: string = 'Unauthorized') {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+/**
+ * Authenticate a WebSocket upgrade request BEFORE upgrading.
+ *
+ * Browsers cannot set an Authorization header on WebSocket connections,
+ * so the access token is accepted from (in priority order):
+ *   1. `token` query parameter (standard WS auth transport)
+ *   2. `Authorization: Bearer <token>` header (non-browser clients)
+ *
+ * @param req - The incoming upgrade request
+ * @returns The authenticated user
+ * @throws AuthError when the token is missing, invalid, or expired
+ */
+export async function verifyWebSocketAuth(req: Request): Promise<{ user: User }> {
+  const url = new URL(req.url);
+  const tokenFromQuery = url.searchParams.get('token');
+  const authHeader = req.headers.get('Authorization');
+  const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = tokenFromQuery ?? tokenFromHeader;
+
+  if (!token) {
+    throw new AuthError('Missing authentication token');
+  }
+
+  const supabase = createSupabaseClient();
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    throw new AuthError('Invalid or expired session');
+  }
+
+  return { user };
+}
+
+/**
+ * Standard 401 response for failed WebSocket authentication.
+ * Plain-text body: WS upgrade failures cannot deliver a JSON body to browser clients.
+ */
+export function unauthorizedWebSocketResponse(): Response {
+  return new Response('Unauthorized', {
+    status: 401,
+    headers: { 'Content-Type': 'text/plain' },
+  });
+}

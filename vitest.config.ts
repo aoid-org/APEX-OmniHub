@@ -124,6 +124,8 @@ export default defineConfig({
         'apps/omnihub-site/dashboard/**',
         'apps/omnihub-site/src/App.tsx',
         'apps/omnihub-site/src/main.tsx',
+        // Entry-point bootstrappers — createRoot wrappers with no unit-testable logic.
+        'apps/omnihub-site/src/omniboard.tsx',
         'apps/omnihub-site/src/pwa-init.ts',
         'apps/omnihub-site/src/pages/**',
         'apps/omnihub-site/src/components/OmniHubPlatformMap.tsx',

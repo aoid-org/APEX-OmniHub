@@ -291,7 +291,8 @@
       "copyright": "© 2026 APEX Business Systems. Todos los derechos reservados.",
       "privacy": "Privacidad",
       "terms": "Términos",
-      "web3Integrations": "Integraciones Web3"
+      "web3Integrations": "Integraciones Web3",
+      "support": "Soporte"
     },
     "maestro": {
       "active": "Activo",
@@ -464,5 +465,13 @@
     "translate": "Traducir",
     "translated_text": "Resultado traducido",
     "copy": "Copiar"
+  },
+  "supportAgent": {
+    "open": "Abrir Agente de Soporte",
+    "close": "Cerrar",
+    "title": "Soporte de APEX",
+    "subtitle": "�C�mo podemos ayudarle hoy?",
+    "greeting": "�Hola! Soy el Agente de Soporte de APEX-OmniHub. �C�mo puedo ayudarle con OmniHub, OmniLink o OmniPort?",
+    "placeholder": "Escriba su mensaje..."
   }
 }

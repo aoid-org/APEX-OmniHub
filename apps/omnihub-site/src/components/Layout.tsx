@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/useAuth";
 import { BrandAnthemPlayer } from "./BrandAnthemPlayer";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { LanguageSelector } from "./LanguageSelector";
+import { PWAInstallButton } from "./PWAInstallButton";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -266,6 +267,9 @@ function Footer() {
               {tx("layout.footer.web3Integrations")}
             </a>
           </li>
+          <li>
+            <PWAInstallButton />
+          </li>
         </ul>
       </div>
       {/* Maestro Observability Indicator */}
@@ -274,7 +278,6 @@ function Footer() {
         style={{
           fontSize: "0.75rem",
           color: "var(--color-text-secondary)",
-          opacity: 0.7,
           paddingTop: "var(--space-4)",
           borderTop: "1px solid var(--color-border)",
           marginTop: "var(--space-4)",

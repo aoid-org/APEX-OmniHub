@@ -105,6 +105,8 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
   // capture on unmount so closing via that X / backdrop / Esc still releases the mic.
   useEffect(() => () => { stopVoice(); }, [stopVoice]);
 
+  // startSession is exposed ONLY for the retry button. Mount initialization uses
+  // a separate cancellable IIFE to avoid react-hooks/set-state-in-effect violations.
   const startSession = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError('Authentication required'); return; }
@@ -124,6 +126,36 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
       setLoading(false);
     }
   }, []);
+
+  // Mount-only: inline cancellable IIFE avoids the set-state-in-effect lint rule
+  // while still behaving identically to the startSession callback.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled || !user) {
+        if (!cancelled) setError('Authentication required');
+        return;
+      }
+      if (cancelled) return;
+      setLoading(true);
+      try {
+        const { data, error } = await invokeWithTimeout<FSMContext>(
+          'omnilink-port/omniboard-start',
+          { tenant_id: user.id, trace_id: crypto.randomUUID() },
+        );
+        if (cancelled) return;
+        if (error || !data) throw error ?? new Error('No response from connection gateway.');
+        setContext(data);
+        setMessage('Tell OmniBoard what app or provider you want to connect.');
+      } catch (err) {
+        if (!cancelled) setError(describeConnectionError(err, 'Failed to start session'));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []); // intentionally empty: runs once on mount only
 
   const sendTurn = useCallback(async () => {
     if (!context || !input.trim()) return;
@@ -151,12 +183,8 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
     }
   }, [context, input, onComplete]);
 
-  useEffect(() => {
-    void startSession();
-  }, [startSession]);
-
   return (
-    <div className="flex max-h-[min(82vh,760px)] w-[min(92vw,920px)] flex-col gap-4 overflow-y-auto rounded-xl border border-border/40 bg-card p-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4">
       <div className="flex items-center gap-3">
         <ApexAgentAvatar size="sm" showStatus={true} />
         <div>
@@ -250,7 +278,6 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
           disabled={loading}
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold"
         >
-          {/* eslint-disable-next-line no-nested-ternary */}
           {loading ? 'Starting session…' : (error ? 'Retry Connection' : 'Start Connecting')}
         </button>
       )}

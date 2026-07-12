@@ -36,6 +36,6 @@
     },
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src", "tests"],
+  "include": ["src", "tests", "apps/omnihub-site/src/types/vite-react-ssg.d.ts"],
   "exclude": ["tests/contracts"]
 }
