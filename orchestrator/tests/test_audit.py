@@ -9,6 +9,8 @@ from models.audit import (
     AuditLogEntry,
     AuditLogger,
     AuditMetadata,
+    AuditPersistenceError,
+    AuditQueryError,
     AuditResourceType,
     AuditStatus,
     audit_logger,
@@ -108,11 +110,12 @@ async def test_log_event_supabase_fallback(logger, capsys):
     )
 
     with patch("models.audit.get_database_provider", side_effect=Exception("DB Error")):
-        await logger.log_event(entry)
+        with pytest.raises(AuditPersistenceError):
+            await logger.log_event(entry)
 
         # Check stderr for fallback logs
         captured = capsys.readouterr()
-        assert "CRITICAL: Audit persistence failed: DB Error" in captured.err
+        assert "CRITICAL: Audit persistence failed: Exception" in captured.err
         assert "AUDIT_FALLBACK: id=123" in captured.err
 
 
@@ -270,20 +273,18 @@ async def test_query_events_basic():
     mock_query.eq.return_value = mock_query
     mock_query.gte.return_value = mock_query
     mock_query.lte.return_value = mock_query
+    mock_query.order.return_value = mock_query
     mock_query.limit.return_value = mock_query
 
     # Return one valid row from execute()
     row = {
         "id": "r1",
-        "correlation_id": "c",
-        "timestamp": datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat(),
-        "event_sequence": 1,
         "actor_id": "a",
-        "action": "read",
-        "status": "success",
+        "action_type": "read",
         "resource_type": "document",
         "resource_id": "d",
-        "metadata": {},
+        "created_at": datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat(),
+        "metadata": {"_audit": {"correlation_id": "c", "event_sequence": 1, "status": "success"}},
     }
     mock_query.execute.return_value.data = [row]
 
@@ -312,14 +313,13 @@ async def test_query_events_basic():
 
 
 @pytest.mark.asyncio
-async def test_query_events_exception_returns_empty():
-    """Lines 377-381: exception in query_events returns empty list."""
+async def test_query_events_exception_is_fail_closed():
+    """A database outage must not be indistinguishable from no audit events."""
     logger = AuditLogger()
 
     with patch("models.audit.get_database_provider", side_effect=Exception("DB down")):
-        results = await logger.query_events()
-
-    assert results == []
+        with pytest.raises(AuditQueryError):
+            await logger.query_events()
 
 
 def test_validate_integrity_broken_chain():

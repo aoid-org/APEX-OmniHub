@@ -24,6 +24,14 @@ from providers.database.factory import get_database_provider
 UTC = timezone.utc
 
 
+class AuditPersistenceError(RuntimeError):
+    """Raised when a compliance event cannot be durably persisted."""
+
+
+class AuditQueryError(RuntimeError):
+    """Raised when stored audit events cannot be queried reliably."""
+
+
 class AuditAction(str, Enum):  # noqa: UP042
     """Standardized audit actions for compliance tracking."""
 
@@ -279,13 +287,40 @@ class AuditLogger:
         try:
             db = get_database_provider()
 
-            # Convert event to dict for storage
             event_dict = event.model_dump(mode="json")
+            # The live audit_logs contract has seven columns. Preserve the
+            # richer compliance envelope under metadata instead of attempting
+            # to insert fields that do not exist in the table.
+            record = {
+                "id": event.id,
+                "actor_id": event.actor_id,
+                "action_type": str(event.action),
+                "resource_type": str(event.resource_type),
+                "resource_id": event.resource_id,
+                "metadata": {
+                    **event.metadata.model_dump(mode="json"),
+                    "_audit": {
+                        key: value
+                        for key, value in event_dict.items()
+                        if key
+                        not in {
+                            "id",
+                            "actor_id",
+                            "action",
+                            "resource_type",
+                            "resource_id",
+                            "metadata",
+                            "timestamp",
+                        }
+                    },
+                },
+                "created_at": event.timestamp.isoformat(),
+            }
 
             # Store in audit_logs table
             await db.insert(
                 table="audit_logs",
-                record=event_dict,
+                record=record,
             )
 
         except Exception as e:
@@ -294,9 +329,10 @@ class AuditLogger:
 
             # Log critical error to stderr
             print(
-                f"CRITICAL: Audit persistence failed: {e}",
+                f"CRITICAL: Audit persistence failed: {type(e).__name__}",
                 file=sys.stderr,
             )
+            raise AuditPersistenceError("Audit persistence failed") from e
 
             # Fallback: Log essential audit data to stderr
             # DO NOT log sensitive data like secrets or PII
@@ -352,13 +388,15 @@ class AuditLogger:
 
         try:
             db = cast(SupabaseDatabaseProvider, get_database_provider())
-            query = db.client.table("audit_logs").select("*")
+            query = db.client.table("audit_logs").select(
+                "id,actor_id,action_type,resource_type,resource_id,metadata,created_at"
+            )
 
             if actor_id:
                 query = query.eq("actor_id", actor_id)
             if action:
                 query = query.eq(
-                    "action", action.value if hasattr(action, "value") else str(action)
+                    "action_type", action.value if hasattr(action, "value") else str(action)
                 )
             if resource_type:
                 query = query.eq(
@@ -366,22 +404,40 @@ class AuditLogger:
                     resource_type.value if hasattr(resource_type, "value") else str(resource_type),
                 )
             if start_date:
-                query = query.gte("timestamp", start_date.isoformat())
+                query = query.gte("created_at", start_date.isoformat())
             if end_date:
-                query = query.lte("timestamp", end_date.isoformat())
+                query = query.lte("created_at", end_date.isoformat())
 
-            query = query.limit(limit)
+            query = query.order("created_at", desc=True).limit(limit)
 
             # Execute sync DB call off the event loop.
             response = await asyncio.to_thread(query.execute)
             data = response.data
 
-            return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]
-        except Exception:
+            events: list[AuditLogEntry] = []
+            for row in data:
+                if not isinstance(row, dict):
+                    raise ValueError("Invalid audit row")
+                metadata = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+                envelope = metadata.get("_audit") if isinstance(metadata.get("_audit"), dict) else {}
+                events.append(
+                    AuditLogEntry(
+                        **envelope,
+                        id=row["id"],
+                        actor_id=row["actor_id"],
+                        action=row["action_type"],
+                        resource_type=row["resource_type"],
+                        resource_id=row["resource_id"],
+                        timestamp=row["created_at"],
+                        metadata={key: value for key, value in metadata.items() if key != "_audit"},
+                    )
+                )
+            return events
+        except Exception as exc:
             import logging
 
             logging.exception("Failed to query audit events")
-            return []
+            raise AuditQueryError("Failed to query audit events") from exc
 
     def validate_integrity(self, events: list[AuditLogEntry]) -> bool:
         """

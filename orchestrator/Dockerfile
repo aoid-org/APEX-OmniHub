@@ -42,7 +42,7 @@ COPY security ./security
 COPY policies ./policies
 COPY providers ./providers
 COPY omniboard ./omniboard
-COPY config.py main.py server.py metrics.py ./
+COPY config.py main.py server.py metrics.py worker_healthcheck.py ./
 
 # Create non-root user
 RUN useradd -m -u 1000 orchestrator && \
@@ -52,7 +52,7 @@ USER orchestrator
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)"
+    CMD ["python", "worker_healthcheck.py"]
 
 # Default command
 CMD ["python", "main.py", "worker"]
