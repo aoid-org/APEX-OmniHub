@@ -303,8 +303,6 @@ export function Layout({ children, title }: LayoutProps) {
   // Use window.location.pathname directly — Layout is a presentational shell
   // and must not depend on React Router context (useLocation would throw
   // if Layout were ever rendered outside a <Router>).
-  const shouldRenderBrandAnthem =
-    globalThis.window?.location.pathname === "/";
 
   useEffect(() => {
     if (title) {
