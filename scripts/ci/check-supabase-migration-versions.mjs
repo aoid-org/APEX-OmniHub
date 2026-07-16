@@ -19,6 +19,14 @@ const MIGRATIONS_DIR = join(REPO_ROOT, "supabase", "migrations");
 
 const VERSION_RE = /^(\d{6,})_.+\.sql$/;
 
+// These versions are already recorded in the production migration history.
+// Their filenames are an immutable repository-to-production identity contract:
+// changing only the timestamp makes `supabase db push` fail before deployment.
+const REQUIRED_APPLIED_MIGRATIONS = [
+  "20260714133607_security_definer_invoker_hardening.sql",
+  "20260716005122_private_authorization_helpers.sql",
+];
+
 function main() {
   let entries;
   try {
@@ -43,6 +51,21 @@ function main() {
 
   if (byVersion.size === 0) {
     console.error("ERROR: no Supabase migration files matched <version>_name.sql");
+    return 1;
+  }
+
+  const missingApplied = REQUIRED_APPLIED_MIGRATIONS.filter(
+    (name) => !entries.includes(name),
+  );
+  if (missingApplied.length > 0) {
+    console.error("Supabase applied migration identity guard FAILED:\n");
+    for (const name of missingApplied) {
+      console.error(`  [MISSING APPLIED MIGRATION] supabase/migrations/${name}`);
+    }
+    console.error(
+      "\nDo not repair these production versions as reverted. Restore the exact " +
+        "filename recorded in remote migration history.",
+    );
     return 1;
   }
 

@@ -1842,12 +1842,12 @@ of the filesystem are not guaranteed to be synced yet.
 - **Webhook DNS pinning:** the outbound webhook client ignores process proxy
   variables so a proxy cannot bypass the SSRF guard's resolved-IP pin.
 - **Database hardening:** migration
-  `20260714132110_security_definer_invoker_hardening.sql` converts four
+  `20260714133607_security_definer_invoker_hardening.sql` converts four
   caller-bound RPCs to `SECURITY INVOKER`, adds tenant/admin UPDATE policies for
   OmniLink key revocation and approval decisions, removes anonymous execution,
   and retains authenticated/service-role execution where required.
 - **Authorization helpers:** migration
-  `20260716005500_private_authorization_helpers.sql` keeps the public
+  `20260716005122_private_authorization_helpers.sql` keeps the public
   `get_user_tier`, `is_admin`, and `is_paid_user` RPC contracts as
   `SECURITY INVOKER` wrappers. Their self-scoped, RLS-bypassing implementations
   live in the non-exposed `private` schema with anonymous access revoked.
