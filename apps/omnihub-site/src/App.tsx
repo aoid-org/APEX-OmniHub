@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { I18nextProvider } from 'react-i18next';
 import { Toaster } from 'sonner';
 import i18n from './i18n';
@@ -147,33 +148,34 @@ const preAuthRoutes: readonly AppRoute[] = [
 
 function App() {
   return (
-    <I18nextProvider i18n={i18n}>
-    <ErrorBoundary>
-    <BrowserRouter>
-      <div data-testid="app-shell">
-        <Routes>
-        {/* Pre-auth public routes */}
-        {preAuthRoutes.map((route) => (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={createProtectedElement(route.element, route.isPublic, route.routeName)}
-          />
-        ))}
+    <HelmetProvider>
+      <I18nextProvider i18n={i18n}>
+      <ErrorBoundary>
+      <BrowserRouter>
+        <div data-testid="app-shell">
+          <Routes>
+          {/* Pre-auth public routes */}
+          {preAuthRoutes.map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={createProtectedElement(route.element, route.isPublic, route.routeName)}
+            />
+          ))}
 
-        {/* OmniDash — the single post-auth surface */}
-        {/* BUG-008 FIX: /omnidash had no wildcard — sub-paths like /omnidash/pipeline
-            matched the catch-all * and redirected back to /omnidash instead of rendering.
-            Now: base route + wildcard both serve OmniDashShell; the shell reads
-            useLocation() to set active nav section. */}
-        <Route path="/omnidash" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
-        <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
-        <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
-        <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+          {/* OmniDash — the single post-auth surface */}
+          {/* BUG-008 FIX: /omnidash had no wildcard — sub-paths like /omnidash/pipeline
+              matched the catch-all * and redirected back to /omnidash instead of rendering.
+              Now: base route + wildcard both serve OmniDashShell; the shell reads
+              useLocation() to set active nav section. */}
+          <Route path="/omnidash" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
+          <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
+          <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+          <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
 
-        {/* Skill Forge — protected launch route. Invokes the generate-business-skills
-            edge function with the user JWT, so it requires an authenticated session. */}
-        <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "OmniSkills")} />
+          {/* Skill Forge — protected launch route. Invokes the generate-business-skills
+              edge function with the user JWT, so it requires an authenticated session. */}
+          <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "OmniSkills")} />
 
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
