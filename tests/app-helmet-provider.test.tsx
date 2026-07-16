@@ -7,10 +7,8 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import App from '../apps/omnihub-site/src/App';
 
 const APP_TSX = resolve(__dirname, '../apps/omnihub-site/src/App.tsx');
 
