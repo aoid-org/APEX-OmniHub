@@ -39,7 +39,9 @@ a deterministic enterprise release gate.
 Use mandatory header-only MCP authentication and shared allowlisted CORS; read
 canonical RLS-backed OmniSkills tables; map audit events to the live schema and
 fail closed; check Temporal health; disable environment proxies for the pinned
-webhook client; and convert caller-bound RPCs to invoker mode with explicit RLS.
+webhook client; convert caller-bound RPCs to invoker mode with explicit RLS;
+and move privileged authorization implementations behind public invoker wrappers
+into a non-exposed schema.
 
 ## 7. Business Capability
 
@@ -85,7 +87,8 @@ migration restoring prior function modes and policies. Preserve audit records.
 ## 14. Security Impact
 
 Removes fail-open and URL-secret behavior, reduces definer execution, enforces
-caller-bound RLS, and prevents proxy-based SSRF pin bypass.
+caller-bound RLS, removes privileged functions from the exposed API schema, and
+prevents proxy-based SSRF pin bypass.
 
 ## 15. Scalability Impact
 

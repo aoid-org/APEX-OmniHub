@@ -1846,6 +1846,11 @@ of the filesystem are not guaranteed to be synced yet.
   caller-bound RPCs to `SECURITY INVOKER`, adds tenant/admin UPDATE policies for
   OmniLink key revocation and approval decisions, removes anonymous execution,
   and retains authenticated/service-role execution where required.
+- **Authorization helpers:** migration
+  `20260716005500_private_authorization_helpers.sql` keeps the public
+  `get_user_tier`, `is_admin`, and `is_paid_user` RPC contracts as
+  `SECURITY INVOKER` wrappers. Their self-scoped, RLS-bypassing implementations
+  live in the non-exposed `private` schema with anonymous access revoked.
 
 ### Deployment and rollback
 
@@ -1866,3 +1871,5 @@ has reached another environment.
 - The worker image reports unhealthy when Temporal cannot be reached.
 - Supabase advisors confirm the four converted RPCs are invoker functions and
   anonymous callers lack `EXECUTE`.
+- Supabase security advisors no longer report authenticated executable
+  `SECURITY DEFINER` functions in the exposed `public` schema.
