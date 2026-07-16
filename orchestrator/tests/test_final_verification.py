@@ -182,6 +182,7 @@ class TestAuditPersistence:
             AuditAction,
             AuditLogEntry,
             AuditLogger,
+            AuditPersistenceError,
             AuditResourceType,
             AuditStatus,
         )
@@ -209,8 +210,8 @@ class TestAuditPersistence:
             patch("models.audit.get_database_provider", return_value=mock_db),
             patch("sys.stderr", captured_stderr),
         ):
-            # Should not raise
-            await logger._store_supabase(event)
+            with pytest.raises(AuditPersistenceError):
+                await logger._store_supabase(event)
 
             stderr_output = captured_stderr.getvalue()
             assert "CRITICAL: Audit persistence failed" in stderr_output

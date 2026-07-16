@@ -3,7 +3,9 @@ import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed }
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { handleOmniMediaRequest } from './omnimedia.ts';
+import { resolveOmniSkills } from './omniskills.ts';
 import { normalizeOmniPortIntent, normalizeModuleItems, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import { describeBillingSubscription } from '../_shared/billing-display.ts';
 import type { NormalizedModuleItem } from '../_shared/types/module-item.ts';
 import {
   checkRateLimit,
@@ -42,6 +44,8 @@ interface ModuleStateResponse {
   actions: string[];
   count: number;
   message?: string;
+  /** Optional display stats consumed by module modals (e.g. Billing "Plan"). */
+  stats?: ReadonlyArray<{ label: string; value: string }>;
 }
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
@@ -199,7 +203,7 @@ function jsonResponse(data: unknown, status: number, headers: HeadersInit): Resp
 //   omnitrace   → omnitrace_events    (user_id  = auth.uid() via RLS)
 //   agent       → agent_sessions      (user_id  = auth.uid() via RLS)
 //   dashboard   → omnidash_kpi_daily + omnidash_incidents
-//   omniskills  → skillforge_entitlements (graceful fallback if absent)
+//   omniskills  → user_entitlements + user_generated_skills (RLS-scoped)
 //   integrations→ connector_sessions  (tenant_id::text = auth.uid()::text via RLS)
 
 function fallbackState(_moduleKey: string): ModuleStateResponse {
@@ -394,6 +398,15 @@ async function resolveFiles(
     metadata: Record<string, unknown> | null;
   }>;
 
+  // Emit real usage stats so the Files modal never shows "—" for a synced
+  // tenant (owner polish item, 2026-07-10). Usage sums the listed page (50-file
+  // cap) — an honest floor, never an inflated number.
+  const usedBytes = files.reduce(
+    (sum, f) => sum + (typeof f.metadata?.size === 'number' ? (f.metadata.size as number) : 0),
+    0,
+  );
+  const usedGB = usedBytes / (1024 ** 3);
+
   return {
     State: 'Online',
     items: normalizeModuleItems(files.map((f) => ({
@@ -404,6 +417,10 @@ async function resolveFiles(
     }))),
     actions: ['upload_file', 'delete_file'],
     count: files.length,
+    stats: [
+      { label: 'Storage Used', value: `${usedGB < 0.01 && usedBytes > 0 ? '<0.01' : usedGB.toFixed(2)} GB` },
+      { label: 'Total Files', value: String(files.length) },
+    ],
   };
 }
 
@@ -430,21 +447,16 @@ async function resolveBilling(
     trial_end: string | null;
   } | null;
 
-  const items = sub ? [
-    {
-      id: sub.id,
-      tier: sub.tier,
-      status: sub.status,
-      period_end: sub.current_period_end,
-      trial_end: sub.trial_end,
-    },
-  ] : [];
+  // Raw IDs must never reach the UI — format a human plan label + stats.
+  const display = sub ? describeBillingSubscription(sub) : null;
+  const items = display ? [display.item] : [];
 
   return {
     State: sub ? 'Online' : 'NoSubscription',
     items: normalizeModuleItems(items),
     actions: ['manage-plan', 'billing-portal'],
     count: items.length,
+    ...(display ? { stats: display.stats } : {}),
   };
 }
 
@@ -648,40 +660,6 @@ async function resolveDashboard(
     actions: [],
     count: items.length,
   };
-}
-
-async function resolveOmniSkills(
-  anonClient: ReturnType<typeof createAnonClient>
-): Promise<ModuleStateResponse> {
-  // Table: skillforge_entitlements — graceful fallback if table absent
-  try {
-    const { data } = await anonClient
-      .from('skillforge_entitlements')
-      .select('tier, free_skills_used, free_skills_limit, total_skills_created')
-      .limit(1)
-      .maybeSingle();
-
-    const e = data as {
-      tier: string;
-      free_skills_used: number;
-      free_skills_limit: number;
-      total_skills_created: number;
-    } | null;
-
-    return {
-      State: 'Online',
-      items: e ? normalizeModuleItems([
-        { key: 'tier', value: e.tier },
-        { key: 'used', value: e.free_skills_used },
-        { key: 'limit', value: e.free_skills_limit },
-        { key: 'total', value: e.total_skills_created },
-      ]) : [],
-      actions: ['forge-skill', 'manage-bundles'],
-      count: e ? e.total_skills_created : 0,
-    };
-  } catch {
-    return { State: 'Online', items: [], actions: ['forge-skill'], count: 0 };
-  }
 }
 
 async function resolveIntegrations(

@@ -335,6 +335,7 @@ export default function AutomationsModule({ onClose }: Props) {
       onClose={onClose}
       onAction={handleAction}
       getActionDisabledReason={actionDisabledReason}
+      emptyState="No automations yet. Use Create Automation to set up your first rule — it will appear here with its trigger and run stats."
       renderItem={(item, selected, toggle) => (
         <AutomationRow item={item} selected={selected} onToggle={toggle} />
       )}

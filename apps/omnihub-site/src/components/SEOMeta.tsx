@@ -4,14 +4,14 @@
  */
 import { Head } from 'vite-react-ssg';
 
-interface SEOMetaProps {
+type SEOMetaProps = Readonly<{
   title: string;
   description: string;
   canonical?: string;
   ogImage?: string;
   noIndex?: boolean;
   appendBrandSuffix?: boolean;
-}
+}>;
 
 export function SEOMeta({
   title,
@@ -25,8 +25,7 @@ export function SEOMeta({
     ? `${title} | APEX OmniHub — Intelligence Designed`
     : title;
   const ogImg = ogImage ?? 'https://apexomnihub.icu/og-image.png';
-  const currentUrl =
-    globalThis.window === undefined ? '' : globalThis.window.location.href;
+  const currentUrl = typeof window === 'undefined' ? '' : window.location.href;
   const canon = canonical ?? currentUrl;
 
   return (
