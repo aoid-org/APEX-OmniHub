@@ -135,3 +135,17 @@ Product Owner: Pending PR review
 Architecture Reviewer: Pending PR review
 Security Reviewer: Pending PR review
 Operations Reviewer: Pending PR review
+
+## 22. Production Migration Identity Reconciliation (2026-07-16)
+
+Production recorded the database-hardening migrations as
+`20260714133607_security_definer_invoker_hardening.sql` and
+`20260716005122_private_authorization_helpers.sql`. The PR #1636 repository
+filenames used different timestamps for the same byte-identical SQL payloads,
+causing Deploy Web3 Functions run 29464710817 to stop before Edge Function
+deployment.
+
+The repository filenames must match the applied production versions exactly.
+Do not mark either valid production version reverted and do not replay either
+payload. CI permanently requires both identities, while the deployment workflow
+uses the Supabase CLI's noninteractive `--yes` flag instead of a shell pipe.
