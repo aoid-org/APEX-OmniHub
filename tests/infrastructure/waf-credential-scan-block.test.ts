@@ -12,9 +12,7 @@ describe('WAF credential-scan block documentation verification', () => {
   });
 
   it('asserts that section 9.36 documents the manual WAF credential-scan block rule ID and expression', () => {
-    if (!existsSync(runbookPath)) {
-      expect.fail('Runbook docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md does not exist yet.');
-    }
+    expect(existsSync(runbookPath)).toBe(true);
     const content = readFileSync(runbookPath, 'utf8');
 
     // Must contain section 9.36
