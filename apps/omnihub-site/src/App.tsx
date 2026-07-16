@@ -2,11 +2,12 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from 'react-i18next';
 import { Toaster } from 'sonner';
 import i18n from './i18n';
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 // APEX PWA INVARIANT: PWAInstallBanner MUST remain in App.tsx.
 // Removal silently breaks the live-site install prompt. Guarded by: scripts/ci/check-pwa-integrity.mjs
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { SupportAgentModal } from "@/components/SupportAgentModal";
+import { BrandAnthemPlayer } from "@/components/BrandAnthemPlayer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -177,10 +178,9 @@ function App() {
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
         </Routes>
-        {/* PWA install banner — renders globally, zero render cost when not installable */}
         <PWAInstallBanner />
-        {/* Support Agent Modal — renders globally */}
-        <SupportAgentModal />
+        {/* Lower-right overlay stack containing Brand Anthem Player and Support bubble */}
+        <LowerRightStack />
         {/* PRCC-001 WP-1b: global toast renderer. toast.error/success are called
             across OmniDash modules and the Launch wizards, but no Toaster was mounted,
             so every notification fired silently. One app-root renderer surfaces them. */}
@@ -189,6 +189,18 @@ function App() {
     </BrowserRouter>
     </ErrorBoundary>
         </I18nextProvider>
+  );
+}
+
+function LowerRightStack() {
+  const location = useLocation();
+  const shouldRenderBrandAnthem = location.pathname === "/";
+
+  return (
+    <div className="lower-right-stack">
+      {shouldRenderBrandAnthem && <BrandAnthemPlayer />}
+      <SupportAgentModal />
+    </div>
   );
 }
 
