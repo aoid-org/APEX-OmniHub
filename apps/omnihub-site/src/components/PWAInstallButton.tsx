@@ -12,20 +12,9 @@ export const PWAInstallButton = memo(() => {
     <button
       type="button"
       onClick={installPWA}
+      className="pwa-install-fixed"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: '#C4511A',
         border: '1px solid #C4511A',
-        borderRadius: '8px',
-        padding: '6px 12px',
-        color: '#ffffff',
-        fontSize: '12px',
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = '#A34316';
