@@ -262,7 +262,6 @@ async def test_store_event_unsupported_backend():
 @pytest.mark.asyncio
 async def test_query_events_basic():
     """Lines 345-376: query_events with all filters exercised."""
-    import sys
     from unittest.mock import MagicMock
 
     logger = AuditLogger()
@@ -288,19 +287,7 @@ async def test_query_events_basic():
     }
     mock_query.execute.return_value.data = [row]
 
-    # query_events does local imports inside the function body, so we
-    # patch the modules in sys.modules so local 'from ... import ...' picks them up.
-    mock_factory = MagicMock()
-    mock_factory.get_database_provider.return_value = mock_db
-    mock_supabase_provider = MagicMock()
-
-    with patch.dict(
-        sys.modules,
-        {
-            "providers.database.factory": mock_factory,
-            "providers.database.supabase_provider": mock_supabase_provider,
-        },
-    ):
+    with patch("models.audit.get_database_provider", return_value=mock_db):
         results = await logger.query_events(
             actor_id="a",
             action=AuditAction.READ,

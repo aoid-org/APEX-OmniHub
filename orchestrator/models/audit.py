@@ -276,11 +276,8 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from providers.database.factory import get_database_provider
-        from providers.database.supabase_provider import SupabaseDatabaseProvider
-
         try:
-            db = cast(SupabaseDatabaseProvider, get_database_provider())
+            db = cast(Any, get_database_provider())
             query = db.client.table("audit_logs").select(
                 "id,actor_id,action_type,resource_type,resource_id,metadata,created_at"
             )
