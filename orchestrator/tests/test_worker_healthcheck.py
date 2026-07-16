@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -24,6 +24,12 @@ async def test_check_worker_dependencies_rejects_unhealthy_temporal():
             await worker_healthcheck.check_worker_dependencies()
 
 
-def test_main_returns_failure_without_leaking_error_details():
-    with patch("worker_healthcheck.asyncio.run", side_effect=ConnectionError("secret-host")):
+def test_main_returns_failure_without_leaking_error_details(capsys):
+    with (
+        patch("worker_healthcheck.check_worker_dependencies", new=Mock(return_value=object())),
+        patch("worker_healthcheck.asyncio.run", side_effect=ConnectionError("secret-host")),
+    ):
         assert worker_healthcheck.main() == 1
+    captured = capsys.readouterr()
+    assert "ConnectionError" in captured.out
+    assert "secret-host" not in captured.out

@@ -1814,3 +1814,55 @@ and read migration/config files intended for a git commit within the same
 tool (shell heredoc end-to-end, or edit-tool-then-edit-tool-read), never
 edit-tool-write then immediately shell-read in the same turn — the two views
 of the filesystem are not guaranteed to be synced yet.
+
+## 9.39 Final runtime security and integrity hardening (2026-07-15)
+
+**RFC-link:** `memory/omni-recall/rfc/rfc-2026-07-15-final-runtime-hardening.md`
+
+### Operational contracts
+
+- **MCP gateway:** `MCP_GATEWAY_API_KEY` is mandatory. Authentication accepts
+  only a matching `Authorization: Bearer` or `x-api-key` header, uses a
+  timing-safe comparison, rejects query-string credentials, and fails closed
+  when configuration is absent. Browser CORS uses the shared origin allowlist;
+  native MCP clients are unaffected by browser CORS.
+- **OmniSkills module state:** `omnilink-port` reads the authenticated user's
+  RLS-scoped `user_entitlements` and `user_generated_skills` rows. Query errors
+  return an unavailable/error response through the existing module-state
+  handler; they are not converted into fabricated empty success.
+- **Audit persistence:** the orchestrator maps the rich audit envelope to the
+  seven-column `audit_logs` table contract. Extended compliance fields live in
+  `metadata._audit`. Failed writes emit a sanitized fallback receipt and then
+  raise `AuditPersistenceError`; failed reads raise `AuditQueryError` rather
+  than appearing to be an empty audit history.
+- **Worker health:** the container health check runs
+  `python worker_healthcheck.py`, connects to the configured Temporal host and
+  namespace, and fails when Temporal health is unavailable. The worker start
+  command remains `python main.py worker`.
+- **Webhook DNS pinning:** the outbound webhook client ignores process proxy
+  variables so a proxy cannot bypass the SSRF guard's resolved-IP pin.
+- **Database hardening:** migration
+  `20260714132110_security_definer_invoker_hardening.sql` converts four
+  caller-bound RPCs to `SECURITY INVOKER`, adds tenant/admin UPDATE policies for
+  OmniLink key revocation and approval decisions, removes anonymous execution,
+  and retains authenticated/service-role execution where required.
+
+### Deployment and rollback
+
+Deploy the orchestrator image and the `mcp-gateway` and `omnilink-port` Edge
+Functions from the same reviewed commit. Apply the migration through the
+normal Supabase migration path. Rollback is a git revert plus redeploy; any
+database rollback must restore the prior function security mode and policies
+in a new forward migration. Never edit an applied migration in place after it
+has reached another environment.
+
+### Required verification
+
+- Missing, incorrect, and query-string MCP credentials return `401`.
+- Allowed-origin preflight returns the exact origin and never `*`.
+- OmniSkills BASIC/PRO counts come from RLS-backed rows and DB errors fail.
+- Audit insert/query tests prove the seven-column projection and fail-closed
+  exceptions without exposing metadata secrets in stderr.
+- The worker image reports unhealthy when Temporal cannot be reached.
+- Supabase advisors confirm the four converted RPCs are invoker functions and
+  anonymous callers lack `EXECUTE`.

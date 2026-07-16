@@ -68,8 +68,13 @@ class TestAuditPersistence:
             call_args = mock_db.insert.call_args
             assert call_args[1]["table"] == "audit_logs"
             assert set(call_args[1]["record"]) == {
-                "id", "actor_id", "action_type", "resource_type",
-                "resource_id", "metadata", "created_at",
+                "id",
+                "actor_id",
+                "action_type",
+                "resource_type",
+                "resource_id",
+                "metadata",
+                "created_at",
             }
             assert call_args[1]["record"]["metadata"]["_audit"]["correlation_id"] == "corr-123"
 
