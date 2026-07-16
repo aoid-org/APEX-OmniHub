@@ -55,7 +55,7 @@ jobs:
       - name: Apply Database Migrations
         # Critical: Deploys schema changes (e.g., 'emergency_controls' table) BEFORE functions
         # fix: Removes invalid 'desc' key
-        run: yes | supabase db push --include-all
+        run: supabase db push --include-all --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
