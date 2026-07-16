@@ -13,6 +13,10 @@ jobs:
     name: Deploy Supabase Edge Functions
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    env:
+      # Supabase CLI analytics is nonessential in CI and can fail successful
+      # commands during PostHog shutdown when the telemetry endpoint is slow.
+      SUPABASE_TELEMETRY_DISABLED: '1'
 
     steps:
       - name: Checkout code
