@@ -235,6 +235,7 @@ Worker healthy logs: `✓ Connected to Temporal` → `✅ Worker started - polli
 6. **Branch:** `main` is the deploy branch for Cloudflare + both Render services. Pull `main` before local work so you don't overwrite production fixes.
 7. **Secrets:** never commit them; rotate the GitHub PAT (it currently sits in the git remote URL), Upstash password, and Temporal key on schedule.
 8. **After every deploy:** run §6 smoke.
+9. **Bus-Factor & Emergency Succession:** if the primary maintainer (`@sinyo`) is unavailable during a P0 incident, execute the emergency recovery protocol in `docs/ops/SUCCESSION_RUNBOOK.md`.
 
 ### Frontend i18n release gate
 
@@ -1619,3 +1620,11 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   the worker, restart `apex-orchestrator-worker`, and confirm logs show Redis connects
   plus vector index creation succeeds or reports `already exists`; the previous
   `IndexType.HASH` AttributeError must not recur.
+
+## 9.33 Bus-Factor Mitigation & Emergency Succession Runbook (2026-07-16)
+
+**Registered critical operations runbook:** `docs/ops/SUCCESSION_RUNBOOK.md`.
+
+- Establishes clear single-developer bus-factor recovery sequence and master credential inventory (`C:\Users\sinyo\Desktop\ENV\APEX-OmniHub - ENV.md` with exact `\_` normalization).
+- Specifies `.github/CODEOWNERS` bypass protocols and designated backup maintainer rules (`@apex-devops` / `@apex-emergency-ops`) for emergency P0 hotfixes without disabling branch protection rules.
+- Documents offline local build (`npm run build`) and direct Cloudflare Pages deployment (`npx wrangler pages deploy dist --project-name=apex-omnihub`) for emergency recovery when CI runners are blocked.
