@@ -19,6 +19,11 @@ const FRONTEND_DIRS = [
 ];
 const FN_DIR = path.join(ROOT, "supabase", "functions");
 const WARN_ONLY = process.env.GATE29_WARN_ONLY === "1";
+// Opt-in fail-closed switch: when set, an unavailable/BLOCKED Tier 2
+// (deployed-list verification) is treated as a FAILURE instead of a soft pass.
+// Default off preserves current behavior; enable in release CI alongside
+// SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF to make deployment verification blocking.
+const REQUIRE_TIER2 = process.env.GATE29_REQUIRE_TIER2 === "1";
 
 function collectSourceFiles(dir) {
   const out = [];
@@ -104,6 +109,10 @@ try {
 
 if (deployed === null) {
   console.log("[gate29] BLOCKED: no SUPABASE_ACCESS_TOKEN/SUPABASE_PROJECT_REF — deployed-list tier not verified (repo-existence tier only). This is not a pass for Tier 2.");
+  if (REQUIRE_TIER2) {
+    failures++;
+    console.log("[gate29] REQUIRE_TIER2=1: Tier 2 (deployed verification) is mandatory but unavailable — treating BLOCKED as FAIL. Provide SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF in CI.");
+  }
 } else {
   for (const [slug, sites] of [...refs.entries()].sort()) {
     if (!deployed.has(slug)) {
