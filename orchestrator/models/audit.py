@@ -14,7 +14,7 @@ All audit events must be logged using this schema to maintain:
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, cast
 
 from providers.database.factory import get_database_provider
 
@@ -231,8 +231,6 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from typing import cast
-
         from providers.database.factory import get_database_provider
         from providers.database.supabase_provider import SupabaseDatabaseProvider
 
@@ -268,10 +266,15 @@ class AuditLogger:
             for row in data:
                 if not isinstance(row, dict):
                     raise ValueError("Invalid audit row")
-                metadata = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
-                envelope = (
-                    metadata.get("_audit") if isinstance(metadata.get("_audit"), dict) else {}
+                raw_metadata = row.get("metadata")
+                metadata = (
+                    cast(dict[str, Any], raw_metadata) if isinstance(raw_metadata, dict) else {}
                 )
+                raw_envelope = metadata.get("_audit")
+                envelope = (
+                    cast(dict[str, Any], raw_envelope) if isinstance(raw_envelope, dict) else {}
+                )
+                public_metadata = {key: value for key, value in metadata.items() if key != "_audit"}
                 events.append(
                     AuditLogEntry(
                         **envelope,
@@ -281,7 +284,7 @@ class AuditLogger:
                         resource_type=row["resource_type"],
                         resource_id=row["resource_id"],
                         timestamp=row["created_at"],
-                        metadata={key: value for key, value in metadata.items() if key != "_audit"},
+                        metadata=AuditMetadata(**public_metadata),
                     )
                 )
             return events
