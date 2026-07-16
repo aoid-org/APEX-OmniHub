@@ -191,6 +191,7 @@ function App() {
     </BrowserRouter>
     </ErrorBoundary>
         </I18nextProvider>
+    </HelmetProvider>
   );
 }
 
