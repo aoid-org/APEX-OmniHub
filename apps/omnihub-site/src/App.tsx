@@ -180,7 +180,6 @@ function App() {
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
         </Routes>
-        <PWAInstallBanner />
         {/* Lower-right overlay stack containing Brand Anthem Player and Support bubble */}
         <LowerRightStack />
         {/* PRCC-001 WP-1b: global toast renderer. toast.error/success are called
@@ -198,10 +197,12 @@ function App() {
 function LowerRightStack() {
   const location = useLocation();
   const shouldRenderBrandAnthem = location.pathname === "/";
+    const isInsideOmniDash = location.pathname.startsWith('/omnidash');
 
   return (
     <div className="lower-right-stack">
       {shouldRenderBrandAnthem && <BrandAnthemPlayer />}
+            {!isInsideOmniDash && <PWAInstallBanner />}
       <SupportAgentModal />
     </div>
   );
