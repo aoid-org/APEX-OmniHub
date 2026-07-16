@@ -69,6 +69,17 @@ This document provides the authoritative, git-verified snapshot of the **APEX-Om
 All runtime quality gates executed clean against the repository:
 - `check:react` (`scripts/check-react-singleton.mjs`): **PASS** (`React 18.3.1` singleton confirmed).
 - `check:pwa` / `check:omnidash`: **PASS** (`15/15` PWA checks, `43/43` OmniDash integrity invariants).
-- `test:infra`: **PASS** (`13/13` infrastructure and WAF/Cloudflare tests).
+- `test:infra`: **PASS** (`13/13` infrastructure and WAF/Cloudflare tests, including APEX Test Integrity Doctrine R1 compliance).
 - `test:assets`: **PASS** (`200 OK` across static assets, icons, JS/CSS bundles).
 - `docs:check`: **PASS** (`0` broken links or code pointers across repository).
+
+---
+
+## 5. SSG Client Hydration & Runtime Stability Remediation (Follow-Up Phase)
+
+During full E2E E2E and diagnostic verification (`diag-console.spec.ts`) against the production static bundle (`vite-react-ssg build`), a high-priority runtime exception (`TypeError: Cannot read properties of undefined (reading 'add')`) was isolated when loading the `/login` route, causing the `RouteErrorBoundary` ("Something went wrong") to trap render initialization.
+
+- **Root Cause & Fix:** While `apps/omnihub-site/src/main.tsx` wrapped `<App />` in `<HelmetProvider>`, the static pre-rendering/hydrated router entry path (`App.tsx` exported structure used across SSG routes) required guaranteed `<HelmetProvider>` context surrounding `Router`/`AppRoutes` to prevent `react-helmet-async` context lookups from failing and interrupting class/DOM mutations. We updated `apps/omnihub-site/src/App.tsx` to wrap `AppRoutes` cleanly within `<HelmetProvider>`, ensuring unified SSR/SSG and CSR initialization.
+- **Test Integrity Compliance:** Eliminated a banned `expect.fail()` assertion inside `tests/infrastructure/waf-credential-scan-block.test.ts` to strictly uphold the **APEX Test Integrity Doctrine (R1)** across CI checks.
+- **Verification Proof:** E2E diagnostics (`diag-console.spec.ts`) run against the fresh preview bundle (`http://localhost:4173/login`) confirmed **0 console errors** and **0 page errors**, with `/login` rendering cleanly (`cp-02-byom-login.spec.ts` passing (`2 passed | 1 skipped`), and full unit test matrix passing (`289 test files passed | 17 skipped`, `3098 tests passed`)).
+
