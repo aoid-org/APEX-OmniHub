@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.9.1
-last_audited: 2026-07-01
+version: 1.9.2
+last_audited: 2026-07-16
 status: verified
 ---
 
@@ -10,22 +10,22 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-01** (release gate audit pass at HEAD `845fced`: full `verify:release` matrix + PR-blocking guards executed non-fail-fast, **GATE: PASS** — see `docs/audits/release-gate-audit-2026-07-01.md`; audit-document inventory corrected to reflect the `memory/omni-recall/archive/docs/audits/` relocation; source-file counts re-verified). Previous refresh: 2026-07-04 (README-cited documentation sync to HEAD `d22ddcf`, package `1.8.3`, OmniDash surface repair baseline). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_04.md`.
+> Current repo-truth index refreshed **2026-07-16** (Security & Reliability Hardening Sprint `APEX-HARDEN-2026-07-16-r3` completion at baseline `8bcda913e6d877e62a129ef66ebcd8ec532f7823`: all 6 hardening tasks verified via TDD contract suites and runtime gates **GATE: PASS**; exact file counts git-verified). Previous refresh: 2026-07-04. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
-## Current Repo Facts Verified in This Pass (2026-07-01)
+## Current Repo Facts Verified in This Pass (2026-07-16)
 
-> Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
+> Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from prior verification unless directly exercised.
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `845fced` — orphaned static `/launch` page removal, after A.R.I.S.E. Phase 1b (#1546 propose engine) and SonarCloud reliability/security repairs; full release gate audit **GATE: PASS** at this commit (`docs/audits/release-gate-audit-2026-07-01.md`, PR #1550, 31/31 CI checks green) |
-| Local audit branch | `work`; live production/branch protection not verified by this documentation pass |
-| Source files under `src/` | **322** TypeScript/TSX (230 `.ts` + 92 `.tsx`) |
-| GitHub workflow files | **22** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`; `arise-propose.yml` added in PR #1546 — A.R.I.S.E. Phase 1b propose engine, `workflow_dispatch` only) |
+| Audited remediation baseline | `8bcda913e6d877e62a129ef66ebcd8ec532f7823` — full completion of Security & Reliability Hardening Sprint (`APEX-HARDEN-2026-07-16-r3` across 6 atomic tasks: WAF block, Pages redirect, asset cache rule, mobile E2E viewport, matrix sync, succession runbook) |
+| Local audit branch | `fix/seo-geo-ssg-remediation` (and upcoming doc sync branch `docs/repo-truth-sync-2026-07-16`); live production/branch protection not verified by this documentation pass |
+| Source files under `src/` | **321** TypeScript/TSX (234 `.ts` + 87 `.tsx`) |
+| GitHub workflow files | **22** files in `.github/workflows/` |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_04.md`. |
-| SQL migrations | **102** `.sql` files = **98 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **34** (33 function dirs + `_shared`) — git-verified |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
+| SQL migrations | **106** `.sql` files = **102 forward** + **4 rollback** (`migrations/rollback/`) |
+| Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~130 tracked (excl. `__pycache__`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441; unsupported actions fail-closed, never call `trigger-workflow` |
@@ -41,7 +41,7 @@ status: verified
 
 ## Documentation Authority Order
 
-0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
+0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
 1. `docs/release/release-validation-matrix.json` for current release evidence boundaries and production-certification gaps.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -59,7 +59,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` _(current — supersedes 2026-06-25 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_07_16.md` _(current — supersedes 2026-07-04 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` _(historical — 2026-07-04 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(historical — 2026-06-25 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(historical — 2026-06-24 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
@@ -161,7 +162,7 @@ Legacy audits (17 files, relocated to `memory/omni-recall/archive/docs/audits/` 
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 17 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_04.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_04.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 18 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_16.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_16.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_

@@ -95,6 +95,7 @@ function getPackageTreeOutput(command, args) {
     return execFileSync(command, args, {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
     });
   } catch (error) {
     // npm ls can exit non-zero for peer/dependency metadata issues while still returning a parseable tree.

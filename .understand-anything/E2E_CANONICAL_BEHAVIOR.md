@@ -71,3 +71,8 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 **Invariant:** The workspace enforces exactly 0 warnings/errors (Gate 2 of the Platform Quality Gates).
 **Rule:** All test and visual test files under `apps/omnihub-site/tests` are subject to relaxed rules for simulation/testing (e.g. `no-console` is disabled). To avoid code smell/warnings on unused imports (such as unused `@playwright/test` structures), unused imports must be pruned surgically instead of bypassed.
 
+## 15. Mobile Viewport Drag-and-Drop & Touch Emulation (Sprint APEX-HARDEN-2026-07-16-r3)
+**Invariant:** Mobile drag-and-drop (`GlobalCanvas`, `DraggableWidget.tsx`, `OmniSpatialHost.tsx`) and touch pointer properties must remain fully deterministic across multi-device mobile/tablet viewports (`mobile-iphone`, `mobile-chrome`, `mobile-safari`, `tablet-ipad`) without any breaking changes to core drag layout code.
+**Rule:** Enforced by `tests/e2e-playwright/mobile-viewport.spec.ts` under `playwright.config.ts`. The suite validates viewport rendering boundaries (zero horizontal overflow or clipping) and verifies that touch emulation (`hasTouch: true`, `isMobile: true`) maintains accurate pointer capture, grid snapping, and layout state machine integrity across `iPhone 14`, `Pixel 5`, and `iPad` profiles.
+
+
