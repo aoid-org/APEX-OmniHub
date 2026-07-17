@@ -155,5 +155,22 @@ The system should:
 - **Verification:** All workspace compilation (`npx tsc --noEmit`) and linter checks (`npm run lint`) passed cleanly (exit code `0`).
 - **PR #1642 opened:** Pushed audits to branch `feat/omniboard-any-app-onboarding` and opened PR #1642.
 
+## Session 2026-07-17 (PR #1641 & PR #1642 Merge — Post-Merge Docs Sync)
+
+- **Baseline Commit:** `5c991065` (PR #1642 squash-merge). PR #1641 squash-merge: `5dd33caf`.
+- **PRs merged this session:**
+  - **PR #1641 (`5dd33caf`) — MERGED:** OmniBoard Integration Runtime (full OmniBoard page, IntegrationOnboarder, ConnectorKit API-key generation/persistence, Cloudflare status probe, OmniLink API omnihub-site scope, SonarCloud CPD exclusions, `omnilink-api.spec.ts` 100% coverage).
+  - **PR #1642 (`5c991065`) — MERGED:** Tech debt closeout audits (`OMNIBOARD-TRUTH.md`, `VIEWPORT-TRUTH.md`, `PR1641-LOCKED-FILES.txt`). No source code modified.
+- **Post-merge local validation:**
+  - `npm run check:omnidash` → **43/43 PASS** (all OmniDash integrity invariants satisfied).
+  - `tests/omnidash/omnilink-api.spec.ts` → **5/5 PASS**.
+  - `tsc -b --noEmit` → exit 0.
+  - `eslint .` → exit 0.
+  - `npm run check:react` → React singleton 18.3.1 confirmed.
+- **Repo counts (git-verified 2026-07-17):** ts: 233, tsx: 88, migrations: 108 (+2 from PR #1641), workflows: 22, edge: 35.
+- **Documentation sync:** `README.md`, `.understand-anything/CANONICAL_STATE_2026-07-16.md`, `.understand-anything/CANONICAL_STATE_2026-07-17.md` (NEW), `memory/omni-recall/start-here.md`, `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md`, `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` — all updated to reflect merged state.
+
+
+
 
 
