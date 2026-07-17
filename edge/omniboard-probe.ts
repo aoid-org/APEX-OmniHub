@@ -58,8 +58,10 @@ export default {
       return Response.json({ q1: null, confidence: 'low' } satisfies ProbeResponse);
     }
 
-    // Normalise — strip trailing slash
-    const base = url.replace(/\/+$/, '');
+    // Normalise — strip trailing slashes without regex (avoids S5852)
+    let trimEnd = url.length;
+    while (trimEnd > 0 && url[trimEnd - 1] === '/') trimEnd--;
+    const base = url.slice(0, trimEnd)
 
     // Fire 3 HEAD probes concurrently with a 4s timeout each
     const [oidcResult, oauthResult, rootResult] = await Promise.allSettled([
