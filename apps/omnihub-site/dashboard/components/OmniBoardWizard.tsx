@@ -8,7 +8,7 @@
  *
  * APEX STANDARDS: No workflow questions. Connect only. Output Connection Spec.
  */
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ApexAgentAvatar from './ApexAgentAvatar';
 import { supabase } from '@/lib/supabase';
 // Relative import (not '@/hooks/...'): the root vitest config resolves '@' to
@@ -179,7 +179,7 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
           <p className="text-[11px] text-muted-foreground">Chat-native connector actions use the existing APEX agent and OmniConnect paths.</p>
         </div>
       </div>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error} <button onClick={startSession} className="underline ml-1">Retry</button></p>}
       <div className="rounded-lg bg-muted/20 p-3 text-xs text-foreground leading-relaxed min-h-[60px]">
         {message}
       </div>
