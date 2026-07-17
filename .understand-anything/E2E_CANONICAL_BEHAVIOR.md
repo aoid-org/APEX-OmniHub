@@ -75,4 +75,12 @@ When mocking core modules in Vitest (e.g., `vi.mock('@/contracts/omnidash-sideba
 **Invariant:** Mobile drag-and-drop (`GlobalCanvas`, `DraggableWidget.tsx`, `OmniSpatialHost.tsx`) and touch pointer properties must remain fully deterministic across multi-device mobile/tablet viewports (`mobile-iphone`, `mobile-chrome`, `mobile-safari`, `tablet-ipad`) without any breaking changes to core drag layout code.
 **Rule:** Enforced by `tests/e2e-playwright/mobile-viewport.spec.ts` under `playwright.config.ts`. The suite validates viewport rendering boundaries (zero horizontal overflow or clipping) and verifies that touch emulation (`hasTouch: true`, `isMobile: true`) maintains accurate pointer capture, grid snapping, and layout state machine integrity across `iPhone 14`, `Pixel 5`, and `iPad` profiles.
 
+## 16. OmniDash Chrome Safety Gate & Audits (Post-Sprint Layout)
+**Invariant:** Floating overlays, support bubbles, PWA install buttons, and bottom navs must not collide, overlap, or cause document overflow across desktop, tablet, or mobile breakpoints.
+**Rule:**
+- **Z-Index Safe Stacking:** Floating stack buttons (such as PWA install or support bubble in `.lower-right-stack`) must be gated/suppressed on dashboard routes to prevent covering system status signals or overlapping mobile bottom navigation bars.
+- **Chrome Safety Spec:** Viewport layout safety is validated by the Playwright safety spec across 9 viewports, asserting zero horizontal document overflow, zero top-header control collisions, and strict z-index isolation.
+- **PR Non-Duplication:** To avoid git conflicts, all integration and onboarder work belongs solely to PR #1641; tech debt audits are cataloged in PR #1642 without modifying locked files.
+
+
 

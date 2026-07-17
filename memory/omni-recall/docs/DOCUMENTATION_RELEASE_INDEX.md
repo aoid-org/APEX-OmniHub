@@ -10,7 +10,7 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-16** (Security & Reliability Hardening Sprint `APEX-HARDEN-2026-07-16-r3` completion at baseline `8bcda913e6d877e62a129ef66ebcd8ec532f7823`: all 6 hardening tasks verified via TDD contract suites and runtime gates **GATE: PASS**; exact file counts git-verified). Previous refresh: 2026-07-04. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
+> Current repo-truth index refreshed **2026-07-16** (Tech Debt Closeout & PR #1640 Layout Adjustments merge at baseline `88a643d8`: layout overlays verified, and onboarding/viewport audits documented in PR #1642). Previous refresh: 2026-07-04. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
 ## Current Repo Facts Verified in This Pass (2026-07-16)
 
@@ -18,12 +18,12 @@ status: verified
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `8bcda913e6d877e62a129ef66ebcd8ec532f7823` — full completion of Security & Reliability Hardening Sprint (`APEX-HARDEN-2026-07-16-r3` across 6 atomic tasks: WAF block, Pages redirect, asset cache rule, mobile E2E viewport, matrix sync, succession runbook) |
-| Local audit branch | `fix/seo-geo-ssg-remediation` (and upcoming doc sync branch `docs/repo-truth-sync-2026-07-16`); live production/branch protection not verified by this documentation pass |
+| Audited remediation baseline | `88a643d8` — Security & Reliability Hardening Sprint completion + PR #1640 merged lower-viewport layout overlays and safe-area adjustments |
+| Local audit branch | `feat/omniboard-any-app-onboarding` (audited and documented in PR #1642); PR #1641 contains the OmniBoard integration runtime changes |
 | Source files under `src/` | **321** TypeScript/TSX (234 `.ts` + 87 `.tsx`) |
-| GitHub workflow files | **22** files in `.github/workflows/` |
+| GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
 | SQL migrations | **106** `.sql` files = **102 forward** + **4 rollback** (`migrations/rollback/`) |
 | Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
@@ -458,28 +458,29 @@ Batch 2 of the PR #1477 fix session. Three code files changed; six doc files upd
 | `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path |
 
 ### Current canonical start point
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` (2026-07-04 README-cited documentation anti-drift sync is the latest state)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (2026-07-16 tech debt closeout documentation anti-drift sync is the latest state)
 
 
-## 2026-07-04 Documentation Anti-Drift Sync — README-cited current-state repair
+## 2026-07-16 Documentation Sync — Tech Debt Closeout Audit
 
-Full repo-truth documentation sync performed against the working tree after release remediation baseline `d22ddcf` and ops-doc repair `e0c1739`. Counts were re-verified with `find`/`git` commands in the local repository. Live infrastructure health, GitHub branch-protection settings, Cloudflare deployed env, Supabase production/staging migrations, provider OAuth, billing, BYOM, native mobile, and real-device WebAuthn were **not** re-verified in this documentation pass.
+Full repo-truth documentation sync performed against the working tree after the layout overlays merge (PR #1640) and during the tech debt closeout audits (PR #1642). Counts were re-verified against the active git tree on the `feat/omniboard-any-app-onboarding` branch.
 
 | File | Change |
 |---|---|
-| `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` | Added repo-evidence vs live-proof doctrine and local-launch truthfulness rule |
-| `README.md` | Current platform-state pointer → 2026-07-04; edge function dirs 34 (33 + `_shared`); test spec count 385; release evidence boundary points to validation matrix |
-| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` | Updated remediation baseline, counts, fail-closed env contract, dependency branch-only behavior, and manual/live validation boundary |
-| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — v1.8.0 facts table and authority pointers updated to 2026-07-04 |
-| `memory/omni-recall/docs/README.md` | Current platform snapshot/certification boundary updated to 2026-07-04 validation matrix |
-| `docs/audits/documentation-drift-assessment-2026-07-04.md` | New dated report documenting scope, evidence, updates, validation, and remaining manual/live gaps |
+| `docs/debt-closeout/PR1641-LOCKED-FILES.txt` | **NEW** — locked files list for active open PR #1641 |
+| `docs/debt-closeout/OMNIBOARD-TRUTH.md` | **NEW** — absolute repo-relative paths map for OmniBoard integrations registry, ConnectorKit UI, and backend Edge APIs |
+| `docs/debt-closeout/VIEWPORT-TRUTH.md` | **NEW** — breakpoint mapping between active 3-tier layout and requested 5-tier responsive layout contract |
+| `apps/omnihub-site/implementation_plan.md` | **NEW** — approved implementation plan and conflict report |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Updated baseline commit, added Section 6 layout and audits record |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — facts table, authority pointers, and sync records updated to 2026-07-16 |
 
-### Current count corrections (2026-07-04, repo-verified)
+### Current count corrections (2026-07-16, repo-verified)
 
 | Metric | Current | Evidence command |
 |---|---:|---|
-| Workflow files | 20 | `find .github/workflows -maxdepth 1 -type f` |
-| `src` TypeScript/TSX files | 328 (234 `.ts` + 94 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
-| Supabase function dirs | 34 (33 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
-| SQL migrations | 102 (98 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
-| Spec/test source files | 385 | `find tests e2e sim apps orchestrator packages ...` |
+| Workflow files | 22 | `find .github/workflows -maxdepth 1 -type f` |
+| `src` TypeScript/TSX files | 321 (234 `.ts` + 87 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
+| Supabase function dirs | 35 (34 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
+| SQL migrations | 106 (102 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
+| Spec/test source files | 388 | `find tests e2e sim apps orchestrator packages ...` |
+
