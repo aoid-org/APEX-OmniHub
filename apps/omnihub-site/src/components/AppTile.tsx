@@ -33,7 +33,9 @@ export const AppTile = ({
 
   let borderShadowClass = 'bg-white border-2 border-dashed border-muted-foreground/30';
   if (app.icon) {
-    borderShadowClass = `bg-white border-2 border-[hsl(var(--navy))] shadow-lg ${isSmall ? '' : 'hover:shadow-xl'}`;
+    borderShadowClass = `bg-white border-2 border-[hsl(var(--navy))] shadow-lg ${
+      isSmall ? '' : 'hover:shadow-xl'
+    }`;
   }
 
   const containerClasses = [baseClasses, paddingClass, borderShadowClass].join(' ');
@@ -66,8 +68,12 @@ export const AppTile = ({
   };
 
   return (
-    <div className={containerClasses} onClick={handleClick} role="button" tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+    // Use a native <button> so the interactive role is semantically correct
+    // (resolves SonarQube S1181: prefer <button> over role="button" on a div).
+    <button
+      type="button"
+      className={`${containerClasses} appearance-none border-0 bg-transparent p-0 text-inherit`}
+      onClick={handleClick}
     >
       {app.icon ? (
         <>
@@ -75,7 +81,9 @@ export const AppTile = ({
             src={`/assets/apps/${app.icon}.png`}
             alt={app.alt ?? app.name}
             className={iconClasses}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
           />
           {app.name === 'APEX' && isInstallable && (
             <Download className="w-4 h-4 text-muted-foreground mb-1" />
@@ -83,10 +91,8 @@ export const AppTile = ({
           <span className={textClasses}>{app.name}</span>
         </>
       ) : (
-        <>
-          <span className={placeholderClasses}>{app.name}</span>
-        </>
+        <span className={placeholderClasses}>{app.name}</span>
       )}
-    </div>
+    </button>
   );
 };
