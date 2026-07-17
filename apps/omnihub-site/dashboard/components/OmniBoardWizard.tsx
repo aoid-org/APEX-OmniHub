@@ -76,6 +76,7 @@ interface WizardProps {
   readonly onDismiss: () => void;
 }
 
+export function OmniBoardWizard({ onComplete }: WizardProps) {
   const [context, setContext] = useState<FSMContext | null>(null);
   const [message, setMessage] = useState<string>('Tell OmniBoard what app or provider you want to connect.');
   const [input, setInput] = useState('');
