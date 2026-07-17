@@ -1,6 +1,6 @@
 ---
-version: 1.3.6
-last_audited: 2026-07-16
+version: 1.3.7
+last_audited: 2026-07-17
 status: verified
 ---
 
@@ -25,7 +25,7 @@ OmniBoard now exposes connector operations through the existing APEX agent path 
 
 **Verification (CP-16):** OmniBoard's chat-native integration pathways are structurally proven via the `cp-16` E2E test matrix across 4 diverse topologies: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**. This matrix strictly enforces the **Honest Gateway Law**, ensuring the FSM gracefully fails closed and reports accurate unavailability when the backend orchestrator is unreachable, without leaking trace errors.
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-16
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-17
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
@@ -66,17 +66,17 @@ The platform relies on a "Holy Trinity" architecture:
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 321 TypeScript/TSX files (234 `.ts` + 87 `.tsx`)  |
-| **React Components (`src/`)**                    | 87 `.tsx` component files                         |
+| **Source Files (`src/`)**                        | 321 TypeScript/TSX files (233 `.ts` + 88 `.tsx`)  |
+| **React Components (`src/`)**                    | 88 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
 | **Edge Functions (`supabase/functions/`)**       | 35 directories (34 function dirs + `_shared`)     |
-| **Database Migrations (`supabase/migrations/`)** | 106 `.sql` files (102 forward + 4 rollback under `migrations/rollback/`) |
+| **Database Migrations (`supabase/migrations/`)** | 108 `.sql` files (git-verified 2026-07-17; includes 2 new migrations added in PR #1641) |
 | **CI/CD Workflows (`.github/workflows/`)**       | 22 workflow files                                 |
-| **Test Specs (`tests/` + `e2e` + `sim` + app/orchestrator/package tests)** | 385 spec/test source files in the current scan; latest pass counts are recorded in audit/validation artifacts |
+| **Test Specs (`tests/` + `e2e` + `sim` + app/orchestrator/package tests)** | 388 spec/test source files in the current scan; latest pass counts are recorded in audit/validation artifacts |
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~130 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** current audited baseline for this documentation sync is `88a643d8` — completion of Security & Reliability Hardening Sprint (`APEX-HARDEN-2026-07-16-r3`) plus PR #1640 merged safe-area stacking and lower-viewport overlays (bottom right action triggers aligned, theme switches corrected, and button size parity enforced). Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **106** (102 forward + 4 rollback). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-16.md`](./.understand-anything/CANONICAL_STATE_2026-07-16.md) for the current platform state assessment.
+**Latest repo-history note:** current audited baseline for this documentation sync is `5c991065` — PR #1641 (`5dd33caf`, OmniBoard Integration Runtime: full page, registry bootstrap, IntegrationOnboarder, ConnectorKit persistence, CF status probe) and PR #1642 (`5c991065`, tech debt closeout audits and PR lock registries) both squash-merged into `main` on 2026-07-17. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **108** (2026-07-17 git-verified; 2 new migrations in PR #1641). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-17.md`](./.understand-anything/CANONICAL_STATE_2026-07-17.md) for the current platform state assessment.
 
 
 ---

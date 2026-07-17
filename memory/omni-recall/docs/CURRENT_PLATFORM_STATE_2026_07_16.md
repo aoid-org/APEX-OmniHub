@@ -85,11 +85,9 @@ During full E2E E2E and diagnostic verification (`diag-console.spec.ts`) against
 
 ---
 
-## 6. Post-Sprint Layout & Governance Remediation (PR #1640 & PR #1642)
+## 6. Post-Sprint Layout & Governance Remediation (PR #1640 — Merged | PR #1641 — Merged | PR #1642 — Merged)
 
 Following the primary hardening sprint, the following updates were added to main/workspace branches:
 - **PR #1640 (Merged)**: Resolves lower-viewport safe-area overlap. Bottom right stack aligned, sun/moon theme selector corrected, PWA install button collision eliminated, and CTA size parity enforced.
-- **PR #1641 (Open)**: Adds dynamic third-party onboarder, ConnectorKit persistence, and Cloudflare status probes.
-- **PR #1642 (Open)**: Tech debt audits and locked-file registries. Explicitly maps the repository-relative paths of the OmniBoard integration core and establishes the 5-tier responsive viewport truth table (`docs/debt-closeout/`). No source code files modified to protect locked file boundaries.
-
-
+- **PR #1641 (Merged `5dd33caf` — 2026-07-17)**: Adds dynamic third-party onboarder, ConnectorKit persistence, and Cloudflare status probes. Squash-merged into `main`.
+- **PR #1642 (Merged `5c991065` — 2026-07-17)**: Tech debt audits and locked-file registries. Explicitly maps the repository-relative paths of the OmniBoard integration core and establishes the 5-tier responsive viewport truth table (`docs/debt-closeout/`). No source code files modified. Squash-merged into `main`.

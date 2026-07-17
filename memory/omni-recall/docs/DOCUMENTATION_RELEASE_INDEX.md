@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.9.2
-last_audited: 2026-07-16
+version: 2.0.0
+last_audited: 2026-07-17
 status: verified
 ---
 
@@ -10,21 +10,22 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-16** (Tech Debt Closeout & PR #1640 Layout Adjustments merge at baseline `88a643d8`: layout overlays verified, and onboarding/viewport audits documented in PR #1642). Previous refresh: 2026-07-04. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
+> Current repo-truth index refreshed **2026-07-17** (Post-merge docs sync for PR #1641 OmniBoard Integration Runtime and PR #1642 Tech Debt Closeout, both squash-merged into `main` at `5c991065`). Previous refresh: 2026-07-16. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
-## Current Repo Facts Verified in This Pass (2026-07-16)
+## Current Repo Facts Verified in This Pass (2026-07-17)
+
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from prior verification unless directly exercised.
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `88a643d8` — Security & Reliability Hardening Sprint completion + PR #1640 merged lower-viewport layout overlays and safe-area adjustments |
-| Local audit branch | `feat/omniboard-any-app-onboarding` (audited and documented in PR #1642); PR #1641 contains the OmniBoard integration runtime changes |
-| Source files under `src/` | **321** TypeScript/TSX (234 `.ts` + 87 `.tsx`) |
+| Audited remediation baseline | `5c991065` — PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) squash-merged 2026-07-17 |
+| Local audit branch | `docs/followup-omniboard-runtime-canon` (post-merge docs PR) |
+| Source files under `src/` | **321** TypeScript/TSX (233 `.ts` + 88 `.tsx`) |
 | GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
-| SQL migrations | **106** `.sql` files = **102 forward** + **4 rollback** (`migrations/rollback/`) |
+| SQL migrations | **108** `.sql` files — git-verified 2026-07-17; +2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
 | Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~130 tracked (excl. `__pycache__`) |
@@ -483,4 +484,44 @@ Full repo-truth documentation sync performed against the working tree after the 
 | Supabase function dirs | 35 (34 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
 | SQL migrations | 106 (102 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
 | Spec/test source files | 388 | `find tests e2e sim apps orchestrator packages ...` |
+
+---
+
+## 2026-07-17 Documentation Sync — PR #1641 & PR #1642 Post-Merge
+
+Full repo-truth documentation sync performed after PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) were squash-merged into `main`. Counts re-verified directly against the git tree. Local gate runs completed on branch `docs/followup-omniboard-runtime-canon`.
+
+| File | Change |
+|---|---|
+| `README.md` | `version: 1.3.6`→`1.3.7`; `last_audited: 2026-07-16`→`2026-07-17`; HEAD note → `5c991065`; migration count `106`→`108`; tsx count `87`→`88`, ts `234`→`233`; canonical state link → `CANONICAL_STATE_2026-07-17.md` |
+| `.understand-anything/CANONICAL_STATE_2026-07-17.md` | **NEW** — authoritative post-PR #1641 and PR #1642 state snapshot |
+| `.understand-anything/CANONICAL_STATE_2026-07-16.md` | Section 3 — PR #1641 and PR #1642 updated from `(Open)` to `(Merged)` with commit SHAs |
+| `memory/omni-recall/start-here.md` | 2026-07-17 session block appended (post-merge validation results + repo counts) |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 heading and PR #1641/PR #1642 status updated to Merged with commit SHAs |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — version `1.9.2`→`2.0.0`; `last_audited` `2026-07-16`→`2026-07-17`; facts table updated to 2026-07-17 verified counts; 2026-07-17 sync section added |
+
+### Current count corrections (2026-07-17, git-verified)
+
+| Metric | Previous (2026-07-16) | Current (2026-07-17) | Reason |
+|---|---|---|---|
+| SQL migrations | 106 | **108** | 2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
+| `src` `.tsx` files | 87 | **88** | 1 new `.tsx` component in PR #1641 |
+| `src` `.ts` files | 234 | **233** | 1 `.ts` file reclassified/removed in PR #1641 |
+| All other counts | unchanged | unchanged | workflows 22, edge 35, hooks 23 |
+
+### Post-merge local gate results (2026-07-17)
+
+| Gate | Result |
+|---|---|
+| `npm run check:omnidash` | **43/43 PASS** |
+| `tests/omnidash/omnilink-api.spec.ts` | **5/5 PASS** |
+| `tsc -b --noEmit` | exit 0 |
+| `eslint .` | exit 0 |
+| `npm run check:react` | React 18.3.1 singleton confirmed |
+
+### Canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (updated this session with merged PR statuses; supersedes prior open-PR state)
+
+
 
