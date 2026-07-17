@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { CheckCircle2, Copy, Key, RefreshCw, Server, AlertTriangle, ExternalLink, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Copy, Key, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { type IntegrationDef } from '@/omniconnect/core/registry';
 import { toast } from 'sonner';
