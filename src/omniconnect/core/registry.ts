@@ -100,3 +100,30 @@ export function hasConnector(provider: string): boolean {
 export function listConnectors(): string[] {
   return connectorRegistry.list();
 }
+// =============================================================================
+// Bootstrap: seed the dynamic registry from the static definitions.
+// Called once at module load. Idempotent — guarded by has() check.
+// StubConnector satisfies the Connector interface with safe no-op methods;
+// the UI surface (ConnectorKit) does not call these — it calls the Supabase
+// edge function directly. The registry merely signals "this type is known".
+// =============================================================================
+class StubConnector implements Connector {
+  readonly provider: string;
+  constructor(provider: string) { this.provider = provider; }
+  getAuthUrl(): Promise<string> { return Promise.resolve(''); }
+  completeHandshake(): Promise<import('../types/connector').SessionToken> {
+    return Promise.reject(new Error('StubConnector: not implemented'));
+  }
+  disconnect(): Promise<void> { return Promise.resolve(); }
+  refreshToken(s: import('../types/connector').SessionToken): Promise<import('../types/connector').SessionToken> { return Promise.resolve(s); }
+  fetchDelta(): Promise<import('../types/connector').RawEvent[]> { return Promise.resolve([]); }
+  normalizeToCanonical(): Promise<import('../types/canonical').CanonicalEvent[]> { return Promise.resolve([]); }
+  validateToken(): Promise<boolean> { return Promise.resolve(false); }
+}
+
+availableIntegrations.forEach((def) => {
+  if (!connectorRegistry.has(def.type)) {
+    connectorRegistry.register(def.type, new StubConnector(def.type));
+  }
+});
+
