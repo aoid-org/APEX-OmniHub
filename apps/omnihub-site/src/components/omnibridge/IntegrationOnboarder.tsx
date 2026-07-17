@@ -36,7 +36,7 @@ const AUTH_MAP: Record<AuthChoice, Partial<IntegrationDef>> = {
 };
 
 const DIRECTION_MAP: Record<DirectionChoice, Partial<IntegrationDef>> = {
-  'I call it':   { category: 'api' as IntegrationDef['category'] },
+  'I call it':   { category: 'automation' as IntegrationDef['category'] },
   'It calls me': { category: 'platform' as IntegrationDef['category'] },
   'Both':        { category: 'platform' as IntegrationDef['category'] },
 };
