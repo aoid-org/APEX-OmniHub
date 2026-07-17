@@ -83,3 +83,13 @@ During full E2E E2E and diagnostic verification (`diag-console.spec.ts`) against
 - **Test Integrity Compliance:** Eliminated a banned `expect.fail()` assertion inside `tests/infrastructure/waf-credential-scan-block.test.ts` to strictly uphold the **APEX Test Integrity Doctrine (R1)** across CI checks.
 - **Verification Proof:** E2E diagnostics (`diag-console.spec.ts`) run against the fresh preview bundle (`http://localhost:4173/login`) confirmed **0 console errors** and **0 page errors**, with `/login` rendering cleanly (`cp-02-byom-login.spec.ts` passing (`2 passed | 1 skipped`), and full unit test matrix passing (`289 test files passed | 17 skipped`, `3098 tests passed`)).
 
+---
+
+## 6. Post-Sprint Layout & Governance Remediation (PR #1640 & PR #1642)
+
+Following the primary hardening sprint, the following updates were added to main/workspace branches:
+- **PR #1640 (Merged)**: Resolves lower-viewport safe-area overlap. Bottom right stack aligned, sun/moon theme selector corrected, PWA install button collision eliminated, and CTA size parity enforced.
+- **PR #1641 (Open)**: Adds dynamic third-party onboarder, ConnectorKit persistence, and Cloudflare status probes.
+- **PR #1642 (Open)**: Tech debt audits and locked-file registries. Explicitly maps the repository-relative paths of the OmniBoard integration core and establishes the 5-tier responsive viewport truth table (`docs/debt-closeout/`). No source code files modified to protect locked file boundaries.
+
+

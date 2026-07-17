@@ -17,3 +17,11 @@ Authoritative snapshot of repo state after the completion of the Security & Reli
 - **Release Line:** `1.8.3` (`package.json`), App `1.3.10`.
 - **Test Matrix Status:** Unit test matrix verified (`289 passed | 17 skipped`, `3098 tests passed`). E2E tests verified (`diag-console.spec.ts`, `cp-02-byom-login.spec.ts`).
 - **Primary Canonical Reference:** See `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md`.
+
+## 3. Post-Sprint Layout & Governance Remediation (PR #1640 & PR #1642)
+
+Following the primary hardening sprint, the following governance and interface changes were integrated:
+- **Lower-Viewport UI Overlays (PR #1640 - Merged)**: Aligned safe-area stacking, resolved bottom-nav/overlays overlap in `.lower-right-stack`, corrected sun/moon theme triggers, and unified CTA button size parity.
+- **Onboarding & Breakpoint Audits (PR #1642 - Open)**: Documented locked-file boundaries for PR #1641 (OmniBoard integration runtime), mapped the absolute repository-relative paths of the OmniBoard registry, and created the 5-tier responsive viewport truth table (`docs/debt-closeout/`).
+- **OmniBoard Integration Runtime (PR #1641 - Open)**: Adds custom non-catalog integration onboarding, ConnectorKit key generation, and background probes.
+
