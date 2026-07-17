@@ -129,7 +129,7 @@ export function IntegrationOnboarder({ onComplete }: IntegrationOnboarderProps) 
         version: '1.0',
         status: 'ga',
         docsUrl: appUrl || undefined,
-        ...AUTH_MAP[q1!],
+        requiresApiKey: AUTH_MAP[q1!].requiresApiKey ?? false, requiresUsername: AUTH_MAP[q1!].requiresUsername ?? false,
         ...DIRECTION_MAP[q2!],
         ...INTENT_MAP[q3!],
       };
