@@ -1,8 +1,9 @@
 ---
-version: 1.3.1
-last_audited: 2026-06-25
+version: 1.3.2
+last_audited: 2026-07-16
 status: verified
 ---
+
 
 # Start Here
 
@@ -141,5 +142,18 @@ The system should:
 - **Task 6 (Bus-Factor Mitigation & Emergency Succession Governance):** Created `docs/ops/SUCCESSION_RUNBOOK.md` (`credential inventory & emergency recovery sequence`) and registered it in `.github/CODEOWNERS` and `docs/APEX_AGENT_OPERATIONS.md`. Patched Windows shell compatibility (`execFileSync(..., { shell: process.platform === 'win32' })`) in `scripts/check-react-singleton.mjs`.
 - **Runtime Gates:** All repository runtime gates verified (`npm run check:react`, `check:pwa`, `check:omnidash`, `test:infra`, `test:assets`, `docs:check`).
 - **Unified Documentation Status Sync:** Created `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` and updated `memory/omni-recall/start-here.md`, `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md`, `.understand-anything/E2E_CANONICAL_BEHAVIOR.md`, `.understand-anything/graph-meta.json`, and public `README.md`.
+
+## Session 2026-07-16 (Tech Debt Closeout & PR #1640 Layout Adjustments merge)
+
+- **Baseline Commit:** `88a643d8`. Release version `1.8.3` (root), App `1.3.10`.
+- **Layout Remediation:** Aligned z-index stack of bottom right action triggers, safe-area stacking, and PWA install button collision. Corrected theme switch triggers.
+- **PR #1641 status:** Checked and validated `IntegrationOnboarder.tsx` and custom integration definitions. Found to be fully complete in PR #1641 (remains open).
+- **PR #1642 status:** Completed non-destructive tech debt closeout audits:
+  - Mapped integration registry core file paths (`docs/debt-closeout/OMNIBOARD-TRUTH.md`).
+  - Audited layout breakpoints and created the 5-tier responsive viewport truth table (`docs/debt-closeout/VIEWPORT-TRUTH.md`).
+  - Recorded PR #1641 locked file boundaries (`docs/debt-closeout/PR1641-LOCKED-FILES.txt`).
+- **Verification:** All workspace compilation (`npx tsc --noEmit`) and linter checks (`npm run lint`) passed cleanly (exit code `0`).
+- **PR #1642 opened:** Pushed audits to branch `feat/omniboard-any-app-onboarding` and opened PR #1642.
+
 
 
