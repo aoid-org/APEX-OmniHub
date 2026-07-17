@@ -5,16 +5,15 @@
  * with the most likely auth method (Q1 answer).
  *
  * POST /api/omniboard/probe
- * Body:    { url: string }
+ * Body: { url: string }
  * Returns: { q1: 'OAuth' | 'API Key' | null, confidence: 'high' | 'low' }
  *
  * Degrades gracefully: if any probe fails the wizard still works normally.
  *
  * wrangler.toml requirement:
- *   [browser]
- *   binding = "BROWSER"
+ * [browser]
+ * binding = "BROWSER"
  */
-
 interface Env {
   BROWSER?: unknown; // Cloudflare Browser Rendering binding (optional — not used in probe logic)
 }
@@ -28,6 +27,18 @@ interface ProbeResponse {
   confidence: 'high' | 'low';
 }
 
+// ---------------------------------------------------------------------------
+// Header hint matchers — written as simple string literals to avoid regex
+// backtracking issues (SonarQube S5852). Case-insensitive comparison is
+// performed via String#toLowerCase() rather than the /i flag.
+// ---------------------------------------------------------------------------
+const API_KEY_HINTS = ['apikey', 'api_key', 'api-key', 'bearer'] as const;
+
+function hasApiKeyHint(wwwAuth: string): boolean {
+  const lower = wwwAuth.toLowerCase();
+  return API_KEY_HINTS.some((hint) => lower.includes(hint));
+}
+
 export default {
   async fetch(request: Request, _env: Env): Promise<Response> {
     // Only accept POST
@@ -37,7 +48,7 @@ export default {
 
     let body: ProbeRequest;
     try {
-      body = await request.json<ProbeRequest>();
+      body = await request.json();
     } catch {
       return Response.json({ q1: null, confidence: 'low' } satisfies ProbeResponse);
     }
@@ -67,11 +78,10 @@ export default {
     ]);
 
     // Extract signals
-    const hasOidc     = oidcResult.status  === 'fulfilled' && oidcResult.value.ok;
+    const hasOidc = oidcResult.status === 'fulfilled' && oidcResult.value.ok;
     const hasOAuthPath = oauthResult.status === 'fulfilled' && oauthResult.value.ok;
-    const rootResponse = rootResult.status  === 'fulfilled' ? rootResult.value : null;
-    const wwwAuth      = rootResponse?.headers.get('www-authenticate') ?? '';
-    const hasApiKeyHint = /apikey|api[_.-]key|bearer/i.test(wwwAuth);
+    const rootResponse = rootResult.status === 'fulfilled' ? rootResult.value : null;
+    const wwwAuth = rootResponse?.headers.get('www-authenticate') ?? '';
 
     // Determine answer + confidence
     let q1: ProbeResponse['q1'] = null;
@@ -80,12 +90,12 @@ export default {
     if (hasOidc || hasOAuthPath) {
       q1 = 'OAuth';
       confidence = 'high';
-    } else if (hasApiKeyHint) {
+    } else if (hasApiKeyHint(wwwAuth)) {
       q1 = 'API Key';
       confidence = 'high';
     }
-    // All other cases: q1 = null, confidence = 'low' — wizard shows all options unselected
 
+    // All other cases: q1 = null, confidence = 'low' — wizard shows all options unselected
     return Response.json({ q1, confidence } satisfies ProbeResponse);
   },
 };
