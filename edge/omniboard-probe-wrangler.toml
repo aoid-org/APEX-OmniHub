@@ -1,0 +1,14 @@
+# wrangler config for edge/omniboard-probe.ts
+# Deploy: wrangler deploy --config edge/omniboard-probe-wrangler.toml
+
+name = "omniboard-probe"
+main = "edge/omniboard-probe.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[browser]
+binding = "BROWSER"
+
+[[routes]]
+pattern = "apexomnihub.icu/api/omniboard/probe"
+custom_domain = true
