@@ -14,10 +14,6 @@ export function SupportAgentModal() {
         onClick={() => setIsOpen(true)}
         aria-label={tx('supportAgent.open')}
         style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 9999,
           width: '56px',
           height: '56px',
           borderRadius: '28px',
@@ -42,10 +38,6 @@ export function SupportAgentModal() {
   return (
     <div
       style={{
-        position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        zIndex: 9999,
         width: '360px',
         height: '500px',
         backgroundColor: 'var(--color-bg-elevated, #0B141E)',

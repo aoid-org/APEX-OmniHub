@@ -25,11 +25,14 @@ export function getSystemHealth(): SystemHealthReport {
     'SyncImport': 'demo',
   };
 
-  const hasUnavailable = Object.values(subsystems).includes('unavailable');
-
+  // ⚡ Bolt: Avoid allocating a new array with Object.values().
+  // Instead, use a faster for-in loop to check for unavailable subsystems.
   let overall: SystemHealthReport['overall'] = 'healthy';
-  if (hasUnavailable) {
-    overall = 'degraded';
+  for (const key in subsystems) {
+    if (subsystems[key] === 'unavailable') {
+      overall = 'degraded';
+      break;
+    }
   }
 
   return {

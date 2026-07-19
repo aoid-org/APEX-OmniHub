@@ -10,3 +10,14 @@
 /src/ai/ @apex-architecture @apex-ai-governance
 /db/ @apex-architecture @apex-devops
 /infra/ @apex-devops @apex-architecture
+
+# Documentation & Review Exception Rules
+*.md @sinyo @apex-leadership
+/docs/ @sinyo @apex-leadership
+
+# Bus-Factor & Emergency Hotfix Succession Rules
+# When primary code owners (@apex-architecture / @apex-leadership / @sinyo) are unavailable during a P0 outage,
+# designated emergency alternates (@apex-devops / @apex-emergency-ops / automated bots) may approve critical
+# hotfix pull requests using GitHub Ruleset bypass permissions without disabling branch protection rules,
+# strictly adhering to the recovery procedure in docs/ops/SUCCESSION_RUNBOOK.md.
+/docs/ops/SUCCESSION_RUNBOOK.md @sinyo @apex-leadership @apex-devops
