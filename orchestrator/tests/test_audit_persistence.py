@@ -15,6 +15,7 @@ from models.audit import (
     AuditAction,
     AuditLogEntry,
     AuditLogger,
+    AuditPersistenceError,
     AuditResourceType,
     AuditStatus,
 )
@@ -66,7 +67,16 @@ class TestAuditPersistence:
             mock_db.insert.assert_called_once()
             call_args = mock_db.insert.call_args
             assert call_args[1]["table"] == "audit_logs"
-            assert "id" in call_args[1]["record"]
+            assert set(call_args[1]["record"]) == {
+                "id",
+                "actor_id",
+                "action_type",
+                "resource_type",
+                "resource_id",
+                "metadata",
+                "created_at",
+            }
+            assert call_args[1]["record"]["metadata"]["_audit"]["correlation_id"] == "corr-123"
 
     @pytest.mark.asyncio
     async def test_fallback_triggered_on_db_failure(self, audit_logger, sample_event):
@@ -81,8 +91,8 @@ class TestAuditPersistence:
             patch("models.audit.get_database_provider", return_value=mock_db),
             patch("sys.stderr", captured_stderr),
         ):
-            # Should not raise - fallback should handle failure
-            await audit_logger._store_supabase(sample_event)
+            with pytest.raises(AuditPersistenceError):
+                await audit_logger._store_supabase(sample_event)
 
             # Check that fallback logging was triggered
             stderr_output = captured_stderr.getvalue()
@@ -107,7 +117,8 @@ class TestAuditPersistence:
             patch("models.audit.get_database_provider", return_value=mock_db),
             patch("sys.stderr", captured_stderr),
         ):
-            await audit_logger._store_supabase(sample_event)
+            with pytest.raises(AuditPersistenceError):
+                await audit_logger._store_supabase(sample_event)
 
             stderr_output = captured_stderr.getvalue()
 
@@ -133,7 +144,8 @@ class TestAuditPersistence:
             patch("models.audit.get_database_provider", return_value=mock_db),
             patch("sys.stderr", captured_stderr),
         ):
-            await audit_logger._store_supabase(sample_event)
+            with pytest.raises(AuditPersistenceError):
+                await audit_logger._store_supabase(sample_event)
 
             stderr_output = captured_stderr.getvalue()
 

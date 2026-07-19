@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 1.9.1
-last_audited: 2026-07-01
+version: 2.0.0
+last_audited: 2026-07-17
 status: verified
 ---
 
@@ -10,22 +10,23 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-01** (release gate audit pass at HEAD `845fced`: full `verify:release` matrix + PR-blocking guards executed non-fail-fast, **GATE: PASS** — see `docs/audits/release-gate-audit-2026-07-01.md`; audit-document inventory corrected to reflect the `memory/omni-recall/archive/docs/audits/` relocation; source-file counts re-verified). Previous refresh: 2026-07-04 (README-cited documentation sync to HEAD `d22ddcf`, package `1.8.3`, OmniDash surface repair baseline). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_04.md`.
+> Current repo-truth index refreshed **2026-07-17** (Post-merge docs sync for PR #1641 OmniBoard Integration Runtime and PR #1642 Tech Debt Closeout, both squash-merged into `main` at `5c991065`). Previous refresh: 2026-07-16. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
-## Current Repo Facts Verified in This Pass (2026-07-01)
+## Current Repo Facts Verified in This Pass (2026-07-17)
 
-> Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from the 2026-06-19 verification — not re-checked (no live credentials used).
+
+> Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from prior verification unless directly exercised.
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `845fced` — orphaned static `/launch` page removal, after A.R.I.S.E. Phase 1b (#1546 propose engine) and SonarCloud reliability/security repairs; full release gate audit **GATE: PASS** at this commit (`docs/audits/release-gate-audit-2026-07-01.md`, PR #1550, 31/31 CI checks green) |
-| Local audit branch | `work`; live production/branch protection not verified by this documentation pass |
-| Source files under `src/` | **322** TypeScript/TSX (230 `.ts` + 92 `.tsx`) |
-| GitHub workflow files | **22** files in `.github/workflows/` (3 removed in PRs #1487/#1488: `dependency-review.yml`, `production-readiness.yml`, `security-guards.yml`; `arise-propose.yml` added in PR #1546 — A.R.I.S.E. Phase 1b propose engine, `workflow_dispatch` only) |
+| Audited remediation baseline | `5c991065` — PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) squash-merged 2026-07-17 |
+| Local audit branch | `docs/followup-omniboard-runtime-canon` (post-merge docs PR) |
+| Source files under `src/` | **321** TypeScript/TSX (233 `.ts` + 88 `.tsx`) |
+| GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence (**attach-only**: gated on the tag already existing, so it can never create a tag). CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_04.md`. |
-| SQL migrations | **102** `.sql` files = **98 forward** + **4 rollback** (`migrations/rollback/`) |
-| Edge function dirs | **34** (33 function dirs + `_shared`) — git-verified |
+| Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
+| SQL migrations | **108** `.sql` files — git-verified 2026-07-17; +2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
+| Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~130 tracked (excl. `__pycache__`) |
 | Module action gating | **Module-keyed capability map** (`moduleActionCapabilities.ts`, `moduleKey + actionId`) — PR #1441; unsupported actions fail-closed, never call `trigger-workflow` |
@@ -41,7 +42,7 @@ status: verified
 
 ## Documentation Authority Order
 
-0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
+0. `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` for the latest branch/head assessment and drift-control snapshot. (All prior `CURRENT_PLATFORM_STATE_*.md` are historical.)
 1. `docs/release/release-validation-matrix.json` for current release evidence boundaries and production-certification gaps.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -59,7 +60,8 @@ status: verified
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` _(current — supersedes 2026-06-25 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_07_16.md` _(current — supersedes 2026-07-04 and all prior snapshots)_
+- `docs/CURRENT_PLATFORM_STATE_2026_07_04.md` _(historical — 2026-07-04 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_25.md` _(historical — 2026-06-25 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_24.md` _(historical — 2026-06-24 snapshot)_
 - `docs/CURRENT_PLATFORM_STATE_2026_06_23.md` _(historical — 2026-06-23 snapshot)_
@@ -161,7 +163,7 @@ Legacy audits (17 files, relocated to `memory/omni-recall/archive/docs/audits/` 
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 17 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_04.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_04.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 18 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_14.md` through `CURRENT_PLATFORM_STATE_2026_07_16.md` snapshots (latest/current: `CURRENT_PLATFORM_STATE_2026_07_16.md`; prior dated snapshots are historical), `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
@@ -457,28 +459,69 @@ Batch 2 of the PR #1477 fix session. Three code files changed; six doc files upd
 | `src/components/global/OmniSupportWidget.tsx` | Removed `console.warn` on successful connect path |
 
 ### Current canonical start point
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` (2026-07-04 README-cited documentation anti-drift sync is the latest state)
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (2026-07-16 tech debt closeout documentation anti-drift sync is the latest state)
 
 
-## 2026-07-04 Documentation Anti-Drift Sync — README-cited current-state repair
+## 2026-07-16 Documentation Sync — Tech Debt Closeout Audit
 
-Full repo-truth documentation sync performed against the working tree after release remediation baseline `d22ddcf` and ops-doc repair `e0c1739`. Counts were re-verified with `find`/`git` commands in the local repository. Live infrastructure health, GitHub branch-protection settings, Cloudflare deployed env, Supabase production/staging migrations, provider OAuth, billing, BYOM, native mobile, and real-device WebAuthn were **not** re-verified in this documentation pass.
+Full repo-truth documentation sync performed against the working tree after the layout overlays merge (PR #1640) and during the tech debt closeout audits (PR #1642). Counts were re-verified against the active git tree on the `feat/omniboard-any-app-onboarding` branch.
 
 | File | Change |
 |---|---|
-| `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` | Added repo-evidence vs live-proof doctrine and local-launch truthfulness rule |
-| `README.md` | Current platform-state pointer → 2026-07-04; edge function dirs 34 (33 + `_shared`); test spec count 385; release evidence boundary points to validation matrix |
-| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_04.md` | Updated remediation baseline, counts, fail-closed env contract, dependency branch-only behavior, and manual/live validation boundary |
-| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — v1.8.0 facts table and authority pointers updated to 2026-07-04 |
-| `memory/omni-recall/docs/README.md` | Current platform snapshot/certification boundary updated to 2026-07-04 validation matrix |
-| `docs/audits/documentation-drift-assessment-2026-07-04.md` | New dated report documenting scope, evidence, updates, validation, and remaining manual/live gaps |
+| `docs/debt-closeout/PR1641-LOCKED-FILES.txt` | **NEW** — locked files list for active open PR #1641 |
+| `docs/debt-closeout/OMNIBOARD-TRUTH.md` | **NEW** — absolute repo-relative paths map for OmniBoard integrations registry, ConnectorKit UI, and backend Edge APIs |
+| `docs/debt-closeout/VIEWPORT-TRUTH.md` | **NEW** — breakpoint mapping between active 3-tier layout and requested 5-tier responsive layout contract |
+| `apps/omnihub-site/implementation_plan.md` | **NEW** — approved implementation plan and conflict report |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Updated baseline commit, added Section 6 layout and audits record |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — facts table, authority pointers, and sync records updated to 2026-07-16 |
 
-### Current count corrections (2026-07-04, repo-verified)
+### Current count corrections (2026-07-16, repo-verified)
 
 | Metric | Current | Evidence command |
 |---|---:|---|
-| Workflow files | 20 | `find .github/workflows -maxdepth 1 -type f` |
-| `src` TypeScript/TSX files | 328 (234 `.ts` + 94 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
-| Supabase function dirs | 34 (33 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
-| SQL migrations | 102 (98 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
-| Spec/test source files | 385 | `find tests e2e sim apps orchestrator packages ...` |
+| Workflow files | 22 | `find .github/workflows -maxdepth 1 -type f` |
+| `src` TypeScript/TSX files | 321 (234 `.ts` + 87 `.tsx`) | `find src -type f -name '*.ts'` / `*.tsx` |
+| Supabase function dirs | 35 (34 functions + `_shared`) | `find supabase/functions -mindepth 1 -maxdepth 1 -type d` |
+| SQL migrations | 106 (102 forward + 4 rollback) | `find supabase/migrations -type f -name '*.sql'` |
+| Spec/test source files | 388 | `find tests e2e sim apps orchestrator packages ...` |
+
+---
+
+## 2026-07-17 Documentation Sync — PR #1641 & PR #1642 Post-Merge
+
+Full repo-truth documentation sync performed after PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) were squash-merged into `main`. Counts re-verified directly against the git tree. Local gate runs completed on branch `docs/followup-omniboard-runtime-canon`.
+
+| File | Change |
+|---|---|
+| `README.md` | `version: 1.3.6`→`1.3.7`; `last_audited: 2026-07-16`→`2026-07-17`; HEAD note → `5c991065`; migration count `106`→`108`; tsx count `87`→`88`, ts `234`→`233`; canonical state link → `CANONICAL_STATE_2026-07-17.md` |
+| `.understand-anything/CANONICAL_STATE_2026-07-17.md` | **NEW** — authoritative post-PR #1641 and PR #1642 state snapshot |
+| `.understand-anything/CANONICAL_STATE_2026-07-16.md` | Section 3 — PR #1641 and PR #1642 updated from `(Open)` to `(Merged)` with commit SHAs |
+| `memory/omni-recall/start-here.md` | 2026-07-17 session block appended (post-merge validation results + repo counts) |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 heading and PR #1641/PR #1642 status updated to Merged with commit SHAs |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — version `1.9.2`→`2.0.0`; `last_audited` `2026-07-16`→`2026-07-17`; facts table updated to 2026-07-17 verified counts; 2026-07-17 sync section added |
+
+### Current count corrections (2026-07-17, git-verified)
+
+| Metric | Previous (2026-07-16) | Current (2026-07-17) | Reason |
+|---|---|---|---|
+| SQL migrations | 106 | **108** | 2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
+| `src` `.tsx` files | 87 | **88** | 1 new `.tsx` component in PR #1641 |
+| `src` `.ts` files | 234 | **233** | 1 `.ts` file reclassified/removed in PR #1641 |
+| All other counts | unchanged | unchanged | workflows 22, edge 35, hooks 23 |
+
+### Post-merge local gate results (2026-07-17)
+
+| Gate | Result |
+|---|---|
+| `npm run check:omnidash` | **43/43 PASS** |
+| `tests/omnidash/omnilink-api.spec.ts` | **5/5 PASS** |
+| `tsc -b --noEmit` | exit 0 |
+| `eslint .` | exit 0 |
+| `npm run check:react` | React 18.3.1 singleton confirmed |
+
+### Canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (updated this session with merged PR statuses; supersedes prior open-PR state)
+
+
+

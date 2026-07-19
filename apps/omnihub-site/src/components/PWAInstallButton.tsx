@@ -2,30 +2,36 @@ import { memo } from 'react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { Download } from 'lucide-react';
 
-export const PWAInstallButton = memo(() => {
+interface Props {
+  readonly inline?: boolean;
+}
+
+export const PWAInstallButton = memo(({ inline }: Props) => {
   const { isInstallable, installPWA } = usePWAInstall();
 
   // If the PWA is not installable (already installed, or not supported), don't show the harness
   if (!isInstallable) return null;
 
+  if (inline) {
+    return (
+      <button
+        type="button"
+        onClick={installPWA}
+        className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
+      >
+        <Download size={13} />
+        Install PWA App
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={installPWA}
+      className="pwa-install-fixed"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: '#C4511A',
         border: '1px solid #C4511A',
-        borderRadius: '8px',
-        padding: '6px 12px',
-        color: '#ffffff',
-        fontSize: '12px',
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = '#A34316';
@@ -36,7 +42,7 @@ export const PWAInstallButton = memo(() => {
         e.currentTarget.style.borderColor = '#C4511A';
       }}
     >
-      <Download size={14} color="#ffffff" />
+      <Download size={14} />
       Install App
     </button>
   );

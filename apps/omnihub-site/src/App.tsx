@@ -1,12 +1,14 @@
 import type { ReactElement } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { I18nextProvider } from 'react-i18next';
 import { Toaster } from 'sonner';
 import i18n from './i18n';
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 // APEX PWA INVARIANT: PWAInstallBanner MUST remain in App.tsx.
 // Removal silently breaks the live-site install prompt. Guarded by: scripts/ci/check-pwa-integrity.mjs
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { SupportAgentModal } from "@/components/SupportAgentModal";
+import { BrandAnthemPlayer } from "@/components/BrandAnthemPlayer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -146,41 +148,40 @@ const preAuthRoutes: readonly AppRoute[] = [
 
 function App() {
   return (
-    <I18nextProvider i18n={i18n}>
-    <ErrorBoundary>
-    <BrowserRouter>
-      <div data-testid="app-shell">
-        <Routes>
-        {/* Pre-auth public routes */}
-        {preAuthRoutes.map((route) => (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={createProtectedElement(route.element, route.isPublic, route.routeName)}
-          />
-        ))}
+    <HelmetProvider>
+      <I18nextProvider i18n={i18n}>
+      <ErrorBoundary>
+      <BrowserRouter>
+        <div data-testid="app-shell">
+          <Routes>
+          {/* Pre-auth public routes */}
+          {preAuthRoutes.map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={createProtectedElement(route.element, route.isPublic, route.routeName)}
+            />
+          ))}
 
-        {/* OmniDash — the single post-auth surface */}
-        {/* BUG-008 FIX: /omnidash had no wildcard — sub-paths like /omnidash/pipeline
-            matched the catch-all * and redirected back to /omnidash instead of rendering.
-            Now: base route + wildcard both serve OmniDashShell; the shell reads
-            useLocation() to set active nav section. */}
-        <Route path="/omnidash" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
-        <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
-        <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
-        <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+          {/* OmniDash — the single post-auth surface */}
+          {/* BUG-008 FIX: /omnidash had no wildcard — sub-paths like /omnidash/pipeline
+              matched the catch-all * and redirected back to /omnidash instead of rendering.
+              Now: base route + wildcard both serve OmniDashShell; the shell reads
+              useLocation() to set active nav section. */}
+          <Route path="/omnidash" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
+          <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
+          <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+          <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
 
-        {/* Skill Forge — protected launch route. Invokes the generate-business-skills
-            edge function with the user JWT, so it requires an authenticated session. */}
-        <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "OmniSkills")} />
+          {/* Skill Forge — protected launch route. Invokes the generate-business-skills
+              edge function with the user JWT, so it requires an authenticated session. */}
+          <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "OmniSkills")} />
 
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
         </Routes>
-        {/* PWA install banner — renders globally, zero render cost when not installable */}
-        <PWAInstallBanner />
-        {/* Support Agent Modal — renders globally */}
-        <SupportAgentModal />
+        {/* Lower-right overlay stack containing Brand Anthem Player and Support bubble */}
+        <LowerRightStack />
         {/* PRCC-001 WP-1b: global toast renderer. toast.error/success are called
             across OmniDash modules and the Launch wizards, but no Toaster was mounted,
             so every notification fired silently. One app-root renderer surfaces them. */}
@@ -189,6 +190,21 @@ function App() {
     </BrowserRouter>
     </ErrorBoundary>
         </I18nextProvider>
+    </HelmetProvider>
+  );
+}
+
+function LowerRightStack() {
+  const location = useLocation();
+  const shouldRenderBrandAnthem = location.pathname === "/";
+    const isInsideOmniDash = location.pathname.startsWith('/omnidash');
+
+  return (
+    <div className="lower-right-stack">
+      {shouldRenderBrandAnthem && <BrandAnthemPlayer />}
+            {!isInsideOmniDash && <PWAInstallBanner />}
+      <SupportAgentModal />
+    </div>
   );
 }
 
