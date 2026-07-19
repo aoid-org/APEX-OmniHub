@@ -567,3 +567,58 @@ add it to `CLAUDE.md` or `docs/architecture/CANONICAL_TRUTH.md` instead.
 ### Non-Negotiable Exclusions
 
 `OmniSkills`, `Orchestrator`, `Fortress`, `OmniPort`, `Maestro`, and `BYOM` are not left-sidebar widgets. `OmniSkills` may remain in the header utility/module access path.
+
+---
+
+## 9. Cloudflare Operations & Ruleset Audit Inventory
+
+### 9.1 Overview & Architecture Boundaries
+- **Zone ID:** `20672e770b13132af267330c46cf1668` (`apexomnihub.icu`)
+- **Account ID:** `0e1bce84773a0d1ce340145ea195e86f` (`APEX-OmniHub`)
+- **Plan Tier:** `Free Website` (`5 WAF Custom Rules max per zone`)
+- **Managed in Terraform:**
+  - `http_ratelimit` (`cloudflare_ruleset.rate_limits` in `terraform/environments/production/cloudflare/main.tf`)
+  - `http_request_cache_settings` (`cloudflare_ruleset.cache_rules` in `terraform/environments/production/cloudflare/main.tf`)
+- **Managed via API / Dashboard:**
+  - `http_request_firewall_custom` (WAF custom rules, ruleset id `26324c15fbc84223af4e18d755d26df0`)
+
+---
+
+### 9.36 WAF Credential-Scan Block (`http_request_firewall_custom`)
+
+To mitigate high-frequency automated vulnerability scanning against configuration, credential, and backend API paths without consuming multiple Free-tier rule slots (`ceiling = 5`), all credential block expressions are consolidated into a single atomic WAF Custom Rule.
+
+#### Rule Audit Metadata
+- **Rule ID:** `7a852c9cbf0141f6b3aeeaa7af63968d`
+- **Ruleset ID:** `26324c15fbc84223af4e18d755d26df0` (`http_request_firewall_custom`)
+- **Action:** `block`
+- **Enabled:** `true`
+- **Created / Verified Date:** `2026-07-16`
+
+#### Consolidated Expression
+```text
+(http.request.uri.path contains "/.env") or
+(http.request.uri.path contains ".env.bak") or
+(http.request.uri.path contains "/root/.boto") or
+(http.request.uri.path contains "serverless.yml") or
+(http.request.uri.path contains "/payment/stripe.json")
+```
+
+#### Target Paths Protected
+1. `/.env` (and any subdirectory `/stripe/.env`, `/workspace/.env`)
+2. `.env.bak` (backup config scanners)
+3. `/root/.boto` (GCP/AWS bucket config scanners)
+4. `serverless.yml` (Serverless framework deployment descriptor scans)
+5. `/payment/stripe.json` (payment gateway credential scans)
+
+#### Verification Command
+To verify or update this rule via API using authorized domain token:
+```bash
+curl -X GET "https://api.cloudflare.com/client/v4/zones/20672e770b13132af267330c46cf1668/rulesets/26324c15fbc84223af4e18d755d26df0/rules/7a852c9cbf0141f6b3aeeaa7af63968d" \
+  -H "Authorization: Bearer $CLOUDFLARE_AGENT_TOKEN"
+```
+Or run infrastructure validation suite:
+```bash
+npx vitest run tests/infrastructure/waf-credential-scan-block.test.ts
+```
+

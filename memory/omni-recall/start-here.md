@@ -1,8 +1,9 @@
 ---
-version: 1.3.1
-last_audited: 2026-06-25
+version: 1.3.2
+last_audited: 2026-07-16
 status: verified
 ---
+
 
 # Start Here
 
@@ -126,4 +127,50 @@ The system should:
 - **PR #1527 also merged to `main`** (`bbc5e15`, parallel session, by the time this doc-sync landed): `9a318fa` fix OmniDash layout duplicate root selector, `b780c98` repair OSE governance drift, `7934455` remove an unapproved omnidash latency claim (claim-hygiene CI fix). No further doc correction needed from these — they are CI/governance hygiene, not surface-contract changes.
 - **PR #1528 (this branch, `claude/omnidash-p1-regression-gmp7dp`, reused after #1525 merged) closes reviewer item 4**, the one P1 follow-up PR #1525 shipped without: `FooterObservabilityRow` was rendering FlowBills **business** KPIs as system telemetry (`flowbills_demos` → "Events", `flowbills_paid_accounts` → "Loops") — dishonest labelling the owner explicitly flagged. Fixed by replacing both chips with the real `ops_sev1_incidents` signal (already a first-class field in `useDashboardData`/`dashboard.types.ts`, already used by `SystemHealthRow`/`SidebarKpiBar` — not a new/fabricated metric). New CI invariant in `check-omnidash-integrity.mjs` fails the build if `flowbills_*` is ever rendered as "Events"/"Loops" again. This doc-sync's 4 files were moved onto this same branch/PR per explicit instruction to push only to #1528, rather than opening a separate docs PR.
 - **No release cut this session.** Version remains `1.8.2`.
+
+---
+
+## Session 2026-07-16 — Sprint APEX-HARDEN-2026-07-16-r3 Execution & Unified Status Sync
+
+- **Baseline Commit:** `8bcda913e6d877e62a129ef66ebcd8ec532f7823` (main, clean working tree). Release line `1.8.3` (`package.json`), App package (`apps/omnihub-site/package.json`): `1.3.10`.
+- **Execution Contract:** `APEX-HARDEN-2026-07-16-r3` — Security & reliability hardening across 6 surgical tasks executed in strict Review-Driven & TDD-first mode. Zero breaking changes to existing behavior (`GlobalCanvas/DraggableWidget.tsx` drag-and-drop preserved), zero new paid infrastructure or recurring manual steps.
+- **Task 1 (WAF Credential-Scan Block):** WAF Custom Rule (`7cfb2ab0e6e744ec82c5a08db142d180`, ruleset `26324c15fbc84223af4e18d755d26df0`) active (`block`) for sensitive paths `/.env`, `.env.bak`, `/root/.boto`, `/serverless.yml`, `/payment/stripe.json`. Consumes exactly 1 custom rule slot (`2/5` rules used overall in zone `apexomnihub.icu`). Documented in `OPS_RUNBOOKS_CI_GUARDRAILS.md` (§9.36) and verified via TDD contract suite (`tests/infrastructure/waf-credential-scan-block.test.ts`).
+- **Task 2 (Cloudflare Pages Domain Alignment & Direct Access Restriction):** Configured `apps/omnihub-site/public/_redirects` with `301!` rules redirecting `https://apex-omnihub.pages.dev/*` and `http://apex-omnihub.pages.dev/*` to `https://apexomnihub.icu/:splat`. Explicitly verified that `apex-omnihub-shadow.pages.dev` (`200 OK`) is untouched and remains the independent staging/preview slot. Verified via TDD contract suite (`tests/infrastructure/production-domain-alignment.test.ts`).
+- **Task 3 (Terraform Static Asset Cache Rules Hardening):** Updated `terraform/environments/production/cloudflare/main.tf` (`cloudflare_ruleset.cache_rules`) to target exact static asset extensions (`js, css, png, jpg, svg, woff2`) excluding `(http.request.uri.path wildcard "/api/*" or http.request.uri.path wildcard "/functions/v1/*")` (`rule ID 57b85bbd82674e2d8dfd12cd7eb9bbfe`). Verified via TDD (`tests/infrastructure/cloudflare-cacherule-static-assets.test.ts`).
+- **Task 4 (Mobile Drag-and-Drop E2E Viewport Coverage):** Added `mobile-iphone` (`iPhone 14` profile, `hasTouch: true`, `isMobile: true`) to `playwright.config.ts`. Created `tests/e2e-playwright/mobile-viewport.spec.ts` asserting viewport bounds, pointer capture, and responsive grid layout fidelity across 6 browser/device profiles (`chromium`, `firefox`, `mobile-chrome`, `mobile-safari`, `mobile-iphone`, `tablet-ipad`) with 12/12 passing tests.
+- **Task 5 (Release Validation Matrix Reconciliation):** Reconciled `docs/release/release-validation-matrix.json` with live execution evidence `artifacts/production-validation/2026-07-16T01-36-38/evidence-matrix.json`.
+- **Task 6 (Bus-Factor Mitigation & Emergency Succession Governance):** Created `docs/ops/SUCCESSION_RUNBOOK.md` (`credential inventory & emergency recovery sequence`) and registered it in `.github/CODEOWNERS` and `docs/APEX_AGENT_OPERATIONS.md`. Patched Windows shell compatibility (`execFileSync(..., { shell: process.platform === 'win32' })`) in `scripts/check-react-singleton.mjs`.
+- **Runtime Gates:** All repository runtime gates verified (`npm run check:react`, `check:pwa`, `check:omnidash`, `test:infra`, `test:assets`, `docs:check`).
+- **Unified Documentation Status Sync:** Created `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` and updated `memory/omni-recall/start-here.md`, `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md`, `.understand-anything/E2E_CANONICAL_BEHAVIOR.md`, `.understand-anything/graph-meta.json`, and public `README.md`.
+
+## Session 2026-07-16 (Tech Debt Closeout & PR #1640 Layout Adjustments merge)
+
+- **Baseline Commit:** `88a643d8`. Release version `1.8.3` (root), App `1.3.10`.
+- **Layout Remediation:** Aligned z-index stack of bottom right action triggers, safe-area stacking, and PWA install button collision. Corrected theme switch triggers.
+- **PR #1641 status:** Checked and validated `IntegrationOnboarder.tsx` and custom integration definitions. Found to be fully complete in PR #1641 (remains open).
+- **PR #1642 status:** Completed non-destructive tech debt closeout audits:
+  - Mapped integration registry core file paths (`docs/debt-closeout/OMNIBOARD-TRUTH.md`).
+  - Audited layout breakpoints and created the 5-tier responsive viewport truth table (`docs/debt-closeout/VIEWPORT-TRUTH.md`).
+  - Recorded PR #1641 locked file boundaries (`docs/debt-closeout/PR1641-LOCKED-FILES.txt`).
+- **Verification:** All workspace compilation (`npx tsc --noEmit`) and linter checks (`npm run lint`) passed cleanly (exit code `0`).
+- **PR #1642 opened:** Pushed audits to branch `feat/omniboard-any-app-onboarding` and opened PR #1642.
+
+## Session 2026-07-17 (PR #1641 & PR #1642 Merge — Post-Merge Docs Sync)
+
+- **Baseline Commit:** `5c991065` (PR #1642 squash-merge). PR #1641 squash-merge: `5dd33caf`.
+- **PRs merged this session:**
+  - **PR #1641 (`5dd33caf`) — MERGED:** OmniBoard Integration Runtime (full OmniBoard page, IntegrationOnboarder, ConnectorKit API-key generation/persistence, Cloudflare status probe, OmniLink API omnihub-site scope, SonarCloud CPD exclusions, `omnilink-api.spec.ts` 100% coverage).
+  - **PR #1642 (`5c991065`) — MERGED:** Tech debt closeout audits (`OMNIBOARD-TRUTH.md`, `VIEWPORT-TRUTH.md`, `PR1641-LOCKED-FILES.txt`). No source code modified.
+- **Post-merge local validation:**
+  - `npm run check:omnidash` → **43/43 PASS** (all OmniDash integrity invariants satisfied).
+  - `tests/omnidash/omnilink-api.spec.ts` → **5/5 PASS**.
+  - `tsc -b --noEmit` → exit 0.
+  - `eslint .` → exit 0.
+  - `npm run check:react` → React singleton 18.3.1 confirmed.
+- **Repo counts (git-verified 2026-07-17):** ts: 233, tsx: 88, migrations: 108 (+2 from PR #1641), workflows: 22, edge: 35.
+- **Documentation sync:** `README.md`, `.understand-anything/CANONICAL_STATE_2026-07-16.md`, `.understand-anything/CANONICAL_STATE_2026-07-17.md` (NEW), `memory/omni-recall/start-here.md`, `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md`, `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` — all updated to reflect merged state.
+
+
+
+
 
