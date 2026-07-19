@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { siteConfig } from "@/content/site";
 import { ReferenceOverlay } from "./ReferenceOverlay";
 import { useAuth } from "@/lib/useAuth";
-import { BrandAnthemPlayer } from "./BrandAnthemPlayer";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { LanguageSelector } from "./LanguageSelector";
 import { PWAInstallButton } from "./PWAInstallButton";
@@ -267,23 +266,15 @@ function Footer() {
               {tx("layout.footer.web3Integrations")}
             </a>
           </li>
-          <li>
-            <PWAInstallButton />
-          </li>
         </ul>
       </div>
       {/* Maestro Observability Indicator */}
       <div
-        className="container"
+        className="container footer__maestro"
         style={{
-          fontSize: "0.75rem",
-          color: "var(--color-text-secondary)",
           paddingTop: "var(--space-4)",
           borderTop: "1px solid var(--color-border)",
           marginTop: "var(--space-4)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
         }}
       >
         <div
@@ -312,8 +303,6 @@ export function Layout({ children, title }: LayoutProps) {
   // Use window.location.pathname directly — Layout is a presentational shell
   // and must not depend on React Router context (useLocation would throw
   // if Layout were ever rendered outside a <Router>).
-  const shouldRenderBrandAnthem =
-    globalThis.window?.location.pathname === "/";
 
   useEffect(() => {
     if (title) {
@@ -326,7 +315,7 @@ export function Layout({ children, title }: LayoutProps) {
   return (
     <>
       <ReferenceOverlay />
-      {shouldRenderBrandAnthem ? <BrandAnthemPlayer /> : null}
+      <PWAInstallButton />
       <Nav />
       <main>{children}</main>
       <Footer />

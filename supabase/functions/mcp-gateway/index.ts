@@ -25,6 +25,8 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isMcpGatewayAuthorized } from "./auth.ts";
 import { ALL_TOOLS, dispatchTool } from "./tools/registry.ts";
 
 // ──────────────────────────────────────────────────────────────────
@@ -35,32 +37,35 @@ const PROTOCOL_VERSION = "2024-11-05";
 const SERVER_INFO = { name: "apex-omnihub-gateway", version: "1.0.0" };
 
 // ──────────────────────────────────────────────────────────────────
-// CORS — open for Claude to connect from any origin
+// CORS — browser callers are restricted by the shared allowlist. Native MCP
+// clients do not rely on CORS and authenticate with a header credential.
 // ──────────────────────────────────────────────────────────────────
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
-  "Access-Control-Allow-Headers":
-    "authorization, content-type, mcp-session-id, x-api-key",
-};
+function mcpCorsHeaders(req: Request): Record<string, string> {
+  return {
+    ...buildCorsHeaders(req.headers.get("origin")),
+    "Access-Control-Allow-Headers":
+      "authorization, content-type, mcp-session-id, x-api-key",
+  };
+}
 
 // ──────────────────────────────────────────────────────────────────
 // Entry point
 // ──────────────────────────────────────────────────────────────────
 
 serve(async (req: Request): Promise<Response> => {
+  const responseHeaders = mcpCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return new Response(null, { status: 204, headers: responseHeaders });
   }
 
   // Auth — MCP_GATEWAY_API_KEY must match the Bearer token
   if (!isAuthorized(req)) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
+    return jsonResponse({ error: "Unauthorized" }, 401, responseHeaders);
   }
 
   if (req.method === "POST") {
-    return handlePost(req);
+    return handlePost(req, responseHeaders);
   }
 
   // GET /mcp-gateway — returns server metadata for discovery
@@ -71,37 +76,37 @@ serve(async (req: Request): Promise<Response> => {
       protocol: PROTOCOL_VERSION,
       tools: ALL_TOOLS.length,
       categories: ["supabase-db", "github", "cloudflare", "omnihub"],
-    });
+    }, 200, responseHeaders);
   }
 
-  return jsonResponse({ error: "Method not allowed" }, 405);
+  return jsonResponse({ error: "Method not allowed" }, 405, responseHeaders);
 });
 
 // ──────────────────────────────────────────────────────────────────
 // POST handler — dispatches JSON-RPC messages
 // ──────────────────────────────────────────────────────────────────
 
-async function handlePost(req: Request): Promise<Response> {
+async function handlePost(req: Request, responseHeaders: HeadersInit): Promise<Response> {
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse(rpcError(null, -32700, "Parse error"), 400);
+    return jsonResponse(rpcError(null, -32700, "Parse error"), 400, responseHeaders);
   }
 
   // Handle batch requests
   if (Array.isArray(body)) {
     const results = await Promise.all(body.map(handleRpcMessage));
     const responses = results.filter((r) => r !== null);
-    return jsonResponse(responses);
+    return jsonResponse(responses, 200, responseHeaders);
   }
 
   const result = await handleRpcMessage(body as RpcRequest);
   if (result === null) {
     // Notification — no response body required
-    return new Response(null, { status: 202, headers: CORS_HEADERS });
+    return new Response(null, { status: 202, headers: responseHeaders });
   }
-  return jsonResponse(result);
+  return jsonResponse(result, 200, responseHeaders);
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -171,32 +176,17 @@ async function handleRpcMessage(msg: RpcRequest): Promise<unknown> {
 // ──────────────────────────────────────────────────────────────────
 
 function isAuthorized(req: Request): boolean {
-  const apiKey = Deno.env.get("MCP_GATEWAY_API_KEY");
-  if (!apiKey) {
-    // No key configured — allow (useful during initial setup)
-    return true;
-  }
-  // 1. Bearer token header (programmatic clients)
-  const authHeader = req.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ") && authHeader.slice(7) === apiKey) {
-    return true;
-  }
-  // 2. x-api-key header
-  if (req.headers.get("x-api-key") === apiKey) return true;
-  // 3. ?key= query param — lets the key be embedded in the connector URL
-  const url = new URL(req.url);
-  if (url.searchParams.get("key") === apiKey) return true;
-  return false;
+  return isMcpGatewayAuthorized(req, Deno.env.get("MCP_GATEWAY_API_KEY"));
 }
 
 // ──────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────
 
-function jsonResponse(data: unknown, status = 200): Response {
+function jsonResponse(data: unknown, status: number, responseHeaders: HeadersInit): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    headers: { ...responseHeaders, "Content-Type": "application/json" },
   });
 }
 

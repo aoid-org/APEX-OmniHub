@@ -19,6 +19,10 @@ import { useOmniModal } from '@/stores/omniModalStore';
 import { useLayoutContext } from '../../contexts/LayoutContext';
 import { useTheme, type ThemeType } from '../../hooks/useTheme';
 import { WidgetSettingsPanel } from '../WidgetSettingsModal';
+import { PWAInstallButton } from '../../../src/components/PWAInstallButton';
+
+
+
 
 interface Props {
   readonly onClose: () => void;
@@ -236,6 +240,9 @@ export default function SettingsModule({ onClose: _onClose }: Props) {
             ))}
           </fieldset>
         </div>
+
+        {/* PWA Install Harness Option */}
+        <PWAInstallButton inline />
       </div>
 
       {/* ── Section B: Platform Settings (backend-persisted) ── */}

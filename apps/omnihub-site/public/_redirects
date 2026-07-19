@@ -1,3 +1,7 @@
+# Cloudflare Pages origin restriction: 301 redirect direct pages.dev traffic to canonical custom domain.
+# Note: staging shadow slot is explicitly excluded (does not match source host).
+https://apex-omnihub.pages.dev/* https://apexomnihub.icu/:splat 301
+
 # Cloudflare Pages SPA rewrite. Vite builds a single React entrypoint, so both
 # clean routes and legacy .html marketing links must be handled by the router.
 /* /index.html 200
