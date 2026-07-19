@@ -49,4 +49,16 @@ describe('production domain alignment', () => {
     expect(nodeVersion).toBe('24');
     expect(productionDeployWorkflow).toContain('node-version: "24"');
   });
+
+  it('restricts direct origin traffic from apex-omnihub.pages.dev via 301 redirect while preserving shadow slot', () => {
+    const publicRedirects = readFileSync(
+      resolve(process.cwd(), 'apps/omnihub-site/public/_redirects'),
+      'utf8',
+    );
+    expect(publicRedirects).toContain('https://apex-omnihub.pages.dev/* https://apexomnihub.icu/:splat 301');
+    expect(publicRedirects).not.toContain('https://apex-omnihub-shadow.pages.dev');
+    const redirectIndex = publicRedirects.indexOf('https://apex-omnihub.pages.dev/* https://apexomnihub.icu/:splat 301');
+    const spaRewriteIndex = publicRedirects.indexOf('/* /index.html 200');
+    expect(redirectIndex).toBeLessThan(spaRewriteIndex);
+  });
 });
