@@ -141,8 +141,8 @@ resource "cloudflare_ruleset" "cache_rules" {
 
   rules {
     action      = "set_cache_settings"
-    expression  = "(http.host eq \"${var.domain}\" and starts_with(http.request.uri.path, \"/assets/\"))"
-    description = "Cache everything for static assets"
+    expression  = "(http.host eq \"${var.domain}\" and (starts_with(http.request.uri.path, \"/assets/\") or http.request.uri.path.extension in {\"js\" \"css\" \"png\" \"jpg\" \"svg\" \"woff2\"}) and not starts_with(http.request.uri.path, \"/api/\") and not starts_with(http.request.uri.path, \"/functions/v1/\"))"
+    description = "Cache static assets and optimization extensions while excluding API endpoints"
     enabled     = true
 
     action_parameters {
