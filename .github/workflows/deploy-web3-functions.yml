@@ -13,6 +13,10 @@ jobs:
     name: Deploy Supabase Edge Functions
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    env:
+      # Supabase CLI analytics is nonessential in CI and can fail successful
+      # commands during PostHog shutdown when the telemetry endpoint is slow.
+      SUPABASE_TELEMETRY_DISABLED: '1'
 
     steps:
       - name: Checkout code
@@ -55,7 +59,7 @@ jobs:
       - name: Apply Database Migrations
         # Critical: Deploys schema changes (e.g., 'emergency_controls' table) BEFORE functions
         # fix: Removes invalid 'desc' key
-        run: yes | supabase db push --include-all
+        run: supabase db push --include-all --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

@@ -109,6 +109,11 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 [functions.omnilink-port]
 verify_jwt = false
 
+# Privileged MCP connector. The platform JWT gate is disabled because this
+# endpoint uses a dedicated header secret and rejects missing configuration.
+[functions.mcp-gateway]
+verify_jwt = false
+
 # APEX Agent — AI orchestration endpoint
 # verify_jwt = true: Same-origin OmniPort Gateway forwards user JWT.
 # Supabase gateway validation prevents unauthenticated invocations.

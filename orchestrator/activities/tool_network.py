@@ -83,7 +83,9 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
     _ns().activity.logger.info(f"Calling webhook: {method} {validated_url.original_url}")
 
-    async with httpx.AsyncClient(follow_redirects=False) as client:
+    # Ignore process proxy variables: using a proxy would bypass the DNS-pinned
+    # destination selected by the SSRF guard above.
+    async with httpx.AsyncClient(follow_redirects=False, trust_env=False) as client:
         try:
             response = await client.request(  # NOSONAR - URL validated by SSRF guard above
                 method=method,

@@ -14,185 +14,44 @@ All audit events must be logged using this schema to maintain:
 
 import asyncio
 from datetime import datetime, timezone
-from enum import Enum
-from typing import Any
-
-from pydantic import BaseModel, Field
+from typing import Any, cast
 
 from providers.database.factory import get_database_provider
+
+from .audit_types import (
+    AuditAction,
+    AuditActor,
+    AuditLogEntry,
+    AuditMetadata,
+    AuditResource,
+    AuditResourceType,
+    AuditStatus,
+)
+
+__all__ = [
+    "AuditAction",
+    "AuditActor",
+    "AuditLogEntry",
+    "AuditLogger",
+    "AuditMetadata",
+    "AuditPersistenceError",
+    "AuditQueryError",
+    "AuditResource",
+    "AuditResourceType",
+    "AuditStatus",
+    "audit_logger",
+    "log_audit_event",
+]
 
 UTC = timezone.utc
 
 
-class AuditAction(str, Enum):  # noqa: UP042
-    """Standardized audit actions for compliance tracking."""
-
-    # Authentication
-    LOGIN = "login"
-    LOGOUT = "logout"
-    MFA_VERIFY = "mfa_verify"
-
-    # Data Access
-    READ = "read"
-    WRITE = "write"
-    DELETE = "delete"
-    DATA_ACCESS = "data_access"
-    DATA_DELETE = "data_delete"
-
-    # System
-    CONFIG_CHANGE = "config_change"
-    DEPLOY = "deploy"
-
-    # Workflow
-    WORKFLOW_START = "workflow_start"
-    WORKFLOW_COMPLETE = "workflow_complete"
-    WORKFLOW_FAIL = "workflow_fail"
-
-    # Data Modification
-    DATA_MODIFY = "data_modify"
-
-    # Security
-    POLICY_VIOLATION = "policy_violation"
-    ACCESS_DENIED = "access_denied"
+class AuditPersistenceError(RuntimeError):
+    """Raised when a compliance event cannot be durably persisted."""
 
 
-class AuditActor(BaseModel):
-    """Identity of the actor performing the action."""
-
-    user_id: str
-    role: str
-    ip_address: str | None = None
-    user_agent: str | None = None
-
-
-class AuditResource(BaseModel):
-    """Resource being acted upon."""
-
-    resource_id: str
-    resource_type: str
-    resource_name: str | None = None
-
-
-class AuditResourceType(str, Enum):  # noqa: UP042
-    """Resource types for audit logging."""
-
-    USER = "user"
-    WORKFLOW = "workflow"
-    DOCUMENT = "document"
-    SYSTEM_CONFIG = "system_config"
-    API_KEY = "api_key"
-    POLICY = "policy"
-    DATABASE = "database"
-    SECURITY_POLICY = "security_policy"
-
-
-class AuditStatus(str, Enum):  # noqa: UP042
-    """Audit event outcome status."""
-
-    SUCCESS = "success"
-    FAILURE = "failure"
-    WARNING = "warning"
-    TIMEOUT = "timeout"
-    ERROR = "error"
-
-
-class AuditMetadata(BaseModel):
-    """Structured metadata for audit events."""
-
-    # Request Context
-    user_agent: str | None = None
-    ip_address: str | None = None
-    geo_location: str | None = None
-    session_id: str | None = None
-
-    # Workflow Context
-    workflow_id: str | None = None
-    workflow_run_id: str | None = None
-    activity_id: str | None = None
-    task_queue: str | None = None
-
-    # Performance Metrics
-    duration_ms: int | None = None
-    retry_count: int | None = 0
-
-    # Compliance Fields
-    data_sensitivity: str | None = None  # public, internal, confidential, restricted
-    compliance_flags: list[str] = Field(default_factory=list)  # soc2, gdpr, hipaa, etc.
-
-    # Custom Fields
-    custom_fields: dict[str, Any] = Field(default_factory=dict)
-
-
-class AuditLogEntry(BaseModel):
-    """
-    Strict schema for enterprise audit logging.
-
-    This model enforces compliance requirements for:
-    - SOC2 Type II audit trails
-    - GDPR Article 30 processing records
-    - ISO 27001 security monitoring
-    - PCI DSS transaction logging
-
-    All audit events MUST use this schema.
-    """
-
-    # Primary Identifiers
-    id: str = Field(..., description="Unique audit event identifier (UUID)")
-    correlation_id: str = Field(..., description="Correlation ID for request tracing")
-
-    # Timestamp (Critical for compliance)
-    timestamp: datetime = Field(..., description="Event timestamp (ISO 8601 with timezone)")
-    event_sequence: int = Field(
-        ..., description="Sequence number for ordering within correlation_id"
-    )
-
-    # Actor Information
-    actor_id: str = Field(..., description="ID of the user/service that performed the action")
-    actor_type: str = Field("user", description="Type of actor: user, service, system")
-    actor_ip: str | None = Field(None, description="IP address of the actor")
-    actor_user_agent: str | None = Field(None, description="User agent string")
-
-    # Action Details
-    action: AuditAction = Field(..., description="Standardized action type")
-    status: AuditStatus = Field(..., description="Outcome of the action")
-
-    # Resource Information
-    resource_type: AuditResourceType = Field(..., description="Type of resource being acted upon")
-    resource_id: str = Field(..., description="Unique identifier of the resource")
-    resource_owner: str | None = Field(None, description="Owner of the resource (if applicable)")
-
-    # Context & Metadata
-    metadata: AuditMetadata = Field(
-        default_factory=AuditMetadata, description="Structured metadata"
-    )
-
-    # Compliance Fields (Required for SOC2/GDPR)
-    data_classification: str = Field("internal", description="Data classification level")
-    retention_period_days: int = Field(
-        2555, description="How long to retain this log (7 years for financial)"
-    )
-    compliance_frameworks: list[str] = Field(
-        default_factory=lambda: ["soc2", "gdpr"], description="Applicable compliance frameworks"
-    )
-
-    # Security & Integrity
-    integrity_hash: str | None = Field(None, description="Cryptographic hash for tamper detection")
-    previous_hash: str | None = Field(
-        None, description="Hash of previous log entry for chain integrity"
-    )
-
-    # Processing Metadata
-    processed_at: datetime | None = Field(None, description="When this log was processed")
-    storage_location: str | None = Field(None, description="Where this log is stored")
-    backup_location: str | None = Field(None, description="Backup location for DR")
-
-    class Config:
-        """Pydantic configuration."""
-
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
+class AuditQueryError(RuntimeError):
+    """Raised when stored audit events cannot be queried reliably."""
 
 
 class AuditLogger:
@@ -279,13 +138,40 @@ class AuditLogger:
         try:
             db = get_database_provider()
 
-            # Convert event to dict for storage
             event_dict = event.model_dump(mode="json")
+            # The live audit_logs contract has seven columns. Preserve the
+            # richer compliance envelope under metadata instead of attempting
+            # to insert fields that do not exist in the table.
+            record = {
+                "id": event.id,
+                "actor_id": event.actor_id,
+                "action_type": str(event.action),
+                "resource_type": str(event.resource_type),
+                "resource_id": event.resource_id,
+                "metadata": {
+                    **event.metadata.model_dump(mode="json"),
+                    "_audit": {
+                        key: value
+                        for key, value in event_dict.items()
+                        if key
+                        not in {
+                            "id",
+                            "actor_id",
+                            "action",
+                            "resource_type",
+                            "resource_id",
+                            "metadata",
+                            "timestamp",
+                        }
+                    },
+                },
+                "created_at": event.timestamp.isoformat(),
+            }
 
             # Store in audit_logs table
             await db.insert(
                 table="audit_logs",
-                record=event_dict,
+                record=record,
             )
 
         except Exception as e:
@@ -294,12 +180,11 @@ class AuditLogger:
 
             # Log critical error to stderr
             print(
-                f"CRITICAL: Audit persistence failed: {e}",
+                f"CRITICAL: Audit persistence failed: {type(e).__name__}",
                 file=sys.stderr,
             )
-
-            # Fallback: Log essential audit data to stderr
-            # DO NOT log sensitive data like secrets or PII
+            # Emit only essential non-secret fields, then fail closed so the
+            # caller cannot mistake a lost compliance event for success.
             print(
                 f"AUDIT_FALLBACK: id={event.id} "
                 f"action={event.action} "
@@ -310,6 +195,7 @@ class AuditLogger:
                 f"timestamp={event.timestamp.isoformat()}",
                 file=sys.stderr,
             )
+            raise AuditPersistenceError("Audit persistence failed") from e
 
     async def _store_file(self, event: AuditLogEntry) -> None:
         """Store audit event in local file (for development/testing)."""
@@ -321,6 +207,51 @@ class AuditLogger:
 
         async with aiofiles.open(log_file, "a") as f:
             await f.write(json.dumps(event.model_dump(), default=str) + "\n")
+
+    @staticmethod
+    def _apply_query_filters(
+        query: Any,
+        *,
+        actor_id: str | None,
+        action: AuditAction | None,
+        resource_type: AuditResourceType | None,
+        start_date: datetime | None,
+        end_date: datetime | None,
+    ) -> Any:
+        """Apply optional audit filters to a Supabase query builder."""
+        if actor_id:
+            query = query.eq("actor_id", actor_id)
+        if action:
+            query = query.eq("action_type", action.value)
+        if resource_type:
+            query = query.eq("resource_type", resource_type.value)
+        if start_date:
+            query = query.gte("created_at", start_date.isoformat())
+        if end_date:
+            query = query.lte("created_at", end_date.isoformat())
+        return query
+
+    @staticmethod
+    def _row_to_event(row: Any) -> AuditLogEntry:
+        """Map the live audit_logs row shape to the compliance model."""
+        if not isinstance(row, dict):
+            raise ValueError("Invalid audit row")
+
+        raw_metadata = row.get("metadata")
+        metadata = cast(dict[str, Any], raw_metadata) if isinstance(raw_metadata, dict) else {}
+        raw_envelope = metadata.get("_audit")
+        envelope = cast(dict[str, Any], raw_envelope) if isinstance(raw_envelope, dict) else {}
+        public_metadata = {key: value for key, value in metadata.items() if key != "_audit"}
+        return AuditLogEntry(
+            **envelope,
+            id=row["id"],
+            actor_id=row["actor_id"],
+            action=row["action_type"],
+            resource_type=row["resource_type"],
+            resource_id=row["resource_id"],
+            timestamp=row["created_at"],
+            metadata=AuditMetadata(**public_metadata),
+        )
 
     async def query_events(
         self,
@@ -345,43 +276,31 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from typing import cast
-
-        from providers.database.factory import get_database_provider
-        from providers.database.supabase_provider import SupabaseDatabaseProvider
-
         try:
-            db = cast(SupabaseDatabaseProvider, get_database_provider())
-            query = db.client.table("audit_logs").select("*")
-
-            if actor_id:
-                query = query.eq("actor_id", actor_id)
-            if action:
-                query = query.eq(
-                    "action", action.value if hasattr(action, "value") else str(action)
-                )
-            if resource_type:
-                query = query.eq(
-                    "resource_type",
-                    resource_type.value if hasattr(resource_type, "value") else str(resource_type),
-                )
-            if start_date:
-                query = query.gte("timestamp", start_date.isoformat())
-            if end_date:
-                query = query.lte("timestamp", end_date.isoformat())
-
-            query = query.limit(limit)
+            db = cast(Any, get_database_provider())
+            query = db.client.table("audit_logs").select(
+                "id,actor_id,action_type,resource_type,resource_id,metadata,created_at"
+            )
+            query = self._apply_query_filters(
+                query,
+                actor_id=actor_id,
+                action=action,
+                resource_type=resource_type,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            query = query.order("created_at", desc=True).limit(limit)
 
             # Execute sync DB call off the event loop.
             response = await asyncio.to_thread(query.execute)
             data = response.data
 
-            return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]
-        except Exception:
+            return [self._row_to_event(row) for row in data]
+        except Exception as exc:
             import logging
 
             logging.exception("Failed to query audit events")
-            return []
+            raise AuditQueryError("Failed to query audit events") from exc
 
     def validate_integrity(self, events: list[AuditLogEntry]) -> bool:
         """
