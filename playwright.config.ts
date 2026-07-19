@@ -43,6 +43,14 @@ const allProjects = [
       viewport: { width: 390, height: 844 },
     },
   },
+  {
+    name: 'mobile-iphone',
+    use: {
+      ...devices['iPhone 14'],
+      defaultBrowserType: 'chromium',
+      viewport: { width: 390, height: 844 },
+    },
+  },
 
   // ── Tablet ────────────────────────────────────────────────────────────
   {
@@ -51,13 +59,13 @@ const allProjects = [
   },
 ];
 
-// CI: chromium-based projects only (chromium + mobile-chrome), pinned to the
+// CI: chromium-based projects only (chromium + mobile-chrome + mobile-iphone), pinned to the
 // runner's preinstalled Google Chrome via `channel: 'chrome'`. Playwright's
 // bundled-Chromium download from its CDN reliably hangs after reaching 100% on
 // CI runners; the system channel sidesteps that download entirely.
 // Local: all browsers including Firefox and WebKit (bundled, no channel).
 const ciProjects = allProjects
-  .filter((p) => ['chromium', 'mobile-chrome'].includes(p.name))
+  .filter((p) => ['chromium', 'mobile-chrome', 'mobile-iphone'].includes(p.name))
   .map((p) => ({
     ...p,
     use: { ...p.use, channel: 'chrome' },

@@ -1,8 +1,4 @@
 .brand-anthem-player {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
   display: flex;
   align-items: center;
   gap: 12px;
