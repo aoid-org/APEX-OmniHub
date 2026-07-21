@@ -98,4 +98,13 @@ describe("generateProposeReport", () => {
     expect(report).toContain("# A.R.I.S.E. Propose Report: 2026-07-01");
     expect(report).toContain("Phase 1b (Propose Engine)");
   });
+
+  it("falls back to unknown when outcome.step is null", async () => {
+    const { generateProposeReport } = await import("../../src/propose/reporter.js");
+    const report = generateProposeReport(
+      { kind: "sandbox_failed", step: null as unknown as string, output: "failed" },
+      TIMESTAMP,
+    );
+    expect(report).toContain("**Failed step:** unknown");
+  });
 });

@@ -211,4 +211,27 @@ describe("runSandboxCheck error formatting edges", () => {
     const result = await runSandboxCheck(DIFF);
     expect(result.output).toContain("string failure");
   });
+
+  it("uses an empty string fallback when stdout or stderr is undefined on exec error", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        const err = new ExecError("tsc failed", undefined as unknown as string, "only stderr");
+        throw err;
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toContain("only stderr");
+
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        const err = new ExecError("tsc failed", "only stdout", undefined as unknown as string);
+        throw err;
+      }
+      return "";
+    });
+    const result2 = await runSandboxCheck(DIFF);
+    expect(result2.output).toContain("only stdout");
+  });
 });

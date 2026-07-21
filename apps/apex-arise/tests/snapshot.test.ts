@@ -223,4 +223,18 @@ describe("writeSnapshot degraded fallback coverage", () => {
     const [, content] = (writeFileSync as ReturnType<typeof vi.fn>).mock.calls.at(-1) as [string, string, string];
     expect(content).toContain("degraded run (redundancy)");
   });
+
+  it("falls back to unknown when compositeError is missing and failures is empty on degraded run", () => {
+    writeSnapshot({
+      signals: [],
+      composite: null,
+      compositeError: null,
+      failures: [],
+      scanTargets: ["src"],
+      timestamp: "2026-07-01T10:00:00.000Z",
+    });
+
+    const [, content] = (writeFileSync as ReturnType<typeof vi.fn>).mock.calls.at(-1) as [string, string, string];
+    expect(content).toContain("degraded run (unknown)");
+  });
 });

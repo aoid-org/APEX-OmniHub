@@ -191,4 +191,20 @@ describe("openProposalPr error and git resolution edges", () => {
     expect(result.opened).toBe(false);
     expect(result.error).toContain("string patch failure");
   });
+
+  it("handles an undefined process.env.PATH gracefully", async () => {
+    const originalPath = process.env.PATH;
+    delete process.env.PATH;
+    process.env.GITHUB_TOKEN = "test-token";
+    process.env.GITHUB_REPOSITORY = "repo";
+    mockExecFileSync.mockReturnValue("");
+    const { openProposalPr } = await import("../../src/propose/pr.js");
+    const result = await openProposalPr({ 
+      diff: { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff" }, 
+      proposal: { proposedDiff: "diff", confidence: "high", rationale: "rationale", filesTouched: ["src/a.ts"] }, 
+      branchName: "arise" 
+    });
+    process.env.PATH = originalPath;
+    expect(mockExecFileSync).toHaveBeenCalled();
+  });
 });
