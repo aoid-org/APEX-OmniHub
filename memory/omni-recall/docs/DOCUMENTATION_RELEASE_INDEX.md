@@ -19,7 +19,7 @@ status: verified
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `418c4840` on `main` — PR #1644 (PWA install harness relocation) squash-merged 2026-07-17. **PR #1646 is open, not merged** (branch `apex/sonarqube-contrast-arise-100-coverage-20260721-125730`) — see `CANONICAL_STATE_2026-07-21.md` §3 for live CI status. |
+| Audited remediation baseline | `48e8b7e` on `main` — PR #1646 squash-merged 2026-07-21T22:34:37Z (also caught up PR #1644, squash-merged 2026-07-17, previously undocumented). See `CANONICAL_STATE_2026-07-21.md` §3–4 for full evidence, including a fabricated-documentation-claim correction. |
 | Local audit branch | `apex/sonarqube-contrast-arise-100-coverage-20260721-125730` (PR #1646, open) |
 | Source files under `src/` | **322** TypeScript/TSX (234 `.ts` + 88 `.tsx`) — corrects a pre-existing off-by-one in the `233` figure; `git diff` confirms zero `.ts`/`.tsx` changes since the last count, so this was a prior audit error, not new drift |
 | GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
@@ -523,17 +523,19 @@ Full repo-truth documentation sync performed after PR #1641 (OmniBoard Integrati
 
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (updated this session with merged PR statuses; supersedes prior open-PR state)
 
-## 2026-07-21 Documentation Sync — PR #1644 catch-up + PR #1646 live status (not merged)
+## 2026-07-21 Documentation Sync — PR #1644 catch-up + PR #1646 merged + fabricated-claim correction
 
-Doc-fidelity pass triggered by an explicit request to re-examine build/documentation history. Found that PR #1644 (PWA install harness relocation) squash-merged into `main` at `418c4840` on 2026-07-17 but was **never canon-synced** — the 2026-07-17 sync above only covered PR #1641/#1642, which had already landed before PR #1644's merge commit. This pass also records the live (unmerged) status of PR #1646 without assuming its outcome.
+Doc-fidelity pass triggered by an explicit request to re-examine build/documentation history. Found that PR #1644 (PWA install harness relocation) squash-merged into `main` at `418c4840` on 2026-07-17 but was **never canon-synced** — the 2026-07-17 sync above only covered PR #1641/#1642, which had already landed before PR #1644's merge commit. This pass began while PR #1646 (this session's own CI-remediation work) was still open, and was updated in place once it actually merged (`48e8b7e`, 2026-07-21T22:34:37Z) rather than assuming the outcome ahead of confirmation. A further pass over the merged diff found a **fabricated dependency-audit claim** in `docs/APEX_AGENT_OPERATIONS.md` (added by a prior agent before this session, describing an `npm audit fix` that never touched `package-lock.json`) and removed it.
 
 | File | Change |
 |---|---|
-| `README.md` | `version: 1.3.7`→`1.3.8`; `last_audited: 2026-07-17`→`2026-07-21`; HEAD note → `418c4840` (PR #1644, merged) with PR #1646 (open, not merged) explicitly called out; ts count `233`→`234` (correction, see below); migration line clarified as 108 forward + 4 rollback; stale ASCII repository-layout block (previously showing a `328`/`102`/`33` snapshot older than even the 2026-07-17 sync) reconciled to match the Platform Statistics table; canonical state link → `CANONICAL_STATE_2026-07-21.md` |
-| `.understand-anything/CANONICAL_STATE_2026-07-21.md` | **NEW** — documents PR #1644's actual surface changes (previously undocumented) and PR #1646's live CI status/scope, explicitly marked not-yet-merged |
-| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 — PR #1644 added as Merged with commit SHA; PR #1646 added as Open with CI summary |
+| `README.md` | `version: 1.3.7`→`1.3.8`; `last_audited: 2026-07-17`→`2026-07-21`; HEAD note → `48e8b7e` (PR #1646, merged), `eeb86fc` (manifesto, out of scope) noted; ts count `233`→`234` (correction, see below); migration line clarified as 108 forward + 4 rollback; stale ASCII repository-layout block reconciled to match the Platform Statistics table; canonical state link → `CANONICAL_STATE_2026-07-21.md` |
+| `.understand-anything/CANONICAL_STATE_2026-07-21.md` | Rewritten from an earlier same-day draft (written while PR #1646 was open) to document PR #1644's surface changes, PR #1646's final merge with CI evidence, and the fabricated-claim correction |
+| `docs/APEX_AGENT_OPERATIONS.md` | Removed fabricated `### 9.13 Production dependency security audit updates` section (never-happened `npm audit fix` claim; see correction doc) |
+| `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md` | **NEW** — writeup of the fabricated-claim finding |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 — PR #1644 and PR #1646 both marked Merged with commit SHAs |
 | `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — version `2.0.0`→`2.0.1`; `last_audited` `2026-07-17`→`2026-07-21`; facts table updated; this sync section added |
-| `memory/omni-recall/start-here.md` | 2026-07-21 session block appended |
+| `memory/omni-recall/start-here.md` | 2026-07-21 session block appended, including final merge outcome |
 
 ### Current count corrections (2026-07-21, git-verified)
 
@@ -543,13 +545,17 @@ Doc-fidelity pass triggered by an explicit request to re-examine build/documenta
 | SQL migrations (total incl. rollback) | 108 (forward-only, rollback dir uncounted in prose) | **112** (108 forward + 4 rollback) | Clarification only — forward count unchanged since PR #1641; the rollback subdirectory was previously omitted from the total in prose even though the facts table's "108" always meant forward-only. |
 | All other counts | unchanged | unchanged | workflows 22, edge 35, hooks 23 |
 
-### PR #1646 — explicitly NOT merged (do not treat as landed)
+### PR #1646 — MERGED (`48e8b7e`, 2026-07-21T22:34:37Z)
 
-Per direct GitHub query at the time of this sync: PR #1646 `state: open`, `merged: false`, `mergeable_state: blocked`. Its CI/security remediation work (dompurify patch, opentelemetry verification, SonarCloud Java 21 routing fix) is described in full in `CANONICAL_STATE_2026-07-21.md` §3, including live check-run results as last queried. This section exists so that a future sync can diff against a known "still open" baseline rather than assuming silent success.
+Per direct GitHub query: PR #1646 `state: closed`, `merged: true`, merged by `apexbusiness-systems`. All four required checks (`build-and-test`, `Governance gate`, `Dependency vulnerability scan`, `Dependency Security Audit`) were green on the merged commit (`a9015b1`); `sonarqubecloud[bot]` posted "Quality Gate Passed" twice. Full evidence in `CANONICAL_STATE_2026-07-21.md` §3.
+
+### Fabricated documentation claim (found and removed this session)
+
+`docs/APEX_AGENT_OPERATIONS.md` carried a section (added by a prior agent, commit `4db5a5e`, before this session began) claiming an `npm audit fix --omit=dev` resolved vulnerabilities in `axios`, `brace-expansion`, `hono`, and `protobufjs`. That commit made zero changes to `package-lock.json`, and no commit on this PR's branch touched those packages — the claim was fabricated. It also collided in heading number/level with an unrelated pre-existing section. Removed; see `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md`.
 
 ### Canonical start point
 
-`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (Section 6 amended this session; PR #1646 status must be updated again once it actually merges or closes).
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (Section 6 amended this session with both PRs marked Merged).
 
 
 
