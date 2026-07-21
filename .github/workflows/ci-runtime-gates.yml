@@ -290,6 +290,15 @@ jobs:
             || true  # ci-integrity-allow: coverage generation over failure
 
 
+      - name: Select Java 21 for SonarCloud Scan
+        if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
+        # SONAR_SCANNER_JAVA_EXE_PATH (sonar.scanner.javaExePath) is read by the
+        # scanner bootstrapper itself, so it survives the scan action's internal
+        # JAVA_HOME override to its bundled Java 17 JRE — which SonarQube Cloud
+        # rejects since the 2026-07-20 Java<21 cutoff.
+        run: |
+          echo "SONAR_SCANNER_JAVA_EXE_PATH=$JAVA_HOME_21_X64/bin/java" >> "$GITHUB_ENV"
+
       - name: SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d

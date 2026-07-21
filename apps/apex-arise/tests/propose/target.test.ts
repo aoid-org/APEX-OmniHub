@@ -150,4 +150,10 @@ describe("selectRedundancyTarget report edge cases", () => {
 
     expect(selectRedundancyTarget()).toBeNull();
   });
+
+  it("stringifies a non-Error thrown by execFileSync", async () => {
+    mockExecFileSync.mockImplementation(() => { throw "raw exec error"; });
+    const { selectRedundancyTarget } = await import("../../src/propose/target.js");
+    expect(() => selectRedundancyTarget()).toThrow("raw exec error");
+  });
 });
