@@ -1,6 +1,6 @@
 ---
-version: 1.3.7
-last_audited: 2026-07-17
+version: 1.3.8
+last_audited: 2026-07-21
 status: verified
 ---
 
@@ -66,7 +66,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 321 TypeScript/TSX files (233 `.ts` + 88 `.tsx`)  |
+| **Source Files (`src/`)**                        | 322 TypeScript/TSX files (234 `.ts` + 88 `.tsx`)  |
 | **React Components (`src/`)**                    | 88 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
 | **Edge Functions (`supabase/functions/`)**       | 35 directories (34 function dirs + `_shared`)     |
@@ -76,7 +76,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
 | **Orchestrator (Python)**                        | ~130 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** current audited baseline for this documentation sync is `5c991065` — PR #1641 (`5dd33caf`, OmniBoard Integration Runtime: full page, registry bootstrap, IntegrationOnboarder, ConnectorKit persistence, CF status probe) and PR #1642 (`5c991065`, tech debt closeout audits and PR lock registries) both squash-merged into `main` on 2026-07-17. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **108** (2026-07-17 git-verified; 2 new migrations in PR #1641). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-17.md`](./.understand-anything/CANONICAL_STATE_2026-07-17.md) for the current platform state assessment.
+**Latest repo-history note:** current audited baseline for this documentation sync is `418c4840` on `main` — PR #1644 (`feat: relocate PWA install harness from header to Settings modal + unit tests`, squash-merged 2026-07-17, folded a docs-only "post-merge canon sync" commit for PR #1641/#1642 as its first commit) is the latest **merged** change; it moved the PWA install trigger from the OmniDash header into `SettingsModule.tsx` and added `tests/lib/PWAInstallButton.spec.tsx`. **PR #1646** (`fix(accessibility): WCAG AA contrast ratios in landing.css & 100% test coverage for apex-arise`, branch `apex/sonarqube-contrast-arise-100-coverage-20260721-125730`) is **open, not yet merged** as of this sync — see `.understand-anything/CANONICAL_STATE_2026-07-21.md` §3 for its live CI status and scope; do not treat its contents as landed until the PR shows `merged: true`. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **108** forward + 4 rollback = **112** total (2026-07-21 git-verified; forward count unchanged since PR #1641). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-21.md`](./.understand-anything/CANONICAL_STATE_2026-07-21.md) for the current platform state assessment.
 
 
 ---
@@ -168,13 +168,13 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 ## Repository Layout
 
 ```
-/src                 - Core frontend/domain source tree (328 files: 234 .ts + 94 .tsx)
+/src                 - Core frontend/domain source tree (322 files: 234 .ts + 88 .tsx)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
-/supabase/migrations - Database schema (102 .sql files: 98 forward + 4 rollback)
-/supabase/functions  - Edge functions (33 function directories + _shared = 34 total)
+/supabase/migrations - Database schema (112 .sql files: 108 forward + 4 rollback)
+/supabase/functions  - Edge functions (34 function directories + _shared = 35 total)
 /orchestrator        - Temporal workers and orchestration services (~130 tracked files)
 /tests               - Automated test suite
 /.github/workflows   - CI/CD workflows (22 workflow files)

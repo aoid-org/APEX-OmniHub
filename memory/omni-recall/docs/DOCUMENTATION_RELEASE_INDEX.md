@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 2.0.0
-last_audited: 2026-07-17
+version: 2.0.1
+last_audited: 2026-07-21
 status: verified
 ---
 
@@ -10,22 +10,22 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-17** (Post-merge docs sync for PR #1641 OmniBoard Integration Runtime and PR #1642 Tech Debt Closeout, both squash-merged into `main` at `5c991065`). Previous refresh: 2026-07-16. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
+> Current repo-truth index refreshed **2026-07-21** (doc-fidelity catch-up: PR #1644 merged 2026-07-17 but never canon-synced until now, plus live status of open PR #1646 — CI/security remediation, not yet merged). Previous refresh: 2026-07-17. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
-## Current Repo Facts Verified in This Pass (2026-07-17)
+## Current Repo Facts Verified in This Pass (2026-07-21)
 
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from prior verification unless directly exercised.
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `5c991065` — PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) squash-merged 2026-07-17 |
-| Local audit branch | `docs/followup-omniboard-runtime-canon` (post-merge docs PR) |
-| Source files under `src/` | **321** TypeScript/TSX (233 `.ts` + 88 `.tsx`) |
+| Audited remediation baseline | `418c4840` on `main` — PR #1644 (PWA install harness relocation) squash-merged 2026-07-17. **PR #1646 is open, not merged** (branch `apex/sonarqube-contrast-arise-100-coverage-20260721-125730`) — see `CANONICAL_STATE_2026-07-21.md` §3 for live CI status. |
+| Local audit branch | `apex/sonarqube-contrast-arise-100-coverage-20260721-125730` (PR #1646, open) |
+| Source files under `src/` | **322** TypeScript/TSX (234 `.ts` + 88 `.tsx`) — corrects a pre-existing off-by-one in the `233` figure; `git diff` confirms zero `.ts`/`.tsx` changes since the last count, so this was a prior audit error, not new drift |
 | GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
-| SQL migrations | **108** `.sql` files — git-verified 2026-07-17; +2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
+| SQL migrations | **108** forward `.sql` files (unchanged since PR #1641) + **4** rollback scripts = **112** total — git-verified 2026-07-21 |
 | Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~130 tracked (excl. `__pycache__`) |
@@ -522,6 +522,34 @@ Full repo-truth documentation sync performed after PR #1641 (OmniBoard Integrati
 ### Canonical start point
 
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (updated this session with merged PR statuses; supersedes prior open-PR state)
+
+## 2026-07-21 Documentation Sync — PR #1644 catch-up + PR #1646 live status (not merged)
+
+Doc-fidelity pass triggered by an explicit request to re-examine build/documentation history. Found that PR #1644 (PWA install harness relocation) squash-merged into `main` at `418c4840` on 2026-07-17 but was **never canon-synced** — the 2026-07-17 sync above only covered PR #1641/#1642, which had already landed before PR #1644's merge commit. This pass also records the live (unmerged) status of PR #1646 without assuming its outcome.
+
+| File | Change |
+|---|---|
+| `README.md` | `version: 1.3.7`→`1.3.8`; `last_audited: 2026-07-17`→`2026-07-21`; HEAD note → `418c4840` (PR #1644, merged) with PR #1646 (open, not merged) explicitly called out; ts count `233`→`234` (correction, see below); migration line clarified as 108 forward + 4 rollback; stale ASCII repository-layout block (previously showing a `328`/`102`/`33` snapshot older than even the 2026-07-17 sync) reconciled to match the Platform Statistics table; canonical state link → `CANONICAL_STATE_2026-07-21.md` |
+| `.understand-anything/CANONICAL_STATE_2026-07-21.md` | **NEW** — documents PR #1644's actual surface changes (previously undocumented) and PR #1646's live CI status/scope, explicitly marked not-yet-merged |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 — PR #1644 added as Merged with commit SHA; PR #1646 added as Open with CI summary |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — version `2.0.0`→`2.0.1`; `last_audited` `2026-07-17`→`2026-07-21`; facts table updated; this sync section added |
+| `memory/omni-recall/start-here.md` | 2026-07-21 session block appended |
+
+### Current count corrections (2026-07-21, git-verified)
+
+| Metric | Previously documented (2026-07-17) | Current (2026-07-21) | Reason |
+|---|---|---|---|
+| `src` `.ts` files | 233 | **234** | **Correction, not new drift.** `git diff 5c991065..418c4840 -- src/` shows zero `.ts`/`.tsx` file changes, so the count was already 234 at the 2026-07-17 sync point — that sync's claimed "1 `.ts` file reclassified/removed in PR #1641" was a documentation error, not a real change. |
+| SQL migrations (total incl. rollback) | 108 (forward-only, rollback dir uncounted in prose) | **112** (108 forward + 4 rollback) | Clarification only — forward count unchanged since PR #1641; the rollback subdirectory was previously omitted from the total in prose even though the facts table's "108" always meant forward-only. |
+| All other counts | unchanged | unchanged | workflows 22, edge 35, hooks 23 |
+
+### PR #1646 — explicitly NOT merged (do not treat as landed)
+
+Per direct GitHub query at the time of this sync: PR #1646 `state: open`, `merged: false`, `mergeable_state: blocked`. Its CI/security remediation work (dompurify patch, opentelemetry verification, SonarCloud Java 21 routing fix) is described in full in `CANONICAL_STATE_2026-07-21.md` §3, including live check-run results as last queried. This section exists so that a future sync can diff against a known "still open" baseline rather than assuming silent success.
+
+### Canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (Section 6 amended this session; PR #1646 status must be updated again once it actually merges or closes).
 
 
 
