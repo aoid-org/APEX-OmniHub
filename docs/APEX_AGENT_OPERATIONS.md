@@ -723,7 +723,7 @@ with Deno installed.
 
 - Updated production dependencies via `npm audit fix --omit=dev` to resolve vulnerabilities in `axios`, `brace-expansion`, `hono`, and `protobufjs`.
 - Verified `npm audit --omit=dev` reports 0 vulnerabilities for production runtime dependencies (`exit 0`).
-- Configured OSV scanner rules in `osv-scanner.toml` for dev-only toolchain dependencies (`adm-zip`, `brace-expansion`, `diff`, `immutable`).
+- Configured OSV scanner rules in `.osv-scanner.toml` and `osv-scanner.toml` for dev-only toolchain dependencies (`adm-zip`, `brace-expansion`, `diff`, `immutable`).
 
 **Operational impact:** None to runtime contracts, env vars, secrets, DB tables/migrations, or start commands.
 
