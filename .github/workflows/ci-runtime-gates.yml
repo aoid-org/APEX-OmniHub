@@ -292,9 +292,12 @@ jobs:
 
       - name: Select Java 21 for SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
+        # SONAR_SCANNER_JAVA_EXE_PATH (sonar.scanner.javaExePath) is read by the
+        # scanner bootstrapper itself, so it survives the scan action's internal
+        # JAVA_HOME override to its bundled Java 17 JRE — which SonarQube Cloud
+        # rejects since the 2026-07-20 Java<21 cutoff.
         run: |
-          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
-          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+          echo "SONAR_SCANNER_JAVA_EXE_PATH=$JAVA_HOME_21_X64/bin/java" >> "$GITHUB_ENV"
 
       - name: SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
