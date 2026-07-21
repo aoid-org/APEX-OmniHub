@@ -290,6 +290,12 @@ jobs:
             || true  # ci-integrity-allow: coverage generation over failure
 
 
+      - name: Select Java 21 for SonarCloud Scan
+        if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+
       - name: SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
