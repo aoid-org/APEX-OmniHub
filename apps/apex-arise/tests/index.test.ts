@@ -224,7 +224,7 @@ describe("index orchestrator (main)", () => {
     mockCollectRedundancy.mockReturnValue({ name: "redundancy", score: 1, raw: "ok", methodNote: "ok" });
     mockCollectStructural.mockReturnValue([{ name: "depth", score: 1, raw: "ok", methodNote: "ok" }]);
     mockWriteSnapshot.mockReturnValue("/fake/path/snapshot.md");
-    const index = await import("../src/index.js");
+    await import("../src/index.js");
     const snapshotInput = mockWriteSnapshot.mock.calls[0][0];
     expect(snapshotInput.failures.some(f => f.error.includes("raw string failure"))).toBe(true);
   });

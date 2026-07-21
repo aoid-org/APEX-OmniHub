@@ -199,7 +199,7 @@ describe("openProposalPr error and git resolution edges", () => {
     process.env.GITHUB_REPOSITORY = "repo";
     mockExecFileSync.mockReturnValue("");
     const { openProposalPr } = await import("../../src/propose/pr.js");
-    const result = await openProposalPr({ 
+    await openProposalPr({ 
       diff: { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff" }, 
       proposal: { proposedDiff: "diff", confidence: "high", rationale: "rationale", filesTouched: ["src/a.ts"] }, 
       branchName: "arise" 

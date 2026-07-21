@@ -58,3 +58,13 @@ id = "GHSA-v56q-mh7h-f735"
 ignoreUntil = 2026-08-31
 reason = "Dev dependency immutable in build toolchain; not imported in production runtime bundles."
 
+
+[[IgnoredVulns]]
+id = "GHSA-4c8g-83qw-93j6"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency fast-uri, required by ajv in the build/lint toolchain; not imported in production runtime bundles."
+
+[[IgnoredVulns]]
+id = "GHSA-xvcm-6775-5m9r"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency immutable, required by hardhat in the dev toolchain; not imported in production runtime bundles. Second, distinct advisory on the same package as GHSA-v56q-mh7h-f735 above."
