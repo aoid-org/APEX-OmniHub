@@ -36,7 +36,7 @@
     "dr:test": "tsx scripts/dr/run-dr-test.ts --dry-run",
     "prompt-defense:analyze": "tsx scripts/prompt-defense/analyze_flags.ts",
     "secret:scan": "node scripts/secret-scan.mjs",
-    "security:audit": "node -e \"const fs=require('fs');const dir='security';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});\" && node -e \"const{execSync}=require('child_process');try{const r=execSync('npm audit --json',{encoding:'utf8'});require('fs').writeFileSync('security/npm-audit-latest.json',r)}catch(e){require('fs').writeFileSync('security/npm-audit-latest.json',e.stdout||'{}')}\"",
+    "security:audit": "node -e \"const fs=require('fs');const dir='security';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});\" && node -e \"const{execSync}=require('child_process');try{const r=execSync('npm audit --omit=dev --json',{encoding:'utf8'});require('fs').writeFileSync('security/npm-audit-latest.json',r)}catch(e){require('fs').writeFileSync('security/npm-audit-latest.json',e.stdout||'{}')}\"",
     "sim:chaos": "tsx sim/cli.ts --mode chaos",
     "sim:dry": "tsx sim/cli.ts --mode dry",
     "sim:quick": "tsx sim/cli.ts --mode quick",

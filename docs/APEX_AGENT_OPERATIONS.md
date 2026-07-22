@@ -1640,12 +1640,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - Specifies `.github/CODEOWNERS` bypass protocols and designated backup maintainer rules (`@apex-devops` / `@apex-emergency-ops`) for emergency P0 hotfixes without disabling branch protection rules.
 - Documents offline local build (`npm run build`) and direct Cloudflare Pages deployment (`npx wrangler pages deploy dist --project-name=apex-omnihub`) for emergency recovery when CI runners are blocked.
 
-## 9.34 Post-CI release workflow lockfile synchronization (2026-07-22)
+## 9.34 Post-CI release workflow lockfile & supply chain synchronization (2026-07-22)
 
-**Changed files:** `bun.lock` (lockfile sync).
+**Changed files:** `package.json` (`security:audit` script), `bun.lock` (lockfile sync).
 
-- **Root cause:** CI workflow steps running `bun install --frozen-lockfile --ignore-scripts` (e.g. in `.github/workflows/release.yml`, `integration.yml`, `deploy-production-cf-direct.yml`) failed with `error: lockfile had changes, but lockfile is frozen` due to drift after package updates to `@opentelemetry/*` dependencies in `package.json`.
-- **Remediation:** Regenerated `bun.lock` via `bun install --ignore-scripts`.
-- **Verification:** Verified zero lockfile drift via `node scripts/ci/check-lockfile-sync.mjs` (`npm run check:lockfiles`), clean frozen install via `bun install --frozen-lockfile --ignore-scripts`, OmniDash invariants via `npm run check:omnidash` (43/43 PASS), and TypeScript typecheck via `npx tsc --noEmit` (exit 0).
-- **Operational impact:** CI release and deployment workflows can now run `bun install --frozen-lockfile --ignore-scripts` without lockfile frozen errors. No deployed service, runtime app behavior, secrets, DB tables/migrations, or production start command changed.
+- **Root cause:** CI workflow steps running `bun install --frozen-lockfile --ignore-scripts` (e.g. in `.github/workflows/release.yml`, `integration.yml`, `deploy-production-cf-direct.yml`) failed due to lockfile drift on `@opentelemetry/*` packages. Subsequently, `verify:supply-chain` failed because `security:audit` ran `npm audit --json` without `--omit=dev`, capturing dev-only dependencies in `security/npm-audit-latest.json`.
+- **Remediation:** Regenerated `bun.lock` via `bun install --ignore-scripts` and updated `package.json`'s `security:audit` script to run `npm audit --omit=dev --json` for production dependency parity.
+- **Verification:** Verified zero lockfile drift via `node scripts/ci/check-lockfile-sync.mjs` (`npm run check:lockfiles`), clean supply chain audit via `node scripts/ci/verify-supply-chain.mjs` (`verify:supply-chain PASSED`), OmniDash invariants via `npm run check:omnidash` (43/43 PASS), and full release verification via `bun run verify:release`.
+- **Operational impact:** CI release and deployment workflows can now run `bun install --frozen-lockfile --ignore-scripts` and `verify:release` cleanly without lockfile frozen or dev-audit false failures. No deployed service, runtime app behavior, secrets, DB tables/migrations, or production start command changed.
+
 

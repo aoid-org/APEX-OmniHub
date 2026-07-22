@@ -10,7 +10,7 @@ interface BatchItem<T, R> {
 }
 
 export class BatchProcessor<T, R> {
-  private queue: BatchItem<T, R>[] = [];
+  private readonly queue: BatchItem<T, R>[] = [];
   private timer: NodeJS.Timeout | null = null;
   private processing = false;
 
