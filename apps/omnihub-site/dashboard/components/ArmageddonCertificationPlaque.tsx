@@ -6,7 +6,7 @@ export interface ArmageddonCertificationPlaqueProps {
   readonly compact?: boolean;
 }
 
-export const ARMAGEDDON_CERT_DATA = {
+const ARMAGEDDON_CERT_DATA = {
   runId: 'e982d187-3363-4295-99c3-3cecc3c410f0',
   date: 'Wed, 22 Jul 2026 12:54:25 GMT',
   verdict: 'CERTIFIED',
