@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Award, Lock, ExternalLink, Download, FileText, CheckCircle2, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
+import { ShieldCheck, Award, Lock, Download, FileText, CheckCircle2, Copy, Check } from 'lucide-react';
 
 export interface ArmageddonCertificationPlaqueProps {
   readonly className?: string;
