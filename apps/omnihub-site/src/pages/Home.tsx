@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { SEOMeta } from "@/components/SEOMeta";
 import { StructuredData } from "@/components/StructuredData";
 import { HERO_BADGE_ASSET_PATH } from "@/lib/heroAssets";
+import { ArmageddonCertificationPlaque } from "../../dashboard/components/ArmageddonCertificationPlaque";
 import {
   isStringArray,
   isTranslatedCardArray,
@@ -1269,6 +1270,9 @@ function GovernanceSection() {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="mt-8 rv d3">
+            <ArmageddonCertificationPlaque />
           </div>
         </div>
       </section>
