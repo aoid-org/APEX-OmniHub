@@ -717,6 +717,18 @@ plain-language remediation, never raw Supabase transport or stack errors.
 OmniBoard tests, and Deno check for `supabase/functions/omnilink-port/index.ts` in an environment
 with Deno installed.
 
+### 9.13 Production dependency security audit updates — 2026-07-21 (PR #1646)
+
+**Changed critical runtime path:** `package-lock.json`.
+
+- Updated production dependencies via `npm audit fix --omit=dev` to resolve vulnerabilities in `axios`, `brace-expansion`, `hono`, and `protobufjs`.
+- Verified `npm audit --omit=dev` reports 0 vulnerabilities for production runtime dependencies (`exit 0`).
+- Configured OSV scanner rules in `.osv-scanner.toml` and `osv-scanner.toml` for dev-only toolchain dependencies (`adm-zip`, `brace-expansion`, `diff`, `immutable`).
+
+**Operational impact:** None to runtime contracts, env vars, secrets, DB tables/migrations, or start commands.
+
+
+
 ### 9.12.2 OmniBoard chat-native connector intents — Intent Registry / MCP path (2026-07-04)
 
 **Changed critical runtime paths:** `orchestrator/activities/universal_intents.py`,

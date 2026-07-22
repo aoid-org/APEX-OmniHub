@@ -15,8 +15,8 @@ export class BatchProcessor<T, R> {
   private processing = false;
 
   constructor(
-    private batchHandler: (items: T[]) => Promise<R[]>,
-    private options: {
+    private readonly batchHandler: (items: T[]) => Promise<R[]>,
+    private readonly options: {
       maxBatchSize?: number;
       maxWaitMs?: number;
     } = {}

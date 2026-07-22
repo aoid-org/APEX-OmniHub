@@ -220,6 +220,7 @@ export function SkillForge() {
               </div>
 
               <button
+                type="button"
                 onClick={handleNext}
                 disabled={isCurrentFieldEmpty || loading}
                 className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -256,6 +257,7 @@ export function SkillForge() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleReset}
                 className="bg-amber-500/20 border border-amber-500 text-amber-300 font-semibold py-3 px-8 rounded-lg hover:bg-amber-500/30 transition-all"
               >

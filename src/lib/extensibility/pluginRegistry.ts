@@ -39,8 +39,8 @@ interface PluginMetrics {
 
 class PluginRegistry {
   private static instance: PluginRegistry;
-  private plugins: Map<string, PluginManifest> = new Map();
-  private metrics: Map<string, PluginMetrics> = new Map();
+  private readonly plugins: Map<string, PluginManifest> = new Map();
+  private readonly metrics: Map<string, PluginMetrics> = new Map();
 
   private constructor() {}
 

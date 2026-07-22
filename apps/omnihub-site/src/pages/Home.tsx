@@ -2226,6 +2226,7 @@ function RequestAccessModal({
     >
       <div className="modal-card">
         <button
+          type="button"
           className="modal-close"
           id="modal-close"
           aria-label={tx("modal.close")}
