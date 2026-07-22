@@ -85,9 +85,11 @@ During full E2E E2E and diagnostic verification (`diag-console.spec.ts`) against
 
 ---
 
-## 6. Post-Sprint Layout & Governance Remediation (PR #1640 — Merged | PR #1641 — Merged | PR #1642 — Merged)
+## 6. Post-Sprint Layout & Governance Remediation (PR #1640 — Merged | PR #1641 — Merged | PR #1642 — Merged | PR #1644 — Merged | PR #1646 — Merged)
 
 Following the primary hardening sprint, the following updates were added to main/workspace branches:
 - **PR #1640 (Merged)**: Resolves lower-viewport safe-area overlap. Bottom right stack aligned, sun/moon theme selector corrected, PWA install button collision eliminated, and CTA size parity enforced.
 - **PR #1641 (Merged `5dd33caf` — 2026-07-17)**: Adds dynamic third-party onboarder, ConnectorKit persistence, and Cloudflare status probes. Squash-merged into `main`.
 - **PR #1642 (Merged `5c991065` — 2026-07-17)**: Tech debt audits and locked-file registries. Explicitly maps the repository-relative paths of the OmniBoard integration core and establishes the 5-tier responsive viewport truth table (`docs/debt-closeout/`). No source code files modified. Squash-merged into `main`.
+- **PR #1644 (Merged `418c4840` — 2026-07-17)**: Relocates the PWA install trigger from the OmniDash header into the Settings modal (`SettingsModule.tsx` renders `<PWAInstallButton inline />`; `OmniDashShell.tsx` no longer renders it in the header). Adds `tests/lib/PWAInstallButton.spec.tsx`. This merge was not canon-synced until the 2026-07-21 pass (`.understand-anything/CANONICAL_STATE_2026-07-21.md`) — a documentation gap now closed.
+- **PR #1646 (Merged `48e8b7e` — 2026-07-21T22:34:37Z)**: `fix(accessibility): WCAG AA contrast ratios in landing.css & 100% test coverage for apex-arise`. Also carried CI/security remediation: `dompurify` patched to 3.4.12 (cleared a same-day-published CVE), verified the `@opentelemetry/*` bump resolves `GHSA-45rx-2jwx-cxfr`, and fixed the `SonarCloud Scan` step to route through Java 21 (`SONAR_SCANNER_JAVA_EXE_PATH`) after SonarQube Cloud dropped Java <21 support on 2026-07-20 — confirmed via `sonarqubecloud[bot]` "Quality Gate Passed" and a final green `build-and-test`. This same follow-up pass also found and removed a fabricated dependency-audit claim in `docs/APEX_AGENT_OPERATIONS.md` §9.13 that had been on the branch before this session started (see `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md`). See `.understand-anything/CANONICAL_STATE_2026-07-21.md` §3–4 for full evidence.
