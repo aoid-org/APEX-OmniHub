@@ -7,30 +7,33 @@ export interface ArmageddonCertificationPlaqueProps {
 }
 
 const ARMAGEDDON_CERT_DATA = {
-  runId: 'e982d187-3363-4295-99c3-3cecc3c410f0',
-  date: 'Wed, 22 Jul 2026 12:54:25 GMT',
+  runId: 'eb989339-e991-4e6d-b271-459401a035e2',
+  date: 'Wed, 22 Jul 2026 16:31:33 GMT',
   verdict: 'CERTIFIED',
   grade: 'A',
   score: 100,
   level: 7,
   mode: 'LIVE_FIRE',
-  seed: 468941141,
+  seed: 3444721184,
   target: 'APEX-OmniHub Orchestrator API (staging)',
   targetUrl: 'https://apex-orchestrator-api-staging.onrender.com',
-  pdfPath: '/certificates/ARMAGEDDONLevel7CERTIFIEDe982d187.pdf',
+  pdfPath: '/certificates/ARMAGEDDONLevel7CERTIFIEDeb989339.pdf',
   jsonPath: '/certificates/certificatereport.json',
   attestation: {
     spec: 'armageddon-attestation/1.0',
     algorithm: 'ed25519',
     chainId: 'armageddon:37557e9ef2e85246',
     keyId: '37557e9ef2e85246',
-    merkleRoot: '2bf66a8e88011499e86bacff0591abd9ed92cdcfbb65d2e0e7962f72b38cbba5',
-    digest: '6748cefa6a3db1083a68e76be197478ad16ca6933fe80a8020e3952b295fffb9',
-    signature: 'd54ZNh4uzWV0jfbtaxmMp3G7EZv+gy3qRSRFmA+gXilWA3EpCqpLieky340j/C6pXkg3l5fBO2qc0dULFXpXDQ==',
+    merkleRoot: '3eee864cbbaaeaedf9c619f1f19c7621b9cacdf753671ca1a6e82b26b0e73073',
+    digest: 'ed90801169c74b2ece1ff84fa0dbc3928322805ab81f5f6e0601fbc3a77a891b',
+    signature: 't/WF+ff73ofZGyuoPBU5ydOHkT3rNoaEiDro5ero8ZY2/nxA/YulCfRcVUqtLA5dI54yBQA14aDlfE6ZjuyfAg==',
   },
   batteries: [
-    { id: 10, name: 'Goal Hijack', code: 'B10_GOAL_HIJACK', tests: 5, blocked: 5, breaches: 0, durationMs: 2700 },
-    { id: 13, name: 'Supply Chain', code: 'B13_SUPPLY_CHAIN', tests: 5, blocked: 5, breaches: 0, durationMs: 3402 },
+    { id: 10, name: 'Goal Hijack', code: 'B10_GOAL_HIJACK', tests: 5, blocked: 5, breaches: 0, durationMs: 22084 },
+    { id: 11, name: 'Tool Misuse', code: 'B11_TOOL_MISUSE', tests: 5, blocked: 5, breaches: 0, durationMs: 23846 },
+    { id: 12, name: 'Memory Poison', code: 'B12_MEMORY_POISON', tests: 5, blocked: 5, breaches: 0, durationMs: 21607 },
+    { id: 13, name: 'Supply Chain', code: 'B13_SUPPLY_CHAIN', tests: 5, blocked: 5, breaches: 0, durationMs: 21209 },
+    { id: 14, name: 'Indirect Injection', code: 'B14_INDIRECT_INJECTION', tests: 5, blocked: 5, breaches: 0, durationMs: 602 },
   ],
 };
 

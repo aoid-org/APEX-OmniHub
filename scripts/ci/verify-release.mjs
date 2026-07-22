@@ -19,6 +19,7 @@ const verifyScripts = [
   { name: "verify:supabase-security", desc: "Supabase table RLS & functions audit" },
   { name: "verify:edge-functions",    desc: "Gate 29: frontend-referenced edge functions exist (+deployed when token present)" },
   { name: "verify:claim-hygiene",     desc: "Launch badge & public copy alignment" },
+  { name: "verify:armageddon-attestation", desc: "Armageddon certificate signature & plaque drift check" },
   { name: "verify:supply-chain",      desc: "Dependency provenance & lockfile checks" },
   { name: "verify:cloudflare-pages-contract", desc: "Cloudflare Pages build/output contract" },
 ];
