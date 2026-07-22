@@ -1639,3 +1639,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - Establishes clear single-developer bus-factor recovery sequence and master credential inventory (`C:\Users\sinyo\Desktop\ENV\APEX-OmniHub - ENV.md` with exact `\_` normalization).
 - Specifies `.github/CODEOWNERS` bypass protocols and designated backup maintainer rules (`@apex-devops` / `@apex-emergency-ops`) for emergency P0 hotfixes without disabling branch protection rules.
 - Documents offline local build (`npm run build`) and direct Cloudflare Pages deployment (`npx wrangler pages deploy dist --project-name=apex-omnihub`) for emergency recovery when CI runners are blocked.
+
+## 9.34 Post-CI release workflow lockfile synchronization (2026-07-22)
+
+**Changed files:** `bun.lock` (lockfile sync).
+
+- **Root cause:** CI workflow steps running `bun install --frozen-lockfile --ignore-scripts` (e.g. in `.github/workflows/release.yml`, `integration.yml`, `deploy-production-cf-direct.yml`) failed with `error: lockfile had changes, but lockfile is frozen` due to drift after package updates to `@opentelemetry/*` dependencies in `package.json`.
+- **Remediation:** Regenerated `bun.lock` via `bun install --ignore-scripts`.
+- **Verification:** Verified zero lockfile drift via `node scripts/ci/check-lockfile-sync.mjs` (`npm run check:lockfiles`), clean frozen install via `bun install --frozen-lockfile --ignore-scripts`, OmniDash invariants via `npm run check:omnidash` (43/43 PASS), and TypeScript typecheck via `npx tsc --noEmit` (exit 0).
+- **Operational impact:** CI release and deployment workflows can now run `bun install --frozen-lockfile --ignore-scripts` without lockfile frozen errors. No deployed service, runtime app behavior, secrets, DB tables/migrations, or production start command changed.
+
