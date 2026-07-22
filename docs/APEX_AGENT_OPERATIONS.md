@@ -251,6 +251,15 @@ Required before merge:
 
 ---
 
+## 9. Dependency & Vulnerability Management
+
+When updating operational dependencies (e.g., resolving Dependabot alerts in `package.json`, `package-lock.json`, or `orchestrator/uv.lock`), you must update this document in the same PR to satisfy the CI `ops-doc-guard`.
+
+**Recent Audits & Patches:**
+- **2026-07-22:** Resolved 15 critical Dependabot alerts across the Node.js ecosystem (`immutable`, `fast-uri`, `brace-expansion`, `dompurify`, `js-yaml`, `adm-zip`) and Python ecosystem (`setuptools v83.0.0`, `torch v2.13.0`). Tested and validated successfully via full CI suite.
+
+---
+
 ## 9. Change history — 2026-06-19 restoration (dead → demo-ready)
 
 | Commit(s) | Change | Why |
