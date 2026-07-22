@@ -29,3 +29,6 @@ jobs:
 
       - name: Check operations-doc drift
         run: node scripts/ci/check-ops-doc-drift.mjs
+
+      - name: Check operations-doc claim integrity
+        run: node scripts/ci/check-ops-doc-claim-integrity.mjs
