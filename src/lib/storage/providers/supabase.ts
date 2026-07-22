@@ -24,8 +24,8 @@ import type {
 // ============================================================================
 
 export class SupabaseStorage implements IStorage {
-  private client: SupabaseClient<Database>
-  private debug: boolean
+  private readonly client: SupabaseClient<Database>
+  private readonly debug: boolean
 
   constructor(options: {
     url: string

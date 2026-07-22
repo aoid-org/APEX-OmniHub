@@ -89,6 +89,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 id="byom-modal-title" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>Connect Your AI</h2>
           <button 
+            type="button"
             onClick={onClose}
             style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}
           >

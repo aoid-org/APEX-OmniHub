@@ -234,6 +234,7 @@ export function OnboardingWizard() {
           </div>
 
           <button
+            type="button"
             onClick={analyzeBusiness}
             disabled={!sessionData.description || !sessionData.goal || isAnalyzing}
             className="w-full py-4 bg-white text-black font-bold rounded-xl text-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
@@ -267,7 +268,7 @@ export function OnboardingWizard() {
                 ))}
               </div>
             </div>
-            <button onClick={() => selectTier('BASIC')} className="w-full py-3 text-gray-500 hover:text-white transition">
+            <button type="button" onClick={() => selectTier('BASIC')} className="w-full py-3 text-gray-500 hover:text-white transition">
               Initialize Base Only (Free)
             </button>
           </div>
@@ -318,6 +319,7 @@ export function OnboardingWizard() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => selectTier('PRO')}
                   className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-lg shadow-lg shadow-emerald-900/20 transition-all transform hover:scale-[1.02]"
                 >
@@ -339,12 +341,14 @@ export function OnboardingWizard() {
 
           <div className="bg-[#0A0A0A] p-6 border border-white/10 rounded-2xl space-y-4">
             <button
+              type="button"
               onClick={() => handleOAuth('google')}
               className="w-full flex items-center justify-center gap-2 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition"
             >
               Continue with Google
             </button>
             <button
+              type="button"
               onClick={() => handleOAuth('apple')}
               className="w-full flex items-center justify-center gap-2 py-3 bg-black text-white font-semibold rounded-lg border border-white/20 hover:bg-gray-900 transition"
             >
@@ -394,6 +398,7 @@ export function OnboardingWizard() {
             <p className="text-center text-sm text-gray-500 mt-4">
               {authState.mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
               <button
+                type="button"
                 onClick={() => setAuthState({...authState, mode: authState.mode === 'signup' ? 'signin' : 'signup'})}
                 className="ml-2 text-blue-400 hover:text-blue-300 underline"
               >
