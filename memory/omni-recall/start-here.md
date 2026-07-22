@@ -1,6 +1,6 @@
 ---
-version: 1.3.2
-last_audited: 2026-07-16
+version: 1.3.3
+last_audited: 2026-07-22
 status: verified
 ---
 
@@ -187,7 +187,18 @@ The system should:
 - **Doc-fidelity files updated to final state:** `README.md`, `.understand-anything/CANONICAL_STATE_2026-07-21.md` (rewritten in place — same calendar day, one canonical file rather than a duplicate), `docs/APEX_AGENT_OPERATIONS.md` (fabricated section removed), `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md`, `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md`, this file.
 - **Follow-up mechanics:** PR #1646's branch is merged history now — per standing instructions, this follow-up work moves to the designated branch (`claude/pr-1646-ci-gates-8jkn43`), restarted fresh off latest `main` (`48e8b7e`), as a new PR rather than stacked onto already-merged history.
 
+## Session 2026-07-22 — PR #1653/#1654 merged; PR #1655 open (release-gate audit); self-correction on gate-scope claim
 
+- **PR #1653 — MERGED** (`203c0a9`, 2026-07-22T12:10:18-06:00): "completely resolve 15 dependabot vulnerabilities in npm and python ecosystems."
+- **PR #1654 — MERGED** (`1048eb5`, 2026-07-22T14:04:10-06:00, now `main` HEAD as of this session): fixed `verify:claim-hygiene`, which failed because the Armageddon Level 7 certification plaque/certificate (from PR #1652) had no `approved-claims.json` entry and its evidence doc described a different run than what shipped. Independently re-verified the Ed25519 attestation is genuine via a live signature check against `apexbusiness-systems/Armageddon-Core`'s production pubkey endpoint (`https://armageddontest.icu/api/attestation/pubkey`) — not fabricated. Replaced cert files/plaque data with the fully-verified run, added `scripts/ci/verify-armageddon-attestation.mjs` as a permanent regression gate (re-verifies signature + plaque/report drift on every `verify:release`). Full record: `docs/APEX_AGENT_OPERATIONS.md` §9.35.
+- **PR #1655 — OPEN, DRAFT, NOT MERGED** as of this session (`mergeable_state: blocked`; head `b2f05d2a470c830c659adf45ef7f4f5d345ae412` on `claude/post-ci-workflow-error-9mcg2i`, base `main@1048eb5`). Verified directly via GitHub MCP `pull_request_read` — do not assume merged without re-checking. A full release-gate audit of `scripts/ci/*` (37 files) against `package.json`/`verify-release.mjs`/every workflow YAML found:
+  1. `verify-release.mjs` registered `verify:cloudflare-pages-contract` twice — fixed (dup removed).
+  2. Four real, working gates were never wired into any CI workflow, three of them documented as enforced "CI Guards" in `APEX_SURFACE_REGISTRY.md`: `guard-agent-destructive-actions.mjs`, `check-lockfile-sync.mjs`, `check-edge-fn-manifest.mjs` (all wired into `ci-runtime-gates.yml`'s `build-and-test`, pre-install) and `verify-supabase-env-alignment.mjs` (wired into `ops-doc-guard.yml`/diagnostic step, non-blocking by design).
+  3. `release-lattice.mjs` (a local-only, intentionally-un-wired convenience script) had a duplicate-stage bug — 3 of 15 stages ran the identical command; collapsed to one labeled stage.
+  4. New forward guard added: `scripts/ci/check-ops-doc-claim-integrity.mjs`, wired into `ops-doc-guard.yml`. Cross-checks any `APEX_AGENT_OPERATIONS.md` section citing an inline commit SHA next to a "Changed files" line against that commit's real `git diff`. Full record: `docs/APEX_AGENT_OPERATIONS.md` §9.36.
+- **Self-correction (caught pre-push, this session):** The first draft of §9.36 overstated that the new `check-ops-doc-claim-integrity.mjs` gate "automates the process that caught the PR #1646 fabricated dependency-audit claim" (see `wiki/corrections/005-fabricated-dependency-audit-claim.md` for that original incident). On re-audit this was caught as false: the gate only fires on sections citing an inline commit SHA next to a Changed-files line; PR #1646's fabrication cited a PR number with no inline SHA, so this gate would **not** have caught it — it cross-checks 0 existing sections today. `docs/APEX_AGENT_OPERATIONS.md` §9.36 was corrected (commit `b2f05d2`) to state the honest forward-guard-only scope before pushing. Full writeup: `wiki/corrections/006-claim-integrity-gate-scope-overstatement.md` (new this session) — a second instance of the exact failure mode `wiki/corrections/2026-05-28-verify-gate-authenticity.md` and `005` both warn about ("a gate's or claim's plain-language description must not exceed what it actually checks").
+- **No release cut this session.** Version remains `1.8.3` as of last known cut; not independently re-verified this pass (docs sync only, scoped to `memory/omni-recall/`).
+- **Docs synced this session (scoped to `memory/omni-recall/` only — other agents own root `README.md`/`CLAUDE.md`/`APEX_SURFACE_REGISTRY.md` and `.understand-anything/` this session):** this file, `wiki/corrections/006-claim-integrity-gate-scope-overstatement.md` (new), `docs/release/RELEASE_RUBRIC_SCORE.md` (staleness note added, no new score fabricated), `docs/release/RELEASE_GATE_AUDIT_2026-07-22.md` (new dated snapshot).
 
 
 

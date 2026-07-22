@@ -178,7 +178,14 @@ jobs:
       - name: Validate Additive Migrations
         run: bun run scripts/ci/check-additive-migrations.ts
 
+      - name: Agent destructive-action / hallucination guardrail
+        run: node scripts/ci/guard-agent-destructive-actions.mjs
 
+      - name: Lockfile sync guard (package.json <-> bun.lock/package-lock.json)
+        run: node scripts/ci/check-lockfile-sync.mjs
+
+      - name: Edge function manifest drift guard
+        run: node scripts/ci/check-edge-fn-manifest.mjs
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -424,6 +431,13 @@ jobs:
         run: npm run test:assets
         env:
           BASE_URL: http://localhost:4173
+
+      - name: Supabase environment alignment inventory (non-blocking)
+        run: node scripts/ci/verify-supabase-env-alignment.mjs
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
 
       - name: Run Playwright render tests (render-smoke mode — no backend required)
         # Render-smoke mode: global-setup skips the Supabase healthcheck and

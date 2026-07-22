@@ -21,7 +21,6 @@ const verifyScripts = [
   { name: "verify:claim-hygiene",     desc: "Launch badge & public copy alignment" },
   { name: "verify:armageddon-attestation", desc: "Armageddon certificate signature & plaque drift check" },
   { name: "verify:supply-chain",      desc: "Dependency provenance & lockfile checks" },
-  { name: "verify:cloudflare-pages-contract", desc: "Cloudflare Pages build/output contract" },
 ];
 
 // Allowlist of PATH entries that are safe for subprocess execution.
