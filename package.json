@@ -96,6 +96,7 @@
     "verify:supabase-security": "node scripts/ci/verify-supabase-security.mjs",
     "verify:edge-functions": "node scripts/ci/verify-edge-function-existence.mjs",
     "verify:claim-hygiene": "node scripts/ci/verify-claim-hygiene.mjs",
+    "verify:armageddon-attestation": "node scripts/ci/verify-armageddon-attestation.mjs",
     "verify:ci-integrity": "node scripts/ci/verify-ci-integrity.mjs",
     "verify:supply-chain": "node scripts/ci/verify-supply-chain.mjs",
     "verify:release": "node scripts/ci/verify-release.mjs",
