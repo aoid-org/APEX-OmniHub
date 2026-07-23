@@ -200,5 +200,10 @@ The system should:
 - **No release cut this session.** Version remains `1.8.3` as of last known cut; not independently re-verified this pass (docs sync only, scoped to `memory/omni-recall/`).
 - **Docs synced this session (scoped to `memory/omni-recall/` only — other agents own root `README.md`/`CLAUDE.md`/`APEX_SURFACE_REGISTRY.md` and `.understand-anything/` this session):** this file, `wiki/corrections/006-claim-integrity-gate-scope-overstatement.md` (new), `docs/release/RELEASE_RUBRIC_SCORE.md` (staleness note added, no new score fabricated), `docs/release/RELEASE_GATE_AUDIT_2026-07-22.md` (new dated snapshot).
 
+### Outcome (same session, later) — PR #1655 MERGED
+
+- **PR #1655 merged:** squash-merged to `main` as `6bf4814` (parent `1048eb5`) by `apexbusiness-systems`. Branch tip at merge was `ea232b2` (the docs-accuracy commit from this same session's 3-agent swarm, pushed after `b2f05d2`) — all required checks green on that commit before merge: `build-and-test`, `Governance gate`, `Terraform Expression Drift Gate`, `Architectural Boundary Enforcement`, SonarCloud Quality Gate ("0 New issues", "0 Security Hotspots"), both Cloudflare Pages previews. The "OPEN, DRAFT, NOT MERGED" line above was accurate when written and is preserved as the historical record; this entry supersedes it with the confirmed outcome. `main` HEAD is now `6bf4814`.
+- This also means every doc in this session's docs-sync pass that said "PR #1655 open/not yet merged as of this note" (this file's prior entry, `RELEASE_RUBRIC_SCORE.md`, `wiki/corrections/006`, `.understand-anything/CANONICAL_STATE_2026-07-22.md`) is a **point-in-time snapshot** now one step behind reality, per this folder's established append-only convention (see the PR #1646 precedent above) — not an error, and not edited in place; this entry is the supersession record.
+
 
 
