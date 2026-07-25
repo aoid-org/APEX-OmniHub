@@ -112,6 +112,11 @@ export const DEFAULT_POLICY_RULES: readonly RoutingRule[] = [
 // Policy Engine
 // ============================================================================
 
+// Pre-sort the default rules to avoid O(N log N) sorting on every evaluation
+const PRE_SORTED_DEFAULT_RULES = [...DEFAULT_POLICY_RULES].sort(
+  (a, b) => b.priority - a.priority,
+);
+
 export interface PolicyOverride {
   /** The rule that triggered the override */
   readonly rule: RoutingRule;
@@ -141,8 +146,11 @@ export function evaluatePolicy(
 ): PolicyOverride | null {
   const normalized = taskDescription.toLowerCase();
 
-  // Sort by priority descending
-  const sortedRules = [...rules].sort((a, b) => b.priority - a.priority);
+  // Sort by priority descending (reuse pre-sorted default if unmodified)
+  const sortedRules =
+    rules === DEFAULT_POLICY_RULES
+      ? PRE_SORTED_DEFAULT_RULES
+      : [...rules].sort((a, b) => b.priority - a.priority);
 
   for (const rule of sortedRules) {
     // Skip if rule would produce the same target (no-op override)
@@ -155,14 +163,11 @@ export function evaluatePolicy(
       continue;
     }
 
-    // Check keyword conditions
-    const keywordMatches = rule.matchKeywords.filter((kw) =>
-      normalized.includes(kw.toLowerCase()),
-    );
-
+    // ⚡ Bolt: Replaced .filter().length with .every()/.some() to allow short-circuiting
+    // and prevent O(N) intermediate array allocations
     const keywordsMatch = rule.requireAll
-      ? keywordMatches.length === rule.matchKeywords.length
-      : keywordMatches.length > 0;
+      ? rule.matchKeywords.every((kw) => normalized.includes(kw.toLowerCase()))
+      : rule.matchKeywords.some((kw) => normalized.includes(kw.toLowerCase()));
 
     if (keywordsMatch) {
       return {
