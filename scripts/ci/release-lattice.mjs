@@ -7,9 +7,7 @@ const npmTest = (...args) => ['npm', ['run', 'test', '--', ...args]];
 const stages = [
   ['unit tests', npmRun('test')],
   ['integration tests', npmRun('test:integration')],
-  ['replay consistency tests', npmTest('tests/lib/apex-control-plane.spec.ts')],
-  ['duplicate delivery tests', npmTest('tests/lib/apex-control-plane.spec.ts')],
-  ['stale-event tests', npmTest('tests/lib/apex-control-plane.spec.ts')],
+  ['idempotency / replay / duplicate-delivery / stale-event tests', npmTest('tests/lib/apex-control-plane.spec.ts')],
   ['policy diff tests', npmRun('zero-trust:baseline')],
   ['prompt-defense checks', npmRun('prompt-defense:analyze')],
   ['deterministic eval', npmRun('eval:ci')],

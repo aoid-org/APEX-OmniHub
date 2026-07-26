@@ -51,7 +51,7 @@ export const availableIntegrations: IntegrationDef[] = [
 ];
 
 class ConnectorRegistryImpl implements ConnectorRegistry {
-  private connectors = new Map<string, Connector>();
+  private readonly connectors = new Map<string, Connector>();
 
   register(provider: string, connector: Connector): void {
     if (this.connectors.has(provider)) {

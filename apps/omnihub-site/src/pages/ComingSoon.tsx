@@ -24,6 +24,7 @@ export const ComingSoonPage = memo(function ComingSoonPage({
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       {/* Breadcrumb */}
       <button
+        type="button"
         onClick={() => navigate('/omnidash')}
         className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-6"
       >

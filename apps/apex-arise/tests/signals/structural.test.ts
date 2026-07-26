@@ -227,4 +227,14 @@ describe("collectStructural nesting coverage", () => {
     expect(depth.raw).toContain("nested.ts");
     expect(depth.raw).toContain("1 file(s) exceed depth 4");
   });
+
+  it("ignores files smaller than the current largest file", () => {
+    mockFiles = [
+      makeFile("/fake/repo/src/a.ts", 10),
+      makeFile("/fake/repo/src/b.ts", 5),
+    ];
+    const [, equality] = collectStructural(SCAN_TARGETS, REPO_ROOT);
+    expect(equality.raw).toContain("a.ts");
+    expect(equality.raw).not.toContain("b.ts");
+  });
 });

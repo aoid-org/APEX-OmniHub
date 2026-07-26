@@ -110,8 +110,8 @@ export class CircuitBreaker {
   private state: 'closed' | 'open' | 'half-open' = 'closed';
   
   constructor(
-    private threshold: number = 5,
-    private timeout: number = 60000 // 1 minute
+    private readonly threshold: number = 5,
+    private readonly timeout: number = 60000 // 1 minute
   ) {}
   
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -186,7 +186,7 @@ export async function loadResourceWithFallback(
  * Degraded mode checker
  */
 export class ServiceHealthChecker {
-  private services = new Map<string, boolean>();
+  private readonly services = new Map<string, boolean>();
   
   markServiceDown(service: string): void {
     this.services.set(service, false);

@@ -18,6 +18,16 @@ Each correction should capture:
 
 ## Entries
 
+Numbered correction files in this directory (index — see each file for full detail):
+
+- `001-migration-linter-preceding-line.md` (2026-05-26) — additive-migration allowlist comment must precede the line it exempts.
+- `002-sonarqube-prng-hotspot.md` (2026-05-26) — `Math.random()` in mock/simulation code still trips SonarQube S2245; use a `crypto.getRandomValues`-backed helper.
+- `003-sonar-coverage-migrations-exclusion.md` (2026-05-26) — SQL migrations need an explicit `sonar.coverage.exclusions` entry, not an automatic exemption.
+- `004-omniboard-dual-surface-scoping.md` (2026-06-20, superseded by the entry below) — OmniBoard vs. Links surface ownership.
+- `005-fabricated-dependency-audit-claim.md` (2026-07-21) — a fabricated "dependency audit fixed" entry shipped to `main` in PR #1646's `docs/APEX_AGENT_OPERATIONS.md`; `docs:check` only validates links/pointers, not claim truthfulness.
+- `006-claim-integrity-gate-scope-overstatement.md` (2026-07-22) — a new CI gate's documented coverage overstated what its matcher logic actually checks; caught and corrected pre-push on PR #1655.
+- `2026-05-28-verify-gate-authenticity.md` (2026-05-28) — verify gates must contain real logic, not fake-pass stubs; the AG2-era `verify:ci-integrity` was itself a fake-pass script.
+
 ### 2026-05-29 — Single-agent assumption + stale HEAD (global, permanent)
 
 - **Original wrong assumption:** Omni-Recall framed the runtime as Claude/GPT-only and the
