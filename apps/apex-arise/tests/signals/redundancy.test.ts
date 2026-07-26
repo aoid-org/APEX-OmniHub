@@ -138,4 +138,9 @@ describe("collectRedundancy", () => {
 
     expect(result.methodNote).toContain("jscpd");
   });
+
+  it("stringifies a non-Error thrown by execFileSync", () => {
+    mockExecFileSync.mockImplementation(() => { throw "raw jscpd error"; });
+    expect(() => collectRedundancy(SCAN_TARGETS, REPO_ROOT)).toThrow("raw jscpd error");
+  });
 });

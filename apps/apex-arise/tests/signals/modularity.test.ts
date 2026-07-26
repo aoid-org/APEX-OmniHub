@@ -93,4 +93,9 @@ describe("collectModularity", () => {
 
     expect(result.methodNote).toContain("dependency-cruiser");
   });
+
+  it("stringifies a non-Error thrown by execFileSync", () => {
+    mockExecFileSync.mockImplementation(() => { throw "raw dp error"; });
+    expect(() => collectModularity(SCAN_TARGETS, REPO_ROOT)).toThrow("raw dp error");
+  });
 });

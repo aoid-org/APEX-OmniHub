@@ -1,6 +1,6 @@
 ---
-version: 1.3.7
-last_audited: 2026-07-17
+version: 1.3.9
+last_audited: 2026-07-22
 status: verified
 ---
 
@@ -25,7 +25,7 @@ OmniBoard now exposes connector operations through the existing APEX agent path 
 
 **Verification (CP-16):** OmniBoard's chat-native integration pathways are structurally proven via the `cp-16` E2E test matrix across 4 diverse topologies: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**. This matrix strictly enforces the **Honest Gateway Law**, ensuring the FSM gracefully fails closed and reports accurate unavailability when the backend orchestrator is unreachable, without leaking trace errors.
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-17
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-22
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
@@ -62,11 +62,11 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-07-16, git-verified)
+## Platform Statistics (Repository Snapshot 2026-07-22, git-verified)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 321 TypeScript/TSX files (233 `.ts` + 88 `.tsx`)  |
+| **Source Files (`src/`)**                        | 322 TypeScript/TSX files (234 `.ts` + 88 `.tsx`)  |
 | **React Components (`src/`)**                    | 88 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
 | **Edge Functions (`supabase/functions/`)**       | 35 directories (34 function dirs + `_shared`)     |
@@ -74,9 +74,9 @@ The platform relies on a "Holy Trinity" architecture:
 | **CI/CD Workflows (`.github/workflows/`)**       | 22 workflow files                                 |
 | **Test Specs (`tests/` + `e2e` + `sim` + app/orchestrator/package tests)** | 388 spec/test source files in the current scan; latest pass counts are recorded in audit/validation artifacts |
 | **Custom Hooks (`src/` + app surfaces)**         | 23 hook files matching `use*.ts*` in `src/`       |
-| **Orchestrator (Python)**                        | ~130 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
+| **Orchestrator (Python)**                        | 148 tracked files (Temporal workers, activities, security; excludes `__pycache__`) |
 
-**Latest repo-history note:** current audited baseline for this documentation sync is `5c991065` — PR #1641 (`5dd33caf`, OmniBoard Integration Runtime: full page, registry bootstrap, IntegrationOnboarder, ConnectorKit persistence, CF status probe) and PR #1642 (`5c991065`, tech debt closeout audits and PR lock registries) both squash-merged into `main` on 2026-07-17. Release line remains **1.8.3** (`package.json`). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **108** (2026-07-17 git-verified; 2 new migrations in PR #1641). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-17.md`](./.understand-anything/CANONICAL_STATE_2026-07-17.md) for the current platform state assessment.
+**Latest repo-history note:** current audited baseline for this documentation sync is `1048eb5` on `main` — PR #1654 (`fix(ci): resolve verify:claim-hygiene with verified Armageddon evidence`), merged 2026-07-22. Since the prior `48e8b7e` (PR #1646) baseline recorded below, `main` picked up PR #1648 (SonarQube audit-debt cleanup + 100% `apex-arise` test coverage), #1649 (lockfile sync fix for post-CI release workflows), #1650–#1651 (supply-chain security audit fixes), #1652 (Armageddon Level 7 Certification Plaque feature), #1653 (dependabot: 15 npm/Python vulnerabilities resolved), and #1654 (claim-hygiene fix for the Armageddon evidence gate). A follow-on PR #1655 (release-gate CI audit — wiring 4 previously-orphaned CI gates, a `verify-release.mjs` duplicate-stage fix, and a new `check-ops-doc-claim-integrity.mjs` gate) is open for review on branch `claude/post-ci-workflow-error-9mcg2i` and **not yet merged** as of this doc pass. Prior baseline detail: `48e8b7e` was PR #1646 (`fix(accessibility): WCAG AA contrast ratios in landing.css & 100% test coverage for apex-arise`), squash-merged 2026-07-21T22:34:37Z. Between the earlier `418c4840` (PR #1644) baseline and that one, `main` also picked up `eeb86fc` (`feat(manifesto): brand-unify apex-manifesto, add MAN Mode section, wire ecosystem links` — touches only `apps/omnihub-site/public/{apex-manifesto,manifesto}.html`, out of scope for this doc pass per root `CLAUDE.md`). PR #1646 itself: WCAG AA contrast fixes in `landing.css`, 100% `apex-arise` test coverage, plus CI/security remediation (dompurify patch for a same-day CVE, verified opentelemetry fix, SonarCloud scanner routed to Java 21 via `SONAR_SCANNER_JAVA_EXE_PATH` after SonarQube Cloud dropped Java <21 support 2026-07-20). A fabricated dependency-audit claim that had been sitting in `docs/APEX_AGENT_OPERATIONS.md` §9.13 since before this PR (claiming an `npm audit fix` that never touched `package-lock.json`) was found and removed in the same follow-up pass — see `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md`. Release line remains **1.8.3** (`package.json`, unchanged). **Releases are cut manually by the owner** (deliberate version bump via `changeset version` → `chore: version packages`); CI validates and `compliance.yml` attaches SBOM evidence. CI does not decide or certify releases. Current release evidence boundary: repo-verified remediations are tracked in [`docs/release/release-validation-matrix.json`](./docs/release/release-validation-matrix.json); full production certification still requires owner/live validation for items labeled `BLOCKED` or `REQUIRES_MANUAL_VALIDATION`. Workflow count: **22**. Edge function dirs: **35** (34 + `_shared`). SQL migrations: **108** forward + 4 rollback = **112** total (2026-07-22 git-verified; forward count unchanged since PR #1641). See [`CURRENT_PLATFORM_STATE_2026_07_16.md`](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md) and [`CANONICAL_STATE_2026-07-22.md`](./.understand-anything/CANONICAL_STATE_2026-07-22.md) for the current platform state assessment.
 
 
 ---
@@ -144,7 +144,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ---
 
-## Edge Functions (34 Directories in Repository, including `_shared`)
+## Edge Functions (35 Directories in Repository: 34 function dirs + `_shared`)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -168,14 +168,14 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 ## Repository Layout
 
 ```
-/src                 - Core frontend/domain source tree (328 files: 234 .ts + 94 .tsx)
+/src                 - Core frontend/domain source tree (322 files: 234 .ts + 88 .tsx)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
-/supabase/migrations - Database schema (102 .sql files: 98 forward + 4 rollback)
-/supabase/functions  - Edge functions (33 function directories + _shared = 34 total)
-/orchestrator        - Temporal workers and orchestration services (~130 tracked files)
+/supabase/migrations - Database schema (112 .sql files: 108 forward + 4 rollback)
+/supabase/functions  - Edge functions (34 function directories + _shared = 35 total)
+/orchestrator        - Temporal workers and orchestration services (148 tracked files)
 /tests               - Automated test suite
 /.github/workflows   - CI/CD workflows (22 workflow files)
 ```

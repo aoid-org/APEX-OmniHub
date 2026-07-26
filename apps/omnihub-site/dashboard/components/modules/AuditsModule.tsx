@@ -5,6 +5,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { exportAuditLogCSV } from '@/dashboard/utils/exportAuditLog';
 import type { ModuleListItem } from '@/dashboard/components/ModuleRegistry';
+import { ArmageddonCertificationPlaque } from '@/dashboard/components/ArmageddonCertificationPlaque';
 
 interface ComplianceCheckResult {
   readonly label: string;
@@ -172,6 +173,9 @@ export default function AuditsModule({ onClose }: Props) {
 
   return (
     <ModuleShell state={shellState} onClose={onClose} onAction={handleAction}>
+      {/* Official Armageddon Level 7 Security Certification Plaque */}
+      <ArmageddonCertificationPlaque className="mb-4" />
+
       {/* Compliance summary — visible whenever we have any data */}
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">

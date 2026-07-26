@@ -90,4 +90,15 @@ describe("loadProposePolicy edge fields", () => {
 
     expect(() => loadProposePolicy()).toThrow(PolicyLoadError);
   });
+
+  it("throws PolicyLoadError if hard_blocked_always key is missing", async () => {
+    mockReadFileSync.mockReturnValue("tier_1_propose:\n  max_lines_changed: 100\n  max_files_changed: 2\n");
+    const { loadProposePolicy, PolicyLoadError } = await import("../../src/propose/policy-loader.js");
+    expect(() => loadProposePolicy()).toThrow(PolicyLoadError);
+  });
+  it("stringifies a non-Error thrown by readFileSync", async () => {
+    mockReadFileSync.mockImplementation(() => { throw "raw fs error"; });
+    const { loadProposePolicy } = await import("../../src/propose/policy-loader.js");
+    expect(() => loadProposePolicy()).toThrow("raw fs error");
+  });
 });
