@@ -23,12 +23,12 @@ export interface OmniConnectConfig {
 }
 
 export class OmniConnect {
-  private config: OmniConnectConfig;
-  private tokenStorage: EncryptedTokenStorage;
-  private policyEngine: PolicyEngine;
-  private translator: SemanticTranslator;
-  private entitlements: EntitlementsService;
-  private delivery: OmniLinkDelivery;
+  private readonly config: OmniConnectConfig;
+  private readonly tokenStorage: EncryptedTokenStorage;
+  private readonly policyEngine: PolicyEngine;
+  private readonly translator: SemanticTranslator;
+  private readonly entitlements: EntitlementsService;
+  private readonly delivery: OmniLinkDelivery;
 
   constructor(config: OmniConnectConfig) {
     this.config = config;

@@ -217,4 +217,15 @@ describe("index orchestrator (main)", () => {
     expect(snapshotInput.failures.length).toBeGreaterThanOrEqual(4);
     expect(stubbedExit).toHaveBeenCalledWith(0);
   });
+
+  it("stringifies a non-Error thrown value from a collector instead of crashing", async () => {
+    mockCollectAcyclicity.mockImplementation(() => { throw "raw string failure"; });
+    mockCollectModularity.mockReturnValue({ name: "modularity", score: 1, raw: "ok", methodNote: "ok" });
+    mockCollectRedundancy.mockReturnValue({ name: "redundancy", score: 1, raw: "ok", methodNote: "ok" });
+    mockCollectStructural.mockReturnValue([{ name: "depth", score: 1, raw: "ok", methodNote: "ok" }]);
+    mockWriteSnapshot.mockReturnValue("/fake/path/snapshot.md");
+    await import("../src/index.js");
+    const snapshotInput = mockWriteSnapshot.mock.calls[0][0];
+    expect(snapshotInput.failures.some(f => f.error.includes("raw string failure"))).toBe(true);
+  });
 });

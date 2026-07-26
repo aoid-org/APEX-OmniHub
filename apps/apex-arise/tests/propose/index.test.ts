@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as path from "node:path";
 import type { ModelResult, ProposePolicy, ProposeTarget } from "../../src/propose/types.js";
 
 const mockSelectRedundancyTarget = vi.fn();
@@ -211,6 +212,14 @@ describe("propose index orchestrator (main)", () => {
 
     const call = findWriteCall("CURRENT_ARISE_PROPOSE_REPORT");
     expect(call?.[0]).toContain("CURRENT_ARISE_PROPOSE_REPORT_2026_07_01.md");
-    expect(call?.[0]).toContain("memory/omni-recall/docs");
+    expect(call?.[0]).toContain(path.join("memory", "omni-recall", "docs"));
+  });
+
+  it("stringifies a non-Error thrown value during proposal generation", async () => {
+    mockSelectRedundancyTarget.mockImplementation(() => { throw "raw string error"; });
+    await import("../../src/propose/index.js");
+    expect(stubbedExit).toHaveBeenCalledWith(0);
+    const call = findWriteCall("CURRENT_ARISE_PROPOSE_REPORT");
+    expect(call?.[1]).toContain("raw string error");
   });
 });
