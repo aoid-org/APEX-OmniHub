@@ -1,46 +1,94 @@
-# Armageddon Test Suite — Executive Evidence Report
+# Armageddon Level 7 Certification — Evidence Record
 
-**Run ID:** `run-20260704-pr176-clean`  
-**Issued By:** APEX Business Systems Ltd. | Edmonton, AB  
-**Target Application:** APEX-OmniHub Enterprise SaaS  
-**Verification Date:** 2026-07-04  
-**Verdict:** **CERTIFIED (LEVEL 8 GOD MODE)**  
-**Aggregate Score:** **100/100 (Grade A)**  
+This document backs the "CERTIFIED" / attestation claims rendered by
+`ArmageddonCertificationPlaque.tsx` and shipped as
+`apps/omnihub-site/public/certificates/certificatereport.{json,md}`. It
+replaces an earlier version of this file that described a different,
+unrelated run (`run-20260704-pr176-clean`, ECDSA-P256, 33 batteries) and
+could not honestly back the artifact actually shipped in this repo.
 
----
+## What This Certifies (and Does Not)
 
-## 1. Executive Summary
-The Armageddon Test Suite executed a comprehensive failure-focused simulation against APEX-OmniHub on branch `apex/omnihub/20260704-pdf-certification-deterministic-clean` (PR #176). All 33 test batteries passed cleanly with zero unmitigated escapes, zero code duplication on new code, and full compliance with SonarCloud A-Grade quality thresholds.
+The Armageddon Test Suite is a product built and operated by APEX Business
+Systems Ltd. (repo `apexbusiness-systems/Armageddon-Core`, site
+`https://armageddontest.icu`) that runs adversarial security batteries
+against a target system and cryptographically signs the result.
 
-## 2. Battery Execution Summary
+**It is not an independent third-party audit, and it is not SOC 2, ISO, or
+any recognized compliance certification.** The shipped certificate says so
+explicitly in its own `legal_notice` field. "CERTIFIED" here means: the
+named build, at the named commit/deploy, passed the Armageddon Level 7
+battery suite under live-fire mode, with a tamper-evident, independently
+re-verifiable cryptographic receipt proving the report wasn't altered after
+signing. Category `internally_aligned` in `approved-claims.json` reflects
+that scope: real, verifiable, self-administered — not externally audited.
 
-| Battery ID | Name | Status | Iterations | Blocked | Breaches | Drift Score |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **B01** | Chaos Stress & Resource Starvation | **PASSED** | 500 | 500 | 0 | 0.00 |
-| **B02** | SSRF & OmniPort Boundary Defense | **PASSED** | 1,200 | 1,200 | 0 | 0.00 |
-| **B03** | Temporal Workflow Recovery & Cleanup | **PASSED** | 350 | 350 | 0 | 0.00 |
-| **B04** | Live-Fire Proof Telemetry & Waiver Verification | **PASSED** | 800 | 800 | 0 | 0.00 |
-| **B05** | Database Rate Limiting & Fail-Closed Enforcement | **PASSED** | 2,500 | 2,500 | 0 | 0.00 |
-| **B06** | Canonical UI Contract & Surface Freeze | **PASSED** | 160 | 160 | 0 | 0.00 |
-| **B07** | Tamper-Evident Attestation & Merkle Verification | **PASSED** | 450 | 450 | 0 | 0.00 |
+## Verified Run
 
-## 3. SonarCloud Quality Gate Compliance
-- **Duplication on New Code:** `0.0%` (Target: ≤3.0%)
-- **Cognitive Complexity Max:** `1` (Target: ≤15)
-- **Parameter Count Max:** `5` (Target: ≤7)
-- **ESLint Warnings:** `0` (Target: 0)
-- **Quality Gate Verdict:** **PASSED**
+- **Run ID:** `eb989339-e991-4e6d-b271-459401a035e2`
+- **Issued:** 2026-07-22T16:31:33.61Z
+- **Target:** APEX-OmniHub Orchestrator API (staging),
+  `https://apex-orchestrator-api-staging.onrender.com`
+- **Mode:** `LIVE_FIRE`, seed `3444721184`
+- **Verdict:** `CERTIFIED`, score 100/100, grade A
 
-## 4. Tamper-Evident Attestation
-```json
-{
-  "spec": "ARMAGEDDON-ATTESTATION-V1",
-  "algorithm": "ECDSA-P256-SHA256",
-  "chainId": "omnihub-prod-chain-01",
-  "keyId": "key-2026-root-01",
-  "merkleRoot": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "digest": "f489390238128390128309128309182309812039812093810293801928301923"
-}
+## Battery Results
+
+| Battery | Status | Iterations | Blocked | Breaches |
+|---|---|---|---|---|
+| B10 Goal Hijack | PASSED | 5 | 5 | 0 |
+| B11 Tool Misuse | PASSED | 5 | 5 | 0 |
+| B12 Memory Poison | PASSED | 5 | 5 | 0 |
+| B13 Supply Chain | PASSED | 5 | 5 | 0 |
+| B14 Indirect Injection | PASSED | 5 | 5 | 0 |
+
+## Cryptographic Attestation — Independently Verified
+
+The attestation block (`spec: armageddon-attestation/1.0`, `algorithm:
+ed25519`) is produced by real signing code, not placeholder data:
+
+- Merkle tree + Ed25519 signing: `packages/core/src/core/attestation.ts`
+  (`createAttestation`) in `Armageddon-Core`.
+- Key derivation from the provisioned `ARMAGEDDON_ATTESTATION_SEED` secret:
+  `packages/shared/src/attestation-key.ts` (`deriveAttestationKeyMaterial`).
+- Public key publication: `GET /api/attestation/pubkey`
+  (`armageddon-site/src/app/api/attestation/pubkey/route.ts`), deployed on
+  Cloudflare Workers at `armageddontest.icu`.
+
+On 2026-07-22, this claim was independently checked (not taken on trust)
+against the live production endpoint:
+
+```
+$ curl https://armageddontest.icu/api/attestation/pubkey
+{"spec":"armageddon-attestation/1.0","algorithm":"ed25519",
+ "keyId":"37557e9ef2e85246",
+ "publicKey":"8+lITUS7AyUP9xoocQkR7fNB//tUD3G6NcXwEGI+c1s=", ...}
 ```
 
-*Legal Disclaimer: Armageddon is designed for controlled sandbox and authorized non-production testing and does not guarantee breach prevention. Certification reflects results of the tested build/configuration at time of run.*
+That `keyId`/`publicKey` matches the attestation block embedded in
+`certificatereport.json` exactly. Re-deriving the Merkle root and digest
+from the report's raw battery data (using the same algorithm as
+`createAttestation`) and verifying the Ed25519 signature against the
+independently-fetched public key returns `[VALID]`:
+
+```
+merkleRoot 3eee864cbbaaeaedf9c619f1f19c7621b9cacdf753671ca1a6e82b26b0e73073
+digest     ed90801169c74b2ece1ff84fa0dbc3928322805ab81f5f6e0601fbc3a77a891b
+keyId      37557e9ef2e85246
+[VALID]
+```
+
+## Reproducing the Verification
+
+This is enforced continuously, not just checked once by hand:
+`scripts/ci/verify-armageddon-attestation.mjs` (wired into `verify:release`
+as `verify:armageddon-attestation`) re-runs this exact check against the
+committed `certificatereport.json` on every release verification, using a
+public key pinned in that script from the endpoint above, and additionally
+fails if `ArmageddonCertificationPlaque.tsx`'s hardcoded `ARMAGEDDON_CERT_DATA`
+ever drifts out of sync with the committed JSON.
+
+*Legal Notice (verbatim from the shipped certificate): This certification
+is valid only for the specific build, configuration, and environment tested
+at the time of this run. It does not constitute SOC 2, ISO, or compliance
+certification, nor does it guarantee breach prevention.*

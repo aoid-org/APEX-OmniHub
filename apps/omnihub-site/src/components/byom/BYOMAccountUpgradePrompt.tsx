@@ -17,7 +17,9 @@ export const BYOMAccountUpgradePrompt: React.FC = () => {
         <br/><br/>
         Ready to access advanced features like Persistent Agent Memory, Team Collaboration, and Managed Compute? Upgrade to a managed APEX account.
       </p>
-      <button style={{
+      <button
+        type="button"
+        style={{
         padding: '10px 20px',
         borderRadius: '8px',
         border: 'none',

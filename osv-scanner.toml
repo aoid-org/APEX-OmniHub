@@ -2,3 +2,23 @@
 id = "GHSA-848j-6mx2-7j84"
 ignoreUntil = 2026-08-31
 reason = "No patched elliptic release exists as of 2026-05-29; finding is dev-only via Hardhat gas/network tooling and not shipped in production runtime bundles. Re-evaluate before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-xcpc-8h2w-3j85"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency adm-zip in hardhat contract toolchain; not imported in production runtime bundles."
+
+[[IgnoredVulns]]
+id = "GHSA-3jxr-9vmj-r5cp"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency brace-expansion in build/lint toolchain; not imported in production runtime bundles."
+
+[[IgnoredVulns]]
+id = "GHSA-73rr-hh4g-fpgx"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency diff in hardhat/mocha test toolchain; not imported in production runtime bundles."
+
+[[IgnoredVulns]]
+id = "GHSA-v56q-mh7h-f735"
+ignoreUntil = 2026-08-31
+reason = "Dev dependency immutable in build toolchain; not imported in production runtime bundles."

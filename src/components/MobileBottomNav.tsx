@@ -84,6 +84,7 @@ export function MobileBottomNav() {
           return (
             <button
               key={item.moduleKey}
+              type="button"
               onClick={() => openModule(item.moduleKey, item.label)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all',
