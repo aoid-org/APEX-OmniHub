@@ -211,4 +211,52 @@ describe("runSandboxCheck error formatting edges", () => {
     const result = await runSandboxCheck(DIFF);
     expect(result.output).toContain("string failure");
   });
+
+  it("handles exec error with both stdout and stderr defined", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        throw new ExecError("tsc failed", "stdout content", "stderr content");
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toBe("stdout contentstderr content");
+  });
+
+  it("uses an empty string fallback when stdout or stderr is undefined on exec error", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        const err = { stdout: undefined, stderr: "only stderr" };
+        throw err;
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toBe("only stderr");
+
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        const err = { stdout: "only stdout", stderr: undefined };
+        throw err;
+      }
+      return "";
+    });
+    const result2 = await runSandboxCheck(DIFF);
+    expect(result2.output).toBe("only stdout");
+  });
+
+  it("handles an error object with neither stdout nor stderr properties", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: unknown) => {
+      if (cmd === "npm" && argsInclude(args, "typecheck")) {
+        const err = { message: "plain error message" };
+        throw err;
+      }
+      return "";
+    });
+    const { runSandboxCheck } = await import("../../src/propose/sandbox.js");
+    const result = await runSandboxCheck(DIFF);
+    expect(result.output).toBe("[object Object]");
+  });
 });

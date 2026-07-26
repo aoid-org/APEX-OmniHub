@@ -1,10 +1,43 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
-status: verified
+version: 1.1.0
+last_audited: 2026-07-22
+status: stale-pending-rescore
 ---
 
-# APEX-OmniHub 100-Point Release Rubric Score
+> **Staleness notice (2026-07-22):** The 100/100 below was scored 2026-05-28 and is
+> **not current**. `main` has moved ~2 months and dozens of PRs since (HEAD as of
+> this note: `1048eb5225ac2ff39355bf66a39023813cd673bd`, PR #1654). This audit pass
+> did **not** independently re-run the full gate/test suite (out of scope — this
+> was a `memory/omni-recall/` documentation-only pass), so **no new total score is
+> claimed here**; inventing one would violate this folder's own
+> "do not mix audit claims with verified system truth" rule.
+>
+> What *is* independently git-verified from this session and the immediately
+> preceding one (2026-07-22, PR #1654/#1655 — see `docs/APEX_AGENT_OPERATIONS.md`
+> §9.34-9.36 for the full evidence trail):
+> - `verify:claim-hygiene` — fixed and passing (PR #1654): the Armageddon
+>   certification plaque's claims are now backed by an independently re-verified
+>   genuine Ed25519 signature (live pubkey check against
+>   `apexbusiness-systems/Armageddon-Core`), with a new permanent regression gate
+>   `scripts/ci/verify-armageddon-attestation.mjs`.
+> - Release-gate wiring audit (PR #1655, **open/draft, not yet merged as of this
+>   note** — verify current state before relying on this): found and fixed a
+>   duplicate gate registration in `verify-release.mjs`, wired 4 previously-orphaned
+>   gates into CI (`guard-agent-destructive-actions.mjs`, `check-lockfile-sync.mjs`,
+>   `check-edge-fn-manifest.mjs`, `verify-supabase-env-alignment.mjs`), fixed a
+>   duplicate-stage bug in the local-only `release-lattice.mjs`, and added a new
+>   forward guard `check-ops-doc-claim-integrity.mjs`. Per this PR's own commit log,
+>   `bun run verify:release` passed end-to-end at the time of that PR's last local
+>   run (vitest + pytest 1002 passed/20 skipped, build, security, supabase-security,
+>   claim-hygiene, armageddon-attestation, supply-chain all green) — cited here as
+>   PR-documented evidence, not independently re-run by this pass.
+> - This does not amount to a full 20-row rescore. Treat every row below as
+>   **historical (2026-05-28) evidence** until a full re-run produces a new score.
+>   See also `RELEASE_GATE_AUDIT_2026-07-22.md` for a narrower, session-scoped
+>   evidence snapshot in the same append-only-by-date convention as
+>   `RELEASE_GATE_AUDIT_2026-05-16.md`.
+
+# APEX-OmniHub 100-Point Release Rubric Score (historical: scored 2026-05-28)
 
 > Rescored 2026-05-28 against **real, observed** evidence. Dependencies were installed
 > (Node + a clean Python venv with the declared ML deps) and the **entire** gate suite was

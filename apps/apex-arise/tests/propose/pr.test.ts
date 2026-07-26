@@ -5,15 +5,15 @@ const mockExecFileSync = vi.fn();
 const mockWriteFileSync = vi.fn();
 const mockRmSync = vi.fn();
 
+const mockExistsSync = vi.fn().mockReturnValue(false);
+
 vi.mock("node:child_process", () => ({
   execFileSync: (...args: unknown[]) => mockExecFileSync(...args),
 }));
 vi.mock("node:fs", () => ({
   writeFileSync: (...args: unknown[]) => mockWriteFileSync(...args),
   rmSync: (...args: unknown[]) => mockRmSync(...args),
-  // No real binary on disk in tests: resolveGitPath falls back to the bare
-  // "git" name, keeping existing assertions on the literal command valid.
-  existsSync: () => false,
+  existsSync: (...args: unknown[]) => mockExistsSync(...args),
 }));
 
 const DIFF: CandidateDiff = { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff --git a/src/a.ts" };
@@ -190,5 +190,63 @@ describe("openProposalPr error and git resolution edges", () => {
     const result = await openProposalPr({ diff: DIFF, proposal: PROPOSAL, branchName: "arise/propose-test" });
     expect(result.opened).toBe(false);
     expect(result.error).toContain("string patch failure");
+  });
+
+  it("uses GH_TOKEN fallback when GITHUB_TOKEN is undefined", async () => {
+    delete process.env.GITHUB_TOKEN;
+    process.env.GH_TOKEN = "gh-token-fallback";
+    process.env.GITHUB_REPOSITORY = "apexbusiness-systems/apex-omnihub";
+    mockExecFileSync.mockReturnValue("");
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ html_url: "https://example.invalid/pr/fallback" }),
+      text: async () => "",
+    }) as unknown as typeof fetch;
+
+    const { openProposalPr } = await import("../../src/propose/pr.js");
+    const result = await openProposalPr({ diff: DIFF, proposal: PROPOSAL, branchName: "arise/fallback" });
+    expect(result.opened).toBe(true);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer gh-token-fallback" }),
+      }),
+    );
+  });
+
+  it("handles an undefined process.env.PATH gracefully", async () => {
+    vi.resetModules();
+    const originalPath = process.env.PATH;
+    delete process.env.PATH;
+    process.env.GITHUB_TOKEN = "test-token";
+    process.env.GITHUB_REPOSITORY = "repo";
+    mockExecFileSync.mockReturnValue("");
+    const { openProposalPr } = await import("../../src/propose/pr.js");
+    await openProposalPr({ 
+      diff: { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff" }, 
+      proposal: { proposedDiff: "diff", confidence: "high", rationale: "rationale", filesTouched: ["src/a.ts"] }, 
+      branchName: "arise-no-path" 
+    });
+    process.env.PATH = originalPath;
+    expect(mockExecFileSync).toHaveBeenCalled();
+  });
+
+  it("resolves git path from process.env.PATH when binary exists", async () => {
+    vi.resetModules();
+    process.env.PATH = "/bin:/usr/bin";
+    process.env.GITHUB_TOKEN = "test-token";
+    process.env.GITHUB_REPOSITORY = "repo";
+    mockExistsSync.mockImplementation((candidatePath: unknown) => String(candidatePath).includes("/usr/bin/git"));
+    mockExecFileSync.mockReturnValue("");
+
+    const { openProposalPr } = await import("../../src/propose/pr.js");
+    await openProposalPr({ 
+      diff: { filesTouched: ["src/a.ts"], linesChanged: 5, patch: "diff" }, 
+      proposal: { proposedDiff: "diff", confidence: "high", rationale: "rationale", filesTouched: ["src/a.ts"] }, 
+      branchName: "arise-found" 
+    });
+
+    const calls = mockExecFileSync.mock.calls;
+    expect(calls[0][0]).toContain("git");
   });
 });
