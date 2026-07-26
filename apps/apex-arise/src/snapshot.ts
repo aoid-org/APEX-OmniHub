@@ -41,7 +41,7 @@ export function writeSnapshot(input: SnapshotInput): string {
 
   const compositeLine =
     input.composite === null
-      ? `N/A — degraded run (${input.compositeError ?? input.failures.map((f) => f.name).join(", ") ?? "unknown"})`
+      ? `N/A — degraded run (${input.compositeError ?? (input.failures.map((f) => f.name).join(", ") || "unknown")})`
       : input.composite.toFixed(2);
 
   const methodology = SIGNAL_ORDER.map((name) => {

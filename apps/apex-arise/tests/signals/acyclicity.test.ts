@@ -102,4 +102,9 @@ describe("collectAcyclicity", () => {
     const opts = callArgs[2] as { cwd: string };
     expect(opts.cwd).toBe(REPO_ROOT);
   });
+
+  it("stringifies a non-Error thrown by execFileSync", () => {
+    mockExecFileSync.mockImplementation(() => { throw "raw madge error"; });
+    expect(() => collectAcyclicity(SCAN_TARGETS, REPO_ROOT)).toThrow("raw madge error");
+  });
 });

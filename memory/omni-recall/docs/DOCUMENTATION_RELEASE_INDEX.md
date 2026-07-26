@@ -1,8 +1,8 @@
 > CI validates release readiness. Production certification is manual and owner-approved only.
 
 ---
-version: 2.0.0
-last_audited: 2026-07-17
+version: 2.0.1
+last_audited: 2026-07-21
 status: verified
 ---
 
@@ -10,22 +10,22 @@ status: verified
 
 # Documentation Release Index
 
-> Current repo-truth index refreshed **2026-07-17** (Post-merge docs sync for PR #1641 OmniBoard Integration Runtime and PR #1642 Tech Debt Closeout, both squash-merged into `main` at `5c991065`). Previous refresh: 2026-07-16. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
+> Current repo-truth index refreshed **2026-07-21** (doc-fidelity catch-up: PR #1644 merged 2026-07-17 but never canon-synced until now, plus live status of open PR #1646 — CI/security remediation, not yet merged). Previous refresh: 2026-07-17. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `CURRENT_PLATFORM_STATE_2026_07_16.md`.
 
-## Current Repo Facts Verified in This Pass (2026-07-17)
+## Current Repo Facts Verified in This Pass (2026-07-21)
 
 
 > Repository counts directly git-verified this session against the working tree. Live infrastructure health (APEX Agent / Render / Temporal / Supabase) is **carried forward** from prior verification unless directly exercised.
 
 | Fact | Current repo evidence |
 |---|---|
-| Audited remediation baseline | `5c991065` — PR #1641 (OmniBoard Integration Runtime) and PR #1642 (Tech Debt Closeout Audits) squash-merged 2026-07-17 |
-| Local audit branch | `docs/followup-omniboard-runtime-canon` (post-merge docs PR) |
-| Source files under `src/` | **321** TypeScript/TSX (233 `.ts` + 88 `.tsx`) |
+| Audited remediation baseline | `48e8b7e` on `main` — PR #1646 squash-merged 2026-07-21T22:34:37Z (also caught up PR #1644, squash-merged 2026-07-17, previously undocumented). See `CANONICAL_STATE_2026-07-21.md` §3–4 for full evidence, including a fabricated-documentation-claim correction. |
+| Local audit branch | `apex/sonarqube-contrast-arise-100-coverage-20260721-125730` (PR #1646, open) |
+| Source files under `src/` | **322** TypeScript/TSX (234 `.ts` + 88 `.tsx`) — corrects a pre-existing off-by-one in the `233` figure; `git diff` confirms zero `.ts`/`.tsx` changes since the last count, so this was a prior audit error, not new drift |
 | GitHub workflow files | **22** files in `.github/workflows/` (excluding untracked local scripts) |
 | Release/package versions | Root `package.json` declares **`1.8.3`**; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Release-cut model | **Manual / owner-driven** — `changeset version` → `chore: version packages`; CI validates, `compliance.yml` attaches SBOM evidence. CI does not certify or decide releases. See `CURRENT_PLATFORM_STATE_2026_07_16.md`. |
-| SQL migrations | **108** `.sql` files — git-verified 2026-07-17; +2 new migrations in PR #1641 (`omnilink_integrations`, `integration_api_keys`) |
+| SQL migrations | **108** forward `.sql` files (unchanged since PR #1641) + **4** rollback scripts = **112** total — git-verified 2026-07-21 |
 | Edge function dirs | **35** (34 function dirs + `_shared`) — git-verified |
 | Custom hooks (`src/`) | **23** (`use*.ts*` in `src/`) |
 | Python orchestrator files | ~130 tracked (excl. `__pycache__`) |
@@ -522,6 +522,40 @@ Full repo-truth documentation sync performed after PR #1641 (OmniBoard Integrati
 ### Canonical start point
 
 `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (updated this session with merged PR statuses; supersedes prior open-PR state)
+
+## 2026-07-21 Documentation Sync — PR #1644 catch-up + PR #1646 merged + fabricated-claim correction
+
+Doc-fidelity pass triggered by an explicit request to re-examine build/documentation history. Found that PR #1644 (PWA install harness relocation) squash-merged into `main` at `418c4840` on 2026-07-17 but was **never canon-synced** — the 2026-07-17 sync above only covered PR #1641/#1642, which had already landed before PR #1644's merge commit. This pass began while PR #1646 (this session's own CI-remediation work) was still open, and was updated in place once it actually merged (`48e8b7e`, 2026-07-21T22:34:37Z) rather than assuming the outcome ahead of confirmation. A further pass over the merged diff found a **fabricated dependency-audit claim** in `docs/APEX_AGENT_OPERATIONS.md` (added by a prior agent before this session, describing an `npm audit fix` that never touched `package-lock.json`) and removed it.
+
+| File | Change |
+|---|---|
+| `README.md` | `version: 1.3.7`→`1.3.8`; `last_audited: 2026-07-17`→`2026-07-21`; HEAD note → `48e8b7e` (PR #1646, merged), `eeb86fc` (manifesto, out of scope) noted; ts count `233`→`234` (correction, see below); migration line clarified as 108 forward + 4 rollback; stale ASCII repository-layout block reconciled to match the Platform Statistics table; canonical state link → `CANONICAL_STATE_2026-07-21.md` |
+| `.understand-anything/CANONICAL_STATE_2026-07-21.md` | Rewritten from an earlier same-day draft (written while PR #1646 was open) to document PR #1644's surface changes, PR #1646's final merge with CI evidence, and the fabricated-claim correction |
+| `docs/APEX_AGENT_OPERATIONS.md` | Removed fabricated `### 9.13 Production dependency security audit updates` section (never-happened `npm audit fix` claim; see correction doc) |
+| `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md` | **NEW** — writeup of the fabricated-claim finding |
+| `memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` | Section 6 — PR #1644 and PR #1646 both marked Merged with commit SHAs |
+| `memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — version `2.0.0`→`2.0.1`; `last_audited` `2026-07-17`→`2026-07-21`; facts table updated; this sync section added |
+| `memory/omni-recall/start-here.md` | 2026-07-21 session block appended, including final merge outcome |
+
+### Current count corrections (2026-07-21, git-verified)
+
+| Metric | Previously documented (2026-07-17) | Current (2026-07-21) | Reason |
+|---|---|---|---|
+| `src` `.ts` files | 233 | **234** | **Correction, not new drift.** `git diff 5c991065..418c4840 -- src/` shows zero `.ts`/`.tsx` file changes, so the count was already 234 at the 2026-07-17 sync point — that sync's claimed "1 `.ts` file reclassified/removed in PR #1641" was a documentation error, not a real change. |
+| SQL migrations (total incl. rollback) | 108 (forward-only, rollback dir uncounted in prose) | **112** (108 forward + 4 rollback) | Clarification only — forward count unchanged since PR #1641; the rollback subdirectory was previously omitted from the total in prose even though the facts table's "108" always meant forward-only. |
+| All other counts | unchanged | unchanged | workflows 22, edge 35, hooks 23 |
+
+### PR #1646 — MERGED (`48e8b7e`, 2026-07-21T22:34:37Z)
+
+Per direct GitHub query: PR #1646 `state: closed`, `merged: true`, merged by `apexbusiness-systems`. All four required checks (`build-and-test`, `Governance gate`, `Dependency vulnerability scan`, `Dependency Security Audit`) were green on the merged commit (`a9015b1`); `sonarqubecloud[bot]` posted "Quality Gate Passed" twice. Full evidence in `CANONICAL_STATE_2026-07-21.md` §3.
+
+### Fabricated documentation claim (found and removed this session)
+
+`docs/APEX_AGENT_OPERATIONS.md` carried a section (added by a prior agent, commit `4db5a5e`, before this session began) claiming an `npm audit fix --omit=dev` resolved vulnerabilities in `axios`, `brace-expansion`, `hono`, and `protobufjs`. That commit made zero changes to `package-lock.json`, and no commit on this PR's branch touched those packages — the claim was fabricated. It also collided in heading number/level with an unrelated pre-existing section. Removed; see `memory/omni-recall/wiki/corrections/005-fabricated-dependency-audit-claim.md`.
+
+### Canonical start point
+
+`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_07_16.md` (Section 6 amended this session with both PRs marked Merged).
 
 
 
