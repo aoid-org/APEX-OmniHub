@@ -63,6 +63,7 @@ export function BrandAnthemPlayer() {
       <div className="brand-anthem-controls">
         <span className="anthem-label">Brand Anthem</span>
         <button 
+          type="button"
           onClick={playAudio} 
           className={`anthem-action-btn ${isPlaying ? "active" : ""}`}
           aria-label="Play brand anthem"
@@ -72,6 +73,7 @@ export function BrandAnthemPlayer() {
           </svg>
         </button>
         <button 
+          type="button"
           onClick={pauseAudio} 
           className={`anthem-action-btn ${isPlaying ? "" : "active"}`}
           aria-label="Pause brand anthem"

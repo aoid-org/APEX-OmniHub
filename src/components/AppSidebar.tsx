@@ -37,6 +37,7 @@ export function AppSidebar() {
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">PLATFORM</h3>
           <nav className="space-y-1">
             <button
+              type="button"
               onClick={() => openModule('omnidash', 'OmniDash')}
               className={`group flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                 activeModuleKey === 'omnidash'
@@ -52,6 +53,7 @@ export function AppSidebar() {
             {navItems.map((item) => (
               <button
                 key={item.title}
+                type="button"
                 onClick={() => openModule(item.moduleKey, item.title)}
                 className={`group flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeModuleKey === item.moduleKey
@@ -70,6 +72,7 @@ export function AppSidebar() {
 
         <div className="mt-1">
           <button
+            type="button"
             onClick={() => openModule('settings', 'Settings')}
             className={`group flex items-center gap-3 w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeModuleKey === 'settings'
@@ -98,12 +101,12 @@ export function AppSidebar() {
       </div>
 
       <div className="border-t border-border p-4 shrink-0 flex flex-col gap-2">
-        <button className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground transition-colors opacity-60 hover:opacity-100">
+        <button type="button" className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground transition-colors opacity-60 hover:opacity-100">
           <LifeBuoy className="w-3 h-3" />
           Support
         </button>
         <div className="h-px bg-border my-1"></div>
-        <button className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground transition-colors opacity-60 hover:opacity-100">
+        <button type="button" className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground transition-colors opacity-60 hover:opacity-100">
           Sign Out
         </button>
       </div>

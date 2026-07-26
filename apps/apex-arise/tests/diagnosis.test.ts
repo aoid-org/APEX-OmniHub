@@ -9,6 +9,7 @@
  * written and no real CLI tools (madge/jscpd/dependency-cruiser/ts-morph) run.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as path from "node:path";
 import type { CompositeResult, SignalScore } from "../src/types.js";
 import { MissingSignalError, rankSignals } from "../src/diagnosis/ranker.js";
 import { generateDegradedReport, generateDiagnosisReport } from "../src/diagnosis/reporter.js";
@@ -315,7 +316,7 @@ describe("diagnosis index orchestrator (main)", () => {
     expect(mockWriteFileSync).toHaveBeenCalledOnce();
     const [outPath] = mockWriteFileSync.mock.calls[0] as [string, string, string];
     expect(outPath).toContain("CURRENT_ARISE_DIAGNOSIS_REPORT_2026_07_01.md");
-    expect(outPath).toContain("memory/omni-recall/docs");
+    expect(outPath).toContain(path.join("memory", "omni-recall", "docs"));
   });
 
   it("exits 0 on a fully successful run", async () => {
