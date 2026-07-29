@@ -1679,4 +1679,15 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - Added `scripts/ci/check-ops-doc-claim-integrity.mjs`, wired into `ops-doc-guard.yml` alongside `check-ops-doc-drift.mjs`: for every section in this file citing a resolvable commit SHA next to a `**Changed files:**`/`**Changed critical runtime path(s):**` line, it verifies the cited commit's real `git diff` actually touches at least one named file. **Scope (honest):** this is a *forward guard* for the high-fidelity claim shape (inline commit SHA + explicit file list); it does **not** retroactively re-verify existing entries and currently cross-checks **0** sections (every current entry cites PR numbers, not inline SHAs). It would **not** have caught the PR #1646 fabrication as-written (that entry cited a PR number, no inline SHA) — it is additive prevention for a stricter future citation style, not a reconstruction of that specific catch. Deliberately conservative: skips (does not fail) any section, SHA, or path it can't confidently resolve. Verified against a synthetic fixture — passes a legitimate SHA-cited claim, fails a fabricated one.
 - **Operational impact:** None to deployed services, environment variables, database tables/migrations, or start commands. All changes are CI-script wiring and one internal script's stage labels.
 
+## 9.37 OmniDash P0 remediation — OmniSlate error gate, OmniBoard timeout, APEX App connect persistence (2026-07-29, PR #1660)
+
+**Changed files:** `apps/omnihub-site/dashboard/OmniDashShell.tsx`, `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, `apps/omnihub-site/dashboard/components/modules/ApexAppsMcpModule.tsx`, `apps/omnihub-site/dashboard/lib/classifyMcpError.ts`, `apps/omnihub-site/tests/lib/omniSlateError.spec.ts`, `apps/omnihub-site/tests/lib/OmniBoardWizard.timeout.spec.ts`, `supabase/migrations/20260729000000_apex_app_installs.sql`, `tests/e2e-playwright/cp-17-omnislate-gate.spec.ts`, `tests/e2e-playwright/cp-18-apex-apps-connect.spec.ts`.
+
+- **Database migration:** Added additive migration `supabase/migrations/20260729000000_apex_app_installs.sql` introducing `public.apex_app_installs` (`id`, `user_id`, `app_id`, `app_label`, `app_url`, `status`, `installed_at`, `updated_at`) with RLS owner-scoped to `auth.uid() = user_id`.
+- **OmniSlate chat error classifier:** Added `classifyMcpError()` in `apps/omnihub-site/dashboard/lib/classifyMcpError.ts` replacing static Guardian error text with 8 classified, user-actionable gate messages.
+- **OmniBoard timeout:** Reduced hard timeout in `OmniBoardWizard.tsx` to 10s (`OMNIBOARD_REQUEST_TIMEOUT_MS = 10_000`) and added `data-testid="omniboard-error-state"`.
+- **APEX App Connect & Gallery:** `ApexAppsMcpModule.tsx` added user-confirmation gate ("It connected! ✔") writing `apex_app_installs`, and `IntegratedAppsGalleryWidget` queries user-confirmed installs on mount.
+- **Operational impact:** Additive DB migration `apex_app_installs` for OmniDash user app connect state. No breaking API, env var, secret, or start command changes.
+
+
 

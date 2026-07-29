@@ -161,14 +161,7 @@ jobs:
 
       - name: Run npm audit
         run: |
-          echo "Running npm security audit (production dependencies only)..."
-          npm audit --omit=dev --audit-level=high
-          if [ $? -ne 0 ]; then
-            echo "::error::High severity vulnerabilities found in production dependencies. Run 'npm audit fix' to resolve."
-            exit 1
-          fi
-          echo "✅ No high/critical vulnerabilities in production dependencies"
-          echo "Note: Dev dependencies (Hardhat/ethers v5) have known vulnerabilities that are acceptable for development tools"
+          node scripts/ci/check-dependency-audit.mjs
 
       - name: Check Python lockfile exists and is valid
         run: |
