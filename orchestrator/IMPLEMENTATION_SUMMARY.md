@@ -262,10 +262,10 @@ const response = await fetch('http://orchestrator:8000/workflows', {
 
 ```python
 # Activities use Supabase client
-_supabase_client.table('workflow_instances').insert({
-  'workflow_id': workflow_id,
-  'status': 'running',
-  'input': input_payload,
+_supabase_client.table("workflow_instances").insert({
+    "workflow_id": workflow_id,
+    "status": "running",
+    "input": input_payload,
 })
 ```
 
@@ -274,8 +274,8 @@ _supabase_client.table('workflow_instances').insert({
 ```python
 # instructor + litellm for structured output
 plan = await client.chat.completions.create(
-  model="gpt-4-turbo-preview",
-  response_model=GeneratedPlan,  # Pydantic model
+    model="gpt-4-turbo-preview",
+    response_model=GeneratedPlan,  # Pydantic model
 )
 ```
 
@@ -284,8 +284,7 @@ plan = await client.chat.completions.create(
 ```python
 # Vector similarity search
 results = await redis.ft("idx:plan_templates").search(
-  Query("*=>[KNN 1 @embedding $vec]"),
-  query_params={"vec": embedding.tobytes()}
+    Query("*=>[KNN 1 @embedding $vec]"), query_params={"vec": embedding.tobytes()}
 )
 ```
 
