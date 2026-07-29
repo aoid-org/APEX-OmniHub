@@ -10,6 +10,7 @@
 
 CREATE TABLE IF NOT EXISTS public.apex_app_installs (
   id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE cascading cleanup on user deletion
   user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   app_id        TEXT        NOT NULL,
   app_label     TEXT        NOT NULL,
@@ -53,6 +54,7 @@ BEGIN
 END;
 $$;
 
+-- additive-allow: DROP_TRIGGER idempotent trigger initialization on new table
 DROP TRIGGER IF EXISTS apex_app_installs_updated_at
   ON public.apex_app_installs;
 
