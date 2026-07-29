@@ -277,13 +277,11 @@ class AgentWorkflow(AgentSagaSupportMixin, AgentSagaExecutionMixin):
             )
 
             # 1b. OmniTrace: Record run start (best-effort)
-            await self._omnitrace_record_run_start(
-                {
-                    "goal": goal,
-                    "user_id": user_id,
-                    "context": context or {},
-                }
-            )
+            await self._omnitrace_record_run_start({
+                "goal": goal,
+                "user_id": user_id,
+                "context": context or {},
+            })
 
             # 1c. BYOM: Mint pilot session if credential_type is 'byom'
             await self._mint_pilot_session_if_byom(user_id, context or {})

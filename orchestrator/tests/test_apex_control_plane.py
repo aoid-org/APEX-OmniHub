@@ -83,9 +83,10 @@ def test_trace_continuity_across_boundaries() -> None:
     edge = continue_trace_context(
         parse_trace_context({"traceparent": browser.traceparent, "tracestate": "apex=browser"})
     )
-    orchestrator = parse_trace_context(
-        {"traceparent": edge.traceparent, "tracestate": edge.tracestate or ""}
-    )
+    orchestrator = parse_trace_context({
+        "traceparent": edge.traceparent,
+        "tracestate": edge.tracestate or "",
+    })
     assert orchestrator is not None
     assert orchestrator.trace_id == browser.trace_id
 

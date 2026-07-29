@@ -61,7 +61,8 @@ async def compute_14_day_baseline(params: dict[str, Any]) -> dict[str, Any]:
 
         # Query all historical telemetry in pilot window
         response = (
-            client.table("physiomni_telemetry")
+            client
+            .table("physiomni_telemetry")
             .select("vibration_x, vibration_y, vibration_z, temperature_c, captured_at")
             .eq("device_serial", device_serial)
             .eq("tenant_id", tenant_id)
@@ -173,7 +174,8 @@ async def evaluate_baseline(telemetry_payload: dict[str, Any]) -> dict[str, Any]
 
         # Fetch device ID
         dev_resp = (
-            client.table("physiomni_devices")
+            client
+            .table("physiomni_devices")
             .select("id")
             .eq("device_serial", device_serial)
             .eq("tenant_id", tenant_id)
@@ -192,7 +194,8 @@ async def evaluate_baseline(telemetry_payload: dict[str, Any]) -> dict[str, Any]
 
         # Fetch baseline envelope
         baseline_resp = (
-            client.table("physiomni_baselines")
+            client
+            .table("physiomni_baselines")
             .select("normal_envelope")
             .eq("device_id", device_id)
             .execute()
@@ -268,18 +271,17 @@ async def log_physiomni_alert(params: dict[str, Any]) -> dict[str, Any]:
 
         client = get_supabase_client()
         response = (
-            client.table("physiomni_alerts")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "device_serial": device_serial,
-                    "severity": severity,
-                    "alert_type": alert_type,
-                    "message": message,
-                    "telemetry_snapshot": telemetry_snapshot,
-                    "acknowledged": False,
-                }
-            )
+            client
+            .table("physiomni_alerts")
+            .insert({
+                "tenant_id": tenant_id,
+                "device_serial": device_serial,
+                "severity": severity,
+                "alert_type": alert_type,
+                "message": message,
+                "telemetry_snapshot": telemetry_snapshot,
+                "acknowledged": False,
+            })
             .execute()
         )
 
@@ -378,21 +380,20 @@ async def dispatch_work_order_activity(params: dict[str, Any]) -> dict[str, Any]
         client = get_supabase_client()
 
         response = (
-            client.table("audit_logs")
-            .insert(
-                {
-                    "actor_id": None,
-                    "action_type": "physiomni.work_order.dispatched",
-                    "resource_type": "physiomni_device",
-                    "resource_id": device_serial,
-                    "metadata": {
-                        "tenant_id": tenant_id,
-                        "device_serial": device_serial,
-                        "message": message,
-                        "dispatched_at": datetime.now(timezone.utc).isoformat(),
-                    },
-                }
-            )
+            client
+            .table("audit_logs")
+            .insert({
+                "actor_id": None,
+                "action_type": "physiomni.work_order.dispatched",
+                "resource_type": "physiomni_device",
+                "resource_id": device_serial,
+                "metadata": {
+                    "tenant_id": tenant_id,
+                    "device_serial": device_serial,
+                    "message": message,
+                    "dispatched_at": datetime.now(timezone.utc).isoformat(),
+                },
+            })
             .execute()
         )
 

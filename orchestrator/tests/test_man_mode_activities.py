@@ -117,9 +117,11 @@ class TestRiskTriageActivity:
 
     @pytest.mark.asyncio
     async def test_irreversible_flag_forces_red(self):
-        result = await self.mod.risk_triage(
-            {"tool_name": "unknown_action", "workflow_id": "wf-4", "irreversible": True}
-        )
+        result = await self.mod.risk_triage({
+            "tool_name": "unknown_action",
+            "workflow_id": "wf-4",
+            "irreversible": True,
+        })
         assert result["risk_lane"] == "RED"
 
     @pytest.mark.asyncio
@@ -153,9 +155,10 @@ class TestRiskTriageActivity:
 
     @pytest.mark.asyncio
     async def test_unknown_tool_returns_yellow(self):
-        result = await self.mod.risk_triage(
-            {"tool_name": "some_mystery_tool_xyz", "workflow_id": "wf-7"}
-        )
+        result = await self.mod.risk_triage({
+            "tool_name": "some_mystery_tool_xyz",
+            "workflow_id": "wf-7",
+        })
         assert result["risk_lane"] == "YELLOW"
 
     @pytest.mark.asyncio
