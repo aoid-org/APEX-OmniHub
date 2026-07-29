@@ -153,9 +153,11 @@ class ModelProviderRegistry:
         return response
 
     def _emit_audit(self, tenant_id: str, provider_id: str, action: str, details: str):
-        self.audit_logs.append({
-            "tenant_id": tenant_id,
-            "provider_id": provider_id,
-            "action": action,
-            "details": details,
-        })
+        self.audit_logs.append(
+            {
+                "tenant_id": tenant_id,
+                "provider_id": provider_id,
+                "action": action,
+                "details": details,
+            }
+        )

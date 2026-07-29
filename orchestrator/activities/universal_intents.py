@@ -175,8 +175,7 @@ async def connector_test(params: dict[str, Any]) -> dict[str, Any]:
         "status": "ok",
         "connector": connector,
         "health": {
-            "lastSuccessAt": datetime
-            .now(timezone.utc)
+            "lastSuccessAt": datetime.now(timezone.utc)
             .isoformat()
             .replace(_UTC_OFFSET, _ZULU_SUFFIX)
         },

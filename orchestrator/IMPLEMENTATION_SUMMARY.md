@@ -262,11 +262,13 @@ const response = await fetch('http://orchestrator:8000/workflows', {
 
 ```python
 # Activities use Supabase client
-_supabase_client.table("workflow_instances").insert({
-    "workflow_id": workflow_id,
-    "status": "running",
-    "input": input_payload,
-})
+_supabase_client.table("workflow_instances").insert(
+    {
+        "workflow_id": workflow_id,
+        "status": "running",
+        "input": input_payload,
+    }
+)
 ```
 
 ### 3. Python → LLM (Plan Generation)

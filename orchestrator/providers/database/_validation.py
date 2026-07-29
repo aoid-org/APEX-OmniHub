@@ -12,50 +12,52 @@ import re
 from .base import DatabaseError
 
 # SECURITY: Allowlist of valid table names (SQL injection prevention)
-ALLOWED_TABLES = frozenset([
-    "users",
-    "profiles",
-    "wallets",
-    "wallet_identities",
-    "wallet_nonces",
-    "files",
-    "links",
-    "integrations",
-    "automations",
-    "automation_logs",
-    "todos",
-    "notifications",
-    "audit_logs",
-    "rate_limits",
-    "omni_policies",
-    "sessions",
-    "user_data",
-    "settings",
-    "events",
-    "provider_registry",
-    "connections",
-    "workflows",
-    "workflow_runs",
-    # MAN Mode tables
-    "man_tasks",
-    "man_notifications",
-    # OmniTrace tables
-    "omni_runs",
-    "omni_run_events",
-    # BYOM Cockpit tables
-    "provider_connections",
-    "pilot_sessions",
-    # Monetization tables
-    "usage_metering",
-    # Agent execution tables
-    "agent_runs",
-    "idempotency_ledger",
-    # PhysiOmni Pilot tables
-    "physiomni_devices",
-    "physiomni_telemetry",
-    "physiomni_alerts",
-    "physiomni_baselines",
-])
+ALLOWED_TABLES = frozenset(
+    [
+        "users",
+        "profiles",
+        "wallets",
+        "wallet_identities",
+        "wallet_nonces",
+        "files",
+        "links",
+        "integrations",
+        "automations",
+        "automation_logs",
+        "todos",
+        "notifications",
+        "audit_logs",
+        "rate_limits",
+        "omni_policies",
+        "sessions",
+        "user_data",
+        "settings",
+        "events",
+        "provider_registry",
+        "connections",
+        "workflows",
+        "workflow_runs",
+        # MAN Mode tables
+        "man_tasks",
+        "man_notifications",
+        # OmniTrace tables
+        "omni_runs",
+        "omni_run_events",
+        # BYOM Cockpit tables
+        "provider_connections",
+        "pilot_sessions",
+        # Monetization tables
+        "usage_metering",
+        # Agent execution tables
+        "agent_runs",
+        "idempotency_ledger",
+        # PhysiOmni Pilot tables
+        "physiomni_devices",
+        "physiomni_telemetry",
+        "physiomni_alerts",
+        "physiomni_baselines",
+    ]
+)
 
 # Valid column/identifier name pattern (alphanumeric and underscore only)
 VALID_COLUMN_PATTERN = re.compile(r"^[a-zA-Z_]\w*$")

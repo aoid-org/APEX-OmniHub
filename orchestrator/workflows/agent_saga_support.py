@@ -71,10 +71,12 @@ class AgentSagaSupportMixin:
         """Execute OmniTrace activity with common parameters (best-effort)."""
         try:
             # Common arguments
-            args.update({
-                "workflow_id": _ns().workflow.info().workflow_id,
-                "trace_id": self._get_trace_id(),
-            })
+            args.update(
+                {
+                    "workflow_id": _ns().workflow.info().workflow_id,
+                    "trace_id": self._get_trace_id(),
+                }
+            )
 
             return await _ns().workflow.execute_activity(
                 activity_name,

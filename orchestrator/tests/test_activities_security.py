@@ -145,10 +145,12 @@ async def test_call_webhook_redirects_not_followed():
                     resolved_ip="resolved-target.example",
                     host_header="example.com",
                 )
-                result = await call_webhook({
-                    "url": "https://example.com/redirect",
-                    "method": "GET",
-                })
+                result = await call_webhook(
+                    {
+                        "url": "https://example.com/redirect",
+                        "method": "GET",
+                    }
+                )
 
                 assert result["success"] is True
                 assert result["status_code"] == 302

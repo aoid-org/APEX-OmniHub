@@ -17,19 +17,23 @@ from activities.iron_law_verify import verify_deductive_path
 # Helpers
 # ---------------------------------------------------------------------------
 
-_VERIFIED_OK = json.dumps({
-    "verified": True,
-    "logicDelta": 0.1,
-    "escalateToMan": False,
-    "reason": "Deductive path verified",
-}).encode()
+_VERIFIED_OK = json.dumps(
+    {
+        "verified": True,
+        "logicDelta": 0.1,
+        "escalateToMan": False,
+        "reason": "Deductive path verified",
+    }
+).encode()
 
-_VERIFIED_FAIL = json.dumps({
-    "verified": False,
-    "logicDelta": 0.9,
-    "escalateToMan": True,
-    "reason": "threshold exceeded",
-}).encode()
+_VERIFIED_FAIL = json.dumps(
+    {
+        "verified": False,
+        "logicDelta": 0.9,
+        "escalateToMan": True,
+        "reason": "threshold exceeded",
+    }
+).encode()
 
 
 def _proc(returncode: int = 0, stdout: bytes = b"", stderr: bytes = b"") -> MagicMock:
@@ -57,12 +61,14 @@ async def test_iron_law_verify_success_verified_true():
     """Subprocess returns verified=True — full param set."""
     proc = _proc(stdout=_VERIFIED_OK)
     with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
-        result = await verify_deductive_path({
-            "intent": "open_door",
-            "target_state": {"door": "open"},
-            "device_id": "door-123",
-            "workflow_id": "wf-123",
-        })
+        result = await verify_deductive_path(
+            {
+                "intent": "open_door",
+                "target_state": {"door": "open"},
+                "device_id": "door-123",
+                "workflow_id": "wf-123",
+            }
+        )
     assert result["verified"] is True
     assert result["logicDelta"] == pytest.approx(0.1)
     assert result["escalateToMan"] is False

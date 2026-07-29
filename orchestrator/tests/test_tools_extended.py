@@ -318,11 +318,13 @@ async def test_update_agent_run_completion_failed_status():
         db = AsyncMock()
         mock_provider.return_value = db
 
-        result = await update_agent_run_completion({
-            "trace_id": "trace-1",
-            "status": "failed",
-            "agent_response": {"error": "timeout occurred"},
-        })
+        result = await update_agent_run_completion(
+            {
+                "trace_id": "trace-1",
+                "status": "failed",
+                "agent_response": {"error": "timeout occurred"},
+            }
+        )
 
     assert result["success"] is True
     update_kwargs = db.update.call_args.kwargs
@@ -357,11 +359,13 @@ async def test_mint_pilot_session_inactive_connection():
         db.select.return_value = []
         mock_provider.return_value = db
 
-        result = await mint_pilot_session({
-            "user_id": "u1",
-            "connection_id": "conn-inactive",
-            "trace_id": "trace-1",
-        })
+        result = await mint_pilot_session(
+            {
+                "user_id": "u1",
+                "connection_id": "conn-inactive",
+                "trace_id": "trace-1",
+            }
+        )
 
     assert result["success"] is False
     assert "not found" in result["error"].lower() or "not active" in result["error"].lower()
@@ -377,11 +381,13 @@ async def test_mint_pilot_session_db_insert_exception():
         db.insert.side_effect = Exception("DB insert failed")
         mock_provider.return_value = db
 
-        result = await mint_pilot_session({
-            "user_id": "u1",
-            "connection_id": "conn-1",
-            "trace_id": "trace-1",
-        })
+        result = await mint_pilot_session(
+            {
+                "user_id": "u1",
+                "connection_id": "conn-1",
+                "trace_id": "trace-1",
+            }
+        )
 
     assert result["success"] is False
     assert "DB insert failed" in result["error"]
@@ -1169,12 +1175,14 @@ async def test_send_email_production_edge_function_success():
                 mock_client.post = AsyncMock(return_value=mock_resp)
                 mock_client_cls.return_value = mock_client
 
-                result = await send_email({
-                    "to": "user@example.com",
-                    "subject": "Hello",
-                    "body": "World",
-                    "step_id": "s1",
-                })
+                result = await send_email(
+                    {
+                        "to": "user@example.com",
+                        "subject": "Hello",
+                        "body": "World",
+                        "step_id": "s1",
+                    }
+                )
 
     assert result["success"] is True
     assert result["message_id"] == "edge-msg-001"
@@ -1309,12 +1317,14 @@ async def test_send_email_dev_fallback_simulated():
             os.environ.pop("SUPABASE_ANON_KEY", None)
 
             with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                result = await send_email({
-                    "to": "dev@test.com",
-                    "subject": "Test",
-                    "body": "Dev mode",
-                    "step_id": "s1",
-                })
+                result = await send_email(
+                    {
+                        "to": "dev@test.com",
+                        "subject": "Test",
+                        "body": "Dev mode",
+                        "step_id": "s1",
+                    }
+                )
 
     assert result["success"] is True
     assert result["to"] == "dev@test.com"

@@ -111,13 +111,15 @@ def derive_intent_hash(
     actor_id: str, device_id: str, action: str, resource: str, payload: Any = None
 ) -> str:
     return sha256_hex(
-        canonical_json({
-            "actor_id": actor_id,
-            "device_id": device_id,
-            "action": action,
-            "resource": resource,
-            "payload": payload,
-        })
+        canonical_json(
+            {
+                "actor_id": actor_id,
+                "device_id": device_id,
+                "action": action,
+                "resource": resource,
+                "payload": payload,
+            }
+        )
     )
 
 
@@ -137,12 +139,14 @@ def create_execution_envelope(
 ) -> ApexExecutionEnvelope:
     intent_hash = derive_intent_hash(actor_id, device_id, action, resource, payload)
     corr_seed = sha256_hex(
-        canonical_json({
-            "actor_id": actor_id,
-            "action": action,
-            "resource": resource,
-            "intent_hash": intent_hash,
-        })
+        canonical_json(
+            {
+                "actor_id": actor_id,
+                "action": action,
+                "resource": resource,
+                "intent_hash": intent_hash,
+            }
+        )
     )
     return ApexExecutionEnvelope(
         trace_id=trace_id or secrets.token_hex(16),
