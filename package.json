@@ -342,7 +342,7 @@
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
     "axios": "^1.16.0",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.25",
     "uuid": "^14.0.0",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0",
     "qs": "6.15.2",

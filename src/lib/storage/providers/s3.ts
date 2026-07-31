@@ -49,7 +49,7 @@ export class S3Storage implements IStorage {
   // SDK handles are cached after first lazy import. Typed as unknown-ish to keep
   // this module resilient when @aws-sdk is not installed in a given context.
   private _mod: typeof import('@aws-sdk/client-s3') | null = null
-  private _client: import('@aws-sdk/client-s3').S3Client | null = null
+  private _client: any | null = null
 
   constructor(options: S3StorageOptions) {
     if (!options.accessKeyId || !options.secretAccessKey) {
@@ -66,7 +66,7 @@ export class S3Storage implements IStorage {
     return this._mod
   }
 
-  private async client(): Promise<import('@aws-sdk/client-s3').S3Client> {
+  private async client(): Promise<any> {
     if (!this._client) {
       const { S3Client } = await this.mod()
       this._client = new S3Client({
