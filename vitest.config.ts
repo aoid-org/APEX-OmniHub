@@ -13,6 +13,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     pool: 'forks', // Fix coverage race condition in CI
+    server: {
+      deps: {
+        inline: ['@smithy', '@aws-sdk'],
+      },
+    },
     include: [
       'tests/**/*.spec.ts',
       'tests/**/*.spec.tsx',

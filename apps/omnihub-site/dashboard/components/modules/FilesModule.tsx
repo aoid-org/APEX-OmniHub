@@ -5,7 +5,7 @@ import { UploadCloud, FileText, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getPlayableMediaKind, ingestUploadedMedia, sanitizeFilename } from '@/dashboard/lib/omniMediaCatalog';
 import { useOmniMedia } from '../../../src/stores/omniMediaStore';
-import { usePlan, getStorageCapGB } from '@/hooks/usePlan';
+import { usePlan, getStorageCapGB } from '../../../src/hooks/usePlan';
 
 interface Props {
   readonly onClose: () => void;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
-import { usePlan } from '@/hooks/usePlan';
-import { PhysiOmniGate } from '@/components/physiomni/PhysiOmniGate';
+import { usePlan } from '../../../src/hooks/usePlan';
+import { PhysiOmniGate } from '../../../src/components/physiomni/PhysiOmniGate';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { ModuleShell } from './ModuleShell';
 import { Button } from '@/components/ui/button';

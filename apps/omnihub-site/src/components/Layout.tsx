@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { siteConfig } from "@/content/site";
+import { siteConfig } from "../content/site";
 import { ReferenceOverlay } from "./ReferenceOverlay";
-import { useAuth } from "@/lib/useAuth";
+import { useAuth } from "../lib/useAuth";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { LanguageSelector } from "./LanguageSelector";
 import { PWAInstallButton } from "./PWAInstallButton";
