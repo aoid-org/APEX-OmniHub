@@ -340,9 +340,11 @@ jobs:
       - name: Cloudflare Pages Production Sync Shield
         run: |
           test ! -f wrangler.toml
+          npm run check:cloudflare-parity
           npm run build
           bun run verify:cloudflare-pages-contract
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           VITE_SUPABASE_PUBLISHABLE_KEY: test-key
