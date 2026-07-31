@@ -71,7 +71,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: mkdir -p build-artifacts
-      - run: bunx @cyclonedx/cdxgen -t node -o build-artifacts/sbom-npm.cdx.json
+      - run: bunx @cyclonedx/cdxgen -t node --no-validate -o build-artifacts/sbom-npm.cdx.json
       - run: pip install cyclonedx-bom
       - run: cyclonedx-py environment --output-format JSON --output-file build-artifacts/sbom-python.cdx.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

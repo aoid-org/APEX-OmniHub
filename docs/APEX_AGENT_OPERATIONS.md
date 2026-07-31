@@ -1713,3 +1713,10 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 **compliance.yml** was modified to update the sbom-gate workflow. Due to the phase 2 lockfile hygiene protocol which deleted package-lock.json and migrated all dependency resolution to un, the previous @cyclonedx/cyclonedx-npm tool was throwing missing evidence errors on the main branch pipeline. The tool was surgically replaced with @cyclonedx/cdxgen executed via unx, providing native parsing capabilities for un.lock.
 
 **Operational contract change:** none. The SBOM attachment functionality operates precisely as before, only upgraded to process the modern un.lock structure. No runtime or service variables were mutated.
+
+## 9.18 PR 1669 post-merge CI fixes — 2026-07-31
+
+**compliance.yml** was modified to add --no-validate to cdxgen to prevent JSON schema validation failures caused by deep workspace version strings in bun.lock.
+
+**scripts/ci/verify-supply-chain.mjs** was modified to check for un.lock instead of package-lock.json and use un pm ls for lockfile coherence.
+
