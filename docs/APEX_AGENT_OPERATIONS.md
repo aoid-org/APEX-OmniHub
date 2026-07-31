@@ -1706,3 +1706,10 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Root cause/Scope:** Implementation of WS-9-R loop-break protocol to address `package-lock.json` divergence and dependabot loops causing unresolvable GitHub Actions check failures.
 - **Remediation:** Migrated entirely to `bun install` for dependency management. Deleted `package-lock.json` and generated a sanitized `bun.lock`.
 - **Operational impact:** Resolves NPM resolution conflicts and loop failures across the CI pipeline.
+
+
+## 9.17 PR 1668 sbom-gate Bun lockfile compatibility — 2026-07-31
+
+**compliance.yml** was modified to update the sbom-gate workflow. Due to the phase 2 lockfile hygiene protocol which deleted package-lock.json and migrated all dependency resolution to un, the previous @cyclonedx/cyclonedx-npm tool was throwing missing evidence errors on the main branch pipeline. The tool was surgically replaced with @cyclonedx/cdxgen executed via unx, providing native parsing capabilities for un.lock.
+
+**Operational contract change:** none. The SBOM attachment functionality operates precisely as before, only upgraded to process the modern un.lock structure. No runtime or service variables were mutated.
