@@ -121,7 +121,8 @@
     "arise:install": "cd apps/apex-arise && bun install",
     "arise:diagnose": "cd apps/apex-arise && bun run src/diagnosis/index.ts",
     "arise:propose": "cd apps/apex-arise && bun run src/propose/index.ts",
-    "arise:open-pr": "cd apps/apex-arise && bun run src/propose/open-pr-cli.ts"
+    "arise:open-pr": "cd apps/apex-arise && bun run src/propose/open-pr-cli.ts",
+    "check:cloudflare-parity": "node scripts/ci/check-cloudflare-project-parity.mjs"
   },
   "size-limit": [
     {

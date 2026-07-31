@@ -1698,3 +1698,11 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - Hardcoded `capacitor.config.ts` to `webDir: 'dist-mobile'`.
   - Updated the existing `.github/workflows/mobile-build-verify.yml` to rename `dist` to `dist-mobile` before running `npx cap sync`, maintaining compatibility with the new `capacitor.config.ts` constraints during PR build verification.
 - **Operational impact:** None to deployed web services or API backends. The CI pipelines now correctly process the mobile shell for deployment via Codemagic.
+
+## 9.39 Cloudflare Project Parity CI Gate — 2026-07-31
+
+**Changed files:** .github/workflows/ci-runtime-gates.yml, scripts/ci/check-cloudflare-project-parity.mjs, docs/ops/cloudflare-projects.json`n
+- **Root cause/Scope:** Implementation of WS-9-R loop-break protocol to prevent un-reproducible CI failures on Cloudflare due to project drift.
+- **Remediation:** Added parity check script in CI to enforce identical configuration between the production project and the shadow project.
+- **Operational impact:** Blocks CI if pex-omnihub and pex-omnihub-shadow projects drift on Cloudflare.
+
