@@ -1698,3 +1698,11 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - Hardcoded `capacitor.config.ts` to `webDir: 'dist-mobile'`.
   - Updated the existing `.github/workflows/mobile-build-verify.yml` to rename `dist` to `dist-mobile` before running `npx cap sync`, maintaining compatibility with the new `capacitor.config.ts` constraints during PR build verification.
 - **Operational impact:** None to deployed web services or API backends. The CI pipelines now correctly process the mobile shell for deployment via Codemagic.
+
+## 9.39 Lockfile Hygiene and Dependency Stabilization — 2026-07-31
+
+**Changed files:** `package-lock.json` (deleted), `bun.lock`, `package.json`
+
+- **Root cause/Scope:** Implementation of WS-9-R loop-break protocol to address `package-lock.json` divergence and dependabot loops causing unresolvable GitHub Actions check failures.
+- **Remediation:** Migrated entirely to `bun install` for dependency management. Deleted `package-lock.json` and generated a sanitized `bun.lock`.
+- **Operational impact:** Resolves NPM resolution conflicts and loop failures across the CI pipeline.
