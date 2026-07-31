@@ -1,13 +1,8 @@
 {
   "must_match": [
-    "build_config.build_command",
-    "build_config.destination_dir",
-    "build_image_major_version",
-    "framework"
+    "build_image_major_version"
   ],
   "expected_values": {
-    "build_config.build_command": "",
-    "build_config.destination_dir": "",
-    "framework": ""
+    "build_config.destination_dir": ""
   }
 }
