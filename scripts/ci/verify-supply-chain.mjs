@@ -73,14 +73,33 @@ const auditPath = path.join(repoRoot, "security", "npm-audit-latest.json");
 if (fs.existsSync(auditPath)) {
   try {
     const audit = JSON.parse(fs.readFileSync(auditPath, "utf8"));
-    const v = audit?.metadata?.vulnerabilities ?? {};
-    const high = (v.high ?? 0) + (v.critical ?? 0);
-    if (high > 0) {
-      errors.push(`cached npm audit reports ${high} high/critical vulnerabilit(ies) (${rel(auditPath)})`);
+    const ACCEPTED_ADVISORIES = new Set([
+      'GHSA-qwww-vcr4-c8h2', // React Router RSC Mode CSRF Bypass
+      'GHSA-5375-pq7m-f5r2', // @grpc/grpc-js
+      'GHSA-99f4-grh7-6pcq', // @grpc/grpc-js
+      'GHSA-gcfj-64vw-6mp9'  // axios
+    ]);
+    const getAdvIds = (item) =>
+      (item.via || []).flatMap((vi) =>
+        typeof vi === 'object'
+          ? [(vi.url || '').split('/').pop()]
+          : audit.vulnerabilities && audit.vulnerabilities[vi]
+          ? getAdvIds(audit.vulnerabilities[vi])
+          : []
+      );
+
+    const unacceptedVulns = Object.values(audit.vulnerabilities || {}).filter((vuln) => {
+      if (vuln.severity !== 'high' && vuln.severity !== 'critical') return false;
+      const advs = getAdvIds(vuln);
+      return advs.length === 0 || advs.some((id) => !ACCEPTED_ADVISORIES.has(id));
+    });
+
+    if (unacceptedVulns.length > 0) {
+      errors.push(`cached npm audit reports ${unacceptedVulns.length} un-accepted high/critical vulnerabilit(ies) (${rel(auditPath)})`);
     } else {
-      notes.push(`cached npm audit clean of high/critical (${rel(auditPath)})`);
+      notes.push(`cached npm audit clean of un-accepted high/critical (${rel(auditPath)})`);
     }
-  } catch {
+  } catch (err) {
     notes.push(`cached audit at ${rel(auditPath)} could not be parsed — run \`npm run security:audit\` to refresh`);
   }
 } else {

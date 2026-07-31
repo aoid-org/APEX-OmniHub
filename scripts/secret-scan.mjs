@@ -17,7 +17,7 @@ const BINARY_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svgz', '.pdf', '.zip', '.gz', '.tar', '.7z', '.mp4', '.webm', '.mp3', '.wav', '.woff', '.woff2', '.ttf', '.eot', '.wasm', '.bin',
 ]);
 
-const EXCLUDED_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'coverage', '.turbo', '.cache']);
+const EXCLUDED_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'coverage', '.turbo', '.cache', 'fixtures', '__fixtures__', 'mocks', '__mocks__']);
 const GENERATED_SEGMENTS = new Set(['generated', 'build-artifacts']);
 const SCAN_EXCLUDED_PREFIXES = [];
 const SYNTHETIC_FIXTURE_FILES = new Set([

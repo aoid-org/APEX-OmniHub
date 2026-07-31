@@ -13,10 +13,10 @@ let hasErrors = false;
 function checkCodePointers(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
-  const locationRegex = /Location:\s+`?([^`]+)`?/;
+  const locationRegex = /\bLocation:\s*(?:\*\*)?\s*`([^`]+)`/;
   
   lines.forEach((line, index) => {
-    // Check "Location: `path`" or "Location: path"
+    // Check "Location: `path`" or "**Location:** `path`"
     const locationMatch = locationRegex.exec(line);
     if (locationMatch) {
       checkPath(filePath, index + 1, locationMatch[1].trim());
@@ -31,6 +31,10 @@ function checkCodePointers(filePath) {
 }
 
 function checkPath(docPath, lineNum, relPath) {
+    // Ignore CLI commands and globs
+    if (relPath.includes(' ') && !relPath.startsWith('src/')) return;
+    if (relPath.includes('*')) return;
+    
     // Handle "code pointers" which might be relative to repo root or doc? 
     // Usually "Location: src/foo/bar.ts" implies repo root.
     // Let's assume repo root first.

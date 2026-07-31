@@ -49,14 +49,14 @@ const dashboardTsxFiles = existsSync(DASHBOARD_DIR) ? listTsxFiles(DASHBOARD_DIR
 // Rule 1 — no <style> tags in dashboard TSX (keyframes/resets belong in omniSkin.css)
 const styleTagOffenders = dashboardTsxFiles.filter((f) => /<style[\s>]/.test(readFileSync(f, 'utf8')));
 check('no <style> tags in dashboard TSX', styleTagOffenders.length === 0,
-  `found in: ${styleTagOffenders.map((f) => f.replace(ROOT + '/', '')).join(', ')}`);
+  `found in: ${styleTagOffenders.map((f) => path.relative(ROOT, f)).join(', ')}`);
 
 // Rule 2 — no invalid var()+hex-alpha pattern in dashboard module/component files
 const moduleOffenders = dashboardTsxFiles
   .filter((f) => f !== SHELL)
   .filter((f) => hasInvalidVarHex(readFileSync(f, 'utf8')));
 check('no invalid var()+hex-alpha pattern in dashboard module files', moduleOffenders.length === 0,
-  `found in: ${moduleOffenders.map((f) => f.replace(ROOT + '/', '')).join(', ')}`);
+  `found in: ${moduleOffenders.map((f) => path.relative(ROOT, f)).join(', ')}`);
 
 // Rule 3 — no var(--od-*) references in the files this contract owns (Shell +
 // token forge). The dashboard-wide `--od-*` legacy token system is a separate,
@@ -67,7 +67,7 @@ const OSE_OWNED_FILES = [SHELL, resolve(DASHBOARD_DIR, 'omniSkinTokens.ts'), res
   .filter((f) => existsSync(f));
 const odTokenOffenders = OSE_OWNED_FILES.filter((f) => /var\(--od-/.test(readFileSync(f, 'utf8')));
 check('no var(--od-*) references in Shell/token-forge files', odTokenOffenders.length === 0,
-  `found in: ${odTokenOffenders.map((f) => f.replace(ROOT + '/', '')).join(', ')}`);
+  `found in: ${odTokenOffenders.map((f) => path.relative(ROOT, f)).join(', ')}`);
 
 // Rule 4 — no invalid var()+hex-alpha pattern in the Shell itself
 if (existsSync(SHELL)) {

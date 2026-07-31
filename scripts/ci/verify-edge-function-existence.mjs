@@ -66,6 +66,7 @@ function extractReferences(files) {
 }
 
 function repoFunctionDirs() {
+  if (!fs.existsSync(FN_DIR)) return new Set();
   return new Set(
     fs.readdirSync(FN_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory() && d.name !== "_shared")

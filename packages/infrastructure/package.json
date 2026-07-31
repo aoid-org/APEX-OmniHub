@@ -14,7 +14,7 @@
     "aws-cdk-lib": "^2.178.0",
     "constructs": "^10.4.2",
     "esbuild": "^0.25.0",
-    "vitest": "^4.0.16"
+    "vitest": "4.1.8"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.750.0",

@@ -50,8 +50,13 @@ function checkLinksInFile(filePath) {
       continue;
     }
 
+    // Strip anchor and query strings for local path resolution
+    let fileUrl = linkUrl.split('#')[0];
+    fileUrl = fileUrl.split('?')[0];
+    if (!fileUrl) continue;
+
     // Resolve path
-    const targetPath = path.resolve(path.dirname(filePath), linkUrl);
+    const targetPath = path.resolve(path.dirname(filePath), fileUrl);
     
     // Check if it exists
     if (!fs.existsSync(targetPath)) {

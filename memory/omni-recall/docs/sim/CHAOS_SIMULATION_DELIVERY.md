@@ -228,7 +228,7 @@ CLOSED ──[5 failures]──> OPEN ──[30s timeout]──> HALF_OPEN
 ## 📖 DOCUMENTATION (Review First)
 
 ### 1. **RUNBOOK.md** ← START HERE
-**Location:** `docs/sim/RUNBOOK.md`
+**Location:** `memory/omni-recall/docs/sim/RUNBOOK.md`
 **Purpose:** How to run simulations (all modes)
 **Key Sections:**
 - Quick start
@@ -238,7 +238,7 @@ CLOSED ──[5 failures]──> OPEN ──[30s timeout]──> HALF_OPEN
 - CI/CD integration
 
 ### 2. **CHAOTIC_CLIENT_STORY.md**
-**Location:** `docs/sim/CHAOTIC_CLIENT_STORY.md`
+**Location:** `memory/omni-recall/docs/sim/CHAOTIC_CLIENT_STORY.md`
 **Purpose:** Full narrative + beat mapping
 **Key Sections:**
 - Story arc (Sarah's terrible day)
@@ -247,7 +247,7 @@ CLOSED ──[5 failures]──> OPEN ──[30s timeout]──> HALF_OPEN
 - Success criteria
 
 ### 3. **ARCHITECTURE.md**
-**Location:** `docs/sim/ARCHITECTURE.md`
+**Location:** `memory/omni-recall/docs/sim/ARCHITECTURE.md`
 **Purpose:** System design + diagrams
 **Key Sections:**
 - 11 Mermaid diagrams
@@ -257,7 +257,7 @@ CLOSED ──[5 failures]──> OPEN ──[30s timeout]──> HALF_OPEN
 - Performance characteristics
 
 ### 4. **INVENTORY.md**
-**Location:** `docs/sim/INVENTORY.md`
+**Location:** `memory/omni-recall/docs/sim/INVENTORY.md`
 **Purpose:** App discovery results
 **Key Sections:**
 - 8 apps found (real implementations)
@@ -266,7 +266,7 @@ CLOSED ──[5 failures]──> OPEN ──[30s timeout]──> HALF_OPEN
 - Database schema
 
 ### 5. **RESULTS_REPORT.md**
-**Location:** `docs/sim/RESULTS_REPORT.md`
+**Location:** `memory/omni-recall/docs/sim/RESULTS_REPORT.md`
 **Purpose:** Template for test reports
 **Key Sections:**
 - Scorecard format

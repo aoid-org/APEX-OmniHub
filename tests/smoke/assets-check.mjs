@@ -122,6 +122,27 @@ async function main() {
 
   const results = [];
 
+  let child;
+  try {
+    let response = await fetch(`${BASE_URL}/`).catch(() => null);
+    if (!response) {
+      console.log('   Spinning up local preview server...');
+      const { spawn } = await import('node:child_process');
+      const vitePath = path.resolve('node_modules', 'vite', 'bin', 'vite.js');
+      child = spawn(process.execPath, [vitePath, 'preview', '--port', '4173'], { stdio: 'ignore' });
+      
+      // Retry for up to 30 seconds
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        response = await fetch(`${BASE_URL}/`).catch(() => null);
+        if (response) {
+          console.log('   Server is up!');
+          break;
+        }
+      }
+    }
+  } catch(e) {}
+
   // Critical assets and routes that MUST return 200
   const criticalAssets = [
     { path: '/manifest.webmanifest', description: 'PWA Manifest' },
@@ -180,6 +201,7 @@ async function main() {
     skipped.forEach((s) => console.log(`   - ${s.path}: ${s.description}`));
     console.log('\n');
     console.log(`${colors.green}No failures - CI passing (skipped tests don't block)${colors.reset}\n`);
+    if (child) child.kill();
     process.exit(0);
   }
 
@@ -187,10 +209,12 @@ async function main() {
     console.log(`${colors.red}FAILED ASSETS:${colors.reset}`);
     failed.forEach((f) => console.log(`   - ${f.path}: ${f.description}`));
     console.log('\n');
+    if (child) child.kill();
     process.exit(1);
   }
 
   console.log(`${colors.green}All critical assets accessible!${colors.reset}\n`);
+  if (child) child.kill();
   process.exit(0);
 }
 

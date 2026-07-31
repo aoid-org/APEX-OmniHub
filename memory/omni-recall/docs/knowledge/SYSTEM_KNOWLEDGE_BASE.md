@@ -12,7 +12,7 @@ status: verified
 ## Critical System Components
 
 ### OmniLink Port (Single Port Rule)
-**Location:** `src/omniconnect/core/OmniLinkPort.ts`
+**Location:** `src/omniconnect/delivery/omnilink-delivery.ts`
 **Purpose:** Universal connection layer for all protocol communication
 **Port:** 9876 (hardcoded by design)
 **Why Critical:** Single point of integration; all external protocols route through this port
@@ -20,7 +20,7 @@ status: verified
 **Key Decision:** We chose a single-port architecture to simplify firewall rules, reduce network complexity, and enable protocol translation without port conflicts.
 
 ### Guardian Safety Layer
-**Location:** `src/guardian/guardrail.ts`
+**Location:** `src/lib/web3/guardrails.ts`
 **Purpose:** Real-time safety evaluation before action execution
 **Processing:** Synchronous blocking evaluation (<100ms SLA)
 **Why Critical:** Prevents unsafe AI actions; regulatory compliance requirement

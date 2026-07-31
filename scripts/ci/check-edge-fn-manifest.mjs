@@ -12,8 +12,14 @@ const ROOT = process.cwd();
 const MANIFEST = path.join(ROOT, "scripts", "ci", "edge-functions.manifest.json");
 const FN_DIR = path.join(ROOT, "supabase", "functions");
 
-const manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
-const declared = new Set(manifest.functions);
+let manifest;
+try {
+  manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+} catch (err) {
+  console.error(`[edge-manifest] ERROR: Could not read or parse edge-functions.manifest.json. Is it missing or malformed?`, err.message);
+  process.exit(1);
+}
+const declared = new Set(manifest.functions || []);
 
 const actual = new Set(
   fs.readdirSync(FN_DIR, { withFileTypes: true })
