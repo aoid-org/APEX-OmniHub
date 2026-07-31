@@ -1688,6 +1688,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **OmniBoard timeout:** Reduced hard timeout in `OmniBoardWizard.tsx` to 10s (`OMNIBOARD_REQUEST_TIMEOUT_MS = 10_000`) and added `data-testid="omniboard-error-state"`.
 - **APEX App Connect & Gallery:** `ApexAppsMcpModule.tsx` added user-confirmation gate ("It connected! ✔") writing `apex_app_installs`, and `IntegratedAppsGalleryWidget` queries user-confirmed installs on mount.
 - **Operational impact:** Additive DB migration `apex_app_installs` for OmniDash user app connect state. No breaking API, env var, secret, or start command changes.
+## 9.38 Codemagic CI and Capacitor Sync — 2026-07-30
 
+**Changed files:** `codemagic.yaml`, `capacitor.config.ts`, `.github/workflows/mobile-build-verify.yml`
 
-
+- **Root cause/Scope:** Implementation of the OmniLink native mobile shell (Capacitor) release pipeline routing to TestFlight and App Store via Codemagic, replacing manual or un-pipelined legacy steps.
+- **Remediation:** 
+  - Added `codemagic.yaml` as the canonical build pipeline for the mobile release shell, pointing strictly to the `dist-mobile` payload directory.
+  - Hardcoded `capacitor.config.ts` to `webDir: 'dist-mobile'`.
+  - Updated the existing `.github/workflows/mobile-build-verify.yml` to rename `dist` to `dist-mobile` before running `npx cap sync`, maintaining compatibility with the new `capacitor.config.ts` constraints during PR build verification.
+- **Operational impact:** None to deployed web services or API backends. The CI pipelines now correctly process the mobile shell for deployment via Codemagic.
