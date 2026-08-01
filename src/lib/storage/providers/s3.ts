@@ -44,16 +44,12 @@ function toError(err: unknown): Error {
   return err instanceof Error ? err : new Error(String(err))
 }
 
-export interface S3ClientLike {
-  send(command: any): Promise<any>
-}
-
 export class S3Storage implements IStorage {
   private readonly opts: S3StorageOptions
-  // SDK handles are cached after first lazy import. Typed as S3ClientLike to keep
+  // SDK handles are cached after first lazy import. Typed as any to keep
   // this module resilient when @aws-sdk is not installed or when types differ.
   private _mod: any = null
-  private _client: S3ClientLike | null = null
+  private _client: any = null
 
   constructor(options: S3StorageOptions) {
     if (!options.accessKeyId || !options.secretAccessKey) {
@@ -70,7 +66,7 @@ export class S3Storage implements IStorage {
     return this._mod
   }
 
-  private async client(): Promise<S3ClientLike> {
+  private async client(): Promise<any> {
     if (!this._client) {
       const { S3Client } = await this.mod()
       this._client = new S3Client({
@@ -81,7 +77,7 @@ export class S3Storage implements IStorage {
           accessKeyId: this.opts.accessKeyId,
           secretAccessKey: this.opts.secretAccessKey,
         },
-      }) as S3ClientLike
+      })
     }
     return this._client
   }
@@ -130,25 +126,27 @@ export class S3Storage implements IStorage {
   async upload(
     bucket: string,
     path: string,
-    file: File | Blob | ArrayBuffer,
+    file: Blob | File | ArrayBuffer | Uint8Array | string,
     options?: UploadOptions
   ): Promise<StorageResult<string>> {
     try {
       const { PutObjectCommand } = await this.mod()
       const client = await this.client()
-      const body = file instanceof ArrayBuffer ? new Uint8Array(file) : file
+      let body: any = file
+      if (typeof file === 'string') {
+        body = new TextEncoder().encode(file)
+      }
       await client.send(
         new PutObjectCommand({
           Bucket: bucket,
           Key: path,
-          Body: body as Uint8Array | Blob,
+          Body: body,
           ContentType: options?.contentType,
           CacheControl: options?.cacheControl,
           Metadata: options?.metadata,
-          ACL: options?.acl,
         })
       )
-      return { data: this.getPublicUrl(bucket, path), error: null }
+      return { data: await this.getPublicUrl(bucket, path), error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
     }
@@ -163,41 +161,69 @@ export class S3Storage implements IStorage {
       const { GetObjectCommand } = await this.mod()
       const client = await this.client()
       const res = await client.send(new GetObjectCommand({ Bucket: bucket, Key: path }))
-      const body = res.Body as { transformToByteArray: () => Promise<Uint8Array> } | undefined
-      if (!body) {
-        return { data: null, error: new Error(`Empty body for ${path}`) }
+      if (!res.Body) {
+        throw new Error('S3 GetObject returned empty body')
       }
-      const bytes = (await body.transformToByteArray()) as Uint8Array<ArrayBuffer>
-      return { data: new Blob([bytes], { type: res.ContentType }), error: null }
+      // transformToByteArray is standard on AWS SDK v3 stream responses
+      const bytes = await res.Body.transformToByteArray()
+      const blob = new Blob([bytes], { type: res.ContentType ?? 'application/octet-stream' })
+      return { data: blob, error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
     }
   }
 
-  async delete(bucket: string, path: string): Promise<StorageResult<boolean>> {
-    try {
-      const { DeleteObjectCommand } = await this.mod()
-      const client = await this.client()
-      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: path }))
-      return { data: true, error: null }
-    } catch (err) {
-      return { data: null, error: toError(err) }
-    }
-  }
-
-  async deleteMany(bucket: string, paths: string[]): Promise<StorageResult<boolean>> {
+  async delete(bucket: string, paths: string[]): Promise<StorageResult<boolean>> {
     try {
       const { DeleteObjectsCommand } = await this.mod()
       const client = await this.client()
       await client.send(
         new DeleteObjectsCommand({
           Bucket: bucket,
-          Delete: { Objects: paths.map((Key) => ({ Key })) },
+          Delete: {
+            Objects: paths.map((p) => ({ Key: p })),
+            Quiet: true,
+          },
         })
       )
       return { data: true, error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
+    }
+  }
+
+  async list(bucket: string, path?: string, options?: ListOptions): Promise<StorageListResult> {
+    try {
+      const { ListObjectsV2Command } = await this.mod()
+      const client = await this.client()
+      const prefix = path ? path.replace(/\/$/, '') + '/' : undefined
+      const res = await client.send(
+        new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: prefix,
+          MaxKeys: options?.limit ?? 100,
+          ContinuationToken: options?.cursor,
+        })
+      )
+
+      const files: StorageFile[] = (res.Contents ?? []).map((item: any) => ({
+        id: item.Key ?? '',
+        name: item.Key ? item.Key.split('/').pop() ?? item.Key : '',
+        path: item.Key ?? '',
+        size: item.Size ?? 0,
+        mimeType: 'application/octet-stream',
+        createdAt: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+        updatedAt: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+        metadata: { etag: item.ETag },
+      }))
+
+      return {
+        data: files,
+        nextCursor: res.NextContinuationToken ?? null,
+        error: null,
+      }
+    } catch (err) {
+      return { data: [], nextCursor: null, error: toError(err) }
     }
   }
 
@@ -207,89 +233,28 @@ export class S3Storage implements IStorage {
       const client = await this.client()
       await client.send(new HeadObjectCommand({ Bucket: bucket, Key: path }))
       return { data: true, error: null }
-    } catch (err) {
-      const name = (err as { name?: string })?.name
-      if (name === 'NotFound' || name === 'NoSuchKey') {
+    } catch (err: any) {
+      if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
         return { data: false, error: null }
       }
-      return { data: false, error: toError(err) }
-    }
-  }
-
-  async getMetadata(bucket: string, path: string): Promise<StorageResult<StorageFile>> {
-    try {
-      const { HeadObjectCommand } = await this.mod()
-      const client = await this.client()
-      const res = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: path }))
-      return {
-        data: {
-          name: path.split('/').pop() ?? path,
-          path,
-          size: res.ContentLength ?? 0,
-          contentType: res.ContentType,
-          lastModified: res.LastModified,
-          metadata: res.Metadata,
-          publicUrl: this.getPublicUrl(bucket, path),
-        },
-        error: null,
-      }
-    } catch (err) {
       return { data: null, error: toError(err) }
     }
-  }
-
-  async list(bucket: string, options?: ListOptions): Promise<StorageListResult> {
-    try {
-      const { ListObjectsV2Command } = await this.mod()
-      const client = await this.client()
-      const res = await client.send(
-        new ListObjectsV2Command({
-          Bucket: bucket,
-          Prefix: options?.prefix,
-          MaxKeys: options?.limit,
-        })
-      )
-      const contents = res.Contents ?? []
-      const offset = options?.offset ?? 0
-      const files: StorageFile[] = contents.slice(offset).map((obj: { Key?: string; Size?: number; LastModified?: Date }) => ({
-        name: (obj.Key ?? '').split('/').pop() ?? (obj.Key ?? ''),
-        path: obj.Key ?? '',
-        size: obj.Size ?? 0,
-        lastModified: obj.LastModified,
-        publicUrl: this.getPublicUrl(bucket, obj.Key ?? ''),
-      }))
-      return { data: files, error: null, count: files.length }
-    } catch (err) {
-      return { data: null, error: toError(err), count: null }
-    }
-  }
-
-  async move(
-    bucket: string,
-    fromPath: string,
-    toPath: string
-  ): Promise<StorageResult<boolean>> {
-    const { data: copied, error } = await this.copy(bucket, fromPath, bucket, toPath)
-    if (error || !copied) {
-      return { data: null, error: error ?? new Error('Copy failed during move') }
-    }
-    return this.delete(bucket, fromPath)
   }
 
   async copy(
     sourceBucket: string,
     sourcePath: string,
-    destBucket: string,
-    destPath: string
+    destinationBucket: string,
+    destinationPath: string
   ): Promise<StorageResult<boolean>> {
     try {
       const { CopyObjectCommand } = await this.mod()
       const client = await this.client()
       await client.send(
         new CopyObjectCommand({
-          Bucket: destBucket,
-          Key: destPath,
-          CopySource: encodeURI(`${sourceBucket}/${sourcePath}`),
+          Bucket: destinationBucket,
+          Key: destinationPath,
+          CopySource: encodeURIComponent(`${sourceBucket}/${sourcePath}`),
         })
       )
       return { data: true, error: null }
@@ -298,14 +263,23 @@ export class S3Storage implements IStorage {
     }
   }
 
+  async move(
+    sourceBucket: string,
+    sourcePath: string,
+    destinationBucket: string,
+    destinationPath: string
+  ): Promise<StorageResult<boolean>> {
+    const copyRes = await this.copy(sourceBucket, sourcePath, destinationBucket, destinationPath)
+    if (copyRes.error) return copyRes
+    const delRes = await this.delete(sourceBucket, [sourcePath])
+    if (delRes.error) return delRes
+    return { data: true, error: null }
+  }
+
   // -------------------------------------------------------------------------
-  // URL OPERATIONS
+  // PRESIGNED URLS
   // -------------------------------------------------------------------------
 
-  getPublicUrl(bucket: string, path: string): string {
-    const key = path.split('/').map(encodeURIComponent).join('/')
-    if (this.opts.publicBaseUrl) {
-      return `${this.opts.publicBaseUrl.replace(/\/$/, '')}/${key}`
   async createSignedUrl(
     bucket: string,
     path: string,
@@ -316,7 +290,7 @@ export class S3Storage implements IStorage {
       const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner')
       const client = await this.client()
       const url = await getSignedUrl(
-        client as any,
+        client,
         new GetObjectCommand({ Bucket: bucket, Key: path }),
         { expiresIn: options?.expiresIn ?? 3600 }
       )
@@ -327,31 +301,29 @@ export class S3Storage implements IStorage {
   }
 
   async getPublicUrl(bucket: string, path: string): Promise<string> {
+    const key = path.split('/').map(encodeURIComponent).join('/')
     if (this.opts.publicBaseUrl) {
-      const base = this.opts.publicBaseUrl.replace(/\/$/, '')
-      return `${base}/${bucket}/${path.replace(/^\//, '')}`
+      return `${this.opts.publicBaseUrl.replace(/\/$/, '')}/${key}`
     }
     if (this.opts.endpoint) {
-      const ep = this.opts.endpoint.replace(/\/$/, '')
-      return `${ep}/${bucket}/${path.replace(/^\//, '')}`
+      return `${this.opts.endpoint.replace(/\/$/, '')}/${bucket}/${key}`
     }
-    return `https://${bucket}.s3.${this.opts.region ?? 'us-east-1'}.amazonaws.com/${path.replace(/^\//, '')}`
+    return `https://${bucket}.s3.${this.opts.region ?? 'us-east-1'}.amazonaws.com/${key}`
   }
 
   async createSignedUrls(
     bucket: string,
     paths: string[],
     options?: SignedUrlOptions
-  ): Promise<StorageResult<string[]>> {
+  ): Promise<StorageResult<Record<string, string>>> {
     try {
-      const results = await Promise.all(
-        paths.map((p) => this.createSignedUrl(bucket, p, options))
-      )
-      const failed = results.find((r) => r.error)
-      if (failed?.error) {
-        return { data: null, error: failed.error }
+      const out: Record<string, string> = {}
+      for (const p of paths) {
+        const res = await this.createSignedUrl(bucket, p, options)
+        if (res.error || !res.data) return { data: null, error: res.error ?? new Error(`Failed url for ${p}`) }
+        out[p] = res.data
       }
-      return { data: results.map((r) => r.data as string), error: null }
+      return { data: out, error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
     }
@@ -383,7 +355,7 @@ export class S3Storage implements IStorage {
     try {
       const { createPresignedPost } = await import('@aws-sdk/s3-presigned-post')
       const client = await this.client()
-      const res = await createPresignedPost(client as any, {
+      const res = await createPresignedPost(client, {
         Bucket: bucket,
         Key: path,
         Fields: options?.contentType ? { 'Content-Type': options.contentType } : undefined,
