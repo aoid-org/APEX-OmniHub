@@ -35,8 +35,8 @@ vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: vi.fn().mockResolvedValue('https://signed.example/object?sig=abc'),
 }))
 
-import { S3Storage } from '../src/lib/storage/providers/s3'
-import { createStorage } from '../src/lib/storage'
+import { S3Storage } from '../../src/lib/storage/providers/s3'
+import { createStorage } from '../../src/lib/storage'
 
 beforeEach(() => {
   send.mockReset()
