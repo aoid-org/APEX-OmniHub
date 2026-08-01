@@ -1756,3 +1756,10 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **R-A12 (All CI runtime gates pass):** PASS
 - **R-A13 (No unverified claims):** PASS
 - **R-A14 (Zero regressions):** PASS
+
+## 9.21 A.R.I.S.E. Snapshot Rolling PR Workflow Reset Contract (.github/workflows/arise.yml)
+
+### 1. Workflow Reset Mechanism
+- **File Updated:** `.github/workflows/arise.yml`
+- **Root Cause Fix:** Replaced 3-way `git merge` between `automation/arise-snapshot-current` and `origin/main` with `git checkout -B "$branch" "origin/${{ github.ref_name }}"`.
+- **Operational Justification:** Resetting the rolling snapshot branch directly to the target reference (`main`) ensures the snapshot branch inherits 100% of current source code with ZERO code merge conflicts (`src/lib/storage/providers/s3.ts`). Generated snapshot reports are applied cleanly on top and force-pushed to the rolling PR.
