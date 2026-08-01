@@ -46,8 +46,6 @@ function toError(err: unknown): Error {
 
 export class S3Storage implements IStorage {
   private readonly opts: S3StorageOptions
-  // SDK handles are cached after first lazy import. Typed as any to keep
-  // this module resilient when @aws-sdk is not installed or when types differ.
   private _mod: any = null
   private _client: any = null
 
@@ -86,7 +84,7 @@ export class S3Storage implements IStorage {
   // BUCKET OPERATIONS
   // -------------------------------------------------------------------------
 
-  async createBucket(name: string): Promise<StorageResult<boolean>> {
+  async createBucket(name: string, _options?: { public?: boolean }): Promise<StorageResult<boolean>> {
     try {
       const { CreateBucketCommand } = await this.mod()
       const client = await this.client()
@@ -126,7 +124,7 @@ export class S3Storage implements IStorage {
   async upload(
     bucket: string,
     path: string,
-    file: Blob | File | ArrayBuffer | Uint8Array | string,
+    file: File | Blob | ArrayBuffer,
     options?: UploadOptions
   ): Promise<StorageResult<string>> {
     try {
@@ -146,7 +144,7 @@ export class S3Storage implements IStorage {
           Metadata: options?.metadata,
         })
       )
-      return { data: await this.getPublicUrl(bucket, path), error: null }
+      return { data: this.getPublicUrl(bucket, path), error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
     }
@@ -164,7 +162,6 @@ export class S3Storage implements IStorage {
       if (!res.Body) {
         throw new Error('S3 GetObject returned empty body')
       }
-      // transformToByteArray is standard on AWS SDK v3 stream responses
       const bytes = await res.Body.transformToByteArray()
       const blob = new Blob([bytes], { type: res.ContentType ?? 'application/octet-stream' })
       return { data: blob, error: null }
@@ -173,7 +170,11 @@ export class S3Storage implements IStorage {
     }
   }
 
-  async delete(bucket: string, paths: string[]): Promise<StorageResult<boolean>> {
+  async delete(bucket: string, path: string): Promise<StorageResult<boolean>> {
+    return this.deleteMany(bucket, [path])
+  }
+
+  async deleteMany(bucket: string, paths: string[]): Promise<StorageResult<boolean>> {
     try {
       const { DeleteObjectsCommand } = await this.mod()
       const client = await this.client()
@@ -192,41 +193,6 @@ export class S3Storage implements IStorage {
     }
   }
 
-  async list(bucket: string, path?: string, options?: ListOptions): Promise<StorageListResult> {
-    try {
-      const { ListObjectsV2Command } = await this.mod()
-      const client = await this.client()
-      const prefix = path ? path.replace(/\/$/, '') + '/' : undefined
-      const res = await client.send(
-        new ListObjectsV2Command({
-          Bucket: bucket,
-          Prefix: prefix,
-          MaxKeys: options?.limit ?? 100,
-          ContinuationToken: options?.cursor,
-        })
-      )
-
-      const files: StorageFile[] = (res.Contents ?? []).map((item: any) => ({
-        id: item.Key ?? '',
-        name: item.Key ? item.Key.split('/').pop() ?? item.Key : '',
-        path: item.Key ?? '',
-        size: item.Size ?? 0,
-        mimeType: 'application/octet-stream',
-        createdAt: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
-        updatedAt: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
-        metadata: { etag: item.ETag },
-      }))
-
-      return {
-        data: files,
-        nextCursor: res.NextContinuationToken ?? null,
-        error: null,
-      }
-    } catch (err) {
-      return { data: [], nextCursor: null, error: toError(err) }
-    }
-  }
-
   async exists(bucket: string, path: string): Promise<StorageResult<boolean>> {
     try {
       const { HeadObjectCommand } = await this.mod()
@@ -241,19 +207,80 @@ export class S3Storage implements IStorage {
     }
   }
 
+  async getMetadata(bucket: string, path: string): Promise<StorageResult<StorageFile>> {
+    try {
+      const { HeadObjectCommand } = await this.mod()
+      const client = await this.client()
+      const res = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: path }))
+      const file: StorageFile = {
+        name: path.split('/').pop() ?? path,
+        path,
+        size: res.ContentLength ?? 0,
+        contentType: res.ContentType,
+        lastModified: res.LastModified,
+        metadata: res.Metadata,
+        publicUrl: this.getPublicUrl(bucket, path),
+      }
+      return { data: file, error: null }
+    } catch (err) {
+      return { data: null, error: toError(err) }
+    }
+  }
+
+  async list(bucket: string, options?: ListOptions): Promise<StorageListResult> {
+    try {
+      const { ListObjectsV2Command } = await this.mod()
+      const client = await this.client()
+      const prefix = options?.prefix ? options.prefix.replace(/\/$/, '') + '/' : undefined
+      const res = await client.send(
+        new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: prefix,
+          MaxKeys: options?.limit ?? 100,
+        })
+      )
+
+      const files: StorageFile[] = (res.Contents ?? []).map((item: any) => ({
+        name: item.Key ? item.Key.split('/').pop() ?? item.Key : '',
+        path: item.Key ?? '',
+        size: item.Size ?? 0,
+        contentType: 'application/octet-stream',
+        lastModified: item.LastModified,
+        metadata: { etag: item.ETag },
+        publicUrl: this.getPublicUrl(bucket, item.Key ?? ''),
+      }))
+
+      return {
+        data: files,
+        count: files.length,
+        error: null,
+      }
+    } catch (err) {
+      return { data: [], count: 0, error: toError(err) }
+    }
+  }
+
+  async move(bucket: string, fromPath: string, toPath: string): Promise<StorageResult<boolean>> {
+    const copyRes = await this.copy(bucket, fromPath, bucket, toPath)
+    if (copyRes.error) return copyRes
+    const delRes = await this.delete(bucket, fromPath)
+    if (delRes.error) return delRes
+    return { data: true, error: null }
+  }
+
   async copy(
     sourceBucket: string,
     sourcePath: string,
-    destinationBucket: string,
-    destinationPath: string
+    destBucket: string,
+    destPath: string
   ): Promise<StorageResult<boolean>> {
     try {
       const { CopyObjectCommand } = await this.mod()
       const client = await this.client()
       await client.send(
         new CopyObjectCommand({
-          Bucket: destinationBucket,
-          Key: destinationPath,
+          Bucket: destBucket,
+          Key: destPath,
           CopySource: encodeURIComponent(`${sourceBucket}/${sourcePath}`),
         })
       )
@@ -263,22 +290,20 @@ export class S3Storage implements IStorage {
     }
   }
 
-  async move(
-    sourceBucket: string,
-    sourcePath: string,
-    destinationBucket: string,
-    destinationPath: string
-  ): Promise<StorageResult<boolean>> {
-    const copyRes = await this.copy(sourceBucket, sourcePath, destinationBucket, destinationPath)
-    if (copyRes.error) return copyRes
-    const delRes = await this.delete(sourceBucket, [sourcePath])
-    if (delRes.error) return delRes
-    return { data: true, error: null }
-  }
+  // -------------------------------------------------------------------------
+  // URL OPERATIONS
+  // -------------------------------------------------------------------------
 
-  // -------------------------------------------------------------------------
-  // PRESIGNED URLS
-  // -------------------------------------------------------------------------
+  getPublicUrl(bucket: string, path: string, _options?: { download?: string }): string {
+    const key = path.split('/').map(encodeURIComponent).join('/')
+    if (this.opts.publicBaseUrl) {
+      return `${this.opts.publicBaseUrl.replace(/\/$/, '')}/${key}`
+    }
+    if (this.opts.endpoint) {
+      return `${this.opts.endpoint.replace(/\/$/, '')}/${bucket}/${key}`
+    }
+    return `https://${bucket}.s3.${this.opts.region ?? 'us-east-1'}.amazonaws.com/${key}`
+  }
 
   async createSignedUrl(
     bucket: string,
@@ -300,28 +325,17 @@ export class S3Storage implements IStorage {
     }
   }
 
-  async getPublicUrl(bucket: string, path: string): Promise<string> {
-    const key = path.split('/').map(encodeURIComponent).join('/')
-    if (this.opts.publicBaseUrl) {
-      return `${this.opts.publicBaseUrl.replace(/\/$/, '')}/${key}`
-    }
-    if (this.opts.endpoint) {
-      return `${this.opts.endpoint.replace(/\/$/, '')}/${bucket}/${key}`
-    }
-    return `https://${bucket}.s3.${this.opts.region ?? 'us-east-1'}.amazonaws.com/${key}`
-  }
-
   async createSignedUrls(
     bucket: string,
     paths: string[],
     options?: SignedUrlOptions
-  ): Promise<StorageResult<Record<string, string>>> {
+  ): Promise<StorageResult<string[]>> {
     try {
-      const out: Record<string, string> = {}
+      const out: string[] = []
       for (const p of paths) {
         const res = await this.createSignedUrl(bucket, p, options)
         if (res.error || !res.data) return { data: null, error: res.error ?? new Error(`Failed url for ${p}`) }
-        out[p] = res.data
+        out.push(res.data)
       }
       return { data: out, error: null }
     } catch (err) {
@@ -333,10 +347,10 @@ export class S3Storage implements IStorage {
   // ADVANCED OPERATIONS
   // -------------------------------------------------------------------------
 
-  async uploadResumable(
+  async uploadWithProgress(
     bucket: string,
     path: string,
-    file: Blob | File,
+    file: File | Blob,
     onProgress: (progress: number) => void,
     options?: UploadOptions
   ): Promise<{ url: string | null; error: Error | null; abort: () => void }> {

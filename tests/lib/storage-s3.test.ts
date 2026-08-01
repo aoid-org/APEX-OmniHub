@@ -117,7 +117,7 @@ describe('S3Storage file operations', () => {
     const res = await s.delete('avatars', 'u/p.jpg')
     expect(res.data).toBe(true)
     const cmd = send.mock.calls[0][0] as FakeCommand
-    expect(cmd.input.Key).toBe('u/p.jpg')
+    expect(cmd.input.Delete.Objects[0].Key).toBe('u/p.jpg')
   })
 
   it('createSignedUrl returns the presigned URL', async () => {
