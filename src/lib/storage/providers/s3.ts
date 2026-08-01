@@ -182,7 +182,7 @@ export class S3Storage implements IStorage {
         throw new Error('S3 GetObject returned empty body')
       }
       const bytes = await res.Body.transformToByteArray()
-      const blob = new Blob([bytes], { type: res.ContentType ?? 'application/octet-stream' })
+      const blob = new Blob([bytes as unknown as BlobPart], { type: res.ContentType ?? 'application/octet-stream' })
       return { data: blob, error: null }
     } catch (err) {
       return { data: null, error: toError(err) }
@@ -273,7 +273,7 @@ export class S3Storage implements IStorage {
         size: item.Size ?? 0,
         contentType: 'application/octet-stream',
         lastModified: item.LastModified,
-        metadata: { etag: item.ETag },
+        metadata: item.ETag ? { etag: item.ETag } : undefined,
         publicUrl: this.getPublicUrl(bucket, item.Key ?? ''),
       }))
 
