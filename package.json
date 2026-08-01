@@ -102,6 +102,8 @@
     "verify:release": "node scripts/ci/verify-release.mjs",
     "check:pwa": "node scripts/ci/check-pwa-integrity.mjs",
     "check:lockfiles": "node scripts/ci/check-lockfile-sync.mjs",
+    "check:lockfile-sync": "node scripts/ci/check-lockfile-sync.mjs",
+    "check:accepted-risk": "node scripts/ci/check-accepted-risk.mjs",
     "check:agent-guardrails": "node scripts/ci/guard-agent-destructive-actions.mjs",
     "check:edge-fn-manifest": "node scripts/ci/check-edge-fn-manifest.mjs",
     "check:supabase-env-alignment": "node scripts/ci/verify-supabase-env-alignment.mjs",
