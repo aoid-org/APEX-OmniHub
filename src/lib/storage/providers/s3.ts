@@ -44,12 +44,16 @@ function toError(err: unknown): Error {
   return err instanceof Error ? err : new Error(String(err))
 }
 
+export interface S3ClientLike {
+  send(command: any): Promise<any>
+}
+
 export class S3Storage implements IStorage {
   private readonly opts: S3StorageOptions
-  // SDK handles are cached after first lazy import. Typed as unknown-ish to keep
-  // this module resilient when @aws-sdk is not installed in a given context.
-  private _mod: typeof import('@aws-sdk/client-s3') | null = null
-  private _client: import('@aws-sdk/client-s3').S3Client | null = null
+  // SDK handles are cached after first lazy import. Typed as S3ClientLike to keep
+  // this module resilient when @aws-sdk is not installed or when types differ.
+  private _mod: any = null
+  private _client: S3ClientLike | null = null
 
   constructor(options: S3StorageOptions) {
     if (!options.accessKeyId || !options.secretAccessKey) {
@@ -61,12 +65,12 @@ export class S3Storage implements IStorage {
     this.opts = options
   }
 
-  private async mod(): Promise<typeof import('@aws-sdk/client-s3')> {
+  private async mod(): Promise<any> {
     this._mod ??= await import('@aws-sdk/client-s3')
     return this._mod
   }
 
-  private async client(): Promise<import('@aws-sdk/client-s3').S3Client> {
+  private async client(): Promise<S3ClientLike> {
     if (!this._client) {
       const { S3Client } = await this.mod()
       this._client = new S3Client({
@@ -77,7 +81,7 @@ export class S3Storage implements IStorage {
           accessKeyId: this.opts.accessKeyId,
           secretAccessKey: this.opts.secretAccessKey,
         },
-      })
+      }) as S3ClientLike
     }
     return this._client
   }
