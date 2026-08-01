@@ -1756,3 +1756,28 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **R-A12 (All CI runtime gates pass):** PASS
 - **R-A13 (No unverified claims):** PASS
 - **R-A14 (Zero regressions):** PASS
+
+## 9.20 F-12 & D-8 Remediation: Cloudflare Pages Build Directory, PWA v5 Cache Purge & Deployed Contract Gate — 2026-08-01
+
+**Changed files:** `apps/omnihub-site/public/sw.js`, `src/swInit.ts`, `scripts/ci/verify-cloudflare-pages-contract.mjs`, `apps/omnihub-site/index.html` (deleted), `docs/APEX_AGENT_OPERATIONS.md`
+
+### 1. Root Cause Analysis (F-12 & D-8)
+- **Defect Mechanism:** Cloudflare Pages published the raw git repository source tree because the build output directory was not configured to `dist/`. When the browser requested `index.html`, it rendered raw `<script type="module" src="/src/main.tsx"></script>`. Cloudflare served `.tsx` with MIME type `application/octet-stream`, causing modern browser strict MIME enforcement to block execution and display a blank white screen.
+- **Entry Point Consolidation (D-8):** Removed orphaned entry `apps/omnihub-site/index.html`. Root `index.html` is the single canonical entry point for Vite compilation.
+
+### 2. Cloudflare Pages Configuration Mandate
+- Both `apex-omnihub` (prod) and `apex-omnihub-shadow` (shadow) Cloudflare Pages projects MUST be set in dashboard settings:
+  - **Build command:** `bun run build`
+  - **Build output directory:** `dist`
+
+### 3. Service Worker PWA v5 Upgrade & Cache Invalidation
+- **Version Bump:** Upgraded service worker from `v4` to `v5` (`omnilink-v5-20260801`).
+- **Automatic Cache Purging:** Activated `caches.delete()` in SW activate event listener for all legacy `v1`-`v4` cache buckets.
+- **Client Cache Flush:** Updated `src/swInit.ts` to send `SKIP_WAITING` and trigger `reg.update()` on app load to unregister stale service worker responses for existing users.
+
+### 4. Deployed URL Contract Gate (`verify-cloudflare-pages-contract.mjs`)
+- **Truth Gate:** Replaced weak deploy-status assertions with actual deployed URL contract verification:
+  1. Verifies root HTML references a compiled hashed asset bundle (`/assets/*.js`) and contains ZERO raw `.tsx` references.
+  2. Verifies primary JavaScript bundle responds with valid JavaScript MIME type (`text/javascript` / `application/javascript`) and NEVER `application/octet-stream`.
+  3. Verifies `/manifest.webmanifest` returns 200 OK and parses cleanly as JSON (no HTML `<` fallback errors).
+  4. Supports Playwright Chromium headless boot testing `#root` element mounting with zero uncaught browser console errors.

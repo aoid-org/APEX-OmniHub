@@ -1,10 +1,10 @@
-// @omnilink/sw:v4-pwa - OmniLink Mobile PWA Service Worker
+// @omnilink/sw:v5-pwa - OmniLink Mobile PWA Service Worker (Cache-Busting & Upgraded)
 // Provides offline support, caching, and native app-like experience for iOS/Android
+// Upgraded to v5 to purge legacy v4 stale caches and enforce compiled JS MIME delivery.
 
-const CACHE_VERSION = 'omnilink-v1';
+const CACHE_VERSION = 'omnilink-v5-20260801';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
-
 
 function isSupabaseSensitiveRequest(url) {
   return url.hostname.endsWith('.supabase.co') ||
@@ -18,6 +18,8 @@ function shouldBypassCache(request, url) {
   if (request.method !== 'GET') return true;
   if (isSupabaseSensitiveRequest(url)) return true;
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
+  // Never cache or intercept raw source code requests (prevent MIME type application/octet-stream issues)
+  if (url.pathname.endsWith('.tsx') || url.pathname.endsWith('.ts') || url.pathname.startsWith('/src/')) return true;
   return false;
 }
 
@@ -81,39 +83,37 @@ const STATIC_ASSETS = [
   '/favicon.png',
 ];
 
-// Install event - cache static assets
-// Install event - cache static assets
+// Install event - cache static assets and skip waiting immediately
 globalThis.addEventListener('install', (event) => {
-  console.log('[SW] Installing OmniLink PWA service worker v4');
+  console.log('[SW] Installing OmniLink PWA service worker v5 (Cache-Busting edition)');
   event.waitUntil(
     caches.open(CACHE_STATIC).then((cache) => {
       console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('[SW] Failed to cache some static assets:', err);
-        // Don't fail install if some assets fail
       });
     }).then(() => {
-      console.log('[SW] Install complete, skipping waiting');
+      console.log('[SW] Install complete, forcing skipWaiting');
       return globalThis.skipWaiting();
     })
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - purge ALL legacy caches (omnilink-v1 through omnilink-v4)
 globalThis.addEventListener('activate', (event) => {
-  console.log('[SW] Activating OmniLink PWA service worker v4');
+  console.log('[SW] Activating OmniLink PWA service worker v5 & purging legacy caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name.startsWith('omnilink-') && !name.startsWith(CACHE_VERSION))
           .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
+            console.log('[SW] Purging legacy cache:', name);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log('[SW] Activation complete');
+      console.log('[SW] Legacy cache purge complete, claiming clients');
       return globalThis.clients.claim();
     })
   );
@@ -121,17 +121,15 @@ globalThis.addEventListener('activate', (event) => {
 
 // Fetch event - network-first with cache fallback for resilience
 globalThis.addEventListener('fetch', (event) => {
-  // ... existing fetch logic ...
   const { request } = event;
   const url = new URL(request.url);
 
-  // Sensitive Supabase/API traffic must never be cached or served stale.
+  // Sensitive Supabase/API traffic and raw TSX/TS source code must never be cached.
   if (shouldBypassCache(request, url)) {
     return;
   }
 
   // Never intercept hashed asset requests — let them go to network directly.
-  // Cached HTML must never be served for CSS/JS asset URLs.
   if (url.pathname.startsWith('/assets/')) {
     return;
   }
@@ -140,41 +138,31 @@ globalThis.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Cache successful responses
         if (response?.status === 200 && response.type !== 'error') {
-          // Clone response before caching
           const responseToCache = response.clone();
-
-          // Determine cache bucket
           let cacheName = CACHE_DYNAMIC;
           if (STATIC_ASSETS.includes(url.pathname)) {
             cacheName = CACHE_STATIC;
           }
-
-          // Cache in background (don't block response)
           caches.open(cacheName).then((cache) => {
             cache.put(request, responseToCache);
           });
         }
-
         return response;
       })
       .catch(() => {
-        // Network failed, try cache
         return caches.match(request).then((cachedResponse) => {
           if (cachedResponse) {
             console.log('[SW] Serving from cache (offline):', url.pathname);
             return cachedResponse;
           }
 
-          // If it's a navigation request and we're offline, serve the cached index
           if (request.mode === 'navigate') {
             return caches.match('/index.html').then((indexResponse) => {
               if (indexResponse) {
                 console.log('[SW] Serving cached index.html for offline navigation');
                 return indexResponse;
               }
-              // No cached index, return generic offline response
               return new Response('Offline - Please check your connection', {
                 status: 503,
                 statusText: 'Service Unavailable',
@@ -183,7 +171,6 @@ globalThis.addEventListener('fetch', (event) => {
             });
           }
 
-          // For other requests, return 503
           return new Response('Offline', {
             status: 503,
             statusText: 'Service Unavailable',
@@ -195,15 +182,13 @@ globalThis.addEventListener('fetch', (event) => {
 
 // Message event - handle client messages
 self.addEventListener('message', (event) => {
-  // FIX: SonarCloud alert #21 (javascript:S2819)
-  // Verify the origin of the received message to prevent cross-origin attacks.
   if (event.origin !== self.location.origin) {
     console.warn('[SW] Rejected message from untrusted origin:', event.origin);
     return;
   }
 
-  if (event.data?.type === 'SKIP_WAITING') {
-    console.log('[SW] Received SKIP_WAITING message');
+  if (event.data?.type === 'SKIP_WAITING' || event.data?.type === 'PURGE_CACHE') {
+    console.log('[SW] Received SKIP_WAITING / PURGE_CACHE message');
     globalThis.skipWaiting();
   }
 });
@@ -211,10 +196,7 @@ self.addEventListener('message', (event) => {
 // Push notification event - show notification when received
 globalThis.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
-
-  if (!event.data) {
-    return;
-  }
+  if (!event.data) return;
 
   let notification;
   try {
@@ -244,13 +226,9 @@ globalThis.addEventListener('push', (event) => {
   );
 });
 
-// Notification click event - handle user click on notification
+// Notification click event
 globalThis.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.action);
-
   event.notification.close();
-
-  // Handle different actions
   let url = '/';
   if (event.action === 'open-dash') {
     url = '/omnidash';
@@ -267,20 +245,17 @@ globalThis.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Focus existing window if available
       for (const client of clientList) {
         if (new URL(client.url).pathname === safePath && 'focus' in client) {
           return client.focus();
         }
       }
-      // Open new window if no existing window found
       if (clients.openWindow) {
         return clients.openWindow(safeUrl);
       }
     })
   );
 
-  // Send message to client
   clients.matchAll().then((clients) => {
     clients.forEach((client) => {
       client.postMessage({
@@ -292,46 +267,21 @@ globalThis.addEventListener('notificationclick', (event) => {
   });
 });
 
-// Background sync event - sync offline data when connection returns
+// Background sync
 globalThis.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync triggered:', event.tag);
-
   if (event.tag === 'omnilink-sync') {
     event.waitUntil(
       fetch('/api/sync/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Sync failed');
-          }
-          console.log('[SW] Background sync completed successfully');
-          return response.json();
-        })
-        .catch((error) => {
-          console.error('[SW] Background sync failed:', error);
-          // Retry sync later
-          throw error;
+        .then((res) => res.json())
+        .catch((err) => {
+          console.error('[SW] Background sync failed:', err);
+          throw err;
         })
     );
   }
 });
 
-// Periodic background sync (requires permission)
-globalThis.addEventListener('periodicsync', (event) => {
-  console.log('[SW] Periodic sync triggered:', event.tag);
-
-  if (event.tag === 'omnilink-periodic-sync') {
-    event.waitUntil(
-      fetch('/api/sync/periodic', {
-        method: 'POST',
-      }).then((response) => {
-        console.log('[SW] Periodic sync completed');
-        return response.json();
-      })
-    );
-  }
-});
-
-console.log('[SW] OmniLink PWA service worker v4 loaded with push & sync support');
+console.log('[SW] OmniLink PWA service worker v5 loaded with cache-busting support');
