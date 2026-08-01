@@ -306,13 +306,6 @@ export class S3Storage implements IStorage {
     const key = path.split('/').map(encodeURIComponent).join('/')
     if (this.opts.publicBaseUrl) {
       return `${this.opts.publicBaseUrl.replace(/\/$/, '')}/${key}`
-    }
-    if (this.opts.endpoint) {
-      return `${this.opts.endpoint.replace(/\/$/, '')}/${bucket}/${key}`
-    }
-    return `https://${bucket}.s3.${this.opts.region}.amazonaws.com/${key}`
-  }
-
   async createSignedUrl(
     bucket: string,
     path: string,
@@ -323,7 +316,7 @@ export class S3Storage implements IStorage {
       const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner')
       const client = await this.client()
       const url = await getSignedUrl(
-        client,
+        client as any,
         new GetObjectCommand({ Bucket: bucket, Key: path }),
         { expiresIn: options?.expiresIn ?? 3600 }
       )
@@ -331,6 +324,18 @@ export class S3Storage implements IStorage {
     } catch (err) {
       return { data: null, error: toError(err) }
     }
+  }
+
+  async getPublicUrl(bucket: string, path: string): Promise<string> {
+    if (this.opts.publicBaseUrl) {
+      const base = this.opts.publicBaseUrl.replace(/\/$/, '')
+      return `${base}/${bucket}/${path.replace(/^\//, '')}`
+    }
+    if (this.opts.endpoint) {
+      const ep = this.opts.endpoint.replace(/\/$/, '')
+      return `${ep}/${bucket}/${path.replace(/^\//, '')}`
+    }
+    return `https://${bucket}.s3.${this.opts.region ?? 'us-east-1'}.amazonaws.com/${path.replace(/^\//, '')}`
   }
 
   async createSignedUrls(
@@ -356,16 +361,13 @@ export class S3Storage implements IStorage {
   // ADVANCED OPERATIONS
   // -------------------------------------------------------------------------
 
-  async uploadWithProgress(
+  async uploadResumable(
     bucket: string,
     path: string,
-    file: File | Blob,
+    file: Blob | File,
     onProgress: (progress: number) => void,
     options?: UploadOptions
   ): Promise<{ url: string | null; error: Error | null; abort: () => void }> {
-    // The S3 SDK does not surface granular upload progress for a single
-    // PutObject; we report 0 → 100 around the call. For true progress, use
-    // createPresignedPost + an XHR client-side.
     const controller = new AbortController()
     onProgress(0)
     const { data: url, error } = await this.upload(bucket, path, file, options)
@@ -381,7 +383,7 @@ export class S3Storage implements IStorage {
     try {
       const { createPresignedPost } = await import('@aws-sdk/s3-presigned-post')
       const client = await this.client()
-      const res = await createPresignedPost(client, {
+      const res = await createPresignedPost(client as any, {
         Bucket: bucket,
         Key: path,
         Fields: options?.contentType ? { 'Content-Type': options.contentType } : undefined,
