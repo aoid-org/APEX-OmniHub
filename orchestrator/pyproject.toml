@@ -27,7 +27,7 @@ dependencies = [
     # Redis with vector search capabilities
     # Keep in sync with requirements.txt. redis-py 7.x rejects the ssl kwarg
     # path used by the current async from_url startup code on TLS Redis URLs.
-    "redis[hiredis]>=5.0.0,<6.0.0",
+    "redis[hiredis]>=5.0.0,<9.0.0",
     "redis-om>=0.2.0",
 
     # LLM interface with instructor + litellm
