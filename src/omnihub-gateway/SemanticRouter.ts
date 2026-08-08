@@ -197,9 +197,12 @@ function scoreSkill(
 
   // Skill name matching (5 points)
   const nameWords = skill.name.toLowerCase().split(/\s+/);
-  if (nameWords.some((w) => keywordSet.has(w))) {
-    score += 5;
-    skills.push(skill.name);
+  for (const w of nameWords) {
+    if (keywordSet.has(w)) {
+      score += 5;
+      skills.push(skill.name);
+      break;
+    }
   }
 
   // Description matching (1 point per keyword)
@@ -209,8 +212,11 @@ function scoreSkill(
   // Example matching (2 points per example with keyword overlap)
   for (const example of skill.examples) {
     const exampleWords = new Set(example.toLowerCase().split(/\s+/));
-    if (keywords.some((kw) => exampleWords.has(kw))) {
-      score += 2;
+    for (const kw of keywords) {
+      if (exampleWords.has(kw)) {
+        score += 2;
+        break;
+      }
     }
   }
 
