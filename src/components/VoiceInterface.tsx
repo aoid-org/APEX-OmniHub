@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
@@ -12,7 +12,8 @@ interface VoiceInterfaceProps {
   onSpeakingChange?: (speaking: boolean) => void;
 }
 
-const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakingChange }) => {
+// ⚡ Bolt: Wrapped VoiceInterface in React.memo() to prevent unnecessary re-renders
+const VoiceInterface: React.FC<VoiceInterfaceProps> = memo(({ onTranscript, onSpeakingChange }) => {
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -329,6 +330,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
       </div>
     </div>
   );
-};
+});
 
 export default VoiceInterface;
