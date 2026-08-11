@@ -117,6 +117,8 @@ final_eslint.json
 security/npm-audit-latest.json
 security/npm-audit-prod.json
 ERRORS.md
+# Local plaintext secret/env export dumps (never commit)
+APEX-OmniHub - ENV.md
 # Claude Code agent worktrees (local only)
 .claude/worktrees/
 
