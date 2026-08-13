@@ -13,6 +13,19 @@
  * does NOT rebuild automatically on env-var changes.
  */
 
+import fs from 'node:fs';
+
+// Try loading local environment files if not already set in process.env
+if (!process.env.VITE_SUPABASE_URL && !process.env.SUPABASE_URL) {
+  try {
+    const dotenv = await import('dotenv');
+    dotenv.config({ path: '.env.local' });
+    dotenv.config({ path: '.env' });
+    dotenv.config({ path: 'apps/omnihub-site/.env.local' });
+    dotenv.config({ path: 'apps/omnihub-site/.env' });
+  } catch {}
+}
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseClientKey =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
