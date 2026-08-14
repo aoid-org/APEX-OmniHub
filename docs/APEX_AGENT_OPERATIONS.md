@@ -1791,4 +1791,6 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - **Cloud Hosting & Infrastructure (3):** AWS, Cloudflare, Vercel
   - **Finance, Payments & Commerce (4):** Stripe, QuickBooks, Shopify, PayPal
   - **Database & Data Infrastructure (5):** Supabase, Snowflake, PostgreSQL, MongoDB, Redis
-- **Performance & Caching:** OmniBoardService._get_optimized_providers() maintains O(1) exact matching and precomputed lowercase lookup with sub-millisecond query latency (<1ms).
+- **Performance & Caching:** `OmniBoardService._get_optimized_providers()` maintains O(1) exact matching and precomputed lowercase lookup with sub-millisecond query latency (<1ms).
+- **POSIX Slug Normalization & Endpoint Resolution:** Added `_normalize_slug()` to sanitize multi-word provider names into POSIX environment variables (e.g. `GOOGLE_WORKSPACE_CLIENT_ID`, `BANK_OF_AMERICA_CLIENT_ID`) and `_WELL_KNOWN_USERINFO_ENDPOINTS` mapping to route least-privilege ping checks to official verification endpoints (GitHub, Slack, Google, Microsoft Graph, Stripe, Plaid, Mercury, Brex, Coinbase, etc.).
+- **Repo Canon Alignment:** Updated `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` Statement 20 reflecting the current active 85-provider registry and FSM resolver routing.

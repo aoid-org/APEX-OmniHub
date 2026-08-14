@@ -147,6 +147,32 @@ class TestFuzzyMatchProvider:
         for item in expected:
             assert item in res
 
+    def test_slug_normalization(self, service):
+        """Provider names normalize to valid POSIX environment variable slugs."""
+        assert service._normalize_slug("Google Workspace") == "GOOGLE_WORKSPACE"
+        assert service._normalize_slug("Bank of America") == "BANK_OF_AMERICA"
+        assert service._normalize_slug("Microsoft 365") == "MICROSOFT_365"
+        assert service._normalize_slug("TD Bank") == "TD_BANK"
+
+    def test_well_known_endpoint_resolution(self, service):
+        """Known providers resolve to their official userinfo verification URLs."""
+        assert service._get_userinfo_endpoint("GitHub") == "https://api.github.com/user"
+        assert service._get_userinfo_endpoint("Slack") == "https://slack.com/api/auth.test"
+        assert service._get_userinfo_endpoint("Stripe") == "https://api.stripe.com/v1/account"
+        assert (
+            service._get_userinfo_endpoint("Google Workspace")
+            == "https://www.googleapis.com/oauth2/v3/userinfo"
+        )
+        assert (
+            service._get_userinfo_endpoint("Microsoft Teams")
+            == "https://graph.microsoft.com/v1.0/me"
+        )
+        assert (
+            service._get_userinfo_endpoint("Plaid")
+            == "https://production.plaid.com/institutions/get"
+        )
+        assert service._get_userinfo_endpoint("Coinbase") == "https://api.coinbase.com/v2/user"
+
 
 class TestFuzzyMatchProviderEdgeCases:
     """Edge cases and security boundaries."""

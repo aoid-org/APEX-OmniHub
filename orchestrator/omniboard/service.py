@@ -247,13 +247,87 @@ class OmniBoardService:
 
         return [provider for _, provider in matches]
 
+    _WELL_KNOWN_USERINFO_ENDPOINTS: dict[str, str] = {
+        "github": "https://api.github.com/user",
+        "slack": "https://slack.com/api/auth.test",
+        "google": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "gmail": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google workspace": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google drive": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google docs": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google sheets": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google calendar": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "google cloud": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "microsoft": "https://graph.microsoft.com/v1.0/me",
+        "microsoft 365": "https://graph.microsoft.com/v1.0/me",
+        "microsoft teams": "https://graph.microsoft.com/v1.0/me",
+        "microsoft outlook": "https://graph.microsoft.com/v1.0/me",
+        "microsoft excel": "https://graph.microsoft.com/v1.0/me",
+        "microsoft word": "https://graph.microsoft.com/v1.0/me",
+        "microsoft sharepoint": "https://graph.microsoft.com/v1.0/me",
+        "microsoft onedrive": "https://graph.microsoft.com/v1.0/me",
+        "azure": "https://management.azure.com/tenants?api-version=2020-01-01",
+        "stripe": "https://api.stripe.com/v1/account",
+        "linear": "https://api.linear.app/graphql",
+        "notion": "https://api.notion.com/v1/users/me",
+        "jira": "https://api.atlassian.com/me",
+        "hubspot": "https://api.hubapi.com/account-info/v3/details",
+        "salesforce": "https://login.salesforce.com/services/oauth2/userinfo",
+        "gitlab": "https://gitlab.com/api/v4/user",
+        "bitbucket": "https://api.bitbucket.org/2.0/user",
+        "sentry": "https://sentry.io/api/0/users/me/",
+        "datadog": "https://api.datadoghq.com/api/v1/validate",
+        "discord": "https://discord.com/api/users/@me",
+        "twilio": "https://api.twilio.com/2010-04-01/Accounts.json",
+        "intercom": "https://api.intercom.io/me",
+        "trello": "https://api.trello.com/1/members/me",
+        "airtable": "https://api.airtable.com/v0/meta/whoami",
+        "asana": "https://app.asana.com/api/1.0/users/me",
+        "clickup": "https://api.clickup.com/api/v2/user",
+        "monday": "https://api.monday.com/v2",
+        "pipedrive": "https://api.pipedrive.com/v1/users/me",
+        "zendesk": "https://api.zendesk.com/api/v2/users/me.json",
+        "plaid": "https://production.plaid.com/institutions/get",
+        "mercury": "https://api.mercury.com/api/v1/accounts",
+        "brex": "https://platform.brexapis.com/v2/users/me",
+        "ramp": "https://api.ramp.com/developer/v1/users",
+        "wise": "https://api.transferwise.com/v1/me",
+        "revolut": "https://b2b.revolut.com/api/1.0/accounts",
+        "square": "https://connect.squareup.com/v2/locations",
+        "xero": "https://api.xero.com/api.xro/2.0/Organisation",
+        "coinbase": "https://api.coinbase.com/v2/user",
+        "robinhood": "https://api.robinhood.com/user/",
+        "supabase": "https://api.supabase.com/v1/projects",
+        "cloudflare": "https://api.cloudflare.com/client/v4/user/tokens/verify",
+        "vercel": "https://api.vercel.com/v2/user",
+        "quickbooks": "https://quickbooks.api.intuit.com/v3/company",
+        "shopify": "https://admin.shopify.com/api/version/shop.json",
+        "paypal": "https://api-m.paypal.com/v1/identity/oauth2/userinfo",
+    }
+
+    @classmethod
+    def _normalize_slug(cls, provider: str) -> str:
+        """Returns uppercase POSIX-compatible environment variable slug."""
+        return provider.upper().replace(" ", "_").replace("-", "_").replace(".", "_")
+
+    @classmethod
+    def _get_userinfo_endpoint(cls, provider: str, custom_endpoint: str | None = None) -> str:
+        """Resolves userinfo endpoint via custom DB registry, well-known mapping, or fallback."""
+        if custom_endpoint:
+            return custom_endpoint
+        key = provider.lower().strip()
+        if key in cls._WELL_KNOWN_USERINFO_ENDPOINTS:
+            return cls._WELL_KNOWN_USERINFO_ENDPOINTS[key]
+        clean_name = key.replace(" ", "").replace("-", "").replace(".", "")
+        return f"https://api.{clean_name}.com/v1/userinfo"
+
     @classmethod
     def generate_oauth_url(cls, provider: str, tenant_id: str) -> str:
         """
         Generates an OAuth authorization URL using authlib per-provider configuration.
         Reads CLIENT_ID, CLIENT_SECRET, REDIRECT_URI from env per provider slug.
         """
-        slug = provider.upper()
+        slug = cls._normalize_slug(provider)
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
         redirect_uri = os.environ.get(f"{slug}_REDIRECT_URI")
 
@@ -301,10 +375,10 @@ class OmniBoardService:
             filters={"name": provider},
         )
 
-        if not res or not res[0].get("userinfo_endpoint"):
-            endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
-        else:
-            endpoint = res[0]["userinfo_endpoint"]
+        custom_endpoint = (
+            res[0].get("userinfo_endpoint") if res and res[0].get("userinfo_endpoint") else None
+        )
+        endpoint = cls._get_userinfo_endpoint(provider, custom_endpoint)
 
         async with httpx.AsyncClient() as client:
             try:
@@ -344,7 +418,7 @@ class OmniBoardService:
                     "in non-production environments."
                 )
 
-        slug = provider.upper()
+        slug = cls._normalize_slug(provider)
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
         if not client_id:
             if _omniboard_mock_oauth_enabled():
@@ -410,10 +484,10 @@ class OmniBoardService:
         res = await db.select(
             table="provider_registry", select_fields="userinfo_endpoint", filters={"name": provider}
         )
-        if not res or not res[0].get("userinfo_endpoint"):
-            endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
-        else:
-            endpoint = res[0]["userinfo_endpoint"]
+        custom_endpoint = (
+            res[0].get("userinfo_endpoint") if res and res[0].get("userinfo_endpoint") else None
+        )
+        endpoint = cls._get_userinfo_endpoint(provider, custom_endpoint)
 
         async with httpx.AsyncClient() as client:
             import time
