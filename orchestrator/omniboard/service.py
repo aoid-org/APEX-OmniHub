@@ -10,6 +10,12 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client  # type: ignore
 from providers.database.factory import get_database_provider
 
 from ._redis import get_omniboard_redis
+from .provider_catalog import (
+    KNOWN_PROVIDERS,
+    WELL_KNOWN_USERINFO_ENDPOINTS,
+    get_userinfo_endpoint,
+    normalize_slug,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +35,11 @@ class OmniBoardService:
     - Vault Storage (Supabase-backed via SUPABASE_ACTIVITY_KEY)
     - OmniPort Registration (via OmniPort API)
     """
+
+    KNOWN_PROVIDERS = KNOWN_PROVIDERS
+    _WELL_KNOWN_USERINFO_ENDPOINTS = WELL_KNOWN_USERINFO_ENDPOINTS
+    _normalize_slug = staticmethod(normalize_slug)
+    _get_userinfo_endpoint = staticmethod(get_userinfo_endpoint)
 
     @classmethod
     async def get_known_providers(cls) -> list[str]:
@@ -55,17 +66,6 @@ class OmniBoardService:
             return providers
         finally:
             await redis_client.aclose()  # type: ignore[attr-defined]
-
-    KNOWN_PROVIDERS = [
-        "GitHub",
-        "Gmail",
-        "Slack",
-        "Linear",
-        "Jira",
-        "Notion",
-        "HubSpot",
-        "Salesforce",
-    ]
 
     # Optimized lookup structures (cached)
     _LOWER_PROVIDERS_CACHE: list[tuple[str, str]] | None = None
@@ -161,7 +161,7 @@ class OmniBoardService:
         Generates an OAuth authorization URL using authlib per-provider configuration.
         Reads CLIENT_ID, CLIENT_SECRET, REDIRECT_URI from env per provider slug.
         """
-        slug = provider.upper()
+        slug = cls._normalize_slug(provider)
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
         redirect_uri = os.environ.get(f"{slug}_REDIRECT_URI")
 
@@ -209,10 +209,10 @@ class OmniBoardService:
             filters={"name": provider},
         )
 
-        if not res or not res[0].get("userinfo_endpoint"):
-            endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
-        else:
-            endpoint = res[0]["userinfo_endpoint"]
+        custom_endpoint = (
+            res[0].get("userinfo_endpoint") if res and res[0].get("userinfo_endpoint") else None
+        )
+        endpoint = cls._get_userinfo_endpoint(provider, custom_endpoint)
 
         async with httpx.AsyncClient() as client:
             try:
@@ -252,7 +252,7 @@ class OmniBoardService:
                     "in non-production environments."
                 )
 
-        slug = provider.upper()
+        slug = cls._normalize_slug(provider)
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
         if not client_id:
             if _omniboard_mock_oauth_enabled():
@@ -318,10 +318,10 @@ class OmniBoardService:
         res = await db.select(
             table="provider_registry", select_fields="userinfo_endpoint", filters={"name": provider}
         )
-        if not res or not res[0].get("userinfo_endpoint"):
-            endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
-        else:
-            endpoint = res[0]["userinfo_endpoint"]
+        custom_endpoint = (
+            res[0].get("userinfo_endpoint") if res and res[0].get("userinfo_endpoint") else None
+        )
+        endpoint = cls._get_userinfo_endpoint(provider, custom_endpoint)
 
         async with httpx.AsyncClient() as client:
             import time

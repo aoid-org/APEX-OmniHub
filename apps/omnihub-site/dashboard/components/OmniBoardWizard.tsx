@@ -10,6 +10,7 @@
  */
 import { useState, useCallback, useEffect } from 'react';
 import ApexAgentAvatar from './ApexAgentAvatar';
+import { ProviderLogo } from './ProviderLogo';
 import { supabase } from '@/lib/supabase';
 // Relative import (not '@/hooks/...'): the root vitest config resolves '@' to
 // the root src tree, so an alias here would break under the test harness.
@@ -181,6 +182,13 @@ export function OmniBoardWizard({ onComplete }: WizardProps) {
         </div>
       </div>
       {error && <p data-testid="omniboard-error-state" className="text-xs text-red-400">{error} <button onClick={startSession} className="underline ml-1">Retry</button></p>}
+      {context?.provider_name && (
+        <div data-testid="omniboard-provider-badge" className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+          <ProviderLogo provider={context.provider_name} size="sm" />
+          <span>{context.provider_name}</span>
+          <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider ml-auto">Channel Ready</span>
+        </div>
+      )}
       <div className="rounded-lg bg-muted/20 p-3 text-xs text-foreground leading-relaxed min-h-[60px]">
         {message}
       </div>
