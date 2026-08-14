@@ -27,6 +27,10 @@ function resolvePath(obj, path) {
 async function run() {
   const token = process.env.CLOUDFLARE_AGENT_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
   if (!token) {
+    if (process.env.CI) {
+      console.log("ℹ️ CLOUDFLARE_AGENT_TOKEN / CLOUDFLARE_API_TOKEN not set in CI environment — skipping remote parity check.");
+      process.exit(0);
+    }
     console.error("Missing CLOUDFLARE_AGENT_TOKEN or CLOUDFLARE_API_TOKEN in environment.");
     process.exit(1);
   }
