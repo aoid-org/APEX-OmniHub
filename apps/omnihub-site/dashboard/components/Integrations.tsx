@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Clock3, Plug, ShieldAlert, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock3, ShieldAlert, Loader2 } from 'lucide-react';
 import { ProviderLogo } from './ProviderLogo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
