@@ -1774,7 +1774,7 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Dependency Isolation:** Function-local lazy import of OmniBoardService in _resolve_candidates() prevents loading module-scope database and authlib dependencies during package init.
 
 ### 2. Expanded 85 Out-of-the-Box Integrations Registry (AI, Banking, Fintech, Sports, Cloud & Enterprise)
-- **Changed files:** orchestrator/omniboard/service.py, orchestrator/tests/omniboard/test_service.py.
+- **Changed files:** `orchestrator/omniboard/service.py`, `orchestrator/omniboard/provider_catalog.py`, `orchestrator/tests/omniboard/test_service.py`, `apps/omnihub-site/dashboard/components/ProviderLogo.tsx`, `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`, `apps/omnihub-site/dashboard/components/Integrations.tsx`.
 - **Out-of-the-Box Providers (85):**
   - **AI Frontiers & Agents (7):** Claude, ChatGPT, Gemini, Grok, Perplexity, Google Antigravity, Google Jules
   - **Prediction Markets & Sports (6):** Kalshi, Polymarket, ESPN, NBA, NFL, NHL
@@ -1791,6 +1791,8 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - **Cloud Hosting & Infrastructure (3):** AWS, Cloudflare, Vercel
   - **Finance, Payments & Commerce (4):** Stripe, QuickBooks, Shopify, PayPal
   - **Database & Data Infrastructure (5):** Supabase, Snowflake, PostgreSQL, MongoDB, Redis
+- **Modularization & Policy Compliance:** Extracted catalog definitions and endpoint mappings into `provider_catalog.py` to strictly observe the 500-line module ceiling governed by `apex_policy_check.py`.
 - **Performance & Caching:** `OmniBoardService._get_optimized_providers()` maintains O(1) exact matching and precomputed lowercase lookup with sub-millisecond query latency (<1ms).
-- **POSIX Slug Normalization & Endpoint Resolution:** Added `_normalize_slug()` to sanitize multi-word provider names into POSIX environment variables (e.g. `GOOGLE_WORKSPACE_CLIENT_ID`, `BANK_OF_AMERICA_CLIENT_ID`) and `_WELL_KNOWN_USERINFO_ENDPOINTS` mapping to route least-privilege ping checks to official verification endpoints (GitHub, Slack, Google, Microsoft Graph, Stripe, Plaid, Mercury, Brex, Coinbase, etc.).
+- **POSIX Slug Normalization & Endpoint Resolution:** Added `normalize_slug()` to sanitize multi-word provider names into POSIX environment variables (e.g. `GOOGLE_WORKSPACE_CLIENT_ID`, `BANK_OF_AMERICA_CLIENT_ID`) and `WELL_KNOWN_USERINFO_ENDPOINTS` mapping to route least-privilege ping checks to official verification endpoints (GitHub, Slack, Google, Microsoft Graph, Stripe, Plaid, Mercury, Brex, Coinbase, etc.).
+- **Vector-Crisp UI Brand Logos:** Implemented `ProviderLogo.tsx` rendering vector-crisp authentic brand SVGs across OmniBoard connection modals and Integrations grid cards for all 85 providers.
 - **Repo Canon Alignment:** Updated `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` Statement 20 reflecting the current active 85-provider registry and FSM resolver routing.

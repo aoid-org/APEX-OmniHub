@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2, Clock3, Plug, ShieldAlert, Loader2 } from 'lucide-react';
+import { ProviderLogo } from './ProviderLogo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -233,7 +234,7 @@ export const Integrations = () => {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-base">
                   <span className="flex items-center gap-2">
-                    <Plug className="h-4 w-4 text-orange-400" />
+                    <ProviderLogo provider={connector.displayName || connector.appSlug} size="sm" />
                     {connector.displayName}
                   </span>
                   <span className={`h-2.5 w-2.5 rounded-full ${statusDotClass(connector.status)}`} />
