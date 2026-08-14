@@ -114,9 +114,7 @@ def test_resolver_is_actually_invoked():
 
     with (
         patch("omniboard.router.get_omniboard_redis", return_value=stub),
-        patch(
-            "omniboard.router._resolve_candidates", return_value=["Slack"]
-        ) as spy,
+        patch("omniboard.router._resolve_candidates", return_value=["Slack"]) as spy,
     ):
         client.post(
             f"/omniboard/{context.session_id}/next",

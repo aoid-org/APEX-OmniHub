@@ -90,10 +90,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
         # performs that search, so the FSM waited forever and the user saw a
         # permanent spinner. Resolve and advance in the same turn. Guarded on
         # state + hint, so an already-resolved context passes through untouched.
-        if (
-            next_context.state == OmniBoardState.APP_IDENTIFICATION
-            and next_context.provider_hint
-        ):
+        if next_context.state == OmniBoardState.APP_IDENTIFICATION and next_context.provider_hint:
             candidates = _resolve_candidates(next_context.provider_hint)
             exact = len(candidates) == 1
             next_context, message = OmniBoardFSM.transition(

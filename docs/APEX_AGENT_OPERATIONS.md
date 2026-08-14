@@ -1714,7 +1714,7 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 
 **Operational contract change:** none. The SBOM attachment functionality operates precisely as before, only upgraded to process the modern un.lock structure. No runtime or service variables were mutated.
 
-## 9.18 PR 1669 post-merge CI fixes � 2026-07-31
+## 9.18 PR 1669 post-merge CI fixes � 2026-07-31
 
 **compliance.yml** was modified to add --no-validate to cdxgen to prevent JSON schema validation failures caused by deep workspace version strings in bun.lock.
 
@@ -1763,3 +1763,12 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **File Updated:** `.github/workflows/arise.yml`
 - **Root Cause Fix:** Replaced 3-way `git merge` between `automation/arise-snapshot-current` and `origin/main` with `git checkout -B "$branch" "origin/${{ github.ref_name }}"`.
 - **Operational Justification:** Resetting the rolling snapshot branch directly to the target reference (`main`) ensures the snapshot branch inherits 100% of current source code with ZERO code merge conflicts (`src/lib/storage/providers/s3.ts`). Generated snapshot reports are applied cleanly on top and force-pushed to the rolling PR.
+
+## 9.38 OmniBoard FSM resolver wiring — orchestrator router provider resolution (2026-08-13, PR #1)
+
+### 1. Operational Contract & Resolver Wiring
+- **Changed files:** orchestrator/omniboard/router.py, orchestrator/tests/omniboard/test_router.py, orchestrator/tests/omniboard/test_router_contract.py.
+- **Root Cause Fix:** Wires OmniBoardService.fuzzy_match_provider into orchestrator/omniboard/router.py at both FSM resolution seams:
+  1. IDLE_LISTEN → APP_IDENTIFICATION: Resolved in ext_turn immediately when ext_context.state == OmniBoardState.APP_IDENTIFICATION and provider_hint is set, advancing to AUTH_SETUP (exact match) or APP_DISAMBIGUATION (multiple matches) in the same turn.
+  2. APP_DISAMBIGUATION: Candidate selections from incoming payload are resolved and enriched with match_found: True and provider_name before transition.
+- **Dependency Isolation:** Function-local lazy import of OmniBoardService in _resolve_candidates() prevents loading module-scope database and authlib dependencies during package init.
