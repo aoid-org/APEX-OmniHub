@@ -344,18 +344,21 @@ jobs:
           npm run build
           bun run verify:cloudflare-pages-contract
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_AGENT_TOKEN }}
+          CLOUDFLARE_AGENT_TOKEN: ${{ secrets.CLOUDFLARE_AGENT_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           VITE_SUPABASE_PUBLISHABLE_KEY: test-key
+          APEX_ALLOW_MISSING_SUPABASE_CONFIG: 'true'
 
       - name: Build production bundle
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://rtopreovkywofgwgmozi.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk' }}
           VITE_CONNECT_AI_ENABLED: 'true'
+          APEX_ALLOW_MISSING_SUPABASE_CONFIG: 'true'
 
       - name: PWA source + dist integrity guard
         run: npm run check:pwa

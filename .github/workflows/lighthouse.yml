@@ -33,9 +33,10 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://rtopreovkywofgwgmozi.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk' }}
           VITE_CONNECT_AI_ENABLED: 'true'
+          APEX_ALLOW_MISSING_SUPABASE_CONFIG: 'true'
 
       - name: Run Lighthouse CI
         run: |

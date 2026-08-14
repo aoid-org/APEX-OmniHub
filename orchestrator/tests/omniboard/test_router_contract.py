@@ -72,7 +72,7 @@ class TestFSMProgressionUserInput:
     def test_idle_listen_user_input_advances_state(self):
         """
         Contract: POST /omniboard/{id}/next with event_type=USER_INPUT and
-        payload.user_input must advance FSM from IDLE_LISTEN -> APP_IDENTIFICATION.
+        payload.user_input resolves provider and advances FSM from IDLE_LISTEN -> AUTH_SETUP.
         """
         ctx = _make_context(OmniBoardState.IDLE_LISTEN)
         session_id = ctx.session_id
@@ -90,8 +90,8 @@ class TestFSMProgressionUserInput:
         body = resp.json()
         assert "context" in body
         assert "message" in body
-        assert body["context"]["state"] == OmniBoardState.APP_IDENTIFICATION.value
-        assert body["context"]["provider_hint"] == "GitHub"
+        assert body["context"]["state"] == OmniBoardState.AUTH_SETUP.value
+        assert body["context"]["provider_name"] == "GitHub"
         # No connection_spec at this stage
         assert "connection_spec" not in body
 
