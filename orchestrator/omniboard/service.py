@@ -57,14 +57,106 @@ class OmniBoardService:
             await redis_client.aclose()  # type: ignore[attr-defined]
 
     KNOWN_PROVIDERS = [
-        "GitHub",
+        # AI Frontiers & Agents
+        "Claude",
+        "ChatGPT",
+        "Gemini",
+        "Grok",
+        "Perplexity",
+        "Google Antigravity",
+        "Google Jules",
+        # Prediction Markets & Sports
+        "Kalshi",
+        "Polymarket",
+        "ESPN",
+        "NBA",
+        "NFL",
+        "NHL",
+        # Google Workspace & Cloud Suite
+        "Google Workspace",
         "Gmail",
+        "Google Drive",
+        "Google Docs",
+        "Google Sheets",
+        "Google Calendar",
+        "Google Cloud",
+        # Microsoft 365 & Cloud Suite
+        "Microsoft 365",
+        "Microsoft Teams",
+        "Microsoft Outlook",
+        "Microsoft Excel",
+        "Microsoft Word",
+        "Microsoft SharePoint",
+        "Microsoft OneDrive",
+        "Azure",
+        # Open Banking & Fintech APIs
+        "Plaid",
+        "Mercury",
+        "Brex",
+        "Ramp",
+        "Wise",
+        "Revolut",
+        "Square",
+        "Xero",
+        # Commercial & Retail Banking
+        "Chase",
+        "Bank of America",
+        "Wells Fargo",
+        "Citi",
+        "Capital One",
+        "RBC",
+        "TD Bank",
+        "Scotiabank",
+        "BMO",
+        "CIBC",
+        # Wealth, Brokerage & Custody
+        "Coinbase",
+        "Robinhood",
+        "Fidelity",
+        "Charles Schwab",
+        "Vanguard",
+        # Developer & DevOps
+        "GitHub",
+        "GitLab",
+        "Bitbucket",
+        "Postman",
+        "Sentry",
+        "Datadog",
+        # Collaboration & Messaging
         "Slack",
+        "Discord",
+        "Twilio",
+        "Intercom",
+        # Workspace & Productivity
+        "Notion",
+        "Trello",
+        "Airtable",
+        # Project & Task Management
         "Linear",
         "Jira",
-        "Notion",
-        "HubSpot",
+        "Asana",
+        "ClickUp",
+        "Monday",
+        # CRM & Sales
         "Salesforce",
+        "HubSpot",
+        "Pipedrive",
+        "Zendesk",
+        # Cloud Hosting & Infrastructure
+        "AWS",
+        "Cloudflare",
+        "Vercel",
+        # Finance, Payments & Commerce
+        "Stripe",
+        "QuickBooks",
+        "Shopify",
+        "PayPal",
+        # Database & Data Infrastructure
+        "Supabase",
+        "Snowflake",
+        "PostgreSQL",
+        "MongoDB",
+        "Redis",
     ]
 
     # Optimized lookup structures (cached)

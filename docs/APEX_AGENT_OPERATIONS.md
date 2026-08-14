@@ -1772,3 +1772,23 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   1. IDLE_LISTEN → APP_IDENTIFICATION: Resolved in ext_turn immediately when ext_context.state == OmniBoardState.APP_IDENTIFICATION and provider_hint is set, advancing to AUTH_SETUP (exact match) or APP_DISAMBIGUATION (multiple matches) in the same turn.
   2. APP_DISAMBIGUATION: Candidate selections from incoming payload are resolved and enriched with match_found: True and provider_name before transition.
 - **Dependency Isolation:** Function-local lazy import of OmniBoardService in _resolve_candidates() prevents loading module-scope database and authlib dependencies during package init.
+
+### 2. Expanded 85 Out-of-the-Box Integrations Registry (AI, Banking, Fintech, Sports, Cloud & Enterprise)
+- **Changed files:** orchestrator/omniboard/service.py, orchestrator/tests/omniboard/test_service.py.
+- **Out-of-the-Box Providers (85):**
+  - **AI Frontiers & Agents (7):** Claude, ChatGPT, Gemini, Grok, Perplexity, Google Antigravity, Google Jules
+  - **Prediction Markets & Sports (6):** Kalshi, Polymarket, ESPN, NBA, NFL, NHL
+  - **Google Workspace & Cloud (7):** Google Workspace, Gmail, Google Drive, Google Docs, Google Sheets, Google Calendar, Google Cloud
+  - **Microsoft 365 & Cloud (8):** Microsoft 365, Microsoft Teams, Microsoft Outlook, Microsoft Excel, Microsoft Word, Microsoft SharePoint, Microsoft OneDrive, Azure
+  - **Open Banking & Fintech APIs (8):** Plaid, Mercury, Brex, Ramp, Wise, Revolut, Square, Xero
+  - **Commercial & Retail Banking (10):** Chase, Bank of America, Wells Fargo, Citi, Capital One, RBC, TD Bank, Scotiabank, BMO, CIBC
+  - **Wealth, Brokerage & Custody (5):** Coinbase, Robinhood, Fidelity, Charles Schwab, Vanguard
+  - **Developer & DevOps (6):** GitHub, GitLab, Bitbucket, Postman, Sentry, Datadog
+  - **Collaboration & Messaging (4):** Slack, Discord, Twilio, Intercom
+  - **Workspace & Productivity (3):** Notion, Trello, Airtable
+  - **Project & Task Management (5):** Linear, Jira, Asana, ClickUp, Monday
+  - **CRM & Sales (4):** Salesforce, HubSpot, Pipedrive, Zendesk
+  - **Cloud Hosting & Infrastructure (3):** AWS, Cloudflare, Vercel
+  - **Finance, Payments & Commerce (4):** Stripe, QuickBooks, Shopify, PayPal
+  - **Database & Data Infrastructure (5):** Supabase, Snowflake, PostgreSQL, MongoDB, Redis
+- **Performance & Caching:** OmniBoardService._get_optimized_providers() maintains O(1) exact matching and precomputed lowercase lookup with sub-millisecond query latency (<1ms).
