@@ -58,6 +58,64 @@ class TestFuzzyMatchProvider:
         assert service.fuzzy_match_provider("   ") == []
         assert service.fuzzy_match_provider("\t\n") == []
 
+    def test_expanded_suites_exact_matches(self, service):
+        """Verify exact matching across all added ecosystem suites."""
+        new_providers = [
+            "Claude",
+            "ChatGPT",
+            "Gemini",
+            "Grok",
+            "Perplexity",
+            "Google Antigravity",
+            "Google Jules",
+            "Kalshi",
+            "Polymarket",
+            "ESPN",
+            "NBA",
+            "NFL",
+            "NHL",
+            "Stripe",
+            "AWS",
+            "Supabase",
+            "PostgreSQL",
+            "Microsoft Excel",
+            "Google Docs",
+        ]
+        for p in new_providers:
+            res = service.fuzzy_match_provider(p)
+            assert res[0] == p
+
+    def test_google_suite_prefix_search(self, service):
+        """Searching 'Google' returns all Google Suite products."""
+        res = service.fuzzy_match_provider("Google")
+        expected = [
+            "Google Workspace",
+            "Google Drive",
+            "Google Docs",
+            "Google Sheets",
+            "Google Calendar",
+            "Google Cloud",
+            "Google Antigravity",
+            "Google Jules",
+        ]
+        for item in expected:
+            assert item in res
+
+    def test_microsoft_suite_prefix_search(self, service):
+        """Searching 'Microsoft' returns all Microsoft 365 products."""
+        res = service.fuzzy_match_provider("Microsoft")
+        expected = [
+            "Microsoft 365",
+            "Microsoft Teams",
+            "Microsoft Outlook",
+            "Microsoft Excel",
+            "Microsoft Word",
+            "Microsoft SharePoint",
+            "Microsoft OneDrive",
+        ]
+        for item in expected:
+            assert item in res
+
 
 class TestFuzzyMatchProviderEdgeCases:
     """Edge cases and security boundaries."""
