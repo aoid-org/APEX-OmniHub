@@ -64,7 +64,6 @@ export default defineConfig({
       '@/lib/omni-sentry': resolve(__dirname, '../../src/lib/omni-sentry.ts'),
       '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
-      'react-router-dom/server.js': 'react-router',
       'react-i18next': resolve(__dirname, '../../node_modules/react-i18next'),
       'i18next': resolve(__dirname, '../../node_modules/i18next'),
     },
@@ -108,9 +107,10 @@ export default defineConfig({
     script: 'async',
     formatting: 'minify',
     includedRoutes(paths: string[]) {
-      // Pre-auth marketing routes only — post-auth SPA routes stay CSR
+      // Pre-auth marketing routes only — post-auth SPA routes stay CSR.
+      // /manifesto and /apex-manifesto are served by the rich static public/manifesto.html
       return paths.filter(
-        (p) => !p.startsWith('/omnidash') && !p.startsWith('/dashboard')
+        (p) => !p.startsWith('/omnidash') && !p.startsWith('/dashboard') && !p.startsWith('/manifesto') && !p.startsWith('/apex-manifesto')
       );
     },
   },

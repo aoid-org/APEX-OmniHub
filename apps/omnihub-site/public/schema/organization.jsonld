@@ -11,5 +11,9 @@
     "addressRegion": "Alberta",
     "addressCountry": "CA"
   },
-  "sameAs": []
+  "sameAs": [
+    "https://github.com/aoid-org/APEX-OmniHub",
+    "https://github.com/apexbusiness-systems/APEX-OmniHub",
+    "https://linkedin.com/company/apex-business-systems"
+  ]
 }

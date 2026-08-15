@@ -1,0 +1,20 @@
+# APEX-OmniHub
+
+> Enterprise AI Orchestration Control Plane and Multi-Agent SaaS Operating System by APEX Business Systems LTD.
+
+## Core Capabilities & Public Surfaces
+- [OmniHub Live](https://apexomnihub.icu/): Authenticated multi-agent orchestration control plane with real-time telemetry and MAN Mode governance.
+- [Tech Specs](https://apexomnihub.icu/tech-specs): Deterministic state execution, Model Context Protocol (MCP) tool integration, and zero-trust security architecture.
+- [Interactive Demo](https://apexomnihub.icu/demo): Live interactive control plane sandbox and task simulation environment.
+- [Tri-Force Architecture](https://apexomnihub.icu/tri-force): Directable, Auditable, Reversible execution engine ensuring tamper-evident state transitions.
+- [Fortress Security](https://apexomnihub.icu/fortress): EU AI Act Article 14 human oversight compliance, GDPR Article 30 audit logging, and Level 7 cryptographic attestation.
+- [OmniPort Gateway](https://apexomnihub.icu/omniport): High-throughput synchronized API proxy for LLMs, SaaS connectors, and edge microservices.
+- [Orchestrator FSM](https://apexomnihub.icu/orchestrator): Central command finite state machine coordinating distributed multi-agent task execution.
+- [OmniBoard Integrations](https://apexomnihub.icu/omniboard): Universal third-party SaaS integration gateway supporting Salesforce, Slack, GitHub, Stripe, and 80+ enterprise platforms.
+- [Pricing & Licensing](https://apexomnihub.icu/pricing): Transparent licensing tiers, self-hosted and cloud options for high-reliability organizations.
+- [The APEX Manifesto](https://apexomnihub.icu/manifesto): "Freedom With Structure" — engineering principles for deterministic, reversible AI control planes.
+
+## Core Architectural Invariants
+- "If it is not deterministic, it is a bug."
+- Reversibility: Every authorized agent action carries an immutable compensating operation.
+- Tree Law: Production code renders strictly from canonical paths (`apps/omnihub-site/`).
