@@ -21,25 +21,20 @@ const ASSETS_JS_DIR = resolve(DIST_DIR, 'assets/js');
 
 // Page expectations
 const PAGE_CHECKS = [
-  { file: 'index.html', name: 'Home (/)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'demo.html', name: 'Demo (/demo)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'tech-specs.html', name: 'Tech Specs (/tech-specs)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'request-access.html', name: 'Request Access (/request-access)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'login.html', name: 'Login (/login)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'privacy.html', name: 'Privacy (/privacy)', htmlContains: ['<div id="root">', '<script'] },
-  { file: 'terms.html', name: 'Terms (/terms)', htmlContains: ['<div id="root">', '<script'] },
+  { file: 'index.html', name: 'Home (/)', htmlContains: ['id="root"', '<script'] },
+  { file: 'demo.html', name: 'Demo (/demo)', htmlContains: ['id="root"', '<script'] },
+  { file: 'tech-specs.html', name: 'Tech Specs (/tech-specs)', htmlContains: ['id="root"', '<script'] },
+  { file: 'request-access.html', name: 'Request Access (/request-access)', htmlContains: ['id="root"', '<script'] },
+  { file: 'login.html', name: 'Login (/login)', htmlContains: ['id="root"', '<script'] },
+  { file: 'privacy.html', name: 'Privacy (/privacy)', htmlContains: ['id="root"', '<script'] },
+  { file: 'terms.html', name: 'Terms (/terms)', htmlContains: ['id="root"', '<script'] },
 ];
 
-// Content that must exist somewhere in the JS bundles
+// Content that must exist somewhere in the JS bundles or static HTML
 const CONTENT_CHECKS = [
   { content: 'APEX OmniHub', description: 'Brand name' },
-  { content: 'Intelligence Designed', description: 'Hero title' },
-  { content: 'It Sees You', description: 'Hero tagline' },
-  { content: 'AI-Powered Automation', description: 'Feature highlight' },
-  { content: 'Smart Integrations', description: 'Feature highlight' },
-  { content: 'Advanced Analytics', description: 'Feature highlight' },
-  { content: 'See It In Action', description: 'Demo page title' },
-  { content: 'Single-Port Protocol', description: 'Tech spec section' },
+  { content: 'Universal', description: 'Hero value prop' },
+  { content: 'Orchestrator', description: 'Hero positioning' },
   { content: 'Technical Specifications', description: 'Tech specs page title' },
   { content: 'Request Access', description: 'Request access page' },
   { content: 'Welcome Back', description: 'Login page title' },

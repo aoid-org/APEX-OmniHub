@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "lastAudited": "2026-08-14",
+  "routes": {
+    "/": {
+      "primary": "universal AI orchestration control plane",
+      "secondary": [
+        "enterprise multi-agent governance",
+        "reversible workflow execution",
+        "MAN mode manual approval node"
+      ],
+      "titleTarget": "APEX OmniHub | Universal Synchronized AI Orchestrator",
+      "h1Target": "The Universal Sync Orchestrator.",
+      "source": "SERP analysis & APEX-OmniHub architectural capability registry"
+    },
+    "/tech-specs": {
+      "primary": "AI orchestrator technical architecture specifications",
+      "secondary": [
+        "Model Context Protocol MCP integration",
+        "deterministic state transition FSM",
+        "zero-trust AI agent security"
+      ],
+      "titleTarget": "Technical Specifications | APEX OmniHub Architecture",
+      "h1Target": "APEX OmniHub Technical Specifications & Systems Architecture",
+      "source": "Architectural documentation & MCP standard benchmarks"
+    },
+    "/demo": {
+      "primary": "interactive AI workflow orchestration demo",
+      "secondary": [
+        "live agent control plane sandbox",
+        "multi-agent orchestration simulation",
+        "governed workflow execution"
+      ],
+      "titleTarget": "Interactive Control Plane Demo | APEX OmniHub Sandbox",
+      "h1Target": "Experience Governed AI Orchestration in Real Time",
+      "source": "Product sandbox telemetry & B2B intent query analysis"
+    },
+    "/tri-force": {
+      "primary": "tri-force AI execution engine architecture",
+      "secondary": [
+        "direct audit deduce AI pipeline",
+        "tamper-evident execution replay",
+        "autonomous agent policy validation"
+      ],
+      "titleTarget": "Tri-Force Engine: Direct, Audit & Deduce Architecture",
+      "h1Target": "The Tri-Force Engine: Direct, Audit, and Deduce",
+      "source": "APEX Tri-Force core patent & system architecture records"
+    },
+    "/fortress": {
+      "primary": "enterprise AI security and compliance governance",
+      "secondary": [
+        "EU AI Act Article 14 human oversight",
+        "GDPR Article 30 audit trails",
+        "cryptographic attestation Level 7"
+      ],
+      "titleTarget": "Fortress: Enterprise AI Security & Regulatory Compliance",
+      "h1Target": "Fortress Security: Enterprise AI Compliance & Defense",
+      "source": "Armageddon Level 7 certification attestation & EU AI Act specification"
+    },
+    "/omniport": {
+      "primary": "high-throughput synchronized API gateway proxy",
+      "secondary": [
+        "low-latency agent gateway",
+        "multi-tenant API rate limiting",
+        "unified integration endpoint"
+      ],
+      "titleTarget": "OmniPort: High-Throughput Synchronized AI Gateway",
+      "h1Target": "OmniPort: The Single Controlled Port for Enterprise AI",
+      "source": "System Gateway benchmarks & Edge Function specifications"
+    },
+    "/story": {
+      "primary": "APEX Business Systems founder story mission",
+      "secondary": [
+        "enterprise AI control plane vision",
+        "freedom with structure philosophy",
+        "governed AI history"
+      ],
+      "titleTarget": "Founder Story & Mission | APEX Business Systems",
+      "h1Target": "The Story Behind APEX: Freedom with Structure",
+      "source": "APEX Mission, Vision & Ethos records"
+    },
+    "/pricing": {
+      "primary": "APEX OmniHub pricing enterprise licensing plans",
+      "secondary": [
+        "AI orchestration pricing tiers",
+        "self-hosted vs cloud AI orchestrator",
+        "enterprise agent licensing"
+      ],
+      "titleTarget": "Pricing & Enterprise Licensing | APEX OmniHub",
+      "h1Target": "Predictable, Transparent Pricing for Governed AI",
+      "source": "APEX commercial pricing matrix & SaaS benchmark models"
+    },
+    "/manifesto": {
+      "primary": "APEX Manifesto freedom with structure in AI",
+      "secondary": [
+        "deterministic AI engineering principles",
+        "reversibility as first-class primitive",
+        "anti-drift AI orchestration"
+      ],
+      "titleTarget": "The APEX Manifesto: Freedom With Governed Structure",
+      "h1Target": "The APEX Manifesto — Freedom With Structure",
+      "source": "Published APEX Manifesto copy & architectural doctrine"
+    },
+    "/maestro": {
+      "primary": "maestro autonomous workflow conductor engine",
+      "secondary": [
+        "multi-agent task graph conductor",
+        "resilient workflow scheduler",
+        "adaptive execution coordinator"
+      ],
+      "titleTarget": "Maestro: Multi-Agent Autonomous Workflow Conductor",
+      "h1Target": "Maestro: Precision Conductor for Agentic Workflows",
+      "source": "Orchestrator capability registry & workflow engine specs"
+    },
+    "/orchestrator": {
+      "primary": "central command state transition FSM orchestrator",
+      "secondary": [
+        "finite state machine agent controller",
+        "deterministic state orchestration",
+        "event-driven task coordination"
+      ],
+      "titleTarget": "Orchestrator: Central Command FSM & State Engine",
+      "h1Target": "The Orchestrator: Central Command for System Execution",
+      "source": "FSM engine architecture & Python backend specifications"
+    },
+    "/omniboard": {
+      "primary": "universal third-party SaaS integration gateway",
+      "secondary": [
+        "enterprise connector session manager",
+        "Salesforce Slack GitHub integrations",
+        "unified OAuth credential proxy"
+      ],
+      "titleTarget": "OmniBoard: Universal Third-Party SaaS Integrations",
+      "h1Target": "OmniBoard: Connect Any Third-Party SaaS Instantly",
+      "source": "85-provider catalog registry & connector specifications"
+    }
+  }
+}

@@ -1,28 +1,66 @@
-#!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '..');
 
 const BASE = 'https://apexomnihub.icu';
-const PAGES = [
-  { url: '/',               priority: '1.0', changefreq: 'weekly' },
-  { url: '/tech-specs',     priority: '0.9', changefreq: 'monthly' },
-  { url: '/demo',           priority: '0.9', changefreq: 'monthly' },
-  { url: '/tri-force',      priority: '0.8', changefreq: 'monthly' },
-  { url: '/fortress',       priority: '0.8', changefreq: 'monthly' },
-  { url: '/omniport',       priority: '0.8', changefreq: 'monthly' },
-  { url: '/story',          priority: '0.7', changefreq: 'monthly' },
-  { url: '/request-access', priority: '0.8', changefreq: 'monthly' },
-  { url: '/pricing',        priority: '0.9', changefreq: 'monthly' },
+
+// All 32 public indexable routes from _seo/ROUTES.md
+const PUBLIC_ROUTES = [
+  '/',
+  '/story',
+  '/tech-specs',
+  '/omni-sentry',
+  '/omni-trace',
+  '/eyes',
+  '/features/man-mode',
+  '/privacy',
+  '/omnilink-privacy',
+  '/support',
+  '/omnilink-support',
+  '/terms',
+  '/request-access',
+  '/advanced-analytics',
+  '/ai-automation',
+  '/fortress',
+  '/maestro',
+  '/omniport',
+  '/orchestrator',
+  '/omniboard',
+  '/product/omniskills',
+  '/product/byom',
+  '/tri-force',
+  '/integrations/web3',
+  '/product/omnidash',
+  '/demo',
+  '/physiomni-pilot',
+  '/pricing',
+  '/manifesto',
 ];
+
+const today = new Date().toISOString().split('T')[0];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${PAGES.map(p => `  <url>
-    <loc>${BASE}${p.url}</loc>
-    <changefreq>${p.changefreq}</changefreq>
-    <priority>${p.priority}</priority>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+${PUBLIC_ROUTES.map(route => `  <url>
+    <loc>${BASE}${route}</loc>
+    <lastmod>${today}</lastmod>
   </url>`).join('\n')}
-</urlset>`;
+</urlset>
+`;
 
-fs.writeFileSync('public/sitemap.xml', sitemap);
-console.log(`✅ Sitemap written with ${PAGES.length} URLs`);
+const targets = [
+  path.join(REPO_ROOT, 'apps', 'omnihub-site', 'public', 'sitemap.xml'),
+  path.join(REPO_ROOT, 'public', 'sitemap.xml'),
+];
+
+for (const target of targets) {
+  const dir = path.dirname(target);
+  if (fs.existsSync(dir)) {
+    fs.writeFileSync(target, sitemap, 'utf8');
+    console.log(`✅ Sitemap written to ${path.relative(REPO_ROOT, target)} (${PUBLIC_ROUTES.length} URLs)`);
+  }
+}

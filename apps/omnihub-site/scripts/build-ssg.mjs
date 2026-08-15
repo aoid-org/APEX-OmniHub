@@ -6,8 +6,8 @@ const cliPath = resolve(process.cwd(), 'node_modules', 'vite-react-ssg', 'dist',
 const viteReactSsgRoot = resolve(dirname(cliPath), '..', '..');
 const sharedDir = join(viteReactSsgRoot, 'dist', 'shared');
 
-const from = "'react-router-dom/server.js'";
-const to = "'react-router'";
+const from = "'react-router'";
+const to = "'react-router-dom/server.js'";
 
 for (const candidate of [
   join(sharedDir, 'vite-react-ssg.DUkzxBEb.mjs'),
