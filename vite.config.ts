@@ -17,11 +17,16 @@ export default defineConfig(({ mode }) => {
   server: {
     host: "::",
     port: 8080,
-    // Proxy removed - app now writes directly to Supabase tables
-    // Edge functions are still available but not required for client-side operations
-    // Security: Enable CORS only for trusted origins in development
+    proxy: {
+      '/functions/v1': {
+        target: 'https://rtopreovkywofgwgmozi.supabase.co',
+        changeOrigin: true,
+        headers: {
+          Origin: 'https://apexomnihub.icu',
+        },
+      },
+    },
     cors: mode === 'development',
-    // Security: Stricter headers in dev
     headers: {
       'X-Content-Type-Options': 'nosniff',
     },

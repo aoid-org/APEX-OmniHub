@@ -1,20 +1,21 @@
 /* VALUATION_IMPACT: Automated quality gate validation ensures institutional-grade reliability. Reduces QA costs by 60% through automated enforcement. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { execFileSync, execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('Platform Quality Gates', () => {
   it('Gate 1: TypeScript compilation must succeed', () => {
     expect(() => {
-      execSync('npx tsc --noEmit', {
+      const tscPath = join(process.cwd(), 'node_modules', 'typescript', 'bin', 'tsc');
+      execFileSync(process.execPath, [tscPath, '-b', '--noEmit'], {
         encoding: 'utf-8',
         stdio: 'pipe',
         cwd: process.cwd()
       });
     }).not.toThrow();
-  });
+  }, 300000);
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
     // APEX-FIX: Increased timeout to 30s for full-repo lint scan

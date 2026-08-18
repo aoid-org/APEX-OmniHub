@@ -25,7 +25,15 @@ OmniBoard now exposes connector operations through the existing APEX agent path 
 
 **Verification (CP-16):** OmniBoard's chat-native integration pathways are structurally proven via the `cp-16` E2E test matrix across 4 diverse topologies: **Legacy Software**, **Web 3 App**, **AI App**, and **Web 2 App**. This matrix strictly enforces the **Honest Gateway Law**, ensuring the FSM gracefully fails closed and reports accurate unavailability when the backend orchestrator is unreachable, without leaking trace errors.
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-07-22
+## Autonomous App Icon Resolution & OmniSlate Context Pipeline (v3.2)
+
+APEX-OmniHub enforces strict **Canonical Surface Ownership** between first-party APEX applications (`apex_app_installs`) and third-party integrations (`integrations`):
+- **First-Party APEX Ecosystem**: Connects apps exclusively via MCP (`ApexAppsMcpModule`). First-party applications (e.g. DueRadar, aSpiral, CheapStays, FLOWBills) render high-DPI vector brand marks natively.
+- **Third-Party Integrations & App Gallery**: Connects third-party SaaS platforms (Google Antigravity, GitHub, Slack, Stripe, Supabase) via OmniBoard ConnectorKit.
+- **Autonomous Dynamic Resolution**: `ProviderLogo` dynamically resolves brand assets without disk preloading. External endpoints are probed via an autonomous `onError` cascade, with an honest fallback monogram avatar.
+- **OmniSlate Context Droplets**: Integrated app tiles drag and drop or click directly into OmniSlate, rendering 28×28 minimized context pills with brand-specific ambient glow and hover dismissal controls.
+
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-08-18
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)

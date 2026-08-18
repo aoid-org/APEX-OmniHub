@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { CheckCircle2, Copy, Key, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { type IntegrationDef } from '@/omniconnect/core/registry';
+import { ProviderLogo } from '../../dashboard/components/ProviderLogo';
 import { toast } from 'sonner';
 
 interface ConnectorKitProps {
@@ -32,21 +33,6 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     return session;
   };
 
-  const parseResponse = async (response: Response) => {
-    try {
-      return await response.json() as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  };
-
-  const responseMessage = (data: Record<string, unknown>, fallback: string) => {
-    const candidate = data.message ?? data.error;
-    if (typeof candidate === 'string') return candidate;
-    if (typeof candidate === 'number' || typeof candidate === 'boolean') return String(candidate);
-    return fallback;
-  };
-
   const plainError = (value: unknown) => {
     const raw = typeof value === 'string' ? value : 'We could not verify this connector.';
     if (/unauthorized|auth/i.test(raw)) return 'Please sign in again, then retry the connection test.';
@@ -54,6 +40,28 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     if (/network|fetch|failed/i.test(raw)) return 'We could not reach the connection service. Check your internet connection, then retry.';
     if (/invalid|integration_id/i.test(raw)) return 'We could not verify that connector. Choose the app again and retry.';
     return `${raw} Check the app details, then retry.`;
+  };
+
+  const invokeEdgeApi = async (path: string, body: Record<string, unknown>, accessToken: string) => {
+    try {
+      const res = await fetch(`/functions/v1/${path}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || data.error || `Request failed with status ${res.status}`);
+      }
+      return data;
+    } catch {
+      const fallback = await supabase.functions.invoke(path, { body });
+      if (fallback.error) throw fallback.error;
+      return fallback.data;
+    }
   };
 
   const handleTestConnection = async () => {
@@ -66,21 +74,13 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
         setTestMessage('Please sign in again, then retry the connection test.');
         return;
       }
-      const response = await fetch(`${serverUrl}/functions/v1/omnilink-port/keys/test`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          integration_id: integration.id,
-          integration_type: integration.type,
-          name: integration.name,
-          scopes: integration.scopes ?? [],
-        }),
-      });
-      const responseData = await parseResponse(response);
-      if (!response.ok) throw new Error(responseMessage(responseData, 'Connector readiness test failed'));
+      await invokeEdgeApi('omnilink-port/keys/test', {
+        integration_id: integration.id,
+        integration_type: integration.type,
+        name: integration.name,
+        scopes: integration.scopes ?? [],
+      }, session.access_token);
+
       setTestStatus('passed');
       setTestMessage('Connection test passed. This app is ready for a production key.');
       toast.success('Connection test passed');
@@ -103,21 +103,13 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     try {
       const session = await requireSession();
       if (!session) return;
-      const response = await fetch(`${serverUrl}/functions/v1/omnilink-port/keys`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          integration_id: integration.id,
-          integration_type: integration.type,
-          name: `${integration.name} Connector`,
-          scopes: integration.scopes ?? [],
-        }),
-      });
-      const responseData = await parseResponse(response);
-      if (!response.ok) throw new Error(responseMessage(responseData, 'Failed to generate key'));
+      const responseData = await invokeEdgeApi('omnilink-port/keys', {
+        integration_id: integration.id,
+        integration_type: integration.type,
+        name: `${integration.name} Connector`,
+        scopes: integration.scopes ?? [],
+      }, session.access_token);
+
       setGeneratedKey({
         key: String(responseData.key),
         prefix: String(responseData.key_prefix),
@@ -169,8 +161,8 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Server className="h-5 w-5" />
-          {integration.name}
+          <ProviderLogo provider={integration.type || integration.name} size="sm" />
+          <span>{integration.name}</span>
         </CardTitle>
         <CardDescription>{integration.description}</CardDescription>
       </CardHeader>

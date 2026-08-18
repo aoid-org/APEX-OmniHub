@@ -38,6 +38,10 @@ status: verified
 21. **SkillForge canonical facts.** Edge function `supabase/functions/generate-business-skills/index.ts`: 401 auth gate, 402 entitlement gate (`check_skill_entitlement`, BASIC cap 3 / PRO 999,999), live Anthropic generation with model `claude-3-5-haiku-20241022`, skill name `skill_${crypto.randomUUID()}` (full UUID, no timestamp), insert of exactly `{ user_id, name, trigger_intent, definition }`, response `entitlement.used = current + 1` (optimistic increment). Three UI surfaces: full page `/launch/skillforge` (Step 4 success state), embeddable `SkillForgeWidget` (closes on success; invalidates `['user-skills']`, `['workflows']`), and the `OmniSkillsModule` routed via `MODULE_COMPONENTS` in `ModuleRenderer.tsx` (not `ModuleRegistry.ts`). See `docs/skill-forge-implementation.md`.
 
 22. **Module action gating is a module-keyed capability map (PR #1441, 2026-06-21).** `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` is keyed by `moduleKey + actionId` (covering both baseline hyphen ids and live underscore ids); it replaced the prior single global whitelist. Unsupported actions fail-closed in `ModuleShell` with **module-specific** copy and must **never** call `trigger-workflow`. Labels equal to the action id or containing underscores are humanized by `normalizeActionLabel` in `useOmniModuleState.ts` (`create_workflow` → `Create Workflow`) without implying the action is wired. **Links** stages valid `http(s)` URLs in local component state only (no persistence table yet — deferred, JR-gated), shows "Links are staged locally until link-context persistence is connected." and "OmniSlate context handoff is not connected yet."; its **Add Link** button is enabled on a valid URL and is never permanently disabled. The live `omnilink-port` `module-state` Links resolver returns an honest **empty** link-context state — it does **not** read the `integrations` table and does **not** return `test-all` (see `docs/APEX_AGENT_OPERATIONS.md §9.1`). The OmniBoard wizard (`OmniBoardWizard.tsx`) carries an `AbortController` timeout and the explicit error taxonomy: missing config, invalid URL, unreachable/CORS, HTTP non-2xx, auth required, timeout — and never fakes a successful connection.
+23. **Surface Ownership & Autonomous App Branding Law (2026-08-18).**
+    - **Surface Ownership Split**: `EcosystemWidget` renders first-party APEX applications (`apex_app_installs` with `status = 'user_confirmed'`). "Add APEX App" opens `ApexAppsMcpModule` via MCP, NEVER OmniBoard. `IntegratedAppsGalleryWidget` renders third-party SaaS integrations (`integrations` with `status = 'active'`). "Connect Third-Party App" opens OmniBoard.
+    - **Autonomous Vector & Dynamic Resolution**: `apps/omnihub-site/dashboard/components/ProviderLogo.tsx` resolves official brand assets dynamically without disk preloading (`public/app-icons` is forbidden). Google Antigravity 2.0 renders the authentic Rainbow Gravitational Arc. DueRadar renders the authentic Metallic "R" + Neon Cyan "D" Radar Scope + Golden Ping Beam. Third-party web apps probe candidate endpoints (`/favicon.png`, `/favicon.ico`) with an honest monogram fallback badge.
+    - **OmniSlate Context Droplets**: Minimized 28×28 droplet pills inherit authentic branding, app-aware ambient glow channels, and hover dismissal controls upon drag-and-drop or click attachment.
 
 ## Tenant Registry
 
@@ -226,4 +230,26 @@ skill routing updated: `apex-dev` is superseded by `apex-boost-claude`,
 - `eslint.config.js` was updated to extend the relaxed overrides for test/simulation files to include `apps/omnihub-site/tests/**/*.{ts,tsx}`, disabling the `no-console` rule.
 - Surgically removed the unused `expect` import from `apps/omnihub-site/tests/visual/omniboard-integrations.spec.ts` to satisfy `@typescript-eslint/no-unused-vars`.
 - `npm run lint` and the Quality Gates test suite pass cleanly with 0 warnings and 0 errors workspace-wide.
+
+## Source-of-Truth Statement 30 (2026-08-18)
+
+**Canonical App Surface Separation & Standard App Behavior.**
+1. **First-Party APEX Ecosystem Apps** (`DueRadar`, `aSpiral`, `PlayMoney`, `FLOWBills`, `CheapStays`, `Jubee.Love`, `Armageddon`, `SBBL-HQ`, `TheLampStand`):
+   - Owned exclusively by **APEX Apps / APEX Ecosystem** (`ApexAppsMcpModule.tsx`, MCP connection flow).
+   - Rendered strictly inside the **APEX ECOSYSTEM** widget (`widget_eco`, top-right panel).
+   - Display official product vector branding via `ProviderLogo`, `[MCP Active · First-Party]` status, and green checkmark.
+   - Draggable (`draggable={true}`) and clickable to immediately bind into OmniSlate task context droplets.
+   - Connected via the `+ Add APEX App` button in the APEX Ecosystem widget.
+2. **Third-Party Integrations** (`Google Antigravity 2.0`, `GitHub`, `Slack`, `Stripe`, `Salesforce`, `Notion`, `Linear`, `Supabase`, etc.):
+   - Owned exclusively by **OmniBoard / ConnectorKit** (`/omniboard`, third-party SaaS connector catalog).
+   - Rendered strictly inside the **APP GALLERY** (`IntegratedAppsGalleryWidget`, bottom-center grid).
+   - Display official vendor vector branding via `ProviderLogo`, `[CONNECTED & READY]` status, and green checkmark.
+   - Draggable (`draggable={true}`) and clickable to immediately bind into OmniSlate task context droplets.
+   - Connected and configured via OmniBoard (`/omniboard`).
+3. **OmniSlate Multi-App Context Droplet Standard**:
+   - `ContextDroplet` components render the authentic `ProviderLogo` vector icon for every attached app.
+   - Prompts submitted in OmniSlate bundle all attached first-party and third-party context IDs in `{ context: { apps: [...] } }`.
+   - In Demo/Staging mode, simulated agent execution acknowledges all attached contexts; in Live mode, payloads dispatch to the agent orchestrator.
+4. **User-Level Scoping & RLS Isolation**:
+   - All rows in `integrations` and `apex_app_installs` are strictly isolated by `user_id` (`auth.uid()`) and protected by Supabase Row-Level Security policies. No cross-tenant or cross-user leakage is permitted.
 

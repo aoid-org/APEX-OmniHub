@@ -9,7 +9,7 @@ export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotP
   }} />
 );
 
-export const GlassCard = ({ children, style={}, glow = true, onClick }: GlassCardProps) => {
+export const GlassCard = ({ children, style={}, glow = true, onClick, onDragOver, onDrop }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -32,7 +32,7 @@ export const GlassCard = ({ children, style={}, glow = true, onClick }: GlassCar
   }
 
   return (
-    <div style={cardStyle}>
+    <div style={cardStyle} onDragOver={onDragOver} onDrop={onDrop}>
       {children}
     </div>
   );

@@ -5,7 +5,7 @@
 
 import { Connector, ConnectorRegistry } from '../types/connector';
 import type { ElementType } from 'react';
-import { MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera, DollarSign, BriefcaseBusiness, Building2 } from 'lucide-react';
+import { MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot, Play, Camera, DollarSign, BriefcaseBusiness, Building2, Sparkles } from 'lucide-react';
 
 export interface IntegrationDef {
   id: string;
@@ -28,6 +28,19 @@ export interface IntegrationDef {
 }
 
 export const availableIntegrations: IntegrationDef[] = [
+  {
+    id: 'google-antigravity',
+    name: 'Google Antigravity 2.0',
+    type: 'google-antigravity',
+    description: 'Agentic AI IDE, orchestration control plane & Autonomous Co-Founder Engine',
+    icon: Sparkles,
+    requiresApiKey: true,
+    category: 'ai',
+    status: 'ga',
+    version: '2.0',
+    docsUrl: 'https://antigravity.google.dev',
+    scopes: ['workspace:read', 'workspace:write', 'agent:execute', 'mcp:connect'],
+  },
   { id: '2', name: 'WhatsApp', type: 'whatsapp', description: 'Business messaging platform', icon: MessageCircle, requiresApiKey: true },
   { id: '3', name: 'Meta', type: 'facebook', description: 'Social media integration', icon: Globe, requiresApiKey: true },
   { id: '4', name: 'Messenger', type: 'messenger', description: 'Facebook Messenger integration', icon: MessageCircle, requiresApiKey: true },
