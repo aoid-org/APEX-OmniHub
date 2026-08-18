@@ -1796,3 +1796,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **POSIX Slug Normalization & Endpoint Resolution:** Added `normalize_slug()` to sanitize multi-word provider names into POSIX environment variables (e.g. `GOOGLE_WORKSPACE_CLIENT_ID`, `BANK_OF_AMERICA_CLIENT_ID`) and `WELL_KNOWN_USERINFO_ENDPOINTS` mapping to route least-privilege ping checks to official verification endpoints (GitHub, Slack, Google, Microsoft Graph, Stripe, Plaid, Mercury, Brex, Coinbase, etc.).
 - **Vector-Crisp UI Brand Logos:** Implemented `ProviderLogo.tsx` rendering vector-crisp authentic brand SVGs across OmniBoard connection modals and Integrations grid cards for all 85 providers.
 - **Repo Canon Alignment:** Updated `memory/omni-recall/docs/architecture/CANONICAL_TRUTH.md` Statement 20 reflecting the current active 85-provider registry and FSM resolver routing.
+
+## 9.39 Autonomous App Branding & OmniSlate Context Droplets (2026-08-18, PR #5)
+
+### 1. Operational Surface Separation & Provider Catalog Metadata
+- **Changed files:** `orchestrator/omniboard/provider_catalog.py`, `package.json`, `apps/omnihub-site/dashboard/components/ProviderLogo.tsx`, `apps/omnihub-site/dashboard/OmniDashShell.tsx`.
+- **Ecosystem vs Third-Party Boundary:** `provider_catalog.py` maintains canonical provider definitions and least-privilege auth configs for third-party developer integrations. First-party APEX applications (DueRadar, aSpiral, CheapStays, FLOWBills) are isolated to `apex_app_installs` and orchestrated via MCP (`ApexAppsMcpModule`).
+- **Autonomous Dynamic Resolution:** Eliminates preloaded disk assets in `public/app-icons`. Resolves mathematical vector marks for Google Antigravity 2.0 (Rainbow Gravitational Arc) and DueRadar (Metallic "R" + Neon Cyan "D" Radar Scope + Golden Beam) with dynamic endpoint candidate cascading for custom endpoints.
+- **OmniSlate Context Droplets:** Dragging or clicking connected app tiles attaches 28×28 minimized context pills with brand-colored ambient glows and hover dismissal controls into the OmniSlate prompt bar.
+- **Package Manifest & Lockfile Synchronization:** `package.json` and `bun.lock` remain strictly synchronized and verified via `check-lockfile-sync.mjs`.
+
