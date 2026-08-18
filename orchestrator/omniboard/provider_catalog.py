@@ -14,6 +14,7 @@ KNOWN_PROVIDERS: list[str] = [
     "Gemini",
     "Grok",
     "Perplexity",
+    "Google Antigravity 2.0",
     "Google Antigravity",
     "Google Jules",
     # Prediction Markets & Sports
@@ -111,6 +112,10 @@ KNOWN_PROVIDERS: list[str] = [
 ]
 
 WELL_KNOWN_USERINFO_ENDPOINTS: dict[str, str] = {
+    "google antigravity 2.0": "https://antigravity.google.dev/api/v2/auth/verify",
+    "google antigravity": "https://antigravity.google.dev/api/v2/auth/verify",
+    "google-antigravity": "https://antigravity.google.dev/api/v2/auth/verify",
+    "antigravity": "https://antigravity.google.dev/api/v2/auth/verify",
     "github": "https://api.github.com/user",
     "slack": "https://slack.com/api/auth.test",
     "google": "https://www.googleapis.com/oauth2/v3/userinfo",

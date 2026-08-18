@@ -17,7 +17,7 @@ export interface OmniSearchTarget {
 }
 
 const MODULE_KEYWORDS: Record<string, string> = {
-  omniboard: 'connect integration third-party provider apps board',
+  omniboard: 'connect integration third-party provider apps board antigravity google ai',
   physiomni: 'physical iot device actuation',
   audits: 'audit log history compliance export',
   links: 'omnilink url share deep link',

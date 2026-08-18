@@ -29,7 +29,7 @@ export async function fetchOmniLinkIntegrations(
   userId: string,
 ): Promise<OmniLinkIntegrationRow[]> {
   const { data, error } = await supabase
-    .from('omnilink_integrations')
+    .from('integrations')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -42,7 +42,7 @@ export async function fetchOmniLinkIntegrations(
 }
 
 /**
- * Persist a new custom integration to the omnilink_integrations table.
+ * Persist a new custom integration to the integrations table.
  * Called by IntegrationOnboarder on wizard completion.
  */
 export async function createOmniLinkIntegration(
@@ -51,7 +51,7 @@ export async function createOmniLinkIntegration(
   type: string,
 ): Promise<OmniLinkIntegrationRow> {
   const { data, error } = await supabase
-    .from('omnilink_integrations')
+    .from('integrations')
     .insert({
       user_id: userId,
       name,

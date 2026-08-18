@@ -1,4 +1,4 @@
-import type { ReactNode, CSSProperties } from 'react';
+import type { ReactNode, CSSProperties, DragEventHandler } from 'react';
 
 export { T, CHANNELS, omniRgba, NAV_BG, NAV_BORDER, NAV_SHADOW, HEALTH_PALETTE } from './omniSkinTokens';
 
@@ -12,6 +12,8 @@ export interface GlassCardProps {
   style?: CSSProperties;
   glow?: boolean;
   onClick?: () => void;
+  onDragOver?: DragEventHandler<HTMLDivElement>;
+  onDrop?: DragEventHandler<HTMLDivElement>;
 }
 
 export interface SectionLabelProps {
