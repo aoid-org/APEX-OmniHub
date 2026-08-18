@@ -1380,8 +1380,9 @@ const EcosystemWidget = () => {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      if (typeof supabase?.from !== 'function') return;
       const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
+      const user = sessionData?.session?.user;
       let q = supabase
         .from('apex_app_installs')
         .select('app_id, app_label, app_url, status')
@@ -1533,8 +1534,9 @@ const IntegratedAppsGalleryWidget = () => {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      if (typeof supabase?.from !== 'function') return;
       const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
+      const user = sessionData?.session?.user;
 
       // Fetch active integrations (e.g. Google Antigravity 2.0, GitHub, Slack, etc.)
       let intQuery = supabase
