@@ -94,9 +94,10 @@ jobs:
 
       - name: Build web app
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || secrets.E2E_SUPABASE_URL || 'https://rtopreovkywofgwgmozi.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || secrets.E2E_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy' }}
           VITE_CONNECT_AI_ENABLED: 'true'
+          APEX_ALLOW_MISSING_SUPABASE_CONFIG: 'true'
         run: npm run build
 
       - name: Upload dist artifact

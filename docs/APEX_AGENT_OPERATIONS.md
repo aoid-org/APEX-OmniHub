@@ -1800,9 +1800,11 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 ## 9.39 Autonomous App Branding & OmniSlate Context Droplets (2026-08-18, PR #5)
 
 ### 1. Operational Surface Separation & Provider Catalog Metadata
-- **Changed files:** `orchestrator/omniboard/provider_catalog.py`, `package.json`, `apps/omnihub-site/dashboard/components/ProviderLogo.tsx`, `apps/omnihub-site/dashboard/OmniDashShell.tsx`.
+- **Changed files:** `orchestrator/omniboard/provider_catalog.py`, `package.json`, `apps/omnihub-site/dashboard/components/ProviderLogo.tsx`, `apps/omnihub-site/dashboard/OmniDashShell.tsx`, `.github/workflows/mobile-build-verify.yml`.
 - **Ecosystem vs Third-Party Boundary:** `provider_catalog.py` maintains canonical provider definitions and least-privilege auth configs for third-party developer integrations. First-party APEX applications (DueRadar, aSpiral, CheapStays, FLOWBills) are isolated to `apex_app_installs` and orchestrated via MCP (`ApexAppsMcpModule`).
 - **Autonomous Dynamic Resolution:** Eliminates preloaded disk assets in `public/app-icons`. Resolves mathematical vector marks for Google Antigravity 2.0 (Rainbow Gravitational Arc) and DueRadar (Metallic "R" + Neon Cyan "D" Radar Scope + Golden Beam) with dynamic endpoint candidate cascading for custom endpoints.
 - **OmniSlate Context Droplets:** Dragging or clicking connected app tiles attaches 28×28 minimized context pills with brand-colored ambient glows and hover dismissal controls into the OmniSlate prompt bar.
 - **Package Manifest & Lockfile Synchronization:** `package.json` and `bun.lock` remain strictly synchronized and verified via `check-lockfile-sync.mjs`.
+- **Mobile Build Verification CI Invariants:** `.github/workflows/mobile-build-verify.yml` uses fallback Supabase variables and `APEX_ALLOW_MISSING_SUPABASE_CONFIG=true` for headless Capacitor web packaging.
+
 
