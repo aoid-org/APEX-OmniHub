@@ -322,11 +322,6 @@ export const ProviderLogo: React.FC<ProviderLogoProps> = ({
     return null;
   }, [normalized]);
 
-  // If matched brand SVG exists, render official mark directly
-  if (brandMatchKey) {
-    return <>{BRAND_SVGS[brandMatchKey](dimensionClass, className)}</>;
-  }
-
   // Build candidate URL list from iconUrl / appUrl for external third-party apps
   const candidateUrls = useMemo(() => {
     const urls: string[] = [];
@@ -346,6 +341,11 @@ export const ProviderLogo: React.FC<ProviderLogoProps> = ({
     }
     return urls;
   }, [appUrl, iconUrl]);
+
+  // If matched brand SVG exists, render official mark directly
+  if (brandMatchKey) {
+    return <>{BRAND_SVGS[brandMatchKey](dimensionClass, className)}</>;
+  }
 
   // If candidate URLs exist, attempt dynamic resolution with fallback
   if (candidateUrls.length > 0) {

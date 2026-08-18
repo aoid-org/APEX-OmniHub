@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { CheckCircle2, Copy, Key, RefreshCw, AlertTriangle, ShieldCheck, Server } from 'lucide-react';
+import { CheckCircle2, Copy, Key, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { type IntegrationDef } from '@/omniconnect/core/registry';
 import { ProviderLogo } from '../../dashboard/components/ProviderLogo';
@@ -33,21 +33,6 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     return session;
   };
 
-  const parseResponse = async (response: Response) => {
-    try {
-      return await response.json() as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  };
-
-  const responseMessage = (data: Record<string, unknown>, fallback: string) => {
-    const candidate = data.message ?? data.error;
-    if (typeof candidate === 'string') return candidate;
-    if (typeof candidate === 'number' || typeof candidate === 'boolean') return String(candidate);
-    return fallback;
-  };
-
   const plainError = (value: unknown) => {
     const raw = typeof value === 'string' ? value : 'We could not verify this connector.';
     if (/unauthorized|auth/i.test(raw)) return 'Please sign in again, then retry the connection test.';
@@ -72,7 +57,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
         throw new Error(data.message || data.error || `Request failed with status ${res.status}`);
       }
       return data;
-    } catch (err) {
+    } catch {
       const fallback = await supabase.functions.invoke(path, { body });
       if (fallback.error) throw fallback.error;
       return fallback.data;
