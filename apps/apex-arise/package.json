@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "arise:scan": "bun run src/index.ts",
+    "arise:diagnose": "bun run src/diagnosis/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
