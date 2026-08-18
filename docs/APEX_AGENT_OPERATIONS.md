@@ -1807,4 +1807,15 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Package Manifest & Lockfile Synchronization:** `package.json` and `bun.lock` remain strictly synchronized and verified via `check-lockfile-sync.mjs`.
 - **Mobile Build Verification CI Invariants:** `.github/workflows/mobile-build-verify.yml` uses fallback Supabase variables and `APEX_ALLOW_MISSING_SUPABASE_CONFIG=true` for headless Capacitor web packaging.
 
+## 9.40 A.R.I.S.E. Observatory CI Fix (2026-08-18, PR #7)
+
+### 1. Diagnosis Script Entrypoint
+- **Changed file:** `apps/apex-arise/package.json`.
+- **Root cause:** `.github/workflows/arise.yml` invokes `bun run arise:diagnose` but the `"arise:diagnose"` script was never defined in `package.json`, causing the Diagnosis Observatory job to fail with `error: Script not found "arise:diagnose"` (exit code 1).
+- **Fix:** Added `"arise:diagnose": "bun run src/diagnosis/index.ts"` to `apps/apex-arise/package.json`.
+
+### 2. Snapshot Publication Resilience
+- **Changed file:** `.github/workflows/arise.yml`.
+- **Root cause:** The `publish-snapshot` job failed when `GITHUB_TOKEN` lacked PR-creation permissions on protected branches.
+- **Fix:** Added `continue-on-error: true` to the `publish-snapshot` job and graceful fallback error handling for `git push` and `gh pr create` commands, so snapshot publication never fails the primary CI pipeline.
 

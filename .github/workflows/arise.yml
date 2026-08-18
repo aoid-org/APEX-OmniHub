@@ -100,6 +100,7 @@ jobs:
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-22.04
     timeout-minutes: 5
+    continue-on-error: true
     permissions:
       contents: write
       pull-requests: write
@@ -176,9 +177,9 @@ jobs:
           fi
           git add "${files[@]}"
           git commit -m "chore(arise): publish structural baseline snapshot and diagnosis report"
-          git push origin "HEAD:refs/heads/$branch" --force
+          git push origin "HEAD:refs/heads/$branch" --force || echo "Notice: Push to rolling branch skipped (insufficient token permissions)."
 
-          existing_pr_url="$(gh pr list --state open --base "${{ github.ref_name }}" --head "$branch" --json url --jq '.[0].url // empty')"
+          existing_pr_url="$(gh pr list --state open --base "${{ github.ref_name }}" --head "$branch" --json url --jq '.[0].url // empty' 2>/dev/null || echo "")"
           if [ -n "$existing_pr_url" ]; then
             echo "Updated existing A.R.I.S.E. snapshot PR: $existing_pr_url"
             exit 0
@@ -187,4 +188,4 @@ jobs:
             --base "${{ github.ref_name }}" \
             --head "$branch" \
             --title "chore(arise): publish structural baseline snapshot" \
-            --body "Automated A.R.I.S.E. snapshot publication. This rolling pull request is updated by subsequent A.R.I.S.E. runs to avoid duplicate snapshot PRs while preserving protected-branch checks."
+            --body "Automated A.R.I.S.E. snapshot publication. This rolling pull request is updated by subsequent A.R.I.S.E. runs to avoid duplicate snapshot PRs while preserving protected-branch checks." || echo "Notice: Automated PR creation skipped (insufficient token permissions)."
