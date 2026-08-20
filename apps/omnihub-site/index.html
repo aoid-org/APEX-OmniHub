@@ -42,6 +42,26 @@
         e.preventDefault();
         window.__deferredPWAEvent = e;
       });
+
+      // Privacy-first lightweight telemetry & attribution
+      window.apexAnalytics = {
+        track: function(eventName, props) {
+          try {
+            var payload = Object.assign({
+              event: eventName,
+              url: window.location.href,
+              referrer: document.referrer || null,
+              timestamp: new Date().toISOString()
+            }, props || {});
+            var queue = JSON.parse(sessionStorage.getItem('apex_events') || '[]');
+            queue.push(payload);
+            sessionStorage.setItem('apex_events', JSON.stringify(queue.slice(-50)));
+            if (window.dataLayer) window.dataLayer.push(payload);
+            if (window.plausible) window.plausible(eventName, { props: props });
+          } catch (e) {}
+        }
+      };
+      window.apexAnalytics.track('pageview');
     </script>
 
     <!-- Open Graph -->

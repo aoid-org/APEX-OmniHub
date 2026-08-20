@@ -14,6 +14,28 @@
 <link rel="icon" type="image/svg+xml" href="/apex-badge.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" integrity="sha384-E4ThpOrOd7OmeB/Pc+rOOXF4ZgxT15hmAkQMOHFXICqLHDIzcLfFpQJusDaJ/Gnt" crossorigin="anonymous">
+<!-- Privacy-first lightweight telemetry & attribution -->
+<script>
+  window.apexAnalytics = {
+    track: function(eventName, props) {
+      try {
+        var payload = Object.assign({
+          event: eventName,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          timestamp: new Date().toISOString()
+        }, props || {});
+        // Store in session telemetry queue
+        var queue = JSON.parse(sessionStorage.getItem('apex_events') || '[]');
+        queue.push(payload);
+        sessionStorage.setItem('apex_events', JSON.stringify(queue.slice(-50)));
+        if (window.dataLayer) window.dataLayer.push(payload);
+        if (window.plausible) window.plausible(eventName, { props: props });
+      } catch (e) {}
+    }
+  };
+  window.apexAnalytics.track('pageview');
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -513,7 +535,13 @@ textarea.form-input{resize:vertical;min-height:80px}
   <div class="sec-in">
     <div class="rv"><div class="tag">Enterprise Ready</div>
     <h2 class="h2">Built for regulated<br>environments.</h2>
-    <p class="sub">Architected from day one for compliance and governance across finance, healthcare, legal, and government.</p></div>
+    <p class="sub">Architected from day one for compliance and governance across finance, healthcare, legal, and government.</p>
+    <div style="margin-top:12px">
+      <a href="/certificates/ARMAGEDDONLevel7CERTIFIEDeb989339.pdf" target="_blank" rel="noopener noreferrer" style="color:var(--copper);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+        <span>Verified by ARMAGEDDON Level 7 Attestation</span> &rarr;
+      </a>
+    </div>
+    </div>
     <div class="comp-grid">
       <div class="comp-card rv"><div class="comp-chk">&#10003;</div><div class="comp-n">Security Controls Roadmap</div><div class="comp-d">Security and availability controls mapped for external assessment</div></div>
       <div class="comp-card rv d1"><div class="comp-chk">&#10003;</div><div class="comp-n">Human oversight controls</div><div class="comp-d">Manual Approval Node governance requirements for high-risk AI systems</div></div>
@@ -549,24 +577,24 @@ textarea.form-input{resize:vertical;min-height:80px}
     <div>
       <img class="foot-wm" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub">
       <p class="foot-about">The Universal Sync Orchestrator. Enterprise AI governance that puts operational authority back where it belongs, with you.</p>
-      <p class="foot-legal-sm">2025 APEX Business Systems Ltd.<br>Edmonton, Alberta, Canada.</p>
+      <p class="foot-legal-sm">2026 APEX Business Systems Ltd.<br>Edmonton, Alberta, Canada.</p>
     </div>
     <div>
       <div class="foot-ttl">Platform</div>
-      <ul class="foot-links"><li><a href="#">Overview</a></li><li><a href="/tri-force.html">Tri-Force Architecture</a></li><li><a href="/maestro.html">MAESTRO Engine</a></li><li><a href="/man-mode.html">MAN Mode</a></li><li><a href="/omniboard.html">OmniBoard</a></li></ul>
+      <ul class="foot-links"><li><a href="/">Overview</a></li><li><a href="/tri-force.html">Tri-Force Architecture</a></li><li><a href="/maestro.html">MAESTRO Engine</a></li><li><a href="/man-mode.html">MAN Mode</a></li><li><a href="/omniboard.html">OmniBoard</a></li></ul>
     </div>
     <div>
       <div class="foot-ttl">Company</div>
-      <ul class="foot-links"><li><a href="#">About APEX</a></li><li><a href="#">Founder's Story</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      <ul class="foot-links"><li><a href="/story.html">About APEX</a></li><li><a href="/story.html">Founder's Story</a></li><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/request-access.html">Early Access</a></li></ul>
     </div>
     <div>
       <div class="foot-ttl">Resources</div>
-      <ul class="foot-links"><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li><li><a href="#">Security</a></li><li><a href="#">Status</a></li><li><a href="#">Contact</a></li></ul>
+      <ul class="foot-links"><li><a href="/tech-specs.html">Tech Specs</a></li><li><a href="/fortress.html">Fortress Security</a></li><li><a href="/omni-sentry.html">OmniSentry</a></li><li><a href="/omni-trace.html">OmniTrace</a></li><li><a href="/support.html">Contact & Support</a></li></ul>
     </div>
   </div>
   <div class="foot-bottom">
     <p class="foot-copy">Intelligence, Designed. APEX OmniHub is a product of APEX Business Systems Ltd.</p>
-    <div class="foot-bl"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="#">Cookies</a></div>
+    <div class="foot-bl"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/privacy.html">Cookies</a></div>
   </div>
 </footer>
 
@@ -618,30 +646,109 @@ document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
 // ===== MODAL =====
 const modal=document.getElementById('ra-modal');
 let formStart=0;
-function openModal(){modal.classList.add('open');modal.removeAttribute('aria-hidden');document.body.style.overflow='hidden';formStart=Date.now();}
-function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+function openModal(){
+  modal.classList.add('open');
+  modal.removeAttribute('aria-hidden');
+  document.body.style.overflow='hidden';
+  formStart=Date.now();
+  if (window.apexAnalytics) window.apexAnalytics.track('modal_open', { modal: 'request-access' });
+}
+function closeModal(){
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
 document.querySelectorAll('[data-modal="request-access"]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openModal();}));
 document.getElementById('modal-close').addEventListener('click',closeModal);
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
 
-// ===== FORM =====
+// ===== FORM & PERSISTENCE =====
 let _lastSubmit=0; // in-memory rate limit (session only)
 
-document.getElementById('ra-form').addEventListener('submit',function(e){
+document.getElementById('ra-form').addEventListener('submit',async function(e){
   e.preventDefault();
   const err=document.getElementById('gen-error');
   const btn=document.getElementById('form-submit');
   err.classList.remove('show');
   if(this.website.value)return; // honeypot
-  if(Date.now()-formStart<2000){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
+  if(Date.now()-formStart<1500){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
   if(_lastSubmit&&Date.now()-_lastSubmit<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
   const name=String(this.ra_name.value).trim().slice(0,200);
   const emailEl=this.ra_email;
+  const company=String(this.ra_company.value||'').trim().slice(0,200);
+  const useCase=String(this.ra_usecase.value||'').trim().slice(0,500);
+
   if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
   if(!emailEl.validity.valid||!emailEl.value){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
+  
   btn.classList.add('loading');btn.disabled=true;
   _lastSubmit=Date.now();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const leadData = {
+    name: name,
+    email: emailEl.value.trim().toLowerCase(),
+    company: company || null,
+    use_case: useCase || null,
+    utm_source: urlParams.get('utm_source'),
+    utm_medium: urlParams.get('utm_medium'),
+    utm_campaign: urlParams.get('utm_campaign'),
+    submitted_at: new Date().toISOString()
+  };
+
+  // Telemetry track
+  if (window.apexAnalytics) {
+    window.apexAnalytics.track('request_access_submit', { email: leadData.email, company: leadData.company });
+  }
+
+  // Attempt Supabase insert if key configured
+  let saved = false;
+  if (APEX_CONFIG.supabaseUrl && APEX_CONFIG.supabaseAnonKey) {
+    try {
+      const res = await fetch(APEX_CONFIG.supabaseUrl + '/rest/v1/access_requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': APEX_CONFIG.supabaseAnonKey,
+          'Authorization': 'Bearer ' + APEX_CONFIG.supabaseAnonKey,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          name: leadData.name,
+          email: leadData.email,
+          company: leadData.company,
+          use_case: leadData.use_case
+        })
+      });
+      if (res.ok) saved = true;
+    } catch(err) {
+      console.warn('[APEX OmniHub] Direct submission relay notice:', err);
+    }
+  }
+
+  // If Supabase is unconfigured or failed, dispatch via mailto fallback
+  if (!saved && APEX_CONFIG.fallbackEmail) {
+    try {
+      const subject = encodeURIComponent('APEX OmniHub Access Request: ' + leadData.name);
+      const body = encodeURIComponent(
+        'Name: ' + leadData.name + '\n' +
+        'Company: ' + (leadData.company || 'Not specified') + '\n' +
+        'Email: ' + leadData.email + '\n\n' +
+        'Use Case:\n' + (leadData.use_case || 'Not specified') + '\n\n' +
+        'UTM Attribution: ' + (leadData.utm_source ? leadData.utm_source + ' / ' + leadData.utm_medium : 'direct')
+      );
+      const mailtoUrl = 'mailto:' + APEX_CONFIG.fallbackEmail + '?subject=' + subject + '&body=' + body;
+      // Trigger background mailto link
+      const a = document.createElement('a');
+      a.href = mailtoUrl;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ document.body.removeChild(a); }, 1000);
+    } catch(e) {}
+  }
+
   document.getElementById('modal-form-body').classList.add('hidden');
   document.getElementById('modal-success').classList.add('show');
 });
