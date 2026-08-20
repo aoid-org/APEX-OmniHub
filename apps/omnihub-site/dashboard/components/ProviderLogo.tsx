@@ -306,15 +306,15 @@ export const ProviderLogo: React.FC<ProviderLogoProps> = ({
 
   // Direct official brand mark matching
   const brandMatchKey = useMemo(() => {
-    if (normalized.includes('antigravity')) return 'google-antigravity';
-    if (normalized.includes('dueradar') || normalized === 'due-radar') return 'dueradar';
+    if (normalized.includes('antigravity') || normalized.includes('google-antigravity') || normalized.includes('google antigravity') || normalized === 'ag') return 'google-antigravity';
+    if (normalized.includes('dueradar') || normalized.includes('due-radar') || normalized.includes('due_radar') || normalized.includes('due radar') || normalized === 'dr') return 'dueradar';
     if (normalized.includes('aspiral')) return 'aspiral';
     if (normalized.includes('cheapstays')) return 'cheapstays';
     if (normalized.includes('flowbills')) return 'flowbills';
     if (normalized.includes('playmoney')) return 'playmoney';
     if (normalized.includes('jubee') || normalized.includes('jubeelove')) return 'jubeelove';
     if (normalized.includes('armageddon')) return 'armageddon';
-    if (normalized.includes('lampstand')) return 'lampstand';
+    if (normalized.includes('lampstand') || normalized.includes('thelampstand')) return 'lampstand';
 
     for (const key of Object.keys(BRAND_SVGS)) {
       if (normalized === key || normalized.includes(key)) return key;
