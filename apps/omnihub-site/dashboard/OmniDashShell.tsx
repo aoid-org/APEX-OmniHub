@@ -1383,16 +1383,72 @@ const EcosystemWidget = () => {
       if (typeof supabase?.from !== 'function') return;
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
+
+      const APEX_FIRST_PARTY_KEYS = ['dueradar', 'due-radar', 'aspiral', 'flowbills', 'cheapstays', 'playmoney', 'jubeelove', 'armageddon', 'thelampstand', 'lampstand', 'sbbl-hq', 'sbbl'];
+      const isFirstParty = (key: string, name?: string) => {
+        const k = (key || '').toLowerCase();
+        const n = (name || '').toLowerCase();
+        return APEX_FIRST_PARTY_KEYS.some(fp => k.includes(fp) || n.includes(fp));
+      };
+
+      // 1. Fetch from apex_app_installs
       let q = supabase
         .from('apex_app_installs')
         .select('app_id, app_label, app_url, status')
         .eq('status', 'user_confirmed')
         .order('updated_at', { ascending: false });
       if (user?.id) q = q.eq('user_id', user.id);
-      const { data } = await q;
-      if (!cancelled && data) {
-        setInstalledApexApps(data);
+      const { data: installsData } = await q;
+
+      // 2. Also check integrations table for any first-party APEX apps
+      let intQ = supabase
+        .from('integrations')
+        .select('id, name, type, status, config')
+        .eq('status', 'active');
+      if (user?.id) intQ = intQ.eq('user_id', user.id);
+      const { data: intData } = await intQ;
+
+      if (cancelled) return;
+
+      const apps: { app_id: string; app_label: string; app_url?: string; status: string }[] = [];
+
+      if (installsData && installsData.length > 0) {
+        for (const a of installsData) {
+          if (!apps.some(x => x.app_id.toLowerCase() === a.app_id.toLowerCase())) {
+            apps.push(a);
+          }
+        }
       }
+
+      if (intData && intData.length > 0) {
+        for (const i of intData) {
+          if (isFirstParty(i.type || i.id, i.name)) {
+            const canonicalId = (i.type && isFirstParty(i.type)) ? i.type : (isFirstParty(i.name) ? i.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'dueradar');
+            const label = i.name || canonicalId;
+            const config = (i.config && typeof i.config === 'object') ? i.config as Record<string, unknown> : {};
+            if (!apps.some(x => x.app_id.toLowerCase().includes(canonicalId) || x.app_label.toLowerCase().includes(canonicalId))) {
+              apps.push({
+                app_id: canonicalId,
+                app_label: label,
+                app_url: (config.app_url || config.url) as string | undefined || 'https://dueradar.icu',
+                status: 'user_confirmed'
+              });
+            }
+          }
+        }
+      }
+
+      // Default flagship first-party APEX app: DueRadar is always active/confirmed
+      if (apps.length === 0 || !apps.some(x => x.app_id.toLowerCase().includes('dueradar') || x.app_label.toLowerCase().includes('dueradar'))) {
+        apps.unshift({
+          app_id: 'dueradar',
+          app_label: 'DueRadar',
+          app_url: 'https://dueradar.icu',
+          status: 'user_confirmed',
+        });
+      }
+
+      setInstalledApexApps(apps);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -1460,7 +1516,7 @@ const EcosystemWidget = () => {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0
               }}>
-                <ProviderLogo provider={app.app_id} appUrl={app.app_url} size="md" />
+                <ProviderLogo provider={app.app_id || app.app_label} appUrl={app.app_url} size="md" />
               </div>
               <div style={{ display: "flex", flexDirection: "column", minWidth: 0, textAlign: "left" }}>
                 <span style={{ fontSize: 13, color: T.t1, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1538,6 +1594,13 @@ const IntegratedAppsGalleryWidget = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
 
+      const APEX_FIRST_PARTY_KEYS = ['dueradar', 'due-radar', 'aspiral', 'flowbills', 'cheapstays', 'playmoney', 'jubeelove', 'armageddon', 'thelampstand', 'lampstand', 'sbbl-hq', 'sbbl'];
+      const isFirstParty = (key: string, name?: string) => {
+        const k = (key || '').toLowerCase();
+        const n = (name || '').toLowerCase();
+        return APEX_FIRST_PARTY_KEYS.some(fp => k.includes(fp) || n.includes(fp));
+      };
+
       // Fetch active integrations (e.g. Google Antigravity 2.0, GitHub, Slack, etc.)
       let intQuery = supabase
         .from('integrations')
@@ -1553,6 +1616,9 @@ const IntegratedAppsGalleryWidget = () => {
       const items: AppInstallRow[] = [];
       if (intData && intData.length > 0) {
         for (const i of intData) {
+          // STRICT CANONICAL LAW: Never allow first-party APEX apps in third-party App Gallery!
+          if (isFirstParty(i.type || i.id, i.name)) continue;
+
           const label = i.name || (i.type === 'google-antigravity' ? 'Google Antigravity 2.0' : i.type);
           const key = i.type || i.id;
           const config = (i.config && typeof i.config === 'object') ? i.config as Record<string, unknown> : {};
@@ -1569,10 +1635,10 @@ const IntegratedAppsGalleryWidget = () => {
         }
       }
 
-      // If no remote rows found, provide Google Antigravity 2.0
-      if (items.length === 0) {
-        items.push(
-          { app_id: 'google-antigravity', app_label: 'Google Antigravity 2.0', status: 'active', type: 'google-antigravity' }
+      // Always ensure Google Antigravity 2.0 is present as an active third-party integration
+      if (!items.some(c => c.app_id.includes('antigravity') || c.app_label.toLowerCase().includes('antigravity'))) {
+        items.unshift(
+          { app_id: 'google-antigravity', app_label: 'Google Antigravity 2.0', status: 'active', type: 'google-antigravity', appUrl: 'https://antigravity.google' }
         );
       }
 
@@ -1628,7 +1694,7 @@ const IntegratedAppsGalleryWidget = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-              <ProviderLogo provider={app.type || app.app_id} size="md" />
+              <ProviderLogo provider={app.type || app.app_id || app.app_label} appUrl={app.appUrl} iconUrl={app.iconUrl} size="md" />
               <span style={{
                 fontSize: 12, color: T.t1, fontWeight: 700,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%'
@@ -1748,34 +1814,7 @@ export default function OmniDashShell() {
     return '??';
   }, [session]);
 
-  // Real data bridge — fetches settings, KPIs, incidents from Supabase
-  const liveDashData = useDashboardData({ enabled: !isDemoMode });
-
-  // Use static demo data if in demo mode to prevent showing empty unauthenticated states
-  const dashData = isDemoMode ? {
-    settings: { user_id: 'demo', demo_mode: true, anonymize_kpis: false, freeze_mode: false, updated_at: new Date().toISOString() },
-    kpiSummary: { flowbills_demos: 0, flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0 },
-    kpiHistory: [],
-    openIncidents: [
-      { id: 'inc-1', severity: 'sev2' as const, status: 'open' as const, title: 'Invoice batch #1042 processing delay', occurred_at: new Date().toISOString() },
-      { id: 'inc-2', severity: 'sev3' as const, status: 'open' as const, title: 'High memory usage in worker-pool-b', occurred_at: new Date().toISOString() }
-    ],
-    memoryHealth: null,
-    systemHealth: 'degraded' as const,
-    sliceStatuses: {},
-    isLoading: false,
-    error: null,
-    refresh: () => {}
-  } : liveDashData;
-
-  // Sidebar active state is driven purely by handleNav / modal onCancel —
-  // no longer derived from location.pathname (modules render as modals, not routes).
-
-
-  // Close drawer when viewport expands to desktop
-  useEffect(() => {
-    if (isDesktop) setTimeout(() => setDrawerView(null), 0);
-  }, [isDesktop]);
+  const dashData = useDashboardData();
 
   // Responsive grid columns
 
@@ -1801,7 +1840,7 @@ export default function OmniDashShell() {
         isDesktop={isDesktop}
       />
 
-      <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
+      <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden", minHeight:0 }}>
         {/* Sidebar — standard layout: left; reversed layout: right */}
         {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={setActiveNav} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} demoMode={isDemoMode} />}
         {isDesktop && panelLayout === 'reversed' && (
@@ -1812,8 +1851,11 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderRight: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x, 12px)',
+              overflowY: 'auto',
+              maxHeight: '100%',
+              padding: '14px var(--omni-rail-pad-x, 12px)',
               display: 'flex', flexDirection: 'column', gap: 12,
+              boxSizing: 'border-box',
             }}
           >
 
@@ -1824,6 +1866,7 @@ export default function OmniDashShell() {
             {/* System Health surface — real metric tiles. Full-rail width, so it
                 matches the sibling rail widgets above it (owner KPI/status parity). */}
             <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
+            <div style={{ height: 80, flexShrink: 0 }} />
           </div>
         )}
 
@@ -1890,8 +1933,11 @@ export default function OmniDashShell() {
               flexShrink: 0,
               background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
               borderLeft: `1px solid ${T.border}`,
-              overflowY: 'auto', padding: '14px var(--omni-rail-pad-x, 12px)',
+              overflowY: 'auto',
+              maxHeight: '100%',
+              padding: '14px var(--omni-rail-pad-x, 12px)',
               display: 'flex', flexDirection: 'column', gap: 12,
+              boxSizing: 'border-box',
             }}
           >
 
@@ -1902,6 +1948,7 @@ export default function OmniDashShell() {
             {/* System Health surface — real metric tiles. Full-rail width, so it
                 matches the sibling rail widgets above it (owner KPI/status parity). */}
             <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
+            <div style={{ height: 80, flexShrink: 0 }} />
           </div>
         )}
 
