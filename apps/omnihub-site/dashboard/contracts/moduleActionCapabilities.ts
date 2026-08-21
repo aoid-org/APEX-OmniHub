@@ -78,6 +78,46 @@ const AUTOMATION_EXECUTE_CAPABILITY: ModuleActionCapability = {
   copy: 'Executes one selected saved automation through the authenticated automation runner.',
 };
 
+const AUTOMATION_CREATE_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Opens the automation builder to create and persist a new trigger rule.',
+};
+
+const BILLING_PORTAL_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Opens the Stripe Customer Portal for this authenticated enterprise account.',
+};
+
+const BILLING_MANAGE_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Opens the Stripe Customer Portal to manage subscriptions, payment methods, and billing details.',
+};
+
+const BILLING_INVOICES_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Opens the Stripe Customer Portal to view and download past invoices.',
+};
+
+const FILES_UPLOAD_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Uploads files directly to tenant-scoped Supabase Storage (omnihub-files or omnimedia-assets).',
+};
+
+const FILES_DELETE_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Permanently deletes selected files from the tenant storage prefix in Supabase Storage.',
+};
+
+const WORKFLOW_TRIGGER_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Executes the selected orchestration workflow via Supabase Edge Function execute-workflow.',
+};
+
+const WORKFLOW_CREATE_CAPABILITY: ModuleActionCapability = {
+  supported: true,
+  copy: 'Opens the workflow authoring form to create and persist a new pipeline.',
+};
+
 const CAPABILITY_MAP: ReadonlyMap<string, ModuleActionCapability> = new Map(
   [
     ...Object.entries(MODULE_ACTION_IDS).flatMap(([moduleKey, actionIds]) => {
@@ -88,6 +128,17 @@ const CAPABILITY_MAP: ReadonlyMap<string, ModuleActionCapability> = new Map(
       );
     }),
     ['automations:execute-automation', AUTOMATION_EXECUTE_CAPABILITY] as const,
+    ['automations:create-automation', AUTOMATION_CREATE_CAPABILITY] as const,
+    ['automations:create-rule', AUTOMATION_CREATE_CAPABILITY] as const,
+    ['billing:billing-portal', BILLING_PORTAL_CAPABILITY] as const,
+    ['billing:manage-plan', BILLING_MANAGE_CAPABILITY] as const,
+    ['billing:download-invoices', BILLING_INVOICES_CAPABILITY] as const,
+    ['files:upload', FILES_UPLOAD_CAPABILITY] as const,
+    ['files:upload_file', FILES_UPLOAD_CAPABILITY] as const,
+    ['files:delete_file', FILES_DELETE_CAPABILITY] as const,
+    ['workflows:trigger_run', WORKFLOW_TRIGGER_CAPABILITY] as const,
+    ['workflows:create_workflow', WORKFLOW_CREATE_CAPABILITY] as const,
+    ['workflows:create-workflow', WORKFLOW_CREATE_CAPABILITY] as const,
   ],
 );
 
