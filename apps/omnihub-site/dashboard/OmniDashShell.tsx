@@ -1854,6 +1854,7 @@ export default function OmniDashShell() {
               overflowY: 'auto',
               maxHeight: '100%',
               padding: '14px var(--omni-rail-pad-x, 12px)',
+              paddingBottom: '96px',
               display: 'flex', flexDirection: 'column', gap: 10,
               boxSizing: 'border-box',
             }}
@@ -1935,6 +1936,7 @@ export default function OmniDashShell() {
               overflowY: 'auto',
               maxHeight: '100%',
               padding: '14px var(--omni-rail-pad-x, 12px)',
+              paddingBottom: '96px',
               display: 'flex', flexDirection: 'column', gap: 10,
               boxSizing: 'border-box',
             }}

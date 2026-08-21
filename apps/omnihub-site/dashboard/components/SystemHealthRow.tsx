@@ -12,16 +12,16 @@ interface MetricCardProps {
 
 function MetricCard({ value, label, valueColor, sublabel }: MetricCardProps) {
   return (
-    <div className="sentinel-metric">
-      <div className="sentinel-metric-value" style={{ color: valueColor }}>
+    <div className="sentinel-metric" style={{ padding: '6px 8px' }}>
+      <div className="sentinel-metric-value" style={{ color: valueColor, fontSize: 16 }}>
         {value}
       </div>
       {sublabel && (
-        <div style={{ fontSize: 8.5, color: 'var(--od-text-tertiary)', letterSpacing: '0.06em', marginTop: 1, textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 8, color: 'var(--od-text-tertiary)', letterSpacing: '0.06em', marginTop: 1, textTransform: 'uppercase' }}>
           {sublabel}
         </div>
       )}
-      <div className="sentinel-metric-label">{label}</div>
+      <div className="sentinel-metric-label" style={{ fontSize: 8.5, marginTop: 2 }}>{label}</div>
     </div>
   );
 }
@@ -73,34 +73,34 @@ export const SystemHealthRow = memo(function SystemHealthRow({
       >
         {tx('dashboard.systemHealth.title')}
       </div>
-    <div data-testid="rt_analytics" className="sentinel-section" style={{ paddingBottom: 12, paddingTop: 0 }}>
-      {/* Row 1 — FlowBills demos + Health */}
-      <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
-        <MetricCard
-          value={flowbillsDemoCount}
-          label={`${tx('dashboard.systemHealth.flowbillsDemoCount')}${simSuffix}`}
-          valueColor="var(--od-text-primary)"
-        />
-        <MetricCard
-          value={healthDisplay}
-          label={`${tx('dashboard.systemHealth.systemHealth')}${simSuffix}`}
-          valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
-        />
+      <div data-testid="rt_analytics" className="sentinel-section" style={{ padding: '0 8px 8px' }}>
+        {/* Row 1 — FlowBills demos + Health */}
+        <div className="sentinel-metric-row" style={{ marginBottom: 4, gap: 4 }}>
+          <MetricCard
+            value={flowbillsDemoCount}
+            label={`${tx('dashboard.systemHealth.flowbillsDemoCount')}${simSuffix}`}
+            valueColor="var(--od-text-primary)"
+          />
+          <MetricCard
+            value={healthDisplay}
+            label={`${tx('dashboard.systemHealth.systemHealth')}${simSuffix}`}
+            valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
+          />
+        </div>
+        {/* Row 2 — FlowBills paid accounts + Stale */}
+        <div className="sentinel-metric-row" style={{ gap: 4 }}>
+          <MetricCard
+            value={flowbillsPaidAccounts}
+            label={`${tx('dashboard.systemHealth.flowbillsPaidAccounts')}${simSuffix}`}
+            valueColor="var(--od-accent)"
+          />
+          <MetricCard
+            value={staleChecks === 0 ? tx('dashboard.systemHealth.clean') : String(staleChecks)}
+            label={`${tx('dashboard.systemHealth.staleChecks')}${simSuffix}`}
+            valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
+          />
+        </div>
       </div>
-      {/* Row 2 — FlowBills paid accounts + Stale */}
-      <div className="sentinel-metric-row">
-        <MetricCard
-          value={flowbillsPaidAccounts}
-          label={`${tx('dashboard.systemHealth.flowbillsPaidAccounts')}${simSuffix}`}
-          valueColor="var(--od-accent)"
-        />
-        <MetricCard
-          value={staleChecks === 0 ? tx('dashboard.systemHealth.clean') : String(staleChecks)}
-          label={`${tx('dashboard.systemHealth.staleChecks')}${simSuffix}`}
-          valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
-        />
-      </div>
-    </div>
     </div>
   );
 });
