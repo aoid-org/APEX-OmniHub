@@ -17,7 +17,7 @@ interface OpsToggleProps {
 
 function OpsToggle({ label, sublabel, enabled, onToggle, ariaLabel }: OpsToggleProps) {
   return (
-    <div className="od-toggle-row" style={{ minHeight: 'auto', marginBottom: 12, alignItems: 'flex-start' }}>
+    <div className="od-toggle-row" style={{ minHeight: 'auto', marginBottom: 6, alignItems: 'flex-start' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--od-text-primary)', lineHeight: 1.3 }}>{label}</div>
         <div style={{ fontSize: 10, color: 'var(--od-text-tertiary)', marginTop: 2, lineHeight: 1.3 }}>{sublabel}</div>
@@ -54,7 +54,7 @@ export const SentinelPanel = memo(function SentinelPanel() {
         padding: '10px 12px',
       }}
     >
-    <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 16 }}>
+    <div data-testid="rt_ops" className="sentinel-section" style={{ paddingBottom: 4 }}>
       <div className="sentinel-section-title">{tx('dashboard.ops.title')}</div>
 
       {/* Demo Mode is not exposed in production builds — no demo state ships. */}

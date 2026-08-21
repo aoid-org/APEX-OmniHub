@@ -45,9 +45,6 @@ export function OmniMediaLaunchWidget() {
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        // Ample room for media previews now that the right rail has space — the
-        // mini-gallery shouldn't feel cramped while loading or showing thumbnails.
-        minHeight: 280,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>

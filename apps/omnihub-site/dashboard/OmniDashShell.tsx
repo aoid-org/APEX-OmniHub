@@ -1854,7 +1854,7 @@ export default function OmniDashShell() {
               overflowY: 'auto',
               maxHeight: '100%',
               padding: '14px var(--omni-rail-pad-x, 12px)',
-              display: 'flex', flexDirection: 'column', gap: 12,
+              display: 'flex', flexDirection: 'column', gap: 10,
               boxSizing: 'border-box',
             }}
           >
@@ -1866,7 +1866,6 @@ export default function OmniDashShell() {
             {/* System Health surface — real metric tiles. Full-rail width, so it
                 matches the sibling rail widgets above it (owner KPI/status parity). */}
             <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
-            <div style={{ height: 80, flexShrink: 0 }} />
           </div>
         )}
 
@@ -1936,7 +1935,7 @@ export default function OmniDashShell() {
               overflowY: 'auto',
               maxHeight: '100%',
               padding: '14px var(--omni-rail-pad-x, 12px)',
-              display: 'flex', flexDirection: 'column', gap: 12,
+              display: 'flex', flexDirection: 'column', gap: 10,
               boxSizing: 'border-box',
             }}
           >
@@ -1948,7 +1947,6 @@ export default function OmniDashShell() {
             {/* System Health surface — real metric tiles. Full-rail width, so it
                 matches the sibling rail widgets above it (owner KPI/status parity). */}
             <SystemHealthRow demoMode={isDemoMode} kpi={dashData.kpiSummary} systemHealth={dashData.systemHealth} />
-            <div style={{ height: 80, flexShrink: 0 }} />
           </div>
         )}
 
