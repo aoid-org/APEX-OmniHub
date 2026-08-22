@@ -1,6 +1,6 @@
 ---
-version: 1.3.9
-last_audited: 2026-07-22
+version: 1.8.3
+last_audited: 2026-08-22
 status: verified
 ---
 
@@ -32,12 +32,13 @@ APEX-OmniHub enforces strict **Canonical Surface Ownership** between first-party
 - **Third-Party Integrations & App Gallery**: Connects third-party SaaS platforms (Google Antigravity, GitHub, Slack, Stripe, Supabase) via OmniBoard ConnectorKit.
 - **Autonomous Dynamic Resolution**: `ProviderLogo` dynamically resolves brand assets without disk preloading. External endpoints are probed via an autonomous `onError` cascade, with an honest fallback monogram avatar.
 - **OmniSlate Context Droplets**: Integrated app tiles drag and drop or click directly into OmniSlate, rendering 28×28 minimized context pills with brand-specific ambient glow and hover dismissal controls.
+- **Verified Module Capabilities (`moduleActionCapabilities.ts`)**: Explicitly wires and certifies live backend capabilities for `Billing` (Stripe Customer Portal via `create-billing-portal`), `Files` (tenant-scoped Supabase Storage upload/delete), `Workflows` (orchestration dispatch via `execute-workflow`), and `Automations` (rule execution via `execute-automation`).
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-08-18
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-08-22
 
-[![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
-[![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
-[![Security Regression Guard](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml)
+[![CI Runtime Gates](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
+[![Orchestrator CI](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
+[![Security Regression Guard](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/security-regression-guard.yml/badge.svg)](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/security-regression-guard.yml)
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---

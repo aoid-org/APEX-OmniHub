@@ -30,7 +30,7 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | Integration ownership (legacy → deprecated shim) | `apps/omnihub-site/dashboard/contracts/appIntegrationOwnership.ts` | [EXISTS] re-exports canon (P1 ✓) |
 | Surface ownership canon (two-owner) | `apps/omnihub-site/dashboard/contracts/omniSurfaceOwnership.ts` (+ `.test.ts`) | [EXISTS] P1 ✓ |
 | APEX Apps contract | `apps/omnihub-site/dashboard/contracts/apexApps.ts` | [EXISTS] inspect P3 |
-| Module action capabilities | `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` | [EXISTS] |
+| Module action capabilities | `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` | [DONE] 2026-08-22 — verified onAction capabilities certified for Billing, Files, Workflows, Automations |
 | Autonomous Provider Logo & Brand Engine | `apps/omnihub-site/dashboard/components/ProviderLogo.tsx` | [EXISTS] 2026-08-18 ✓ |
 
 ## Modules

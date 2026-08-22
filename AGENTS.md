@@ -1,6 +1,6 @@
 ---
-version: 2.0.3
-last_audited: 2026-06-28
+version: 2.0.4
+last_audited: 2026-08-22
 status: active
 scope: APEX-OmniHub production repository
 owner: APEX Business Systems LTD

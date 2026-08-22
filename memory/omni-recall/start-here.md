@@ -205,5 +205,28 @@ The system should:
 - **PR #1655 merged:** squash-merged to `main` as `6bf4814` (parent `1048eb5`) by `apexbusiness-systems`. Branch tip at merge was `ea232b2` (the docs-accuracy commit from this same session's 3-agent swarm, pushed after `b2f05d2`) — all required checks green on that commit before merge: `build-and-test`, `Governance gate`, `Terraform Expression Drift Gate`, `Architectural Boundary Enforcement`, SonarCloud Quality Gate ("0 New issues", "0 Security Hotspots"), both Cloudflare Pages previews. The "OPEN, DRAFT, NOT MERGED" line above was accurate when written and is preserved as the historical record; this entry supersedes it with the confirmed outcome. `main` HEAD is now `6bf4814`.
 - This also means every doc in this session's docs-sync pass that said "PR #1655 open/not yet merged as of this note" (this file's prior entry, `RELEASE_RUBRIC_SCORE.md`, `wiki/corrections/006`, `.understand-anything/CANONICAL_STATE_2026-07-22.md`) is a **point-in-time snapshot** now one step behind reality, per this folder's established append-only convention (see the PR #1646 precedent above) — not an error, and not edited in place; this entry is the supersession record.
 
+## Session 2026-08-22 — Full GO onAction Capabilities & Right-Rail Layout Certified (Riddle Audit Remediation)
+
+- **Baseline Commit on `main`:** `d18107c6` (`feat(capabilities): certify and wire verified onAction capabilities for Billing, Files, Workflows, and Automations`).
+- **Remote Repo Origin:** `https://github.com/aoid-org/APEX-OmniHub.git` on `main`.
+- **Riddle Prompt Audit Remediation:**
+  - `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` updated from static stub defaults to live, verified capability mappings with `supported: true` for:
+    - `Billing`: `billing-portal`, `manage-plan`, `download-invoices` (wired to Supabase Edge Function `create-billing-portal` / Stripe Customer Portal).
+    - `Files`: `upload_file`, `upload`, `delete_file` (wired directly to tenant-scoped Supabase Storage `omnihub-files` and `omnimedia-assets`).
+    - `Workflows`: `trigger_run` (wired to Supabase Edge Function `execute-workflow`), `create_workflow` (inline builder).
+    - `Automations`: `execute-automation` (wired to Supabase Edge Function `execute-automation`), `create-automation` (inline trigger builder).
+- **Right-Rail Layout & System Health Overflow:**
+  - Cleaned up vertical bounds in `.omni-right-panel` (added `paddingBottom: 96px`, removed rigid 280px minimum from `OmniMediaLaunchWidget`, streamlined `SystemHealthRow` metric cards).
+  - All 4 system telemetry tiles (`FlowBills Demos`, `System Health`, `Paid Accounts`, `Stale Checks`) are 100% visible and un-obfuscated above the fold and scrollable without cutoffs across all desktop viewports.
+- **Canonical Surface Ownership:**
+  - `DueRadar` isolated to `APEX ECOSYSTEM` with metallic "R" + cyan "D" radar brand SVG.
+  - `Google Antigravity 2.0` connected in `APP GALLERY` with Rainbow Gravitational Arc brand SVG.
+- **Multi-Viewport Responsive Validation:**
+  - Desktop (1440x900), Tablet (820x1180), and Mobile (390x844) verified with live browser evidence.
+- **Verification Gates Passed (Exit code 0):**
+  - `npm run typecheck` (0 errors), `npm run lint` (0 warnings), `npm run check:omnidash` (43/43 pass), `npm run check:pwa` (15/15 pass), `npm run check:react` (React 18.3.1 singleton).
+- **Deployment:** Live production bundle deployed to Cloudflare Pages project `apex-omnihub` and CDN cache purged on `apexomnihub.icu`.
+
+
 
 
