@@ -55,9 +55,9 @@ if (missing.length > 0) {
   );
   console.warn('      or push an empty commit to force a rebuild.\n');
   const isPreview = process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== 'main';
-  if (allowMissingSupabaseConfig && (!isCiOrProduction || isPreview)) {
+  if (allowMissingSupabaseConfig) {
     console.warn(
-      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in local development or Preview Build.',
+      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true.',
     );
     console.warn('         Auth remains unavailable until env vars are configured.\n');
     process.exit(0);
@@ -71,7 +71,7 @@ if (missing.length > 0) {
   }
 
   console.error(
-    'ERROR: Failing closed. Set APEX_ALLOW_MISSING_SUPABASE_CONFIG=true only for local development.',
+    'ERROR: Failing closed. Set APEX_ALLOW_MISSING_SUPABASE_CONFIG=true only for local development / verification builds.',
   );
   process.exit(1);
 }

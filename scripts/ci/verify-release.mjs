@@ -59,8 +59,8 @@ function sanitizePath() {
 
 function findSystemPkgManager(isWin) {
   const candidates = isWin
-    ? ["C:/Program Files/bun/bun.exe", "C:/Program Files/nodejs/node.exe"]
-    : ["/usr/local/bin/bun", "/usr/bin/bun", "/bin/bun"];
+    ? ["C:/Program Files/bun/bun.exe", "C:/Program Files/nodejs/npm.cmd"]
+    : ["/usr/local/bin/bun", "/usr/bin/bun", "/bin/bun", "/usr/local/bin/npm", "/usr/bin/npm"];
   return candidates.find((p) => fs.existsSync(p)) ?? null;
 }
 
