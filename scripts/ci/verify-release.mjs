@@ -102,22 +102,25 @@ for (const script of verifyScripts) {
   console.log(`\nRunning ${script.name} [${script.desc}]...`);
   let serverProcess = null;
 
+  const isWin = process.platform === "win32";
+  const cmd = isWin && pkgManager.includes(" ") ? `"${pkgManager}"` : pkgManager;
+
   if (script.name === "verify:assets") {
     console.log("[INFO] Starting background Vite preview server for asset checks...");
-    // shell: false + absolute binary path prevents S4036 PATH-injection vulnerability.
-    serverProcess = spawn(pkgManager, ["run", "preview"], {
+    // shell: false + absolute binary path on UNIX prevents S4036 PATH-injection vulnerability.
+    serverProcess = spawn(cmd, ["run", "preview"], {
       stdio: "ignore",
       env: safeEnv,
-      shell: false,
+      shell: isWin,
     });
     await new Promise((resolve) => setTimeout(resolve, 3000)); // eslint-disable-line no-await-in-loop
   }
 
   try {
-    const result = spawnSync(pkgManager, ["run", script.name], {
+    const result = spawnSync(cmd, ["run", script.name], {
       stdio: "inherit",
       env: safeEnv,
-      shell: false,
+      shell: isWin,
     });
     if (result.status !== 0) {
       throw new Error(`Command failed with status ${result.status}`);

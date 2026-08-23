@@ -100,6 +100,11 @@
       "claim": "- **Spec:** `armageddon-attestation/1.0`",
       "category": "internally_aligned",
       "evidence_ref": "docs/release/claim-evidence/armageddon-report.md"
+    },
+    {
+      "claim": "<span>Verified by ARMAGEDDON Level 7 Attestation</span> &rarr;",
+      "category": "internally_aligned",
+      "evidence_ref": "docs/release/claim-evidence/armageddon-report.md"
     }
   ]
 }
