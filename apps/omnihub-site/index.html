@@ -47,18 +47,21 @@
       window.apexAnalytics = {
         track: function(eventName, props) {
           try {
-            var payload = Object.assign({
+            var payload = {
               event: eventName,
               url: window.location.href,
               referrer: document.referrer || null,
-              timestamp: new Date().toISOString()
-            }, props || {});
+              timestamp: new Date().toISOString(),
+              ...(props || {})
+            };
             var queue = JSON.parse(sessionStorage.getItem('apex_events') || '[]');
             queue.push(payload);
             sessionStorage.setItem('apex_events', JSON.stringify(queue.slice(-50)));
             if (window.dataLayer) window.dataLayer.push(payload);
             if (window.plausible) window.plausible(eventName, { props: props });
-          } catch (e) {}
+          } catch (err) {
+            console.debug('[Analytics]', err);
+          }
         }
       };
       window.apexAnalytics.track('pageview');

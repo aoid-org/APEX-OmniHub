@@ -330,11 +330,13 @@ export const ProviderLogo: React.FC<ProviderLogoProps> = ({
     if (appUrl) {
       try {
         const origin = new URL(appUrl.startsWith('http') ? appUrl : `https://${appUrl}`).origin;
-        urls.push(`${origin}/favicon.png`);
-        urls.push(`${origin}/assets/app-icon.png`);
-        urls.push(`${origin}/favicon.ico`);
-        urls.push(`${origin}/icon.png`);
-        urls.push(`${origin}/apple-touch-icon.png`);
+        urls.push(
+          `${origin}/favicon.png`,
+          `${origin}/assets/app-icon.png`,
+          `${origin}/favicon.ico`,
+          `${origin}/icon.png`,
+          `${origin}/apple-touch-icon.png`
+        );
       } catch {
         // invalid URL format, ignore
       }

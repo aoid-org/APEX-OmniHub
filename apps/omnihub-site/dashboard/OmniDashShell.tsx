@@ -259,6 +259,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     };
   return (
     <button
+      type="button"
       className="omni-nav-item"
       draggable
       onDragStart={(e) =>
@@ -374,6 +375,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, kpi, systemHealth, demoMode:
         </div>
         <div style={{ fontSize:10.8, color:T.t3 }}>{tx('dashboard.sidebar.companyName')}</div>
         <button
+          type="button"
           onClick={handleSignOut}
           disabled={signingOut}
           style={{
@@ -518,7 +520,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
       </div>
 
       {/* OmniSkills */}
-      <button onClick={handleOmniSkills} style={{
+      <button type="button" onClick={handleOmniSkills} style={{
         display:"flex", alignItems:"center", gap:7, flexShrink:0,
         background:T.card, border:`1px solid ${T.border}`,
         borderRadius:10, padding:"0 11px", height:44,
@@ -569,7 +571,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
       }}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
-          <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
+          <button type="button" id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
             display:"flex", alignItems:"center", gap:6,
             background:T.card, border:`1px solid ${orgOpen ? "rgba(249,115,22,0.40)" : T.border}`,
             borderRadius:10, padding:"0 10px", height:34,
@@ -601,7 +603,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
                 { label: tx('dashboard.header.billingPlans'), icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => { toast.success('Billing changes applied'); }, onCancel: () => {} }); } },
                 { label: tx('dashboard.header.inviteMembers'), icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async (result) => { toast.success(tx('dashboard.header.inviteSent', { email: (result.data as Record<string, string>)?.email || 'team member' })); }, onCancel: () => {} }); } },
               ].map(item => (
-                <button key={item.label} onClick={item.action} style={{
+                <button type="button" key={item.label} onClick={item.action} style={{
                   display:"flex", alignItems:"center", gap:10,
                   width:"100%", padding:"9px 14px", textAlign:"left",
                   background:"none", border:"none", cursor:"pointer",
@@ -632,7 +634,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         </div>
 
         {/* Connect AI */}
-        <button onClick={handleConnectAI} style={{
+        <button type="button" onClick={handleConnectAI} style={{
           background:`linear-gradient(135deg, ${T.orange} 0%, ${T.orangeDim} 100%)`,
           border:"none", borderRadius:10, padding:"0 13px", height:34,
           color:"#fff", fontSize:12.4, fontWeight:700,
@@ -655,7 +657,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         <LanguageSelector className="omni-header-lang" />
 
         {/* Theme Toggle — Sun/Moon */}
-        <button className="ose-icon-button" aria-label={isDark ? tx('dashboard.mobile.switchLight') : tx('dashboard.mobile.switchDark')} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
+        <button type="button" className="ose-icon-button" aria-label={isDark ? tx('dashboard.mobile.switchLight') : tx('dashboard.mobile.switchDark')} onClick={() => setIsDark(d => !d)} style={{ color: isDark ? T.warn : T.blue }}>
           {isDark
             ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5"/>
@@ -671,7 +673,7 @@ const OmniDashHeader = ({ isDark, setIsDark, invoke, userInitials, isDesktop }: 
         </button>
 
         {/* Bell */}
-        <button className="ose-icon-button" aria-label={`${tx('dashboard.header.notifications')}${unreadCount > 0 ? ` (${unreadCount})` : ''}`} onClick={handleBell}>
+        <button type="button" className="ose-icon-button" aria-label={unreadCount > 0 ? `${tx('dashboard.header.notifications')} (${unreadCount})` : tx('dashboard.header.notifications')} onClick={handleBell}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
@@ -896,6 +898,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
       <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:10, padding:"12px 16px 16px", flexShrink:0 }}>
         {/* Play / Pause */}
         <button
+          type="button"
           onClick={handlePlayPause}
           title={isRunning ? tx('dashboard.agent.pause') : tx('dashboard.agent.start')}
           style={{
@@ -915,6 +918,7 @@ const AgentWidget = (_props: AgentWidgetProps) => {
         </button>
         {/* Reset */}
         <button
+          type="button"
           onClick={handleReset}
           title={tx('dashboard.agent.reset')}
           style={{
@@ -976,6 +980,7 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
 
   return (
     <button
+      type="button"
       onClick={onRemove}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -1178,7 +1183,7 @@ const OmniSlateWidget = () => {
       }}>
         <SectionLabel>{tx('dashboard.slate.title')}</SectionLabel>
         <div style={{display:"flex",gap:8, position:"relative"}}>
-          <button onClick={() => {
+          <button type="button" onClick={() => {
             setMessages([]);
             if (!demoMode) {
               void supabase.auth.getUser().then(({ data: u }) => {
@@ -1247,6 +1252,7 @@ const OmniSlateWidget = () => {
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
                       <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
                       <button 
+                        type="button"
                         onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
                        title={tx('dashboard.slate.removeContext')}
                        style={{
@@ -1364,7 +1370,7 @@ const OmniSlateWidget = () => {
           }}
         />
         {/* Play / Stop icon buttons only — no text labels */}
-        <button data-testid="submit-prompt" onClick={send} title={tx('dashboard.slate.execute')} style={{
+        <button type="button" data-testid="submit-prompt" onClick={send} title={tx('dashboard.slate.execute')} style={{
           width:44, height:44, borderRadius:12, flexShrink:0,
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
           border:"none", cursor:"pointer",
@@ -1374,6 +1380,7 @@ const OmniSlateWidget = () => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
         <button
+          type="button"
           onClick={stop}
           title={tx('dashboard.slate.stop')}
           disabled={!loading}
@@ -1393,7 +1400,7 @@ const OmniSlateWidget = () => {
   );
 };
 
-// ─── Shared tile dimensions (used by the APEX Ecosystem widget)
+// ─── Shared tile dimensions & first-party helper
 const APP_TILE_STYLE: React.CSSProperties = {
   borderRadius:14,
   padding:"18px 14px",
@@ -1401,6 +1408,13 @@ const APP_TILE_STYLE: React.CSSProperties = {
   cursor:"pointer", transition:"all .2s",
   minHeight:72,
 };
+
+const APEX_FIRST_PARTY_KEYS = ['dueradar', 'due-radar', 'aspiral', 'flowbills', 'cheapstays', 'playmoney', 'jubeelove', 'armageddon', 'thelampstand', 'lampstand', 'sbbl-hq', 'sbbl'];
+function isFirstPartyApp(key: string, name?: string): boolean {
+  const k = (key || '').toLowerCase();
+  const n = (name || '').toLowerCase();
+  return APEX_FIRST_PARTY_KEYS.some(fp => k.includes(fp) || n.includes(fp));
+}
 
 // ─── Widget: APEX Ecosystem ───────────────────────────────────────────────────
 const EcosystemWidget = () => {
@@ -1414,13 +1428,6 @@ const EcosystemWidget = () => {
       if (typeof supabase?.from !== 'function') return;
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
-
-      const APEX_FIRST_PARTY_KEYS = ['dueradar', 'due-radar', 'aspiral', 'flowbills', 'cheapstays', 'playmoney', 'jubeelove', 'armageddon', 'thelampstand', 'lampstand', 'sbbl-hq', 'sbbl'];
-      const isFirstParty = (key: string, name?: string) => {
-        const k = (key || '').toLowerCase();
-        const n = (name || '').toLowerCase();
-        return APEX_FIRST_PARTY_KEYS.some(fp => k.includes(fp) || n.includes(fp));
-      };
 
       // 1. Fetch from apex_app_installs
       let q = supabase
@@ -1453,8 +1460,8 @@ const EcosystemWidget = () => {
 
       if (intData && intData.length > 0) {
         for (const i of intData) {
-          if (isFirstParty(i.type || i.id, i.name)) {
-            const canonicalId = (i.type && isFirstParty(i.type)) ? i.type : (isFirstParty(i.name) ? i.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'dueradar');
+          if (isFirstPartyApp(i.type || i.id, i.name)) {
+            const canonicalId = (i.type && isFirstPartyApp(i.type)) ? i.type : (isFirstPartyApp(i.name) ? i.name.toLowerCase().replace(/[^a-z0-9]/g, '') : 'dueradar');
             const label = i.name || canonicalId;
             const config = (i.config && typeof i.config === 'object') ? i.config as Record<string, unknown> : {};
             if (!apps.some(x => x.app_id.toLowerCase().includes(canonicalId) || x.app_label.toLowerCase().includes(canonicalId))) {
@@ -1514,6 +1521,8 @@ const EcosystemWidget = () => {
         {installedApexApps.map((app) => (
           <div
             key={`eco-installed-${app.app_id}`}
+            role="button"
+            tabIndex={0}
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData('text/plain', JSON.stringify({ id: app.app_id, label: app.app_label, appUrl: app.app_url }));
@@ -1524,6 +1533,16 @@ const EcosystemWidget = () => {
               });
               globalThis.dispatchEvent(event);
               toast.success(`Attached ${app.app_label} to OmniSlate context`);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const event = new CustomEvent('omnislate-drop', {
+                  detail: { id: app.app_id, label: app.app_label, appUrl: app.app_url }
+                });
+                globalThis.dispatchEvent(event);
+                toast.success(`Attached ${app.app_label} to OmniSlate context`);
+              }
             }}
             title="Drag or click to attach to OmniSlate"
             style={{
@@ -1564,6 +1583,7 @@ const EcosystemWidget = () => {
 
         {/* Add APEX App button */}
         <button
+          type="button"
           onClick={handleAddApp}
           title="Connect an APEX Ecosystem App via MCP"
           data-testid="add-apex-app-btn"
@@ -1625,13 +1645,6 @@ const IntegratedAppsGalleryWidget = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
 
-      const APEX_FIRST_PARTY_KEYS = ['dueradar', 'due-radar', 'aspiral', 'flowbills', 'cheapstays', 'playmoney', 'jubeelove', 'armageddon', 'thelampstand', 'lampstand', 'sbbl-hq', 'sbbl'];
-      const isFirstParty = (key: string, name?: string) => {
-        const k = (key || '').toLowerCase();
-        const n = (name || '').toLowerCase();
-        return APEX_FIRST_PARTY_KEYS.some(fp => k.includes(fp) || n.includes(fp));
-      };
-
       // Fetch active integrations (e.g. Google Antigravity 2.0, GitHub, Slack, etc.)
       let intQuery = supabase
         .from('integrations')
@@ -1648,7 +1661,7 @@ const IntegratedAppsGalleryWidget = () => {
       if (intData && intData.length > 0) {
         for (const i of intData) {
           // STRICT CANONICAL LAW: Never allow first-party APEX apps in third-party App Gallery!
-          if (isFirstParty(i.type || i.id, i.name)) continue;
+          if (isFirstPartyApp(i.type || i.id, i.name)) continue;
 
           const label = i.name || (i.type === 'google-antigravity' ? 'Google Antigravity 2.0' : i.type);
           const key = i.type || i.id;
@@ -1700,6 +1713,8 @@ const IntegratedAppsGalleryWidget = () => {
           className="ose-integrated-apps-slot"
           data-testid={`apex-app-tile-${app.app_id}`}
           aria-label={`${app.app_label} — connected`}
+          role="button"
+          tabIndex={0}
           draggable
           onDragStart={(e) => {
             e.dataTransfer.setData('text/plain', JSON.stringify({ id: app.app_id, label: app.app_label, iconIdx: idx, appUrl: app.appUrl, iconUrl: app.iconUrl }));
@@ -1710,6 +1725,16 @@ const IntegratedAppsGalleryWidget = () => {
             });
             globalThis.dispatchEvent(event);
             toast.success(`Attached ${app.app_label} to OmniSlate context`);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              const event = new CustomEvent('omnislate-drop', {
+                detail: { id: app.app_id, label: app.app_label, iconIdx: idx, appUrl: app.appUrl, iconUrl: app.iconUrl }
+              });
+              globalThis.dispatchEvent(event);
+              toast.success(`Attached ${app.app_label} to OmniSlate context`);
+            }
           }}
           title="Drag or click to attach to OmniSlate"
           style={{
@@ -2045,9 +2070,11 @@ export default function OmniDashShell() {
           isOpen={drawerView !== null}
           onClose={() => setDrawerView(null)}
           title={
-            drawerView === 'apps' ? tx('dashboard.mobile.apps')
-              : drawerView === 'more' ? tx('dashboard.mobile.more')
-              : tx('dashboard.mobile.insightsControls')
+            (() => {
+              if (drawerView === 'apps') return tx('dashboard.mobile.apps');
+              if (drawerView === 'more') return tx('dashboard.mobile.more');
+              return tx('dashboard.mobile.insightsControls');
+            })()
           }
         >
           {drawerView === 'apps' && (

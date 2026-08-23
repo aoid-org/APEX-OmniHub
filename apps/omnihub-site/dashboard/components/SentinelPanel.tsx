@@ -9,11 +9,11 @@ import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 import { supabase } from '@/lib/supabase';
 
 interface OpsToggleProps {
-  label: string;
-  sublabel: string;
-  enabled: boolean;
-  onToggle: () => void;
-  ariaLabel: string;
+  readonly label: string;
+  readonly sublabel: string;
+  readonly enabled: boolean;
+  readonly onToggle: () => void;
+  readonly ariaLabel: string;
 }
 
 function OpsToggle({ label, sublabel, enabled, onToggle, ariaLabel }: OpsToggleProps) {

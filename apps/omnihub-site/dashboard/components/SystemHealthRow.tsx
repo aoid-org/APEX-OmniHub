@@ -4,10 +4,10 @@ import type { KpiSummary, SystemHealthState } from '../types/dashboard.types';
 import { useAppTranslation } from '../../src/i18n/useAppTranslation';
 
 interface MetricCardProps {
-  value: string | number;
-  label: string;
-  valueColor?: string;
-  sublabel?: string;
+  readonly value: string | number;
+  readonly label: string;
+  readonly valueColor?: string;
+  readonly sublabel?: string;
 }
 
 function MetricCard({ value, label, valueColor, sublabel }: MetricCardProps) {
@@ -31,17 +31,18 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   kpi,
   systemHealth,
 }: {
-  demoMode: boolean;
-  kpi: KpiSummary;
-  systemHealth?: SystemHealthState;
+  readonly demoMode: boolean;
+  readonly kpi: KpiSummary;
+  readonly systemHealth?: SystemHealthState;
 }) {
   const { tx } = useAppTranslation();
   const flowbillsDemoCount = demoMode ? 0 : (kpi.flowbills_demos ?? 0);
-  const healthDisplay = demoMode
-    ? tx('dashboard.footer.healthy')
-    : systemHealth
-      ? tx(`dashboard.footer.${systemHealth}`, { defaultValue: systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) })
-      : tx('dashboard.footer.unknown');
+  let healthDisplay = tx('dashboard.footer.unknown');
+  if (demoMode) {
+    healthDisplay = tx('dashboard.footer.healthy');
+  } else if (systemHealth) {
+    healthDisplay = tx(`dashboard.footer.${systemHealth}`, { defaultValue: systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1) });
+  }
   const flowbillsPaidAccounts = demoMode ? 1 : (kpi.flowbills_paid_accounts ?? 0);
   const staleChecks = demoMode ? 0 : (kpi.ops_sev1_incidents ?? 0);
   const healthIsGreen = demoMode || systemHealth === 'healthy';

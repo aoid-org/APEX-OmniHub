@@ -19,19 +19,22 @@
   window.apexAnalytics = {
     track: function(eventName, props) {
       try {
-        var payload = Object.assign({
+        var payload = {
           event: eventName,
           url: window.location.href,
           referrer: document.referrer || null,
-          timestamp: new Date().toISOString()
-        }, props || {});
+          timestamp: new Date().toISOString(),
+          ...(props || {})
+        };
         // Store in session telemetry queue
         var queue = JSON.parse(sessionStorage.getItem('apex_events') || '[]');
         queue.push(payload);
         sessionStorage.setItem('apex_events', JSON.stringify(queue.slice(-50)));
         if (window.dataLayer) window.dataLayer.push(payload);
         if (window.plausible) window.plausible(eventName, { props: props });
-      } catch (e) {}
+      } catch (err) {
+        console.debug('[Analytics]', err);
+      }
     }
   };
   window.apexAnalytics.track('pageview');
@@ -607,7 +610,8 @@ textarea.form-input{resize:vertical;min-height:80px}
       <div class="modal-sub">Tell us about your use case and we will be in touch.</div>
       <div class="modal-gen-error" id="gen-error"></div>
       <form id="ra-form" novalidate>
-        <input type="text" name="website" class="form-honey" tabindex="-1" autocomplete="off">
+        <label for="ra-website-hp" style="display:none">Website</label>
+        <input type="text" id="ra-website-hp" name="website" class="form-honey" tabindex="-1" autocomplete="off">
         <div class="form-group"><label class="form-label" for="ra_name">Full Name *</label><input class="form-input" type="text" id="ra_name" name="ra_name" required maxlength="100" autocomplete="name" placeholder="Jane Smith"></div>
         <div class="form-group"><label class="form-label" for="ra_email">Work Email *</label><input class="form-input" type="email" id="ra_email" name="ra_email" required maxlength="254" autocomplete="email" placeholder="jane@company.com"></div>
         <div class="form-group"><label class="form-label" for="ra_company">Company</label><input class="form-input" type="text" id="ra_company" name="ra_company" maxlength="100" autocomplete="organization" placeholder="ACME Corp"></div>
@@ -664,26 +668,91 @@ modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
 
 // ===== FORM & PERSISTENCE =====
-let _lastSubmit=0; // in-memory rate limit (session only)
+let _lastSubmit = 0; // in-memory rate limit (session only)
 
-document.getElementById('ra-form').addEventListener('submit',async function(e){
+async function sendToSupabase(leadData) {
+  if (!APEX_CONFIG.supabaseUrl || !APEX_CONFIG.supabaseAnonKey) return false;
+  try {
+    const res = await fetch(APEX_CONFIG.supabaseUrl + '/rest/v1/access_requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': APEX_CONFIG.supabaseAnonKey,
+        'Authorization': 'Bearer ' + APEX_CONFIG.supabaseAnonKey,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        name: leadData.name,
+        email: leadData.email,
+        company: leadData.company,
+        use_case: leadData.use_case
+      })
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('[APEX OmniHub] Direct submission relay notice:', err);
+    return false;
+  }
+}
+
+function sendViaMailto(leadData) {
+  if (!APEX_CONFIG.fallbackEmail) return;
+  try {
+    const subject = encodeURIComponent('APEX OmniHub Access Request: ' + leadData.name);
+    const body = encodeURIComponent(
+      'Name: ' + leadData.name + '\n' +
+      'Company: ' + (leadData.company || 'Not specified') + '\n' +
+      'Email: ' + leadData.email + '\n\n' +
+      'Use Case:\n' + (leadData.use_case || 'Not specified') + '\n\n' +
+      'UTM Attribution: ' + (leadData.utm_source ? leadData.utm_source + ' / ' + leadData.utm_medium : 'direct')
+    );
+    const mailtoUrl = 'mailto:' + APEX_CONFIG.fallbackEmail + '?subject=' + subject + '&body=' + body;
+    const a = document.createElement('a');
+    a.href = mailtoUrl;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { a.remove(); }, 1000);
+  } catch (err) {
+    console.debug('[Mailto fallback]', err);
+  }
+}
+
+document.getElementById('ra-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const err=document.getElementById('gen-error');
-  const btn=document.getElementById('form-submit');
+  const err = document.getElementById('gen-error');
+  const btn = document.getElementById('form-submit');
   err.classList.remove('show');
-  if(this.website.value)return; // honeypot
-  if(Date.now()-formStart<1500){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
-  if(_lastSubmit&&Date.now()-_lastSubmit<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
-  const name=String(this.ra_name.value).trim().slice(0,200);
-  const emailEl=this.ra_email;
-  const company=String(this.ra_company.value||'').trim().slice(0,200);
-  const useCase=String(this.ra_usecase.value||'').trim().slice(0,500);
+  if (this.website.value) return; // honeypot
+  if (Date.now() - formStart < 1500) {
+    err.textContent = 'Please take a moment to fill out the form.';
+    err.classList.add('show');
+    return;
+  }
+  if (_lastSubmit && Date.now() - _lastSubmit < 300000) {
+    err.textContent = 'You already submitted recently. Please wait a few minutes.';
+    err.classList.add('show');
+    return;
+  }
+  const name = String(this.ra_name.value).trim().slice(0, 200);
+  const emailEl = this.ra_email;
+  const company = String(this.ra_company.value || '').trim().slice(0, 200);
+  const useCase = String(this.ra_usecase.value || '').trim().slice(0, 500);
 
-  if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
-  if(!emailEl.validity.valid||!emailEl.value){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
-  
-  btn.classList.add('loading');btn.disabled=true;
-  _lastSubmit=Date.now();
+  if (!name || name.length < 2) {
+    err.textContent = 'Please enter your name.';
+    err.classList.add('show');
+    return;
+  }
+  if (!emailEl.validity.valid || !emailEl.value) {
+    err.textContent = 'Please enter a valid email address.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  _lastSubmit = Date.now();
 
   const urlParams = new URLSearchParams(window.location.search);
   const leadData = {
@@ -697,56 +766,13 @@ document.getElementById('ra-form').addEventListener('submit',async function(e){
     submitted_at: new Date().toISOString()
   };
 
-  // Telemetry track
   if (window.apexAnalytics) {
     window.apexAnalytics.track('request_access_submit', { email: leadData.email, company: leadData.company });
   }
 
-  // Attempt Supabase insert if key configured
-  let saved = false;
-  if (APEX_CONFIG.supabaseUrl && APEX_CONFIG.supabaseAnonKey) {
-    try {
-      const res = await fetch(APEX_CONFIG.supabaseUrl + '/rest/v1/access_requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': APEX_CONFIG.supabaseAnonKey,
-          'Authorization': 'Bearer ' + APEX_CONFIG.supabaseAnonKey,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
-          name: leadData.name,
-          email: leadData.email,
-          company: leadData.company,
-          use_case: leadData.use_case
-        })
-      });
-      if (res.ok) saved = true;
-    } catch(err) {
-      console.warn('[APEX OmniHub] Direct submission relay notice:', err);
-    }
-  }
-
-  // If Supabase is unconfigured or failed, dispatch via mailto fallback
-  if (!saved && APEX_CONFIG.fallbackEmail) {
-    try {
-      const subject = encodeURIComponent('APEX OmniHub Access Request: ' + leadData.name);
-      const body = encodeURIComponent(
-        'Name: ' + leadData.name + '\n' +
-        'Company: ' + (leadData.company || 'Not specified') + '\n' +
-        'Email: ' + leadData.email + '\n\n' +
-        'Use Case:\n' + (leadData.use_case || 'Not specified') + '\n\n' +
-        'UTM Attribution: ' + (leadData.utm_source ? leadData.utm_source + ' / ' + leadData.utm_medium : 'direct')
-      );
-      const mailtoUrl = 'mailto:' + APEX_CONFIG.fallbackEmail + '?subject=' + subject + '&body=' + body;
-      // Trigger background mailto link
-      const a = document.createElement('a');
-      a.href = mailtoUrl;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){ document.body.removeChild(a); }, 1000);
-    } catch(e) {}
+  const saved = await sendToSupabase(leadData);
+  if (!saved) {
+    sendViaMailto(leadData);
   }
 
   document.getElementById('modal-form-body').classList.add('hidden');
