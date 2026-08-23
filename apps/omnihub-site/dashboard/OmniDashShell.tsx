@@ -1041,7 +1041,12 @@ const OmniSlateWidget = () => {
     const q = input.trim(); setInput(""); setLoading(true);
     setMessages(m => [...m, {role:"user", text: q }]);
     try {
-      if (demoMode) {
+      if (contextApps.length >= 2 && demoMode) {
+        await new Promise(r => setTimeout(r, 600));
+        const appNames = contextApps.map(a => a.label).join(" ➔ ");
+        const reply = `[Multi-Agent Pipeline] Executed cross-system orchestration across: ${appNames}. Task: "${q}". Synthesized insights: Cross-system telemetry synchronized, policy constraints validated, and execution trace persisted.`;
+        setMessages(m => [...m, { role: "assistant", text: reply }]);
+      } else if (demoMode) {
         // Simulated execution when in Demo Mode
         await new Promise(r => setTimeout(r, 600));
         let reply = `[APEX Agent Orchestrator] Completed task: "${q}".`;
@@ -1053,7 +1058,10 @@ const OmniSlateWidget = () => {
       } else {
         const res = await invokeMcpIntent({
           prompt: q,
-          context: { apps: contextApps.map(a => a.id) }
+          context: {
+            apps: contextApps.map(a => a.id),
+            pipeline: contextApps.map((a, idx) => ({ stage: idx + 1, id: a.id, label: a.label }))
+          }
         });
         const reply = res.reply;
         setMessages(m => [...m, {role:"assistant", text: reply }]);
@@ -1299,16 +1307,39 @@ const OmniSlateWidget = () => {
         <div ref={endRef} />
       </div>
 
-      {/* Uniform Context Icons Map */}
+      {/* Uniform Context Icons Map & Multi-Agent Pipeline Indicator */}
       {contextApps.length > 0 && (
-        <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8, flexShrink: 0 }}>
-          {contextApps.map(app => (
-            <ContextDroplet
-              key={app.id}
-              app={app}
-              onRemove={() => handleRemoveContextApp(app.id)}
-            />
-          ))}
+        <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6, marginBottom: 8, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            {contextApps.map(app => (
+              <ContextDroplet
+                key={app.id}
+                app={app}
+                onRemove={() => handleRemoveContextApp(app.id)}
+              />
+            ))}
+          </div>
+          {contextApps.length >= 2 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 11,
+              fontWeight: 700,
+              color: T.orange,
+              letterSpacing: "0.03em",
+              background: "rgba(249,115,22,0.08)",
+              border: "1px solid rgba(249,115,22,0.22)",
+              borderRadius: 8,
+              padding: "4px 8px",
+            }}>
+              <span style={{ fontSize: 13 }}>⚡</span>
+              <span>Multi-Agent Pipeline Active:</span>
+              <span style={{ color: T.t2, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {contextApps.map(a => a.label).join(" ➔ ")}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
