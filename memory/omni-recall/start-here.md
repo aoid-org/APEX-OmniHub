@@ -1,6 +1,6 @@
 ---
-version: 1.3.3
-last_audited: 2026-07-22
+version: 1.8.3
+last_audited: 2026-08-23
 status: verified
 ---
 
@@ -32,13 +32,30 @@ The system should:
 
 ## Last Verified Session
 
-- Audit date: 2026-06-21
-- HEAD: `966d695f` (fix(omnidash): canonical widget rescue and global drift guards — PR #1441, merged this session; squash carries git date 2026-06-20)
-- Branch: `docs/repo-truth-sync-2026-06-21` (docs); main at `966d695f`
-- Package: `1.7.1` (root); app `1.3.10`
-- Key facts: PR #1441 completed the OmniDash canonical widget rescue with a corrective commit — Links is now a genuine local URL-staging surface (validates input, Add Link never permanently disabled, "staged locally" + "OmniSlate handoff not connected" copy), the global action whitelist became a **module-keyed capability map** (`moduleKey + actionId`, module-specific copy, unsupported actions never call `trigger-workflow`), underscore/raw-id labels are humanized, the OmniBoard wizard gained timeout handling + explicit error taxonomy, and the live `omnilink-port` Links resolver returns an honest empty link-context state (no `integrations` read, no `test-all`). Corrective-commit gates green locally: typecheck/eslint/`vitest run tests/omnidash` (585 passed)/build/ops-doc-guard. `docs/APEX_AGENT_OPERATIONS.md §9.1` records the resolver contract change.
-- Carried forward (not re-verified this pass): APEX Agent LIVE — demo-ready (restored via PR #1435 `4bbd3e5b`, end-to-end verified 2026-06-19, trace `da6e7fe5`). `respond_to_user` in TOOL_REGISTRY (9 tools). 90 forward migrations + 4 rollback (94 `.sql`). 23 workflows. See `docs/CURRENT_PLATFORM_STATE_2026_06_21.md`.
-- Docs synced this session: README.md, `docs/CURRENT_PLATFORM_STATE_2026_06_21.md` (new), DOCUMENTATION_RELEASE_INDEX.md, docs/README.md, architecture/CANONICAL_TRUTH.md, state/checkpoints/current-status.md.
+- Audit date: 2026-08-23
+- HEAD: `be00488d` (release(v1.8.3): Multi-Droplet Agent Pipelines, Sentinel Edge Pre-Warming, and SonarCloud clean-code certification)
+- Branch: `main` (pushed to `origin/main` and release tagged `v1.8.3`)
+- Package: `1.8.3` (root); app `1.3.10`
+- Key facts:
+  1. **Multi-Droplet Agent Pipelines**: OmniSlate supports attaching 2 or more ecosystem apps with interactive visual chaining (`⚡ Multi-Agent Pipeline Active: DueRadar ➔ Google Antigravity`) and multi-stage MCP synthesis plans.
+  2. **Sentinel Edge Pre-Warming**: Background 5-minute heartbeat keeps Edge Functions and containers hot (`Edge Engine Warm · 5m cycle`).
+  3. **Zero Code Inspection Issues**: 100% resolved SonarCloud/ESLint inspection items across `ProviderLogo.tsx`, `SentinelPanel.tsx`, `SystemHealthRow.tsx`, `OmniDashShell.tsx`, `index.html`, and `landing.html`.
+  4. **Certified onAction Capabilities**: Central capability contract `moduleActionCapabilities.ts` wires live Stripe Customer Portal, Supabase Storage, and Edge Function pipelines with full truth alignment.
+
+## Session 2026-08-23 (v1.8.3 Release & Multi-Droplet Pipelines)
+
+- **Release Tag:** `v1.8.3` (commit `be00488d`)
+- **Key Enhancements:**
+  - Multi-Droplet Agent Pipelines: Attached tools chain in parallel/sequence in OmniSlate.
+  - Edge Pre-Warming: Automatic 5-minute heartbeat loop in `SentinelPanel`.
+  - Code Quality: Readonly component props, explicit `type="button"`, accessible keyboard listeners on interactive tiles, and decomposed form submit helpers.
+- **Verification Gates:**
+  - `npm run typecheck` (`tsc -b --noEmit`) -> 0 errors.
+  - `npm run lint` (`eslint .`) -> 0 warnings.
+  - `npm run check:omnidash` -> 43/43 PASSED.
+  - `npm run check:pwa` -> 15/15 PASSED.
+  - `npm run check:react` -> React 18.3.1 singleton verified.
+  - Cloudflare Pages live at `https://apexomnihub.icu`.
 
 ## Session 2026-06-23 (user-shoes validation + production flip)
 

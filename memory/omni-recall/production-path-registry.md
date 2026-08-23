@@ -32,6 +32,8 @@ for OmniDash work) is an automatic NO-GO — re-resolve to `apps/omnihub-site/da
 | APEX Apps contract | `apps/omnihub-site/dashboard/contracts/apexApps.ts` | [EXISTS] inspect P3 |
 | Module action capabilities | `apps/omnihub-site/dashboard/contracts/moduleActionCapabilities.ts` | [DONE] 2026-08-22 — verified onAction capabilities certified for Billing, Files, Workflows, Automations |
 | Autonomous Provider Logo & Brand Engine | `apps/omnihub-site/dashboard/components/ProviderLogo.tsx` | [EXISTS] 2026-08-18 ✓ |
+| Multi-Droplet Agent Pipelines | `apps/omnihub-site/dashboard/OmniDashShell.tsx` | [DONE] 2026-08-23 — Multi-app chained MCP context pipelines & visual indicator |
+| Sentinel Edge Function Pre-Warming | `apps/omnihub-site/dashboard/components/SentinelPanel.tsx` | [DONE] 2026-08-23 — 5-minute periodic background heartbeat loop & warm indicator |
 
 ## Modules
 

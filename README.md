@@ -1,6 +1,6 @@
 ---
 version: 1.8.3
-last_audited: 2026-08-22
+last_audited: 2026-08-23
 status: verified
 ---
 
@@ -19,6 +19,13 @@ status: verified
 **_Directable • Accountable • Dependable_**
 
 
+## Multi-Droplet Agent Pipelines & Edge Pre-Warming (v1.8.3)
+
+APEX-OmniHub v1.8.3 delivers next-generation cross-system orchestration and enterprise latency guarantees:
+- **Multi-Droplet Agent Pipelines**: OmniSlate supports attaching 2 or more active ecosystem tools simultaneously (e.g. DueRadar + Google Antigravity). Renders an interactive visual pipeline connector (`⚡ Multi-Agent Pipeline Active`) and dispatches multi-stage chained synthesis plans across attached MCP agents.
+- **Edge Function Pre-Warming Heartbeat**: `SentinelPanel` runs an automatic 5-minute periodic heartbeat ping to `platform-health` and Supabase Edge Functions, keeping V8 isolates and backend containers hot to eliminate cold starts for enterprise users.
+- **Strict Code Quality & SonarCloud A-Grade**: Clean code inspection across all components, zero ESLint warnings, single React 18.3.1 singleton, accessible keyboard listeners, and readonly prop contracts.
+
 ## OmniBoard Chat-Native Connection Layer (v3.1)
 
 OmniBoard now exposes connector operations through the existing APEX agent path instead of adding new chat infrastructure. The registered universal intents are `connector.list`, `connector.status`, `connector.connect`, `connector.test`, `connector.disconnect`, and `connector.create_custom`; they route through the existing Intent Registry and MCP `omnihub_execute_intent` dispatcher. The proprietary custom connector scaffold lives at `src/omniconnect/scaffold/`, validates every user-supplied URL through the shared SSRF guard, and always creates raw-events-only `beta` connectors until an explicit human promotion occurs.
@@ -34,7 +41,7 @@ APEX-OmniHub enforces strict **Canonical Surface Ownership** between first-party
 - **OmniSlate Context Droplets**: Integrated app tiles drag and drop or click directly into OmniSlate, rendering 28×28 minimized context pills with brand-specific ambient glow and hover dismissal controls.
 - **Verified Module Capabilities (`moduleActionCapabilities.ts`)**: Explicitly wires and certifies live backend capabilities for `Billing` (Stripe Customer Portal via `create-billing-portal`), `Files` (tenant-scoped Supabase Storage upload/delete), `Workflows` (orchestration dispatch via `execute-workflow`), and `Automations` (rule execution via `execute-automation`).
 
-**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-08-22
+**Release line:** 1.8.3 | **package.json version:** 1.8.3 | **App package:** 1.3.10 | **Docs audit:** 2026-08-23
 
 [![CI Runtime Gates](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Orchestrator CI](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/aoid-org/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
