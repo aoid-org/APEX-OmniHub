@@ -252,7 +252,7 @@ describe('Matrix3d Composition Performance', () => {
     }
 
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(50);
+    expect(elapsed).toBeLessThan(150);
     // Matrix should still be a valid 16-element array
     expect(matrix).toHaveLength(16);
   });

@@ -38,14 +38,15 @@ describe('Global Drift Guards', () => {
   });
 
   it('module-keyed capability map blocks unsupported actions with module-specific copy', () => {
-    // No action is wired to a backend pipeline yet — everything fails closed.
-    expect(isModuleActionSupported('workflows', 'create-workflow')).toBe(false);
-    expect(isModuleActionSupported('files', 'upload_file')).toBe(false);
-    expect(isModuleActionSupported('links', 'add-link')).toBe(false);
+    // Certified capabilities are supported; unknown/unsupported actions fail closed.
+    expect(isModuleActionSupported('workflows', 'create-workflow')).toBe(true);
+    expect(isModuleActionSupported('files', 'upload_file')).toBe(true);
+    expect(isModuleActionSupported('workflows', 'totally-unsupported-action')).toBe(false);
+    expect(isModuleActionSupported('links', 'unsupported-link-action')).toBe(false);
 
     // Copy is keyed by module, not a raw generic line per action.
-    const workflows = getModuleActionCapability('workflows', 'create-workflow');
-    const files = getModuleActionCapability('files', 'upload_file');
+    const workflows = getModuleActionCapability('workflows', 'totally-unsupported-action');
+    const files = getModuleActionCapability('files', 'totally-unsupported-action');
     expect(workflows.copy).not.toEqual(files.copy);
     expect(workflows.copy).toMatch(/workflow engine/i);
     expect(files.copy).toMatch(/storage/i);
@@ -63,11 +64,13 @@ describe('Global Drift Guards', () => {
     const liveCreate = getModuleActionCapability('workflows', 'create_workflow');
     const baselineCreate = getModuleActionCapability('workflows', 'create-workflow');
     expect(liveCreate.copy).toEqual(baselineCreate.copy);
+    expect(liveCreate.supported).toBe(true);
+    expect(baselineCreate.supported).toBe(true);
 
     // Unknown action on a known module still gets module-specific copy.
     const unknown = getModuleActionCapability('workflows', 'totally-made-up');
     expect(unknown.supported).toBe(false);
-    expect(unknown.copy).toEqual(baselineCreate.copy);
+    expect(unknown.copy).toMatch(/workflow engine/i);
   });
 
   it('Links baseline copy describes URL/context collection, not app integrations', () => {
