@@ -198,7 +198,7 @@ test.describe('OMNIDASH_LIVE_PERSISTENCE — live production', () => {
     await shot('4-after-hard-reload');
 
     // Authenticated direct read-back probe with retry to ensure PostgREST exchange is captured
-    await page.evaluate(async (targetUrl) => {
+    await page.evaluate(async ({ targetUrl, anonKey }: { targetUrl: string; anonKey: string }) => {
       for (let attempt = 0; attempt < 4; attempt++) {
         try {
           const tokenKey = Object.keys(window.localStorage).find(
@@ -223,7 +223,7 @@ test.describe('OMNIDASH_LIVE_PERSISTENCE — live production', () => {
             `https://rtopreovkywofgwgmozi.supabase.co/rest/v1/omnilink_links?url=eq.${encodeURIComponent(targetUrl)}&select=id,url,status,created_at`,
             {
               headers: {
-                apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b3ByZW92a3l3b2Znd2dtb3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MzQxOTAsImV4cCI6MjA4MTAxMDE5MH0.-CHhOEaFkUMf8hKrD_FWnunPOfehjLdq5QXVuKPal58',
+                apikey: anonKey,
                 Authorization: `Bearer ${token}`,
               },
             },
@@ -237,7 +237,7 @@ test.describe('OMNIDASH_LIVE_PERSISTENCE — live production', () => {
         }
         await new Promise((r) => setTimeout(r, 1000));
       }
-    }, testUrl);
+    }, { targetUrl: testUrl, anonKey: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '' });
     await page.waitForTimeout(2_000);
 
     // ── Read-back proof, sourced from the network, not the DOM ──

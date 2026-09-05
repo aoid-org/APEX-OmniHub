@@ -166,7 +166,7 @@ test.describe('SUPABASE_RLS_MULTI_TENANT — live production', () => {
     // Ensure Tenant B issues an explicit authenticated PostgREST read against omnilink_links
     // as nominated in resolvedBy:
     if (target) {
-      await page.evaluate(async (targetUrl) => {
+      await page.evaluate(async ({ targetUrl, anonKey }: { targetUrl: string; anonKey: string }) => {
         try {
           const tokenKey = Object.keys(window.localStorage).find(
             (k) => k.startsWith('sb-') && k.endsWith('-auth-token'),
@@ -181,7 +181,7 @@ test.describe('SUPABASE_RLS_MULTI_TENANT — live production', () => {
             `https://rtopreovkywofgwgmozi.supabase.co/rest/v1/omnilink_links?url=eq.${encodeURIComponent(targetUrl)}&select=id,url,status,created_at`,
             {
               headers: {
-                apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b3ByZW92a3l3b2Znd2dtb3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MzQxOTAsImV4cCI6MjA4MTAxMDE5MH0.-CHhOEaFkUMf8hKrD_FWnunPOfehjLdq5QXVuKPal58',
+                apikey: anonKey,
                 Authorization: `Bearer ${token}`,
               },
             },
@@ -189,7 +189,7 @@ test.describe('SUPABASE_RLS_MULTI_TENANT — live production', () => {
         } catch (_err) {
           void _err;
         }
-      }, target.testUrl);
+      }, { targetUrl: target.testUrl, anonKey: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '' });
       await page.waitForTimeout(1_000);
     }
 
