@@ -35,6 +35,58 @@ npm run check:pwa
 npm run test -- tests/omnidash/useOmniDashAction.spec.tsx tests/omnidash/fake-success-guardrails.spec.tsx
 ```
 
+## Live validation specs (2026-09-05)
+
+The production-safe suite is one harness with one entrypoint. Do not add a parallel one.
+
+| File | Matrix item | Certifies |
+| --- | --- | --- |
+| `tests/e2e-playwright/production-safe.live.ts` | `BROWSER_PUBLIC_ROUTES`, `PWA_MOBILE_WEB` | Route render evidence |
+| `tests/e2e-playwright/production-safe-negative-controls.live.ts` | — | Nothing. Controls only: logged-out gating and client-side service-role absence. They can falsify, never certify. |
+| `tests/e2e-playwright/production-safe-auth.live.ts` | `AUTH_EMAIL_PASSWORD` | Login, session artifact, protected route, real session termination |
+| `tests/e2e-playwright/production-safe-persistence.live.ts` | `OMNIDASH_LIVE_PERSISTENCE` | Backend-accepted write + network-sourced read-back after a hard reload |
+| `tests/e2e-playwright/production-safe-rls.live.ts` | `SUPABASE_RLS_MULTI_TENANT` | Tenant B denied on Tenant A's row, via UI and API |
+
+Shared primitives live in `tests/e2e-playwright/helpers/production-validation-evidence.ts`
+(redaction, run-scoped evidence, credential gating) and
+`tests/e2e-playwright/helpers/production-validation-probes.ts` (network recording,
+client-surface scan, login/logout). Every live file uses the `*.live.ts` suffix so
+default `*.spec.ts` discovery can never hit production by accident, and each throws at
+module scope unless `APEX_RUN_PRODUCTION_SAFE=true`.
+
+### Credentials
+
+Owner credentials load from environment variables only, optionally via an untracked
+`.env.production-validation` (gitignored) read by
+`scripts/ci/run-production-safe-validation.mjs`:
+
+```
+APEX_PROD_URL=https://apexomnihub.icu
+APEX_TEST_USER_EMAIL=...
+APEX_TEST_USER_PASSWORD=...
+APEX_TENANT_B_EMAIL=...
+APEX_TENANT_B_PASSWORD=...
+```
+
+Values are never printed, logged, committed, or written to an evidence file. Evidence
+records credential **variable names** only. When a required variable is missing the
+relevant spec writes a `REQUIRES_MANUAL_VALIDATION` record naming the missing variables
+and skips with an `APEX-2030` tracker — it never degrades into a pass.
+
+### Promotion rule
+
+Every evidence record carries `certifies`. A matrix item may be promoted to `VERIFIED`
+**only** from a record with `certifies: true`. `UNCERTAIN` records carry a `resolvedBy`
+field naming the exact additional signal required; they are not partial passes.
+
+### Browser-egress fallback
+
+`scripts/ci/collect-production-http-evidence.mjs` collects HTTP-layer evidence (route
+status, security headers, and a conclusive scan of the shipped client bundle for a
+Supabase service-role credential) for environments where the browser cannot reach
+production but Node can. It writes `certifies: false` on every record by design: it can
+falsify, never certify.
+
 ## Evidence policy
 
 Generated evidence lives under `artifacts/production-validation/` and must be sanitized before sharing. Evidence must not contain bearer tokens, cookies, service-role keys, private emails, payment data, raw auth headers, provider API keys, or private user data.
