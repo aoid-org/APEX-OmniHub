@@ -2,7 +2,7 @@
 
 # APEX Agent â€” Operations & Anti-Drift Reference
 
-**Status:** LIVE / demo-ready Â· **Last verified end-to-end:** 2026-07-06
+**Status:** LIVE / production-certified Â· **Last verified end-to-end:** 2026-09-05
 **Canonical source of truth.** If reality and this document disagree, fix one of them â€” do not let them drift. Every value here was verified against the running production system.
 
 > This file lives in the repo on purpose. Update it in the **same PR** that changes any service, env var, table, or start command.
@@ -1819,3 +1819,10 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Root cause:** The `publish-snapshot` job failed when `GITHUB_TOKEN` lacked PR-creation permissions on protected branches.
 - **Fix:** Added `continue-on-error: true` to the `publish-snapshot` job and graceful fallback error handling for `git push` and `gh pr create` commands, so snapshot publication never fails the primary CI pipeline.
 
+## 9.41 Live Production Validation Matrix & Release Guard (2026-09-05, PR #13)
+
+### 1. Operational Surface Verification & Release Matrix
+- **Changed files:** `package.json`, `docs/release/release-validation-matrix.json`, `scripts/release/check-release-matrix.mjs`, `apps/omnihub-site/dashboard/components/modules/apexAppsResolve.ts`, `apps/omnihub-site/dashboard/components/modules/omniMediaUploadCatalog.ts`, `docs/APEX_AGENT_OPERATIONS.md`.
+- **Live Production Matrix Certification:** Promoted `AUTH_EMAIL_PASSWORD`, `OMNIDASH_LIVE_PERSISTENCE`, `SUPABASE_RLS_MULTI_TENANT`, and negative controls from `PLANNED` to `VERIFIED` backed by machine evidence under `artifacts/production-validation/2026-09-05T03-33-13/`.
+- **Release Matrix Verification Script:** Added `npm run release:validation-matrix:check` (`node scripts/release/check-release-matrix.mjs`) to validate release matrix integrity, status synchronization, and artifact path existence.
+- **Fail-Closed Production Safe Suite:** Production E2E test suite verified with zero mocks and read-only non-destructive operations against live production endpoints (`https://apexomnihub.icu`).
