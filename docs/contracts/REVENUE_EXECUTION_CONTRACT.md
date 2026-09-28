@@ -2,15 +2,16 @@
 contract_id: APEX-REV-2026-09
 version: 1.0.0
 issued: 2026-09-28
-target_repo: apexbusiness-systems/APEX-OmniHub (main)
+target_repo: aoid-org/APEX-OmniHub (main) — canonical per owner decision A4, 2026-09-28
 evidence_basis: uploaded snapshot APEX-OmniHub-main (no .git; root 1.8.3) + live fetch of https://apexomnihub.icu
 audience: Claude Code (executor), JR (owner/approver)
-wp00_baseline: 2026-09-28 at main HEAD 841e2b171a42a2e8515fc0ce23ab138a7a034230 (remote aoid-org/APEX-OmniHub)
+wp00_baseline: 2026-09-28 at main HEAD 841e2b171a42a2e8515fc0ce23ab138a7a034230
+owner_decisions: 2026-09-28 (A1, A2 and A4 approved with conditions; D1 = option (a)); see §4.2
 ---
 
 # APEX-OmniHub Revenue & Conversion Execution Contract
 
-> **WP-00 status (2026-09-28):** Baseline complete at `841e2b1`. All 22 F-IDs remain `OPEN`. Three new findings (F-23 to F-25) and four proposed amendments (A1 to A4) are recorded in §4.2. **WP-01 is `BLOCKED`** until the owner approves A1 to A3 and decides D1. §4.2 explains why.
+> **WP-00 status (2026-09-28):** Baseline complete at `841e2b1`. All 22 F-IDs remain `OPEN`. Three new findings (F-23 to F-25) are recorded in §4.2. The owner decided amendments A1 to A4 and gate D1 on 2026-09-28 (§4.2), and WP-01 to WP-03 were amended to match. WP-01 starts once PR #14 merges. The owner is holding that merge until repo visibility is confirmed (O5).
 
 ## 0. How to Use This Contract (read first, every session)
 
@@ -33,8 +34,8 @@ wp00_baseline: 2026-09-28 at main HEAD 841e2b171a42a2e8515fc0ce23ab138a7a034230 
 | N7 | **Claim hygiene.** All public copy must pass `node scripts/ci/verify-claim-hygiene.mjs`. Never add a claim to `docs/release/approved-claims.json` without a real, existing evidence file. No invented metrics, customers, ROI guarantees, or "certified" language. (Context: the PR #1646 fabricated-claim incident.) |
 | N8 | **Honesty labels.** In PRs and docs use `VERIFIED` only for what was actually exercised. Otherwise use `VERIFIED-IN-CODE`, `REQUIRES_LIVE_VALIDATION`, or `REQUIRES_OWNER_ACTION` (see `.understand-anything/E2E_CANONICAL_BEHAVIOR.md` §7). |
 | N9 | **Never mock data outside tests.** Never display simulated values in production UI. |
-| N10 | **Commits:** use Conventional Commits (commitlint is configured). Name branches `fix/rev-wpNN-<slug>` or `feat/rev-wpNN-<slug>`. (If the session mandates a branch name, that name wins. See A4.) |
-| N11 | **Ops log:** append one entry to `docs/APEX_AGENT_OPERATIONS.md` per WP. First run `grep -nE "^#{2,3} 9\.[0-9]+" docs/APEX_AGENT_OPERATIONS.md` and use the next unused number. Duplicate numbers already exist (13 of them at `841e2b1`, see §4.2), so do not add another. The entry must list the changed files, which must match `git diff --stat` exactly. |
+| N10 | **Commits:** use Conventional Commits (commitlint is configured). Name branches `fix/rev-wpNN-<slug>` or `feat/rev-wpNN-<slug>`. (Waived for the Claude Code harness per A4: the branch the session requires is accepted.) |
+| N11 | **Ops log:** append one entry to `docs/APEX_AGENT_OPERATIONS.md` per WP. First run `grep -nE "^#{2,3} 9\.[0-9]+" docs/APEX_AGENT_OPERATIONS.md` and use the next unused number. Duplicate numbers already exist (13 of them at `841e2b1`, see §4.2), so do not add another, and do not renumber existing duplicates (that breaks cross-references). Per the owner's ruling, the 600-line cap (N3) applies to source modules, not to this append-only log. The entry must list the changed files, which must match `git diff --stat` exactly. |
 | N12 | **Pre-existing defects** you encounter inside a WP's blast radius are fixed in that WP and logged. Defects outside the blast radius are recorded in the PR under "Found, not fixed (out of scope)" and never silently expanded into. |
 
 ## 2. Status Labels
@@ -112,7 +113,7 @@ The following were checked and are fine:
 | F-24 | HIGH | **The skill entitlement layer recognizes only `PRO`.** Anything else is treated as `BASIC` (the 5-skill free cap). Business customers would therefore get fewer skills than Pro even after F-01/F-23 are fixed. | `supabase/functions/omnilink-port/omniskills.ts:47`; `20260622000000_skill_entitlement_free_cap_5.sql:57,118` (`IF user_tier = 'PRO'`); `20260214000001_skill_forge_protocol.sql:117` | VERIFIED-IN-CODE |
 | F-25 | MEDIUM | **The UI tier maps have no `business` key.** `tierLevels` and `tierNames` in `PaidAccessRoute.tsx` cover `free`/`starter`/`pro`/`enterprise` only, although the enum has had `business` since 2026-06-23. | `src/components/PaidAccessRoute.tsx:23-30`; `20260623000000_add_business_subscription_tier.sql:12` | VERIFIED-IN-CODE |
 
-#### Proposed amendments (owner approval required before WP-01)
+#### Amendments (decided by the owner on 2026-09-28; decisions below the table)
 
 | ID | Affects | Amendment | Evidence |
 |---|---|---|---|
@@ -121,20 +122,37 @@ The following were checked and are fine:
 | A3 | WP-01 (gate D1) | **D1 is pre-evaluated and TRIGGERS.** `public.is_paid_user` delegates to `private.is_paid_user`, which requires `tier IN ('starter','pro','business','enterprise')`. Six OmniDash RLS policies depend on it. Mapping BASIC to `free` would lock Base users out of OmniDash data, which is a promised Base surface. The owner must choose **(a)** BASIC to `free` and relax those RLS policies to authenticated-only, or **(b)** keep `starter` and make both `isPaid` (`src/hooks/usePaidAccess.ts:84-96`) and `private.is_paid_user` exclude activations with no `stripe_subscription_id`. | `20260205000001_omnidash_paid_access.sql:12,38` (6 `CREATE POLICY`); `20260716005122_private_authorization_helpers.sql:59-124` |
 | A4 | Process | This session's harness mandates the branch `claude/apex-omnihub-revenue-contract-v4bm9b`, which takes precedence over N10's naming. The git remote at HEAD is `aoid-org/APEX-OmniHub`, while the frontmatter `target_repo` says `apexbusiness-systems/APEX-OmniHub`. The owner should confirm which is canonical. | `git remote -v` |
 
+**Owner decisions (2026-09-28, binding):**
+
+- **A1: APPROVED.** `BUS` maps to `business`.
+  - Every rank comparison uses the ladder `free 0 < starter 1 < pro 2 < business 3 < enterprise 4`. WP-02's `tierForPrice` returns `'business'`, and WP-03's `hasTier` uses this ladder.
+  - The WP-01 `tierNames` rename is dropped, so `enterprise` stays "Enterprise".
+  - Before writing WP-01, verify that `is_paid_user()` and `get_user_tier()` treat `business` as paid. If an `IN` list excludes it, fix that in WP-01.
+  - F-25 moves to WP-03.
+- **A2: APPROVED, with one change.** WP-01 does not rely on looking up the constraint name in production. Instead, an idempotent `DO` block drops every CHECK constraint on `public.user_entitlements` that references `tier`, then adds `user_entitlements_tier_check CHECK (tier IN ('BASIC','PRO','BUS'))`. A rollback script is required. F-24 moves to WP-03.
+  - **Release rule:** WP-01, WP-02 and WP-03 merge in order and deploy to production as one release. BUS checkout stays disabled until then.
+- **A3 / D1: OPTION (a).** Base maps to `free`, and the six OmniDash policies admit any signed-in user.
+  - Option (b) was rejected because it would still lock Base out: it excludes accounts with no Stripe subscription from `is_paid_user`, which those same six policies use. It would also keep `starter` as a tier with no product behind it.
+  - Only those six policies change: `is_paid_user(...)` is replaced with `(select auth.uid()) IS NOT NULL`, and every ownership or tenant predicate stays byte-identical. `is_paid_user()` itself is unchanged.
+  - All of this goes in one migration, policies first and then the RPC mapping. The BASIC→free backfill is a separate migration that the owner approves before merge (N5).
+  - Tests for each policy: anon is denied, a free user reads their own rows, and cross-user access is denied.
+- **A4:** `aoid-org/APEX-OmniHub` is canonical (it holds `main` `841e2b1`). The branch the session requires is accepted, and N10 naming is waived for this harness.
+- **Merge hold:** PR #14 merges only after the owner confirms the repo is private (O5).
+
 #### Found, not fixed (out of scope for WP-00, N12)
 
-- `docs/APEX_AGENT_OPERATIONS.md` is 1828 lines, which breaks the 600-line rule (N3). It also contains 13 duplicated §9 numbers: 9.7, 9.10, 9.11, 9.12, 9.13, 9.16, 9.17, 9.18, 9.19, 9.21, 9.22, 9.38 and 9.39. N11 requires appending to this file, so splitting it needs an owner decision (target: WP-11).
-- Files later WPs will edit that already exceed 600 lines: `apps/omnihub-site/src/pages/Home.tsx` (2463; WP-08) and `apps/omnihub-site/src/pages/RequestAccess.tsx` (782; WP-05, WP-08). Those WPs must not grow these files. They should extract any new logic into a separate module.
+- `docs/APEX_AGENT_OPERATIONS.md` is 1828 lines and contains 13 duplicated §9 numbers: 9.7, 9.10, 9.11, 9.12, 9.13, 9.16, 9.17, 9.18, 9.19, 9.21, 9.22, 9.38 and 9.39. **Owner ruling:** the 600-line cap does not apply to this append-only log. Do not renumber the duplicates. A possible archive split is logged for WP-11 and needs an owner decision.
+- Files later WPs will edit that already exceed 600 lines: `apps/omnihub-site/src/pages/Home.tsx` (2463; WP-08) and `apps/omnihub-site/src/pages/RequestAccess.tsx` (782; WP-05, WP-08). **Owner ruling:** the net line count of these files must not increase in WP-05 or WP-08. New code goes in new modules, and existing code is not refactored.
 - Live DB checks for F-02 (row counts), F-08 (`access_requests` existence) and the A2 constraint name were not run, because the Supabase MCP connector was not authorized in this session. They remain REQUIRES_LIVE_VALIDATION.
 
 #### Revised WP readiness
 
 | WP | Readiness at `841e2b1` |
 |---|---|
-| WP-01 | **BLOCKED:** needs owner approval of A1, A2 and A3 plus a D1 decision |
-| WP-02 | Ready once A1 is approved (tier literal only) |
-| WP-03 | Follows WP-02. Scope gains F-24 and the RLS/skill-gate inventory. |
-| WP-05, WP-07, WP-09 | Ready (depend only on WP-00) |
+| WP-01 | Unblocked by the owner decisions. Starts once PR #14 merges (merge held pending O5 repo visibility). |
+| WP-02 | Follows WP-01. WP-01, WP-02 and WP-03 ship as one production release. |
+| WP-03 | Follows WP-02. Scope gains F-24, F-25 and the RLS/skill-gate inventory. |
+| WP-05, WP-07, WP-09 | Ready (depend only on WP-00). The owner ordered them WP-05, then WP-07, then WP-09. |
 | WP-10 | BLOCKED on D3 (unchanged) |
 
 ## 5. Work Packages
@@ -171,18 +189,20 @@ curl -s https://apexomnihub.icu/ | grep -c "<h1" ; curl -s https://apexomnihub.i
 
 ---
 
-### WP-01 — Fix Tier Provisioning (F-01, F-02) · P0 · **BLOCKED (A1–A3, D1)**
+### WP-01 — Fix Tier Provisioning (F-01, F-02, F-23) · P0 · amended per owner decisions of 2026-09-28
 
 - **Skill:** `apex-master-debug-claude` + `supabase-postgres-best-practices`
+- **Starts after:** PR #14 merges.
+- **Release rule:** WP-01, WP-02 and WP-03 merge in that order and deploy to production as **one** release. The owner keeps BUS checkout disabled until then.
 - **Preconditions:**
-  1. Open the latest migration that defines `public.activate_client_subscription`. Copy its entire body verbatim as the base, including `SECURITY DEFINER`, `SET search_path`, the service-role guard, the `ON CONFLICT`, and any `GRANT`/`REVOKE` statements.
-  2. Confirm that the enum `public.subscription_tier` contains `free`, `starter`, `pro` and `enterprise`.
-  3. **Decision gate D1 (BASIC → `free`).** Inventory every consumer that could depend on a free user having tier `starter` or `isPaid=true`:
-     - `grep -rnE "'starter'|isPaid|subscription_active_status|\.tier\b" src apps/omnihub-site/src supabase/functions orchestrator --include=*.ts --include=*.tsx --include=*.py`
-     - `grep -rn "subscription_active_status" supabase/migrations`
-
-     If any surface that Base promises (OmniDash console, core skill architecture, standard automations) is gated on `tier >= starter` or on `isPaid`, **STOP** and report the gated surfaces. The owner then decides between (a) mapping Base to `free` and relaxing those gates to authenticated-only, or (b) keeping `starter` and making `isPaid` exclude activations with no `stripe_subscription_id`.
-- **Changes** (one new migration `supabase/migrations/<ts>_activation_rpc_bus_tier.sql`): take the verbatim body and change **only** the tier block. (Superseded in part by A1/A2: BUS maps to `business`, and the `user_entitlements` CHECK must also be widened.)
+  1. Open the latest migration that defines `public.activate_client_subscription`. Copy its entire body verbatim as the base. That includes `SECURITY DEFINER`, `SET search_path`, the service-role guard, both upserts (`user_entitlements` and `subscriptions`), the `ON CONFLICT` clauses, and any `GRANT`/`REVOKE` statements.
+  2. Confirm that the enum `public.subscription_tier` contains `free`, `starter`, `pro`, `business` and `enterprise`. (`business` was added in `20260623000000_add_business_subscription_tier.sql`.)
+  3. **Paid-check audit (A1 condition).** Verify that `is_paid_user()` (which delegates `public` → `private`; latest definition in `20260716005122_private_authorization_helpers.sql`), `get_user_tier()` and any other tier-comparing helper treat `business` as paid. For each helper, record whether it compares by enum order or against a hard-coded `IN` list. At `841e2b1`, `private.is_paid_user` already lists `'business'`. If any `IN` list omits `business`, fix it in this WP's migration and list the fix in the PR.
+  4. Resolve the latest definition of each of the six OmniDash policies in `20260205000001_omnidash_paid_access.sql` that use `is_paid_user(...)`, checking for later redefinitions. Record each policy's current `USING` / `WITH CHECK` text in the PR as "before".
+- **Changes, migration 1** (`supabase/migrations/<ts>_activation_rpc_business_free_tiers.sql`), applied in this order:
+  1. **OmniDash policies (D1 = option a).** For each of the six policies, run `DROP POLICY IF EXISTS`, then `CREATE POLICY` with the same name, command and roles. The **only** change is replacing the `is_paid_user(...)` term with `(select auth.uid()) IS NOT NULL`. Every ownership and tenant predicate stays byte-identical. `is_paid_user()` itself does not change, and every other policy that uses it stays paid-gated.
+  2. **`user_entitlements` tier CHECK (A2).** Add an idempotent `DO` block that finds every CHECK constraint on `public.user_entitlements` whose definition references `tier` (`pg_constraint`, `contype = 'c'`, `conrelid = 'public.user_entitlements'::regclass`, with `pg_get_constraintdef(oid)` referencing `tier`) and drops each one. Then add `user_entitlements_tier_check CHECK (tier IN ('BASIC','PRO','BUS'))`. Do not depend on looking up the constraint name in production.
+  3. **Activation RPC.** Use the verbatim body and change only the tier block:
 
 ```sql
 IF p_tier NOT IN ('BASIC', 'PRO', 'BUS') THEN
@@ -190,25 +210,39 @@ IF p_tier NOT IN ('BASIC', 'PRO', 'BUS') THEN
 END IF;
 v_subscription_tier := (CASE p_tier
     WHEN 'PRO' THEN 'pro'
-    WHEN 'BUS' THEN 'enterprise'
-    ELSE 'free'            -- BASIC is the free plan (D1)
+    WHEN 'BUS' THEN 'business'
+    ELSE 'free'            -- BASIC is the free plan (D1 = option a)
 END)::public.subscription_tier;
 ```
 
-  - Rollback: `supabase/migrations/rollback/<ts>_activation_rpc_bus_tier_rollback.sql`, which re-creates the previous body verbatim.
-  - **Separate owner-gated data migration** (N5), `<ts+1>_backfill_basic_tier_free.sql`:
+  4. Include any paid-check fix found in precondition 3.
+  - **Rollback:** `supabase/migrations/rollback/<ts>_activation_rpc_business_free_tiers_rollback.sql`. It restores the previous RPC body, the six original policies and the original `CHECK (tier IN ('BASIC','PRO'))`, all verbatim. The script must warn that restoring the CHECK fails while any `BUS` rows exist.
+- **Changes, migration 2** (owner-gated per N5; `<ts+1>_backfill_basic_tier_free.sql`):
 
 ```sql
 UPDATE public.subscriptions SET tier = 'free'
 WHERE tier = 'starter' AND stripe_subscription_id IS NULL;   -- idempotent: re-run matches 0 rows
 ```
 
-  - Its PR body must include a pre-merge count query for the owner: `SELECT count(*) FROM public.subscriptions WHERE tier='starter' AND stripe_subscription_id IS NULL;`
-  - `src/components/PaidAccessRoute.tsx`: display name only. `tierNames.enterprise` becomes `'Business'` to match Pricing. Make no other change.
-- **Tests:** Add a static contract test in the style of the existing infrastructure tests (for example `tests/infrastructure/activation-rpc-tiers.test.ts`). It must assert that the lexicographically latest migration defining `activate_client_subscription` (a) accepts `BUS`, (b) maps `BUS` to `enterprise`, (c) maps `BASIC` to `free`, and (d) still contains the service-role guard.
-- **Acceptance:** DoD passes, and the diff against the previous function body is limited to the tier block.
-- **Live validation** (`omnidev-apex-pro-v2`, after deploy): call the RPC with the service role in staging for all three tiers and confirm the resulting rows. Label `REQUIRES_LIVE_VALIDATION` until this is done.
-- **Stop if:** gate D1 triggers, or a later migration has already redefined the function.
+  - Its PR body must give the owner a pre-merge count query: `SELECT count(*) FROM public.subscriptions WHERE tier='starter' AND stripe_subscription_id IS NULL;`. The owner approves this migration before merge.
+- **Not in WP-01:**
+  - The `tierNames` rename is dropped; `enterprise` stays "Enterprise".
+  - F-25 (`business` in `SubscriptionTier` and the `PaidAccessRoute` maps) moves to WP-03.
+  - F-24 (skill parity) moves to WP-03.
+- **Tests:**
+  - A static contract test, for example `tests/infrastructure/activation-rpc-tiers.test.ts`. It asserts that the latest migration defining `activate_client_subscription`:
+    - accepts `BUS`;
+    - maps `BUS` to `business`;
+    - maps `BASIC` to `free`;
+    - keeps the service-role guard.
+
+    It also asserts that the latest `user_entitlements` tier CHECK accepts `BUS`, and that none of the six policies references `is_paid_user`.
+  - For each of the six policies: anon is denied, a free user can read their own rows, and cross-user access is denied. Use the repo's existing RLS test harness. If none can run here, label the tests `REQUIRES_LIVE_VALIDATION`.
+- **Acceptance:** DoD passes. The PR shows each policy before and after. The RPC diff against the previous body is limited to the tier block.
+- **Live validation** (`omnidev-apex-pro-v2`, after deploy): in staging, call the RPC with the service role for all three tiers and confirm the resulting `subscriptions` and `user_entitlements` rows. Label it `REQUIRES_LIVE_VALIDATION` until that is done.
+- **Stop if:** any of these hold:
+  - a later migration already redefines the function, the CHECK or the six policies;
+  - fixing a paid-check helper would require touching policies other than the six.
 
 ---
 
@@ -220,11 +254,11 @@ WHERE tier = 'starter' AND stripe_subscription_id IS NULL;   -- idempotent: re-r
   2. Confirm the `public.subscription_status` enum values are exactly `active|trialing|past_due|canceled|expired|paused`. If they differ, adapt the mapping to the real enum and document it. (Confirmed exact at `841e2b1`.)
   3. Run `grep -rn "constructEvent" tests` and update any static assertion (for example in `tests/runtime-production-hardening.spec.ts`) to expect the async variant.
 - **Changes:**
-  1. **New pure module** `supabase/functions/_shared/stripeSubscriptionSync.ts`. It has zero imports, so both Deno and Vitest can load it. (A1: `DbSubscriptionTier` gains `'business'`, and the bus price maps to `'business'`.)
+  1. **New pure module** `supabase/functions/_shared/stripeSubscriptionSync.ts`. It has zero imports, so both Deno and Vitest can load it. (Per A1, the bus price maps to `'business'`.)
 
 ```ts
 export type DbSubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired' | 'paused';
-export type DbSubscriptionTier = 'free' | 'starter' | 'pro' | 'enterprise';
+export type DbSubscriptionTier = 'free' | 'starter' | 'pro' | 'business' | 'enterprise';
 const STATUS_MAP: Readonly<Record<string, DbSubscriptionStatus>> = {
   active: 'active', trialing: 'trialing', past_due: 'past_due', unpaid: 'past_due',
   incomplete: 'past_due', incomplete_expired: 'expired', canceled: 'canceled', paused: 'paused',
@@ -234,7 +268,7 @@ export function mapStripeStatus(stripeStatus: string): DbSubscriptionStatus | nu
 }
 export function tierForPrice(priceId: string | undefined, prices: { pro?: string; bus?: string }): DbSubscriptionTier | null {
   if (!priceId) return null;
-  if (prices.bus && priceId === prices.bus) return 'enterprise';
+  if (prices.bus && priceId === prices.bus) return 'business';
   if (prices.pro && priceId === prices.pro) return 'pro';
   return null; // unknown price: never downgrade, leave tier unchanged
 }
@@ -267,10 +301,12 @@ export const LIFECYCLE_EVENTS = new Set([
 ### WP-03 — Entitlement Matrix and Server-Side Enforcement (F-05, feeds F-13) · P0
 
 - **Skill:** `apex-master-debug-claude`
-- **Goal:** Every paid promise on the Pricing page either maps to enforced code or is removed from the copy (removal happens in WP-08). (A2 adds F-24 skill parity to this WP's scope.)
+- **Goal:** Every paid promise on the Pricing page either maps to enforced code or is removed from the copy (removal happens in WP-08). The scope also includes:
+  - **F-24:** skill parity, where `BUS` counts as at least `PRO` in `omniskills.ts` and in the skill-enforcement SQL.
+  - **F-25:** add `business` to `SubscriptionTier` and to the `tierLevels`/`tierNames` maps in `PaidAccessRoute.tsx`, displayed as `'Business'`. `enterprise` stays `'Enterprise'`.
 - **Step 1 (deliverable, committed):** Write `docs/contracts/ENTITLEMENT_MATRIX.md` with one table containing every feature bullet in `Pricing.tsx` PLANS. Columns: `feature | tier | code surface (file:line) | enforced where (server/UI/none) | status: IMPLEMENTED+ENFORCED / IMPLEMENTED-UNGATED / NOT-IMPLEMENTED`. Include the existing gating in `supabase/functions/omnilink-port/omniskills.ts`.
 - **Step 2 (enforcement):**
-  - Add a single helper, `supabase/functions/_shared/entitlements.ts`, exporting `hasTier(adminClient, userId, minTier)`. It reads `subscriptions` with the service role. It returns true only if `tier` rank is at least `minTier` rank (`free 0 < starter 1 < pro 2 < enterprise 3`; A1 inserts `business` before `enterprise`), `status` is `active` or `trialing`, and `current_period_end` is null or in the future.
+  - Add a single helper, `supabase/functions/_shared/entitlements.ts`, exporting `hasTier(adminClient, userId, minTier)`. It reads `subscriptions` with the service role. It returns true only if `tier` rank is at least `minTier` rank (`free 0 < starter 1 < pro 2 < business 3 < enterprise 4`, per A1), `status` is `active` or `trialing`, and `current_period_end` is null or in the future.
   - First reuse `subscription_active_status()` if its semantics match; document the decision.
   - Apply the helper **only** at the server entry points of features marked `IMPLEMENTED-UNGATED` for Pro or Business. A denied request returns 403 with `{ error: 'UPGRADE_REQUIRED', requiredTier }`.
   - In the UI, render the existing `UpgradePrompt` only **inside module content areas** when a 403 `UPGRADE_REQUIRED` is received. Never change OmniDash layout (N6).
@@ -305,7 +341,7 @@ export const LIFECYCLE_EVENTS = new Set([
 - **Skill:** `apex-master-debug-claude` + `supabase-postgres-best-practices`
 - **Changes:**
   1. Add a new root migration, `supabase/migrations/<ts>_access_requests_canonical.sql`. It must be idempotent: `CREATE TABLE IF NOT EXISTS` with the identical schema from the app-local migration, including `UNIQUE(email)`; `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`; `DROP POLICY IF EXISTS` then `CREATE POLICY` for anon INSERT; and the deny-read policy. Add a rollback script as well.
-  2. In `RequestAccess.tsx`, change the upsert options to `{ onConflict: 'email', ignoreDuplicates: true }`. This compiles to `ON CONFLICT DO NOTHING`, which the INSERT-only policy allows. Also replace `throw new Error(error.message)` with the site's existing user-facing error mapping (reuse the pattern from `toUserFacingAuthError` or its sibling). Never show raw database messages. (The file is 782 lines at `841e2b1`: do not grow it, and extract any new logic.)
+  2. In `RequestAccess.tsx`, change the upsert options to `{ onConflict: 'email', ignoreDuplicates: true }`. This compiles to `ON CONFLICT DO NOTHING`, which the INSERT-only policy allows. Also replace `throw new Error(error.message)` with the site's existing user-facing error mapping (reuse the pattern from `toUserFacingAuthError` or its sibling). Never show raw database messages. (The file is 782 lines at `841e2b1`. Its net line count must not increase: new code goes in new modules, with no refactor of existing code.)
   3. **Alerting without a new vendor.** Inventory the existing channels:
      - `grep -rnE "RESEND|SMTP|sendgrid|postmark|send-push-notification|slack|discord" supabase/functions .env.example`
      - If an existing channel exists, add an `AFTER INSERT` trigger that calls it, or extend an existing function to notify.
@@ -368,7 +404,7 @@ export const LIFECYCLE_EVENTS = new Set([
      - Content comes only from the approved offer: the Intelligence Design Sprint delivers a mapped, documented, deployable automation system for CAD $5K–$15K setup, with a 30-minute discovery call.
      - The CTA links to `/request-access?intent=design-sprint`. Add the route to the SSG `includedRoutes` and the sitemap.
   2. **`RequestAccess.tsx`:** when `intent=design-sprint`, prefix `use_case` with `[design-sprint] `. No schema change.
-  3. **Homepage:** add a primary CTA pair, "Book a Design Sprint" → `/design-sprint` and "See pricing" → `/pricing`. Place it in the existing hero CTA slot without restructuring the layout, and keep `/demo.html` reachable. (`Home.tsx` is 2463 lines at `841e2b1`: do not grow it, and extract the CTA pair into a component.)
+  3. **Homepage:** add a primary CTA pair, "Book a Design Sprint" → `/design-sprint` and "See pricing" → `/pricing`. Place it in the existing hero CTA slot without restructuring the layout, and keep `/demo.html` reachable. (`Home.tsx` is 2463 lines at `841e2b1`. Its net line count must not increase: the CTA pair goes in a new component, with no refactor of existing code.)
   4. **Pricing copy:** rewrite each tier's tagline and features in plain outcome language. Remove every `NOT-IMPLEMENTED` bullet listed in the WP-03 matrix. Keep the prices and IDs unchanged, and keep the `data-testid` values.
   5. **i18n:** add every new string through the site's i18n system and satisfy `npm run i18n:check` in all 9 locales. If non-English values must be placeholders, use the English string and list the keys for translation in the PR. Do not machine-invent translations presented as final.
   6. **CASL (F-18):** append to each outreach template in `memory/omni-recall/apex-dataroom/07-outreach/` a footer block with these placeholders: `[Legal business name] · [Mailing address] · [Contact email/phone] · Reply "unsubscribe" or use [unsubscribe link] to opt out; requests honoured within 10 business days.` Add a note that counsel must review before sending (O6).
@@ -424,8 +460,8 @@ export const LIFECYCLE_EVENTS = new Set([
 | O7 | Run one full live billing cycle (buy, then cancel, then refund) on Pro and on Business, and record the evidence. | Production certification |
 | O8 | Fill in the burn-ledger costs, then pause any product with no revenue path in 90 days. | Focus |
 | O9 | Sell the Design Sprint now; do not wait for the code. One sprint equals 50–150 months of Pro revenue (CAD $5K–$15K ÷ $99). | Cash |
-| D1/D3 | Decisions described in WP-01 and WP-10. (D1 is pre-evaluated in §4.2 A3.) | WP-01, WP-10 |
-| A1–A4 | Approve or reject the WP-00 amendments in §4.2. | WP-01, WP-02, WP-03 |
+| D1/D3 | D1 decided on 2026-09-28: option (a) (§4.2). D3 is still open (WP-10). | WP-10 |
+| A1–A4 | Decided on 2026-09-28 (§4.2). | — |
 
 ## 7. Success Metrics (computed from WP-06 data; no vanity metrics)
 
