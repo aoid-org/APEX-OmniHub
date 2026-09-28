@@ -2,13 +2,16 @@
  * PhysiOmni Ingress — OmniPort Edge Function
  *
  * Receives raw telemetry from Nordic nRF9161-DK + ADXL345 sensors
- * via mTLS HTTPS and persists to Supabase.
+ * over HTTPS with HMAC-signed payloads and persists to Supabase.
  *
  * Flow:
- *   1. Parse + validate JSON payload
- *   2. Upsert telemetry (idempotent via device_serial + timestamp)
- *   3. Evaluate threshold rules
- *   4. Escalate critical alerts → physiomni_alerts (triggers MAN_MODE webhook)
+ *   1. Parse the JSON payload (size-capped) and apply the per-IP rate limit
+ *   2. Verify the HMAC signature (required on every request)
+ *   3. Validate the payload; the (tenant_id, device_serial) pair must be a
+ *      registered, active device in physiomni_devices
+ *   4. Insert telemetry (idempotent via device_serial + timestamp)
+ *   5. Evaluate threshold rules
+ *   6. Escalate critical alerts → physiomni_alerts (triggers MAN_MODE webhook)
  *
  * Author: APEX-OmniHub PhysiOmni
  * Date: 2026-05-26
@@ -22,9 +25,19 @@ import {
   rateLimitExceededResponse,
   RATE_LIMIT_CONFIGS,
 } from '../_shared/rate-limit.ts';
+import {
+  computeTelemetrySignature,
+  normalizeTelemetrySignatureHeader,
+  timingSafeEqual,
+} from './signature.ts';
 
 const VIBRATION_CRITICAL_THRESHOLD = 15;
 const VIBRATION_WARNING_THRESHOLD = 10;
+const MAX_BODY_BYTES = 4096;
+/** Limit for callers that have not authenticated yet (keyed by client IP). */
+const IP_RATE_LIMIT = { maxRequests: 600, windowMs: 60_000, keyPrefix: 'physiomni-ingress-ip' };
+
+type ServiceClient = ReturnType<typeof createServiceClient>;
 
 interface PhysiOmniPayload {
   device_serial: string;
@@ -212,10 +225,15 @@ function buildAlertResponse(evaluation: AlertEvaluation, alertId: string | null)
 
 async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<ParsedJsonBody> {
   try {
+    const tooLarge = () => ({
+      response: jsonResponse({ error: 'payload_too_large', message: `Body exceeds ${MAX_BODY_BYTES} bytes` }, 413, headers),
+    });
+    if (Number(req.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) return tooLarge();
     const raw = await req.text();
     if (!raw) {
       return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
     }
+    if (raw.length > MAX_BODY_BYTES) return tooLarge();
     return { body: JSON.parse(raw), rawBody: raw };
   } catch {
     return { response: jsonResponse({ error: 'invalid_json', message: 'Request body is not valid JSON' }, 400, headers) };
@@ -234,87 +252,18 @@ function enforceIngressGate(corsHeaders: Record<string, string>): Response | nul
   return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' }, 403, corsHeaders);
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  const left = new TextEncoder().encode(a);
-  const right = new TextEncoder().encode(b);
-  const maxLength = Math.max(left.length, right.length);
-  let diff = left.length ^ right.length;
-
-  for (let i = 0; i < maxLength; i += 1) {
-    // Compare every position so mismatched lengths do not leak early-exit timing.
-    diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
-  }
-
-  return diff === 0;
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function bytesToBase64Url(bytes: Uint8Array): string {
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCodePoint(byte);
-
-  let encoded = btoa(binary);
-  const base64PaddingCodePoint = '='.codePointAt(0);
-  let unpaddedLength = encoded.length;
-  while (
-    unpaddedLength > 0 &&
-    encoded.codePointAt(unpaddedLength - 1) === base64PaddingCodePoint
-  ) {
-    // Trim fixed-width base64 padding with a linear scan to avoid regex DoS hotspots.
-    unpaddedLength -= 1;
-  }
-
-  encoded = encoded.slice(0, unpaddedLength);
-  let base64url = '';
-  for (const char of encoded) {
-    let safeChar = char;
-    if (char === '+') {
-      safeChar = '-';
-    } else if (char === '/') {
-      safeChar = '_';
-    }
-    // Convert the only two non-URL-safe base64 characters without regex backtracking.
-    base64url += safeChar;
-  }
-
-  return base64url;
-}
-
-function normalizeTelemetrySignatureHeader(value: string): string {
-  return value.toLowerCase().startsWith('sha256=') ? value.slice(7) : value;
-}
-
-async function computeTelemetrySignature(secret: string, timestamp: string, rawBody: string): Promise<{ hex: string; base64url: string }> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}.${rawBody}`));
-  const bytes = new Uint8Array(signature);
-  return { hex: bytesToHex(bytes), base64url: bytesToBase64Url(bytes) };
-}
-
-async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders: Record<string, string>): Promise<Response | null> {
-  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  if (!isLiveEnabled) return null;
-
+async function requireSignedTelemetry(req: Request, rawBody: string, corsHeaders: Record<string, string>): Promise<Response | null> {
+  // Fails closed: with no secret configured, every request is refused.
   const secret = Deno.env.get('PHYSIOMNI_INGRESS_HMAC_SECRET') ?? '';
   if (!secret) {
-    console.error('[physiomni-ingress] PHYSIOMNI_INGRESS_HMAC_SECRET is required in live mode');
+    console.error('[physiomni-ingress] PHYSIOMNI_INGRESS_HMAC_SECRET is not configured');
     return jsonResponse({ error: 'server_misconfigured', message: 'Telemetry signing is not configured' }, 503, corsHeaders);
   }
 
   const timestamp = req.headers.get('x-physiomni-timestamp') ?? '';
   const provided = normalizeTelemetrySignatureHeader(req.headers.get('x-physiomni-signature') ?? '');
   if (!timestamp || !provided) {
-    return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+    return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry is required' }, 401, corsHeaders);
   }
 
   const timestampMs = Date.parse(timestamp);
@@ -328,6 +277,38 @@ async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders:
     return jsonResponse({ error: 'unauthorized', message: 'Invalid telemetry signature' }, 401, corsHeaders);
   }
 
+  return null;
+}
+
+function clientIp(req: Request): string {
+  return (
+    req.headers.get('cf-connecting-ip')?.trim() ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  );
+}
+
+/** The (tenant_id, device_serial) pair must be a registered, active device. */
+async function requireRegisteredDevice(
+  supabase: ServiceClient,
+  data: PhysiOmniPayload,
+  corsHeaders: Record<string, string>,
+): Promise<Response | null> {
+  const { data: device, error } = await supabase
+    .from('physiomni_devices')
+    .select('id')
+    .eq('tenant_id', data.tenant_id)
+    .eq('device_serial', data.device_serial)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[physiomni-ingress] device lookup failed:', error);
+    return jsonResponse({ error: 'device_lookup_failed', message: 'Unable to verify device' }, 503, corsHeaders);
+  }
+  if (!device) {
+    return jsonResponse({ error: 'forbidden', message: 'Device is not registered for this tenant' }, 403, corsHeaders);
+  }
   return null;
 }
 
@@ -348,6 +329,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const body = parsedBody.body;
   const rawBody = parsedBody.rawBody ?? '';
 
+  // ── 0. Gate, IP rate limit, authentication ──────────────────────────────────
+  const gateError = enforceIngressGate(corsHeaders);
+  if (gateError) return gateError;
+
+  // Unauthenticated callers are limited per client IP (Upstash, fails closed).
+  const ipLimit = await checkRateLimit(`ip:${clientIp(req)}`, IP_RATE_LIMIT);
+  if (!ipLimit.allowed) {
+    return rateLimitExceededResponse(requestOrigin, ipLimit);
+  }
+
+  // Every request must carry a valid HMAC signature before anything else runs.
+  const signatureError = await requireSignedTelemetry(req, rawBody, corsHeaders);
+  if (signatureError) return signatureError;
+
   // Validate payload
   const validation = validatePayload(body);
   if (!validation.valid) {
@@ -366,12 +361,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID();
   const supabase = createServiceClient();
 
-  // ── 0. Security, Rate Limiting & Gating ─────────────────────────────────────
-  const gateError = enforceIngressGate(corsHeaders);
-  if (gateError) return gateError;
+  const deviceError = await requireRegisteredDevice(supabase, data, corsHeaders);
+  if (deviceError) return deviceError;
 
-  // Distributed rate limiting (Upstash) — additive to the Postgres-backed
-  // RateLimiter below; both fail closed. Keyed per device serial.
+  // Authenticated per-device limits: Upstash plus the Postgres-backed
+  // RateLimiter, both fail closed. Keyed per device serial.
   const rl = await checkRateLimit(data.device_serial, RATE_LIMIT_CONFIGS.physiomniIngress);
   if (!rl.allowed) {
     return rateLimitExceededResponse(requestOrigin, rl);
@@ -386,9 +380,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       corsHeaders,
     );
   }
-
-  const signatureError = await requiresLiveSignature(req, rawBody, corsHeaders);
-  if (signatureError) return signatureError;
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
   const { error: telemetryError } = await supabase

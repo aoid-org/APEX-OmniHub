@@ -77,7 +77,7 @@ verify_jwt = true  # All BYOM credential operations require authenticated user
 # PhysiOmni — Physical-Edge Sensor Ingress (Phase 1 Pilot)
 # Version: 1.0.0 | Date: 2026-05-26
 [functions.physiomni-ingress]
-verify_jwt = false  # Device auth via mTLS at transport layer; service_role used internally
+verify_jwt = false  # Devices carry no JWT; HMAC signature and device registry are enforced in the function; service_role used internally
 # Environment Variables for Edge Functions
 # These blockchain-related secrets must be set in production environment:
 # - WEB3_PRIVATE_KEY: OmniLink EVM private key for transaction signing

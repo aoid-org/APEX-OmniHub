@@ -25,7 +25,9 @@ describe('security hardening regressions', () => {
   });
 
   it('requires real PhysiOmni live telemetry HMAC validation instead of header presence', () => {
-    const source = read('supabase/functions/physiomni-ingress/index.ts');
+    const source = ['index.ts', 'signature.ts']
+      .map((file) => read(`supabase/functions/physiomni-ingress/${file}`))
+      .join('\n');
 
     expect(source).toContain('PHYSIOMNI_INGRESS_HMAC_SECRET');
     expect(source).toContain("crypto.subtle.sign('HMAC'");
