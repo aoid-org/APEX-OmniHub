@@ -1826,3 +1826,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Live Production Matrix Certification:** Promoted `AUTH_EMAIL_PASSWORD`, `OMNIDASH_LIVE_PERSISTENCE`, `SUPABASE_RLS_MULTI_TENANT`, and negative controls from `PLANNED` to `VERIFIED` backed by machine evidence under `artifacts/production-validation/2026-09-05T03-33-13/`.
 - **Release Matrix Verification Script:** Added `npm run release:validation-matrix:check` (`node scripts/release/check-release-matrix.mjs`) to validate release matrix integrity, status synchronization, and artifact path existence.
 - **Fail-Closed Production Safe Suite:** Production E2E test suite verified with zero mocks and read-only non-destructive operations against live production endpoints (`https://apexomnihub.icu`).
+
+## 9.42 Revenue Contract WP-00 — Baseline Re-verification (2026-09-28)
+
+### 1. Read-only baseline of APEX-REV-2026-09 at `main` HEAD `841e2b1`
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `docs/contracts/REVENUE_EXECUTION_CONTRACT.md`.
+- **Scope:** Documentation only. No source, migration, workflow or dependency files changed.
+- **Result:** F-01 to F-22 were re-verified by code probes: all are `OPEN` and none is `RESOLVED-UPSTREAM`. F-11 was re-observed live: `/` and `/pricing` return an empty `#root` with 0 `<h1>`.
+- **New findings:** F-23 (the `user_entitlements.tier` CHECK rejects `BUS`), F-24 (skill caps recognize only `PRO`) and F-25 (the UI tier maps have no `business` key).
+- **Amendments proposed, owner approval required:** A1 (`BUS` maps to the existing `business` enum value, not `enterprise`), A2 (widen the `user_entitlements` CHECK constraint inside WP-01), A3 (D1 pre-evaluated: it triggers via `private.is_paid_user` and the OmniDash RLS policies) and A4 (branch/remote naming).
+- **Status:** WP-01 is `BLOCKED` pending A1–A3 and D1. The live DB checks (F-02 counts, F-08) remain `REQUIRES_LIVE_VALIDATION`.
