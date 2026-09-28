@@ -28,7 +28,7 @@ import { ANON_FORM_CLIENT_OPTIONS, submitAccessRequest } from '@/lib/accessReque
 
 /** Check if Supabase integration is enabled via environment variables */
 const ENABLE_SUPABASE =
-  import.meta.env.VITE_ENABLE_REQUEST_ACCESS === 'true' &&
+  import.meta.env.VITE_ENABLE_REQUEST_ACCESS !== 'false' && // on by default (WP-05); 'false' opts out
   Boolean(import.meta.env.VITE_SUPABASE_URL) &&
   Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY);
 

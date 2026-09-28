@@ -2,7 +2,7 @@
   "$schema_note": "Canonical single source of truth for Supabase Edge Functions.",
   "$rule": "scripts/ci/check-edge-fn-manifest.mjs enforces this list matches supabase/functions/ (excluding _shared). Deployment automation should derive its deploy set from this file rather than hand-maintained lists.",
   "generated": "2026-07-10",
-  "count": 34,
+  "count": 35,
   "functions": [
     "activate-client",
     "alchemy-webhook",
@@ -20,6 +20,7 @@
     "identity-webauthn",
     "mcp-gateway",
     "mcp-proxy",
+    "notify-access-request",
     "omni-runs",
     "omnibridge-control",
     "omnilink-eval",
