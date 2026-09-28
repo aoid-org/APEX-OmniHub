@@ -1893,3 +1893,37 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - `verify_jwt=false` is set because the function uses its own secret, as `execute-workflow` does.
 - **Form:** `VITE_ENABLE_REQUEST_ACCESS` is now on by default; setting it to `'false'` opts out. Before this, production compiled the Supabase path out, so no lead ever reached the database. `RequestAccess.tsx` stays at 777 lines.
 - **Not done (blocked by the session safety classifier; owner action):** the PostgREST schema reload, and deleting the 6 stale deployed functions (`lovable-audit`, `lovable-device`, `lovable-healthcheck`, `supabase_healthcheck`, `omnilink-agent`, `test-integration`). None of the 6 has a reference in the repo.
+
+## 9.47 Revenue Contract WP-01 — Tier Provisioning Fix (2026-09-28)
+
+### 1. BUS→business, BASIC→free, user_entitlements accepts BUS, OmniDash open to signed-in owners
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `supabase/migrations/20260928020000_activation_rpc_business_free_tiers.sql`, `supabase/migrations/20260928020100_backfill_basic_tier_free.sql`, `supabase/migrations/rollback/20260928020000_activation_rpc_business_free_tiers_rollback.sql`, `tests/infrastructure/activation-rpc-tiers.test.ts`.
+- **Policies (D1 option a):** production `pg_policies` has **5** policies that use `is_paid_user` (on `omnidash_incidents`, `omnidash_kpi_daily`, `omnidash_pipeline_items`, `omnidash_settings` and `omnidash_today_items`), not the six the contract states. In each one, only that term is replaced with `(select auth.uid()) IS NOT NULL`. The `user_id = auth.uid()` ownership predicate is unchanged, and so is `is_paid_user()`.
+- **CHECK (A2):** a `DO` block drops every tier CHECK constraint on `user_entitlements` and re-adds `user_entitlements_tier_check` so that it also accepts `BUS`. The live constraint name was confirmed as `user_entitlements_tier_check`.
+- **RPC:** the body is verbatim from `20260601000000`; a diff shows that only the tier block changed. **Paid-check audit:** `private.is_paid_user` already includes `business`, and `get_user_tier` returns the enum with no `IN` list, so neither needed a fix.
+- **Backfill (owner-gated, N5):** separate migration `20260928020100`. Production has 0 matching rows (8 `free`, 1 `pro`), so it is currently a no-op.
+- **Release rule:** WP-01, WP-02 and WP-03 merge in order and deploy as one release. The RLS behaviour (anon denied, free users read their own rows, cross-user access denied) remains REQUIRES_LIVE_VALIDATION, because running it needs `APEX_TENANT_B_*` credentials.
+
+## 9.48 Revenue Contract WP-02 — Webhook Integrity and Subscription Lifecycle Sync (2026-09-28)
+
+### 1. constructEventAsync, lifecycle sync, fail-closed secrets, IP rate limit
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `supabase/functions/_shared/stripeSubscriptionSync.ts`, `supabase/functions/stripe-webhook/index.ts`, `tests/edge-functions/stripeSubscriptionSync.test.ts`.
+- **F-04:** switched to `constructEventAsync` with `Stripe.createSubtleCryptoProvider()`, which is Stripe's documented pattern for Deno.
+- **F-03:** the `customer.subscription.*`, `invoice.paid` and `invoice.payment_failed` events now call `syncSubscription`. It re-reads the subscription from Stripe, so the result does not depend on event order and is idempotent. It updates `status`, the current period, `cancel_at_period_end` and the tier (price → `pro`/`business`; an unknown price leaves the tier unchanged).
+  - Stripe or DB errors return 500 so Stripe retries. A subscription with no row yet returns 200.
+  - The live Stripe endpoint was already subscribed to these events (verified 2026-09-28), so O1's Stripe side is done.
+- **F-17:** rate limiting is now keyed by caller IP.
+- **Fail closed:** the handler returns 500 when the Stripe secrets are unset.
+- **Unchanged:** `checkout.session.completed` behaves exactly as before, apart from the verification call.
+- **Release:** WP-01, WP-02 and WP-03 ship as one release.
+
+## 9.49 Revenue Contract WP-03 — Entitlement Matrix and Business Parity (2026-09-28)
+
+### 1. Matrix committed; gaps closed by extending the existing mechanisms (§4.3 B2)
+- **Changed files:** `apps/omnihub-site/dashboard/components/modules/AuditsModule.tsx`, `docs/APEX_AGENT_OPERATIONS.md`, `docs/contracts/ENTITLEMENT_MATRIX.md`, `src/components/PaidAccessRoute.tsx`, `src/hooks/useCapabilities.ts`, `src/hooks/usePaidAccess.ts`, `src/utils/postLoginRouter.ts`, `supabase/functions/_shared/stripeSubscriptionSync.ts`, `supabase/functions/omnilink-port/omniskills.ts`, `supabase/functions/stripe-webhook/index.ts`, `supabase/migrations/20260928030000_skill_entitlement_business_parity.sql`, `supabase/migrations/rollback/20260928030000_skill_entitlement_business_parity_rollback.sql`, `tests/infrastructure/business-tier-parity.test.ts`.
+- **F-24:** Business is treated like Pro for skill caps. The DB gates change only their `'PRO'` comparisons; the bodies were taken from the live production definitions (`pg_get_functiondef`). `omniskills.ts` also admits `BUS`.
+- **F-25:** `usePaidAccess` and `useCapabilities` now include `business`. `canViewOmniDash` also admits Base users (`free`/`starter`), in line with D1(a). Before this change, Business subscribers and Base users were locked out of OmniDash on mobile.
+- **Type-only edits to dead code:** widening `SubscriptionTier` required adding `business` to the `Record` maps in `PaidAccessRoute.tsx` and to the tier union in `postLoginRouter.ts` so the build compiles. `enterprise` is still shown as "Enterprise", and neither file is wired into anything new.
+- **L8:** the lifecycle sync now also updates `user_entitlements.tier`, so skill caps follow the paid state.
+- **Business promise:** audit export is now gated to `tier >= business` through `usePlan`, the existing module gate. No new helper was needed.
+- **For WP-08 (copy):** "Priority orchestration & routing" is **NOT-IMPLEMENTED**. "PhysiOmni device telemetry" is **NOT-LIVE**: the functions are not deployed and the HMAC secret is unset.
