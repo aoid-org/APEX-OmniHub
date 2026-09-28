@@ -60,6 +60,8 @@ vi.mock('../../supabase/functions/_shared/supabaseClient.ts', () => ({
   createServiceClient: () => h.makeClient(),
 }));
 
+const HANDLER_PATH = '../../supabase/functions/physiomni-ingest/index.ts';
+
 const env: Record<string, string | undefined> = {};
 const SECRET = 'test-signing-secret';
 const TENANT = '11111111-1111-4111-8111-111111111111';
@@ -103,7 +105,8 @@ beforeEach(async () => {
 
   vi.resetModules();
   (globalThis as unknown as { Deno: unknown }).Deno = { env: { get: (k: string) => env[k] } };
-  await import('../../supabase/functions/physiomni-ingest/index.ts');
+  // Computed specifier: keeps Deno-only handler code out of the repo's tsc program.
+  await import(/* @vite-ignore */ HANDLER_PATH);
 });
 
 describe('physiomni-ingest authentication', () => {

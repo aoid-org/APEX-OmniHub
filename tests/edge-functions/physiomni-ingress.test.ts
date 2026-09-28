@@ -59,6 +59,8 @@ vi.mock('../../supabase/functions/_shared/supabaseClient.ts', () => ({
   createServiceClient: () => h.makeClient(),
 }));
 
+const HANDLER_PATH = '../../supabase/functions/physiomni-ingress/index.ts';
+
 type Handler = (req: Request) => Promise<Response>;
 let handler: Handler;
 const env: Record<string, string | undefined> = {};
@@ -106,7 +108,8 @@ beforeEach(async () => {
       handler = fn;
     },
   };
-  await import('../../supabase/functions/physiomni-ingress/index.ts');
+  // Computed specifier: keeps Deno-only handler code out of the repo's tsc program.
+  await import(/* @vite-ignore */ HANDLER_PATH);
 });
 
 describe('physiomni-ingress authentication', () => {
