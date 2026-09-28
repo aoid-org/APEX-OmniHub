@@ -1827,12 +1827,23 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Release Matrix Verification Script:** Added `npm run release:validation-matrix:check` (`node scripts/release/check-release-matrix.mjs`) to validate release matrix integrity, status synchronization, and artifact path existence.
 - **Fail-Closed Production Safe Suite:** Production E2E test suite verified with zero mocks and read-only non-destructive operations against live production endpoints (`https://apexomnihub.icu`).
 
+## 9.42 Revenue Contract WP-00 — Baseline Re-verification (2026-09-28)
+
+### 1. Read-only baseline of APEX-REV-2026-09 at `main` HEAD `841e2b1`
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `docs/contracts/REVENUE_EXECUTION_CONTRACT.md`.
+- **Scope:** Documentation only. No source, migration, workflow or dependency files changed.
+- **Result:** F-01 to F-22 were re-verified by code probes: all are `OPEN` and none is `RESOLVED-UPSTREAM`. F-11 was re-observed live: `/` and `/pricing` return an empty `#root` with 0 `<h1>`.
+- **New findings:** F-23 (the `user_entitlements.tier` CHECK rejects `BUS`), F-24 (skill caps recognize only `PRO`) and F-25 (the UI tier maps have no `business` key).
+- **Amendments proposed, owner approval required:** A1 (`BUS` maps to the existing `business` enum value, not `enterprise`), A2 (widen the `user_entitlements` CHECK constraint inside WP-01), A3 (D1 pre-evaluated: it triggers via `private.is_paid_user` and the OmniDash RLS policies) and A4 (branch/remote naming).
+- **Status:** On 2026-09-28 the owner approved A1, A2 and A4 with conditions and chose option (a) for D1 (Base maps to `free`, and the six OmniDash policies admit any signed-in user). WP-01 to WP-03 in the contract were amended to match. WP-01 starts once PR #14 merges; that merge is held until the owner confirms the repo is private. The live DB checks (F-02 counts, F-08) remain `REQUIRES_LIVE_VALIDATION`.
+
 ## 9.43 Revenue Contract WP-05 — Lead Capture Integrity (2026-09-28)
 
 ### 1. `access_requests` canonical migration and idempotent, anon-only form submit
-- **Changed files:** `apps/omnihub-site/src/lib/accessRequestSubmit.ts`, `apps/omnihub-site/src/pages/RequestAccess.tsx`, `docs/APEX_AGENT_OPERATIONS.md`, `supabase/migrations/20260928000000_access_requests_canonical.sql`, `supabase/migrations/rollback/20260928000000_access_requests_canonical_rollback.sql`, `tests/access-request-submit.test.ts`, `tests/infrastructure/access-requests-canonical-migration.test.ts`.
+- **Changed files:** `.gitattributes`, `apps/omnihub-site/src/lib/accessRequestSubmit.ts`, `apps/omnihub-site/src/pages/RequestAccess.tsx`, `docs/APEX_AGENT_OPERATIONS.md`, `supabase/migrations/20260928000000_access_requests_canonical.sql`, `supabase/migrations/rollback/20260928000000_access_requests_canonical_rollback.sql`, `tests/access-request-submit.test.ts`, `tests/infrastructure/access-requests-canonical-migration.test.ts`.
 - **F-08:** Added an idempotent root migration with the identical app-local schema, RLS and policies (every `DROP ... IF EXISTS` precedes its `CREATE`). It also pins `search_path` on the trigger function. The rollback does not drop the lead table (N5).
 - **F-09:** The submit now uses `ignoreDuplicates` (`ON CONFLICT (email) DO NOTHING`), so a repeat email succeeds instead of hitting the denied UPDATE path. Failures throw an opaque error. Note: the raw `error.message` was never shown to users, because the page's `catch` already replaced it with a fixed message. `toUserFacingAuthError` was deliberately not reused because it falls back to the raw error text.
 - **Pre-existing defect fixed (N12):** The form's client inherited a signed-in visitor's stored session (same default storage key as `lib/supabase.ts`, which uses `persistSession: true`), so those inserts ran as `authenticated` and RLS rejected them. The form client now sets `persistSession: false`.
 - **F-10:** `BLOCKED` pending owner input. The existing channels are Resend email (`_shared/action-executor.ts:84-110`, with `RESEND_API_KEY` not declared in `.env.example`) and `send-push-notification`, which pushes to user devices. The owner must choose the channel and recipient and confirm the secret before a `pg_net` trigger is wired.
+- **CI repair:** Each idempotent `DROP POLICY/TRIGGER IF EXISTS` carries the `-- additive-allow:` annotation that `check-additive-migrations.ts` requires. The branch's merge from `main` (commit `171653b`) had converted this log to CRLF and dropped §9.42, so the log was restored from `main` (LF) with §9.43 re-appended. `.gitattributes` now pins this file to `eol=lf`.
 - **Status:** VERIFIED-IN-CODE. Duplicate-submit behaviour against production is REQUIRES_LIVE_VALIDATION (O3). `RequestAccess.tsx` went from 782 to 777 lines (net decrease).

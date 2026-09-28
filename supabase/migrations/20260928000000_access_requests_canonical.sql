@@ -56,6 +56,7 @@ CREATE INDEX IF NOT EXISTS access_requests_created_at_idx
 ALTER TABLE public.access_requests ENABLE ROW LEVEL SECURITY;
 
 -- Anon may insert; reads/updates/deletes are denied (admin uses service role).
+-- additive-allow: DROP_POLICY idempotent re-create of the identical app-local policy (no semantic change)
 DROP POLICY IF EXISTS "Allow anonymous inserts" ON public.access_requests;
 CREATE POLICY "Allow anonymous inserts"
     ON public.access_requests
@@ -63,6 +64,7 @@ CREATE POLICY "Allow anonymous inserts"
     TO anon
     WITH CHECK (true);
 
+-- additive-allow: DROP_POLICY idempotent re-create of the identical app-local policy (no semantic change)
 DROP POLICY IF EXISTS "Deny anonymous reads" ON public.access_requests;
 CREATE POLICY "Deny anonymous reads"
     ON public.access_requests
@@ -70,6 +72,7 @@ CREATE POLICY "Deny anonymous reads"
     TO anon
     USING (false);
 
+-- additive-allow: DROP_POLICY idempotent re-create of the identical app-local policy (no semantic change)
 DROP POLICY IF EXISTS "Deny anonymous updates" ON public.access_requests;
 CREATE POLICY "Deny anonymous updates"
     ON public.access_requests
@@ -77,6 +80,7 @@ CREATE POLICY "Deny anonymous updates"
     TO anon
     USING (false);
 
+-- additive-allow: DROP_POLICY idempotent re-create of the identical app-local policy (no semantic change)
 DROP POLICY IF EXISTS "Deny anonymous deletes" ON public.access_requests;
 CREATE POLICY "Deny anonymous deletes"
     ON public.access_requests
@@ -98,6 +102,7 @@ BEGIN
 END;
 $$;
 
+-- additive-allow: DROP_TRIGGER idempotent re-create of the identical app-local trigger (no semantic change)
 DROP TRIGGER IF EXISTS access_requests_updated_at_trigger ON public.access_requests;
 CREATE TRIGGER access_requests_updated_at_trigger
     BEFORE UPDATE ON public.access_requests
