@@ -45,6 +45,7 @@ BEGIN
 END;
 $$;
 
+-- additive-allow: REVOKE least-privilege lock on a new SECURITY DEFINER trigger function
 REVOKE ALL ON FUNCTION public.notify_access_request() FROM PUBLIC, anon, authenticated;
 
 -- additive-allow: DROP_TRIGGER idempotent re-create of this migration's own trigger
