@@ -1882,3 +1882,13 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - `canAccessFeature` and `postLoginRouter` are unreachable.
   - The B-2 tracker is at `memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`.
 - **Ops-log repair:** §9.43 (WP-05, #15) was dropped by the conflict resolution when `main` was merged into #16 (`7792ccc`). It is restored verbatim from `37d3c22e`. No code changed.
+
+## 9.47 Revenue Contract WP-01 — Tier Provisioning Fix (2026-09-28)
+
+### 1. BUS→business, BASIC→free, user_entitlements accepts BUS, OmniDash open to signed-in owners
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `supabase/migrations/20260928020000_activation_rpc_business_free_tiers.sql`, `supabase/migrations/20260928020100_backfill_basic_tier_free.sql`, `supabase/migrations/rollback/20260928020000_activation_rpc_business_free_tiers_rollback.sql`, `tests/infrastructure/activation-rpc-tiers.test.ts`.
+- **Policies (D1 option a):** production `pg_policies` has **5** policies that use `is_paid_user` (on `omnidash_incidents`, `omnidash_kpi_daily`, `omnidash_pipeline_items`, `omnidash_settings` and `omnidash_today_items`), not the six the contract states. In each one, only that term is replaced with `(select auth.uid()) IS NOT NULL`. The `user_id = auth.uid()` ownership predicate is unchanged, and so is `is_paid_user()`.
+- **CHECK (A2):** a `DO` block drops every tier CHECK constraint on `user_entitlements` and re-adds `user_entitlements_tier_check` so that it also accepts `BUS`. The live constraint name was confirmed as `user_entitlements_tier_check`.
+- **RPC:** the body is verbatim from `20260601000000`; a diff shows that only the tier block changed. **Paid-check audit:** `private.is_paid_user` already includes `business`, and `get_user_tier` returns the enum with no `IN` list, so neither needed a fix.
+- **Backfill (owner-gated, N5):** separate migration `20260928020100`. Production has 0 matching rows (8 `free`, 1 `pro`), so it is currently a no-op.
+- **Release rule:** WP-01, WP-02 and WP-03 merge in order and deploy as one release. The RLS behaviour (anon denied, free users read their own rows, cross-user access denied) remains REQUIRES_LIVE_VALIDATION, because running it needs `APEX_TENANT_B_*` credentials.
