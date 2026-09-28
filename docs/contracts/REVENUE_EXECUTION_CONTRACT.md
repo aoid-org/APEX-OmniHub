@@ -66,7 +66,7 @@ Findings come from the snapshot. The **WP-00 @ `841e2b1`** column records the re
 | F-02 | **CRITICAL** | **Free Base users get paid entitlement permanently.** `activate-client` sends `BASIC`, the RPC maps it to tier `starter` with status `active` and no period end, and `isPaid` then returns `true` ("No period end means unlimited"). | `supabase/functions/activate-client/index.ts:52-71`; RPC `:36-42`; `src/hooks/usePaidAccess.ts:83-96` | VERIFIED-IN-CODE | **OPEN.** The same condition also passes the SQL `private.is_paid_user` check (`20260716005122_private_authorization_helpers.sql:59-80`). D1 triggers (A3). |
 | F-03 | **CRITICAL** | **Subscription state never syncs after checkout.** The webhook ignores every event except `checkout.session.completed`. Renewals never extend `current_period_end`, so paying users drop out of `isPaid` after their first period wherever it is enforced. Cancellations and failed payments are never recorded. | `supabase/functions/stripe-webhook/index.ts:96` | VERIFIED-IN-CODE | **OPEN** (`:96`) |
 | F-04 | HIGH (possibly CRITICAL) | **Webhook signature check uses synchronous `constructEvent` on Deno.** Stripe's documented Deno/Supabase pattern is `constructEventAsync` with `Stripe.createSubtleCryptoProvider()`. If the sync path throws, every event returns 400 and nothing provisions for any tier. | `supabase/functions/stripe-webhook/index.ts:129-131`; no `constructEventAsync` anywhere in `supabase/functions` | REQUIRES_LIVE_VALIDATION (Stripe webhook delivery log, O1) | **OPEN** (`:131`). Runtime impact is still REQUIRES_LIVE_VALIDATION. |
-| F-05 | **CRITICAL** | **Paid features are not enforced.** `PaidAccessRoute` has zero consumers in either app. Server-side tier checks exist only in `omnilink-port/omniskills.ts` (plus checkout and activation), so the paid plans sell features that are not gated. | `grep -rn "<PaidAccessRoute" src apps/omnihub-site/src` returns no consumers | VERIFIED-IN-CODE (the scope of `omniskills.ts` gating is confirmed in WP-03) | **OPEN, scope amended.** There are still zero `<PaidAccessRoute` consumers. Server-side gating is wider than stated: OmniDash RLS uses `is_paid_user` (6 policies in `20260205000001_omnidash_paid_access.sql`), and skill caps use `user_entitlements.tier` (`20260622000000_skill_entitlement_free_cap_5.sql:57,118`). WP-03 must inventory all of these. |
+| F-05 | MEDIUM (downgraded 2026-09-28, §4.3 B1) | **Paid features are not enforced.** `PaidAccessRoute` has zero consumers in either app. Server-side tier checks exist only in `omnilink-port/omniskills.ts` (plus checkout and activation), so the paid plans sell features that are not gated. | `grep -rn "<PaidAccessRoute" src apps/omnihub-site/src` returns no consumers | VERIFIED-IN-CODE (the scope of `omniskills.ts` gating is confirmed in WP-03) | **OPEN, scope amended.** There are still zero `<PaidAccessRoute` consumers. Server-side gating is wider than stated: OmniDash RLS uses `is_paid_user` (6 policies in `20260205000001_omnidash_paid_access.sql`), and skill caps use `user_entitlements.tier` (`20260622000000_skill_entitlement_free_cap_5.sql:57,118`). WP-03 must inventory all of these. |
 | F-06 | HIGH | **Purchase intent is lost at auth, and there are two competing funnels.** Pricing sends visitors to a bare `/login`, and OAuth `redirectTo` is `/login`. The `/launch` wizard preserves intent via `returnUrl` at step 4. | `Pricing.tsx:88-91`; `apps/omnihub-site/src/pages/Login.tsx:67`; `apps/omnihub-site/src/pages/Launch/OnboardingWizard.tsx:93-109,184` | VERIFIED-IN-CODE | **OPEN** (`Pricing.tsx:90`, `Login.tsx:67`) |
 | F-07 | HIGH | **Zero funnel instrumentation.** No product event tracking exists in the site or app. | grep for track/capture/analytics finds no calls | VERIFIED-IN-CODE | **OPEN** (zero `track(`/`capture(`/gtag/posthog/plausible calls) |
 | F-08 | HIGH | **The lead table may not exist in production.** The `access_requests` migration exists only in `apps/omnihub-site/supabase/migrations/`, not in the root `supabase/migrations/` that is deployed. | `apps/omnihub-site/supabase/migrations/20250111000000_create_access_requests.sql` | REQUIRES_LIVE_VALIDATION (O3) | **OPEN** (no root migration). The production check could not run because the Supabase MCP was not authorized this session. |
@@ -154,6 +154,50 @@ The following were checked and are fine:
 | WP-03 | Follows WP-02. Scope gains F-24, F-25 and the RLS/skill-gate inventory. |
 | WP-05, WP-07, WP-09 | Ready (depend only on WP-00). The owner ordered them WP-05, then WP-07, then WP-09. |
 | WP-10 | BLOCKED on D3 (unchanged) |
+
+### 4.3 Owner amendments B (2026-09-28), re-verified at `main` `89d81ee`
+
+The owner's omni-recall analysis used an older snapshot. Every item below was re-checked at `89d81ee` (after #15 and #16 merged). Where the analysis and the current code disagree, the correction is recorded and the code wins.
+
+**B1: F-05 re-verified and downgraded to MEDIUM, pending the WP-03 matrix.** Paid gating lives outside `PaidAccessRoute`. Live mechanisms at HEAD:
+
+| Mechanism | Evidence | Live? |
+|---|---|---|
+| `usePlan` (tier from `subscriptions`; fails closed to `free`) | `apps/omnihub-site/src/hooks/usePlan.ts:21,50-58`, consumed by `dashboard/components/modules/PhysiOmniModule.tsx:75` and `FilesModule.tsx:28` | Yes |
+| `omniskills.ts` skill cap (`user_entitlements.tier`, PRO only) | `supabase/functions/omnilink-port/omniskills.ts:33-63` | Yes |
+| DB skill enforcement | `20260622000000_skill_entitlement_free_cap_5.sql:57,118` | Yes |
+| OmniDash RLS via `is_paid_user` | `20260205000001_omnidash_paid_access.sql` (6 policies) → `private.is_paid_user` | Yes |
+| `usePaidAccess` | Consumed by `src/hooks/useCapabilities.ts:25` (live: `MobileBottomNav.tsx:53`, `MobileOnlyGate.tsx:21`) and `useLoginRedirect.ts:48` | **Yes (correction)** |
+| `canAccessFeature` | `src/features/registry.ts:684`; no call sites outside tests | No (defined, unused) |
+| `postLoginRouter` paid routes | `src/utils/postLoginRouter.ts:20-31`; only importer is `useLoginRedirect`, which has no callers | No (unreachable) |
+| `PaidAccessRoute` component | No consumers outside its own file | No (dead) |
+
+- **Correction:** the analysis said `PaidAccessRoute` and `usePaidAccess` are both dead. Only the **component** is dead. `usePaidAccess` feeds `useCapabilities`, which renders on mobile, so F-02's `isPaid` defect reaches live UI through it. Neither will be *wired* anywhere new (owner instruction), but `usePaidAccess` stays in the WP-03 inventory and in F-02's blast radius.
+- `canAccessFeature` and `postLoginRouter` are not reachable from any rendered surface. WP-03 records them as `NOT-WIRED` and does not treat them as enforcement.
+
+**B2: WP-03 rewrite (supersedes §5 WP-03 Steps 1–2).**
+- The matrix must inventory the B1 mechanisms. Each Pricing promise maps to the mechanism that owns its surface.
+- A gap is closed by **extending that surface's existing mechanism** (for example `usePlan` for PhysiOmni/Files, `omniskills.ts` plus the DB functions for skills, the RLS policies for OmniDash data).
+- A new helper is added only when no existing mechanism covers a promised feature, and the PR must justify it. The `_shared/entitlements.ts` helper is no longer the default.
+- **F-25 target:** the tier maps that are actually live. `usePlan` already includes `business` in the RFC-003 ladder (`usePlan.ts:8,21`), so it needs no change. The live maps missing `business` are the tier type of `usePaidAccess`/`useCapabilities` (`src/hooks/usePaidAccess.ts`). The type in `postLoginRouter.ts:21` is unreachable (see B1). The `PaidAccessRoute` maps are dead and are not edited.
+- **Ladder:** RFC-003 (`memory/omni-recall/rfc/RFC_003_PHYSIOMNI_BUSINESS_TIER_PAYWALL.md:23-27`) confirms `free < starter < pro < business ($299 CAD) < enterprise`. This matches A1.
+
+**B3: WP-01.** A1 is confirmed by the approved RFC-003. No change.
+
+**B4: WP-07.** Keep the approved SSG readiness gate green (`memory/omni-recall/rfc/RFC_2026_06_23_TENANT_ENTITLEMENTS_SSG_GATE.md`).
+- **Correction:** `production-readiness.yml` has been retired. Its gate, including the isolated `bun run build:ssg` smoke build, now lives in `.github/workflows/ci-runtime-gates.yml` (`:196` fold note, `:375` SSG build).
+- WP-07 must keep both the root production build and that SSG build green.
+
+**B5: WP-08.** Public copy must avoid every "Prohibited Unqualified Claim" in `memory/omni-recall/docs/architecture/CANONICAL_TRUTH_MATRIX.md` (§ at `:57`), in addition to `verify-claim-hygiene.mjs`.
+
+**B6: Shadow project (no code change).**
+- `apex-omnihub-shadow` serves `release.yml`'s shadow certification (the Release Safety pipeline; shadow preflight at `release.yml:71-79`).
+- Certification blocker **B-2 is still open**, per `memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md:23,36`: no `release-validation-summary.json` with a `VALIDATED` verdict has been produced yet.
+- **Correction:** the tracker's path is `memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`, not `docs/release/`.
+- **Owner decision logged, RSI naming:**
+  - In code and docs, RSI = *Release Safety Intelligence* (`memory/omni-recall/docs/rsi/README.md:20`; `.github/workflows/rsi-governance.yml`).
+  - The canonical dev skill `.claude/skills/omnidev-apex-pro-v2/SKILL.md` uses an `<rsi_engine>` block that means a repair loop, which is a different meaning under the same acronym.
+  - The owner should choose one expansion, or rename the skill block. No change is made here.
 
 ## 5. Work Packages
 
@@ -300,6 +344,8 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ### WP-03 — Entitlement Matrix and Server-Side Enforcement (F-05, feeds F-13) · P0
 
+> **Amended by §4.3 B2 (2026-09-28).** The matrix inventories the live mechanisms in §4.3 B1. Gaps are closed by extending the owning mechanism. A new helper, including `_shared/entitlements.ts` below, is added only when no mechanism covers a promised feature, and must be justified in the PR. F-25 targets the live tier maps (§4.3 B2).
+
 - **Skill:** `apex-master-debug-claude`
 - **Goal:** Every paid promise on the Pricing page either maps to enforced code or is removed from the copy (removal happens in WP-08). The scope also includes:
   - **F-24:** skill parity, where `BUS` counts as at least `PRO` in `omniskills.ts` and in the skill-enforcement SQL.
@@ -384,6 +430,8 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ### WP-07 — Crawlability and SSG Deploy Integrity (F-11) · P1
 
+> **Amended by §4.3 B4.** Keep the approved SSG readiness gate green. It now lives in `ci-runtime-gates.yml:196,375`; `production-readiness.yml` is retired. Both the root production build and the isolated `build:ssg` must pass.
+
 - **Skill:** `omnidev-apex-pro-v2`
 - **Diagnose first (commit findings to the PR):**
   1. Compare `curl -s https://apexomnihub.icu/ | grep -c "<h1"` with the local `cd apps/omnihub-site && npm run build && grep -c "<h1" dist/index.html`.
@@ -409,7 +457,7 @@ export const LIFECYCLE_EVENTS = new Set([
   5. **i18n:** add every new string through the site's i18n system and satisfy `npm run i18n:check` in all 9 locales. If non-English values must be placeholders, use the English string and list the keys for translation in the PR. Do not machine-invent translations presented as final.
   6. **CASL (F-18):** append to each outreach template in `memory/omni-recall/apex-dataroom/07-outreach/` a footer block with these placeholders: `[Legal business name] · [Mailing address] · [Contact email/phone] · Reply "unsubscribe" or use [unsubscribe link] to opt out; requests honoured within 10 business days.` Add a note that counsel must review before sending (O6).
 - **Tests:** Playwright checks that `/design-sprint` renders its H1 and CTA, that the CTA reaches `/request-access?intent=design-sprint`, and that the homepage shows both CTAs.
-- **Acceptance:** DoD passes, including claim hygiene and i18n. `check:omnidash` passes, confirming no layout drift.
+- **Acceptance:** DoD passes, including claim hygiene and i18n. `check:omnidash` passes, confirming no layout drift. Per §4.3 B5, no copy may contain a "Prohibited Unqualified Claim" from `memory/omni-recall/docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
 
 ---
 
