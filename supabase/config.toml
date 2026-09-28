@@ -52,6 +52,10 @@ verify_jwt = true
 [functions.apex-voice]
 verify_jwt = false
 
+[functions.notify-access-request]
+# Own auth: X-Cron-Secret (vault cron_shared_secret) from the access_requests trigger.
+verify_jwt = false
+
 # Web3 Authentication Functions
 [functions.web3-nonce]
 verify_jwt = false  # Public endpoint to generate nonce for wallet signature
