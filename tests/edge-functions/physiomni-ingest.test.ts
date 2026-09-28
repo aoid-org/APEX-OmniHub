@@ -63,16 +63,16 @@ vi.mock('../../supabase/functions/_shared/supabaseClient.ts', () => ({
 const HANDLER_PATH = '../../supabase/functions/physiomni-ingest/index.ts';
 
 const env: Record<string, string | undefined> = {};
-const SECRET = 'test-signing-secret';
+const SIGNING_KEY = 'test-signing-key-material';
 const TENANT = '11111111-1111-4111-8111-111111111111';
 const DEVICE = 'dev-001';
 const NONCE = 'n'.repeat(20);
 
-function call(opts: { secret?: string; ts?: string; device?: string; sign?: string; raw?: string } = {}): Promise<Response> {
+function call(opts: { key?: string; ts?: string; device?: string; sign?: string; raw?: string } = {}): Promise<Response> {
   const ts = opts.ts ?? new Date().toISOString();
   const device = opts.device ?? DEVICE;
   const sig =
-    opts.sign ?? createHmac('sha256', opts.secret ?? SECRET).update(`${DEVICE}:${TENANT}:${ts}:${NONCE}`).digest('hex');
+    opts.sign ?? createHmac('sha256', opts.key ?? SIGNING_KEY).update(`${DEVICE}:${TENANT}:${ts}:${NONCE}`).digest('hex');
   const raw =
     opts.raw ??
     JSON.stringify({
@@ -101,7 +101,7 @@ beforeEach(async () => {
   h.state.handler = null;
   for (const key of Object.keys(env)) delete env[key];
   env.PHYSIOMNI_LIVE_ENABLED = 'true';
-  env.PHYSIOMNI_INGRESS_HMAC_SECRET = SECRET;
+  env.PHYSIOMNI_INGRESS_HMAC_SECRET = SIGNING_KEY;
 
   vi.resetModules();
   (globalThis as unknown as { Deno: unknown }).Deno = { env: { get: (k: string) => env[k] } };
@@ -118,13 +118,13 @@ describe('physiomni-ingest authentication', () => {
 
   it('fails closed when no signing key is configured, and honors only the reconciled name', async () => {
     delete env.PHYSIOMNI_INGRESS_HMAC_SECRET;
-    env.PHYSIOMNI_DEVICE_HMAC_SECRET = SECRET;
+    env.PHYSIOMNI_DEVICE_HMAC_SECRET = SIGNING_KEY;
     expect((await call()).status).toBe(503);
     expect(h.state.calls).toEqual([]);
   });
 
   it('rejects wrong keys, tampered identifiers and out-of-window timestamps before any database access', async () => {
-    expect((await call({ secret: 'not-the-secret' })).status).toBe(403);
+    expect((await call({ key: 'wrong-signing-key-material' })).status).toBe(403);
     expect((await call({ device: 'dev-002' })).status).toBe(403);
     const past = new Date(Date.now() - 5 * 60_000).toISOString();
     const future = new Date(Date.now() + 5 * 60_000).toISOString();

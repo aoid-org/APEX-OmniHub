@@ -65,7 +65,7 @@ type Handler = (req: Request) => Promise<Response>;
 let handler: Handler;
 const env: Record<string, string | undefined> = {};
 
-const SECRET = 'test-signing-secret';
+const SIGNING_KEY = 'test-signing-key-material';
 const TENANT = '11111111-1111-4111-8111-111111111111';
 const payload = {
   device_serial: 'dev-001',
@@ -77,7 +77,7 @@ const payload = {
   timestamp: '2026-09-28T12:00:00.000Z',
 };
 
-function request(opts: { sign?: boolean; secret?: string; ts?: string; raw?: string } = {}): Request {
+function request(opts: { sign?: boolean; key?: string; ts?: string; raw?: string } = {}): Request {
   const raw = opts.raw ?? JSON.stringify(payload);
   const ts = opts.ts ?? new Date().toISOString();
   const headers: Record<string, string> = {
@@ -86,7 +86,7 @@ function request(opts: { sign?: boolean; secret?: string; ts?: string; raw?: str
   };
   if (opts.sign !== false) {
     headers['x-physiomni-timestamp'] = ts;
-    headers['x-physiomni-signature'] = `sha256=${createHmac('sha256', opts.secret ?? SECRET).update(`${ts}.${raw}`).digest('hex')}`;
+    headers['x-physiomni-signature'] = `sha256=${createHmac('sha256', opts.key ?? SIGNING_KEY).update(`${ts}.${raw}`).digest('hex')}`;
   }
   return new Request('https://example.test/functions/v1/physiomni-ingress', { method: 'POST', body: raw, headers });
 }
@@ -99,7 +99,7 @@ beforeEach(async () => {
   h.state.deviceLimitAllowed = true;
   h.state.rateKeys = [];
   for (const key of Object.keys(env)) delete env[key];
-  env.PHYSIOMNI_INGRESS_HMAC_SECRET = SECRET;
+  env.PHYSIOMNI_INGRESS_HMAC_SECRET = SIGNING_KEY;
 
   vi.resetModules();
   (globalThis as unknown as { Deno: unknown }).Deno = {
@@ -130,7 +130,7 @@ describe('physiomni-ingress authentication', () => {
   });
 
   it('rejects a wrong signature and a stale timestamp', async () => {
-    expect((await handler(request({ secret: 'not-the-secret' }))).status).toBe(401);
+    expect((await handler(request({ key: 'wrong-signing-key-material' }))).status).toBe(401);
     const stale = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     expect((await handler(request({ ts: stale }))).status).toBe(401);
     expect(h.state.calls).toEqual([]);
