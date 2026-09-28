@@ -1882,3 +1882,14 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
   - `canAccessFeature` and `postLoginRouter` are unreachable.
   - The B-2 tracker is at `memory/omni-recall/docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`.
 - **Ops-log repair:** §9.43 (WP-05, #15) was dropped by the conflict resolution when `main` was merged into #16 (`7792ccc`). It is restored verbatim from `37d3c22e`. No code changed.
+
+## 9.46 Revenue Contract WP-05b — Lead Capture Live and New-Lead Alerts (2026-09-28)
+
+### 1. Production migration applied; F-10 alert via existing Resend channel; form on by default
+- **Changed files:** `apps/omnihub-site/marketing-site-README.md`, `apps/omnihub-site/src/pages/RequestAccess.tsx`, `docs/APEX_AGENT_OPERATIONS.md`, `scripts/ci/edge-functions.manifest.json`, `supabase/config.toml`, `supabase/functions/notify-access-request/index.ts`, `supabase/functions/notify-access-request/leadAlert.ts`, `supabase/migrations/20260928010000_access_requests_lead_alert.sql`, `supabase/migrations/rollback/20260928010000_access_requests_lead_alert_rollback.sql`, `tests/edge-functions/lead-alert.test.ts`.
+- **Production (owner-approved, 2026-09-28):** migration `20260928000000_access_requests_canonical` was applied via the Management API and recorded in `supabase_migrations.schema_migrations`. Verified: the table exists, RLS is on, and it has 4 policies.
+- **F-10:** the `AFTER INSERT` trigger `notify_access_request()` calls the new `notify-access-request` function through `pg_net`, using the vault `project_url`/`cron_shared_secret` pattern from `dispatch_scheduled_workflows`. The trigger never blocks an insert. The function authenticates the call by comparing `X-Cron-Secret` in constant time, then emails through Resend. `RESEND_API_KEY` was already set in production.
+  - It needs the `LEAD_ALERT_TO` and `LEAD_ALERT_FROM` secrets. If they are missing, the function skips the alert and logs a warning.
+  - `verify_jwt=false` is set because the function uses its own secret, as `execute-workflow` does.
+- **Form:** `VITE_ENABLE_REQUEST_ACCESS` is now on by default; setting it to `'false'` opts out. Before this, production compiled the Supabase path out, so no lead ever reached the database. `RequestAccess.tsx` stays at 777 lines.
+- **Not done (blocked by the session safety classifier; owner action):** the PostgREST schema reload, and deleting the 6 stale deployed functions (`lovable-audit`, `lovable-device`, `lovable-healthcheck`, `supabase_healthcheck`, `omnilink-agent`, `test-integration`). None of the 6 has a reference in the repo.
