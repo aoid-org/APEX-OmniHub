@@ -30,9 +30,6 @@ enabled = false  # Enable when Solana support is needed
 [functions.storage-upload-url]
 verify_jwt = true
 
-[functions.supabase_healthcheck]
-verify_jwt = false
-
 [functions.execute-automation]
 verify_jwt = true
 
@@ -53,15 +50,6 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.apex-voice]
-verify_jwt = false
-
-[functions.lovable-device]
-verify_jwt = false
-
-[functions.lovable-audit]
-verify_jwt = false
-
-[functions.lovable-healthcheck]
 verify_jwt = false
 
 # Web3 Authentication Functions
