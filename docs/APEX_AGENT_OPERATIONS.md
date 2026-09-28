@@ -1927,3 +1927,31 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **L8:** the lifecycle sync now also updates `user_entitlements.tier`, so skill caps follow the paid state.
 - **Business promise:** audit export is now gated to `tier >= business` through `usePlan`, the existing module gate. No new helper was needed.
 - **For WP-08 (copy):** "Priority orchestration & routing" is **NOT-IMPLEMENTED**. "PhysiOmni device telemetry" is **NOT-LIVE**: the functions are not deployed and the HMAC secret is unset.
+
+## 9.50 Revenue Contract — Post-Merge Operations, Findings and Blocked Steps (2026-09-28)
+
+### 1. Lead-loss window, blocked production steps, and open findings after #18 and #19
+- **Changed files:** `docs/APEX_AGENT_OPERATIONS.md`, `docs/contracts/MCP_PROXY_SECURITY_REVIEW.md`, `memory/omni-recall/rfc/RFC_2026_09_28_ORCHESTRATOR_HOSTING.md`
+- **Lead-loss window (owner-requested record):** before #18, production stored no leads server-side.
+  - **Start:** commit `9492e792` (2026-01-11). `apps/omnihub-site/src/pages/RequestAccess.tsx:7-8` introduced `ENABLE_SUPABASE = import.meta.env.VITE_ENABLE_REQUEST_ACCESS === 'true' && …`, and the insert was reachable only inside `if (ENABLE_SUPABASE)` (`:177`, insert at `:187`). At the last version before #15 (`37d3c22e^`) the same gate is at `:29-32`, `if (ENABLE_SUPABASE)` at `:430`, the upsert at `:439`, and the else branch at `:455-459`.
+  - **Why it was compiled out:** the production build step (`.github/workflows/deploy-production-cf-direct.yml:142-152`) passes the `VITE_SUPABASE_*` variables but never `VITE_ENABLE_REQUEST_ACCESS`. The workflow itself notes that Cloudflare dashboard variables are ignored on direct uploads (`:148`). A search of `.github`, `wrangler*` and `.env*` finds no setting that turns the flag on.
+  - **What visitors saw:** the else branch opened a `mailto:` draft and showed the success screen (`:455-459`). A lead therefore existed only if the visitor actually sent that email.
+  - **Second, independent cause:** the migration that creates `access_requests` was first applied to production on 2026-09-28 (§9.46).
+  - **Not knowable from the repo:** how many leads were lost (there is no server-side record), and the date of the first production deploy that contained this code (a commit date is not a deploy date; Cloudflare's deploy history would show it).
+  - **Status:** storage is enabled by #18 (flag default on) plus the table. Alerts remain pending the steps below.
+- **Post-merge production steps NOT executed:** the session's production-deploy guard blocked applying migrations, so nothing from this list was applied by this session (inferred from the block happening before execution; a later re-check was also blocked). Pending, in order:
+  1. Migrations `20260928010000`, `20260928020000`, `20260928020100`, `20260928030000`. Immediately before the backfill, re-run `SELECT count(*) FROM public.subscriptions WHERE tier='starter' AND stripe_subscription_id IS NULL`. It read 0 at 2026-09-28 before any apply. If it is above 0, stop and report the count.
+  2. Deploy `notify-access-request`, `stripe-webhook`, `create-checkout` and `activate-client`.
+  3. Owner sets `LEAD_ALERT_TO` and `LEAD_ALERT_FROM`, then one real test submission ("row saved and alert received"). No lead contents are recorded in the repo.
+  - `omnilink-port` also changed in WP-03 (the BUS skill cap in `omniskills.ts`) and is not in the owner's deploy list. Deferring it is safe while Business checkout stays off.
+- **Findings:**
+  - `STRIPE_PRICE_ID_BUS` **is set** in production (secret names only, read 2026-09-28), which contradicts the intent that it stay unset until WP-08. `create-checkout/index.ts:73-76` fails closed with `BILLING_NOT_CONFIGURED` when it is unset, so unsetting it cleanly disables Business checkout. While it is set and `create-checkout` is deployed, a Business purchase can take payment before the tier fixes above are live.
+  - `OMNIBOARD_SESSION_SECRET` is read by no code (`ENV_CLASSIFICATION.md:33`: reserved, not wired), so setting it (Phase 0) changes nothing.
+  - #19 was squash-merged (`bb22baf0`), not merged with a merge commit. WP-01, WP-02 and WP-03 are now one commit; the per-WP rollback scripts still exist.
+- **L7 `mcp-proxy`:** see `docs/contracts/MCP_PROXY_SECURITY_REVIEW.md`. Do not deploy. It spawns subprocesses, which the Edge Runtime does not allow, hands the service key to a user-driven child process, and runs three npm packages that do not exist on the registry.
+- **L6 function deletions:** invocation counts per function were **not obtained** (production log access was blocked). No function is proven to have zero invocations in 30 days, so none should be deleted yet. Supabase log retention may also be shorter than 30 days, in which case zero invocations over 30 days cannot be shown from logs alone.
+- **WP-07 diagnosis (no workflow edited; deploy-workflow edits need owner approval):**
+  - **Live:** `/`, `/pricing` and `/request-access` each return the same 5,972-byte document with zero `<h1`. `robots.txt` and `sitemap.xml` are real files with the correct content types.
+  - **Cause:** production runs `bun run build` (`deploy-production-cf-direct.yml:152`), which is the root `vite build`, and deploys `dist` (`:193`). The site's SSG build (`apps/omnihub-site/package.json` `build:ssg`) runs only as a CI gate (`ci-runtime-gates.yml:375`). The SSG build prerenders pre-auth marketing routes only (`apps/omnihub-site/vite.config.ts:109-118`).
+  - **Options (owner decision):** (1) deploy the site's SSG output, the contract default, which needs proof of route and provider parity with the root app and a pass of the OmniDash shield against that build; (2) keep the root SPA as the shipped app and add the prerendered marketing routes on top of it. Option 2 has the smaller blast radius, but asset and hydration consistency is unproven.
+- **Orchestrator (L1):** decision memo at `memory/omni-recall/rfc/RFC_2026_09_28_ORCHESTRATOR_HOSTING.md`. The revenue path does not depend on the orchestrator.
