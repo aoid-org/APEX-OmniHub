@@ -48,3 +48,27 @@ export function subscriptionIdFor(eventType: string, object: { id?: unknown; sub
       : object.subscription;
   return typeof raw === 'string' && raw.length > 0 ? raw : null;
 }
+
+/**
+ * user_entitlements.tier (skill caps) for a synced subscription (WP-03, L8/F-24).
+ * Paid access continues through dunning (past_due); canceled/expired/paused drop to
+ * BASIC. Returns null when the tier cannot be classified (leave the row unchanged).
+ */
+export function entitlementTierFor(
+  tier: string | null | undefined,
+  status: DbSubscriptionStatus
+): 'BASIC' | 'PRO' | 'BUS' | null {
+  if (status === 'canceled' || status === 'expired' || status === 'paused') return 'BASIC';
+  switch (tier) {
+    case 'business':
+    case 'enterprise':
+      return 'BUS';
+    case 'pro':
+      return 'PRO';
+    case 'free':
+    case 'starter':
+      return 'BASIC';
+    default:
+      return null;
+  }
+}

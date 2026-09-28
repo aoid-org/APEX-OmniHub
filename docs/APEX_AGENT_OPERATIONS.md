@@ -1905,3 +1905,14 @@ modules (`workflows/saga_context.py`, `workflows/agent_saga_support.py`,
 - **Fail closed:** the handler returns 500 when the Stripe secrets are unset.
 - **Unchanged:** `checkout.session.completed` behaves exactly as before, apart from the verification call.
 - **Release:** WP-01, WP-02 and WP-03 ship as one release.
+
+## 9.49 Revenue Contract WP-03 — Entitlement Matrix and Business Parity (2026-09-28)
+
+### 1. Matrix committed; gaps closed by extending the existing mechanisms (§4.3 B2)
+- **Changed files:** `apps/omnihub-site/dashboard/components/modules/AuditsModule.tsx`, `docs/APEX_AGENT_OPERATIONS.md`, `docs/contracts/ENTITLEMENT_MATRIX.md`, `src/components/PaidAccessRoute.tsx`, `src/hooks/useCapabilities.ts`, `src/hooks/usePaidAccess.ts`, `src/utils/postLoginRouter.ts`, `supabase/functions/_shared/stripeSubscriptionSync.ts`, `supabase/functions/omnilink-port/omniskills.ts`, `supabase/functions/stripe-webhook/index.ts`, `supabase/migrations/20260928030000_skill_entitlement_business_parity.sql`, `supabase/migrations/rollback/20260928030000_skill_entitlement_business_parity_rollback.sql`, `tests/infrastructure/business-tier-parity.test.ts`.
+- **F-24:** Business is treated like Pro for skill caps. The DB gates change only their `'PRO'` comparisons; the bodies were taken from the live production definitions (`pg_get_functiondef`). `omniskills.ts` also admits `BUS`.
+- **F-25:** `usePaidAccess` and `useCapabilities` now include `business`. `canViewOmniDash` also admits Base users (`free`/`starter`), in line with D1(a). Before this change, Business subscribers and Base users were locked out of OmniDash on mobile.
+- **Type-only edits to dead code:** widening `SubscriptionTier` required adding `business` to the `Record` maps in `PaidAccessRoute.tsx` and to the tier union in `postLoginRouter.ts` so the build compiles. `enterprise` is still shown as "Enterprise", and neither file is wired into anything new.
+- **L8:** the lifecycle sync now also updates `user_entitlements.tier`, so skill caps follow the paid state.
+- **Business promise:** audit export is now gated to `tier >= business` through `usePlan`, the existing module gate. No new helper was needed.
+- **For WP-08 (copy):** "Priority orchestration & routing" is **NOT-IMPLEMENTED**. "PhysiOmni device telemetry" is **NOT-LIVE**: the functions are not deployed and the HMAC secret is unset.

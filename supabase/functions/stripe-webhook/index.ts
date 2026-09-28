@@ -7,6 +7,7 @@ import {
   RATE_LIMIT_CONFIGS,
 } from "../_shared/rate-limit.ts";
 import {
+  entitlementTierFor,
   LIFECYCLE_EVENTS,
   mapStripeStatus,
   subscriptionIdFor,
@@ -141,13 +142,27 @@ async function syncSubscription(stripeSubscriptionId: string): Promise<Response>
       ...(tier ? { tier } : {}),
     })
     .eq('stripe_subscription_id', sub.id)
-    .select('user_id');
+    .select('user_id, tier');
   if (error) {
     console.error('Lifecycle sync: subscriptions update failed', error);
     return new Response('Failed to sync subscription', { status: 500 });
   }
   if (!data || data.length === 0) {
     console.warn('Lifecycle sync: no subscriptions row yet for', sub.id);
+    return RECEIVED();
+  }
+
+  // Keep skill caps (user_entitlements.tier) in step with paid state (WP-03, L8).
+  const entTier = entitlementTierFor(data[0].tier, status);
+  if (entTier) {
+    const { error: entError } = await supabaseAdmin
+      .from('user_entitlements')
+      .update({ tier: entTier, updated_at: new Date().toISOString() })
+      .eq('user_id', data[0].user_id);
+    if (entError) {
+      console.error('Lifecycle sync: user_entitlements update failed', entError);
+      return new Response('Failed to sync entitlements', { status: 500 });
+    }
   }
   return RECEIVED();
 }
