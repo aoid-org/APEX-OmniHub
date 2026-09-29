@@ -11,6 +11,8 @@ owner_decisions: 2026-09-28 (A1, A2 and A4 approved with conditions; D1 = option
 
 # APEX-OmniHub Revenue & Conversion Execution Contract
 
+> **Contract status (2026-09-29, `main` @ `6c62fdb8`):** merged — WP-00 (#14), WP-05 (#15), WP-09 (#16), WP-05b (#18), WP-01/02/03 (#19, one squash commit), plus the audit-log write-path change outside the WP list (#24 part A, #25 part B). Merged is not live: four 2026-09-28 migrations are pending owner application and the billing, activation and lead-alert functions are not yet deployed (`memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_09_29.md` §4). **WP-04 is stopped for an owner decision:** `OnboardingWizard.tsx:48` types `handleFinalActivation(tier: 'BASIC' | 'PRO')` and branches only on those two (`:53`, `:63`), so a Business selection has no activation path. WP-07 is diagnosed and waits on the owner's deploy option (ops-log §9.50); WP-10 is `BLOCKED` on D3; WP-06 and WP-08 are not merged. Per-finding closure: `.understand-anything/CANONICAL_STATE_2026-09-29.md`.
+>
 > **WP-00 status (2026-09-28):** Baseline complete at `841e2b1`. All 22 F-IDs remain `OPEN`. Three new findings (F-23 to F-25) are recorded in §4.2. The owner decided amendments A1 to A4 and gate D1 on 2026-09-28 (§4.2), and WP-01 to WP-03 were amended to match. WP-01 starts once PR #14 merges. The owner is holding that merge until repo visibility is confirmed (O5).
 
 ## 0. How to Use This Contract (read first, every session)
@@ -205,7 +207,7 @@ Dependency graph: `WP-00 → WP-01 → WP-02 → WP-03 → WP-04`. `WP-05`, `WP-
 
 ---
 
-### WP-00 — Baseline and Re-verification (read-only, no code changes) · **DONE (pending merge)**
+### WP-00 — Baseline and Re-verification (read-only, no code changes) · **DONE (merged #14)**
 
 - **Skill:** `apex-master-debug-claude`
 - **Goal:** Confirm every F-ID at current HEAD and produce the authoritative status table.
@@ -233,7 +235,7 @@ curl -s https://apexomnihub.icu/ | grep -c "<h1" ; curl -s https://apexomnihub.i
 
 ---
 
-### WP-01 — Fix Tier Provisioning (F-01, F-02, F-23) · P0 · amended per owner decisions of 2026-09-28
+### WP-01 — Fix Tier Provisioning (F-01, F-02, F-23) · P0 · amended per owner decisions of 2026-09-28 · **DONE in code (merged #19; migrations and deploy pending)**
 
 - **Skill:** `apex-master-debug-claude` + `supabase-postgres-best-practices`
 - **Starts after:** PR #14 merges.
@@ -290,7 +292,7 @@ WHERE tier = 'starter' AND stripe_subscription_id IS NULL;   -- idempotent: re-r
 
 ---
 
-### WP-02 — Webhook Integrity and Subscription Lifecycle Sync (F-03, F-04, F-17) · P0
+### WP-02 — Webhook Integrity and Subscription Lifecycle Sync (F-03, F-04, F-17) · P0 · **DONE in code (merged #19; deploy pending)**
 
 - **Skill:** `apex-master-debug-claude`
 - **Preconditions:**
@@ -342,7 +344,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-03 — Entitlement Matrix and Server-Side Enforcement (F-05, feeds F-13) · P0
+### WP-03 — Entitlement Matrix and Server-Side Enforcement (F-05, feeds F-13) · P0 · **DONE in code (merged #19; migration `20260928030000` and `omnilink-port` deploy pending)**
 
 > **Amended by §4.3 B2 (2026-09-28).** The matrix inventories the live mechanisms in §4.3 B1. Gaps are closed by extending the owning mechanism. A new helper, including `_shared/entitlements.ts` below, is added only when no mechanism covers a promised feature, and must be justified in the PR. F-25 targets the live tier maps (§4.3 B2).
 
@@ -363,7 +365,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-04 — Single Purchase Funnel (F-06) · P0
+### WP-04 — Single Purchase Funnel (F-06) · P0 · **STOPPED (owner decision: Business in the wizard)**
 
 - **Skill:** `apex-boost-claude`
 - **Preconditions:**
@@ -382,7 +384,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-05 — Lead Capture Integrity and Alerting (F-08, F-09, F-10) · P0
+### WP-05 — Lead Capture Integrity and Alerting (F-08, F-09, F-10) · P0 · **DONE (merged #15, #18; alert function and secrets pending)**
 
 - **Skill:** `apex-master-debug-claude` + `supabase-postgres-best-practices`
 - **Changes:**
@@ -461,7 +463,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-09 — Security Hygiene (F-15, F-16) · P1
+### WP-09 — Security Hygiene (F-15, F-16) · P1 · **DONE (merged #16)**
 
 - **Skill:** `apex-master-debug-claude`
 - **Changes:**
@@ -476,7 +478,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-10 — Margin Guard on Platform-Key LLM Usage (F-14) · P2 · Requires owner decision D3
+### WP-10 — Margin Guard on Platform-Key LLM Usage (F-14) · P2 · Requires owner decision D3 · **BLOCKED (no caps supplied)**
 
 - **Precondition (D3):** the owner supplies monthly caps per tier for platform-key (non-BYOM) usage, in the unit that `usage_metering` records. **No caps supplied means this WP is `BLOCKED`.** Do not invent limits.
 - **Changes:**
@@ -487,7 +489,7 @@ export const LIFECYCLE_EVENTS = new Set([
 
 ---
 
-### WP-11 — Repo Hygiene and Documentation Sync (F-20, F-21) · P3 · run last
+### WP-11 — Repo Hygiene and Documentation Sync (F-20, F-21) · P3 · run last · **Documentation part done 2026-09-29 (F-21); F-20 root clutter untouched**
 
 - **Changes:**
   1. For each file in F-20, run `grep -rn "<basename>" --exclude-dir=node_modules .`. Delete the file only if it has zero references; otherwise leave it and list it. Never touch the `Updated Grant Plan` file or the dataroom; that is owner decision O5.
