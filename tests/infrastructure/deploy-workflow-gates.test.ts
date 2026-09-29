@@ -105,3 +105,28 @@ describe('deploy-web3-functions.yml', () => {
     expect(code).toContain('${DEPLOY_REASON}');
   });
 });
+
+describe('deploy-mcp-gateway.yml', () => {
+  const { code, doc, triggers } = load('deploy-mcp-gateway.yml');
+  const job = Object.values(doc.jobs ?? {})[0];
+
+  it('is manual only, in production-db, from main', () => {
+    expect(triggers).toEqual(['workflow_dispatch']);
+    expect(Object.keys(doc.jobs ?? {})).toHaveLength(1);
+    expect(envName(job)).toBe('production-db');
+    expect(job.if).toContain("github.ref == 'refs/heads/main'");
+  });
+
+  it('deploys only mcp-gateway and never touches the database', () => {
+    const deploys = code.match(/supabase\s+functions\s+deploy\s+\S+/g) ?? [];
+    expect(deploys).toEqual(['supabase functions deploy mcp-gateway']);
+    expect(code).toContain('--project-ref "$SUPABASE_PROJECT_REF"');
+    expect(code).not.toMatch(/db\s+push|migration\s+(repair|up)|--include-all|SUPABASE_DB_PASSWORD/);
+  });
+
+  it('passes the free-text reason through the environment only', () => {
+    const uses = code.split('\n').filter((line) => line.includes('inputs.reason'));
+    expect(uses).toHaveLength(1);
+    expect(uses[0].trim()).toBe('DEPLOY_REASON: ${{ inputs.reason }}');
+  });
+});
