@@ -94,6 +94,7 @@ Owner-side items this pass could not verify: existence of the `production-db` Gi
 - WP-04 (whether Business enters the activation wizard), WP-07 (crawlable marketing routes: deploy the site SSG output or layer prerendered routes), WP-10 (usage caps, D3).
 - Claims register items O1–O8, legal review of outreach templates (CASL), dataroom visibility (`REVENUE_EXECUTION_CONTRACT.md` §6).
 - PhysiOmni PX-1: `[functions.physiomni-ingest]` config entry and retirement of the `PHYSIOMNI_INGRESS_HMAC_SECRET` variable.
+- Orchestrator CI `Security Scan` (`.github/workflows/orchestrator-ci.yml`) fails on `main` for any change that starts it. `main` last ran it on 2026-08-18 (green); since then `safety check` flags `setuptools 79.0.1` (SFTY-20260721-58460, the runner image copy; `orchestrator/uv.lock` pins 83.0.0) and `cuda-toolkit 13.0.3.0` (SFTY-20260120-40557 / CVE-2025-33228, an Nsight Systems script flaw fixed in 13.1.0; `torch 2.13.0` requires `==13.0.3`; the orchestrator never invokes Nsight). Fix in its own pull request: upgrade `setuptools` in the job and add a justified `--ignore` for the second advisory. The same pull request carries the `orchestrator/README.md` path fix (ops-log §9.56 (j)). The Bandit step of that job has not run since the safety step fails first, so its state is unverified.
 - Documentation limits: `RequestAccess.tsx` is 777 lines (over the 600-line policy); `docs/APEX_AGENT_OPERATIONS.md` and other living docs carry bulk `last_audited: 2026-06-*` stamps that were not individually re-audited in this pass (section 7).
 
 ---
