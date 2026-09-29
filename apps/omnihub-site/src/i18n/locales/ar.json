@@ -369,7 +369,8 @@
     "trace": {
       "live": "مباشر",
       "connecting": "جارٍ الاتصال",
-      "demoSimulated": "تجريبي (محاكاة)",
+      "unavailable": "غير متاح",
+      "loadFailed": "تعذّر تحميل النشاط. حاول مرة أخرى لاحقًا.",
       "noEvents": "لا توجد أحداث بعد",
       "replayWorkflows": "إعادة تشغيل العمليات",
       "closeReplay": "إغلاق الإعادة",
