@@ -369,7 +369,8 @@
     "trace": {
       "live": "Live",
       "connecting": "Connecting",
-      "demoSimulated": "Demo (Simulated)",
+      "unavailable": "Unavailable",
+      "loadFailed": "Could not load activity. Try again later.",
       "noEvents": "No events yet",
       "replayWorkflows": "Replay Workflows",
       "closeReplay": "Close Replay",

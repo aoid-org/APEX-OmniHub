@@ -12,15 +12,6 @@ interface AuditLog {
   [key: string]: unknown;
 }
 
-const DEMO_LOGS: AuditLog[] = [
-  { id: 'd1', action: 'Salesforce sync completed — 48 records updated', created_at: new Date(Date.now() - 92000).toISOString(), severity: 'ok' },
-  { id: 'd2', action: 'Invoice batch #1042 processed successfully', created_at: new Date(Date.now() - 310000).toISOString(), severity: 'ok' },
-  { id: 'd3', action: 'Workflow "Lead Nurture" triggered by Guardian', created_at: new Date(Date.now() - 540000).toISOString(), severity: 'info' },
-  { id: 'd4', action: 'QuickBooks reconciliation done — 0 discrepancies', created_at: new Date(Date.now() - 870000).toISOString(), severity: 'ok' },
-  { id: 'd5', action: 'Ticket #7291 auto-resolved by APEX Agent', created_at: new Date(Date.now() - 1200000).toISOString(), severity: 'ok' },
-  { id: 'd6', action: 'MAN Mode review request queued — low risk', created_at: new Date(Date.now() - 1800000).toISOString(), severity: 'warn' },
-];
-
 const SEVERITY_COLOR: Record<string, string> = {
   ok:   '#34d399',
   warn: '#f59e0b',
@@ -287,7 +278,6 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
     if (!url || !key) {
       setStatus('ERROR');
-      setLogs(DEMO_LOGS);
     }
   }, []);
 
@@ -319,16 +309,15 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
     return () => { if (channel) supabase.removeChannel(channel); };
   }, [tenantId, mockSupabase]);
 
-  const isDemo = status === 'ERROR';
-  const displayLogs = isDemo ? DEMO_LOGS : logs;
+  const isError = status === 'ERROR';
 
   let traceColor = '#f59e0b';
   let traceBg = 'rgba(245,158,11,0.08)';
   let traceBorderColor = 'rgba(245,158,11,0.22)';
   let traceText = tx('dashboard.trace.connecting');
 
-  if (isDemo) {
-    traceText = tx('dashboard.trace.demoSimulated');
+  if (isError) {
+    traceText = tx('dashboard.trace.unavailable');
   } else if (status === 'SUBSCRIBED') {
     traceColor = '#34d399';
     traceBg = 'rgba(52,211,153,0.08)';
@@ -371,7 +360,7 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 190, overflowY: 'auto' }}>
-        {displayLogs.map(log => (
+        {logs.map(log => (
           <div key={log.id} className="sentinel-trace-item">
             <div style={{
               width: 6, height: 6, borderRadius: '50%', flexShrink: 0, marginTop: 4,
@@ -388,13 +377,16 @@ export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: 
             </div>
           </div>
         ))}
-        {!isDemo && logs.length === 0 && status === 'SUBSCRIBED' && (
+        {!isError && logs.length === 0 && status === 'SUBSCRIBED' && (
           <div style={{ fontSize: 11, color: 'var(--od-text-tertiary)', padding: '6px 0' }}>{tx('dashboard.trace.noEvents')}</div>
+        )}
+        {isError && logs.length === 0 && (
+          <div style={{ fontSize: 11, color: 'var(--od-text-tertiary)', padding: '6px 0' }}>{tx('dashboard.trace.loadFailed')}</div>
         )}
       </div>
 
       {replayOpen && (
-        <ReplayPanel logs={displayLogs} onClose={() => setReplayOpen(false)} />
+        <ReplayPanel logs={logs} onClose={() => setReplayOpen(false)} />
       )}
 
       <button

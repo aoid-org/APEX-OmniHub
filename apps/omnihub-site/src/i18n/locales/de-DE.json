@@ -369,7 +369,8 @@
     "trace": {
       "live": "Live",
       "connecting": "Verbindung wird hergestellt",
-      "demoSimulated": "Demo (Simuliert)",
+      "unavailable": "Nicht verfügbar",
+      "loadFailed": "Aktivität konnte nicht geladen werden. Bitte später erneut versuchen.",
       "noEvents": "Noch keine Ereignisse",
       "replayWorkflows": "Workflows wiederholen",
       "closeReplay": "Wiedergabe schließen",
@@ -402,9 +403,9 @@
       "autoPilotSub": "Autonome Aufgabenbearbeitung",
       "guardianMode": "Guardian-Modus",
       "guardianModeSub": "KI-Richtliniendurchsetzung",
-      "toggleDemoMode": "Toggle demo mode",
-      "toggleAutoPilot": "Toggle auto pilot",
-      "toggleGuardianMode": "Toggle guardian mode"
+      "toggleDemoMode": "Demo-Modus umschalten",
+      "toggleAutoPilot": "Autopilot umschalten",
+      "toggleGuardianMode": "Guardian-Modus umschalten"
     },
     "footer": {
       "copyright": "© 2026 APEX Business Systems Ltd.",

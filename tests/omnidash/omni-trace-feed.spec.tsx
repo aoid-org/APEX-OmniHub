@@ -52,24 +52,27 @@ describe('OmniTraceFeed', () => {
     expect(screen.getByText('OmniTrace')).toBeTruthy();
   });
 
-  it('shows Demo badge when env vars are not configured', () => {
+  it('shows an unavailable badge and error state when env vars are not configured', () => {
     vi.stubEnv('VITE_SUPABASE_URL', '');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
 
     render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
-    expect(screen.getByText('Demo (Simulated)')).toBeTruthy();
+    expect(screen.getByText('Unavailable')).toBeTruthy();
+    expect(screen.getByText('Could not load activity. Try again later.')).toBeTruthy();
 
     vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
   });
 
-  it('renders demo logs when in demo mode', () => {
+  it('never renders sample events when loading fails', () => {
     vi.stubEnv('VITE_SUPABASE_URL', '');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
 
     render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
-    expect(screen.getByText(/Salesforce sync completed/)).toBeTruthy();
-    expect(screen.getByText(/Invoice batch/)).toBeTruthy();
+    expect(screen.queryByText(/Salesforce sync completed/)).toBeNull();
+    expect(screen.queryByText(/Invoice batch/)).toBeNull();
+    expect(screen.queryByText(/MAN Mode review request queued/)).toBeNull();
+    expect(screen.queryByText(/Demo \(Simulated\)/)).toBeNull();
 
     vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
@@ -100,7 +103,7 @@ describe('OmniTraceFeed', () => {
       render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     await waitFor(() => {
-      const badges = screen.getAllByText(/Demo \(Simulated\)|Connecting/);
+      const badges = screen.getAllByText(/Unavailable|Connecting/);
       expect(badges.length).toBeGreaterThan(0);
     });
   });

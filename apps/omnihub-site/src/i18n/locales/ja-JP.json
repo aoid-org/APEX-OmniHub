@@ -369,7 +369,8 @@
     "trace": {
       "live": "ライブ",
       "connecting": "接続中",
-      "demoSimulated": "デモ（シミュレーション）",
+      "unavailable": "利用不可",
+      "loadFailed": "アクティビティを読み込めませんでした。後でもう一度お試しください。",
       "noEvents": "イベントなし",
       "replayWorkflows": "ワークフローを再生",
       "closeReplay": "再生を閉じる",

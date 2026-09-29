@@ -369,7 +369,8 @@
     "trace": {
       "live": "实时",
       "connecting": "连接中",
-      "demoSimulated": "演示（模拟）",
+      "unavailable": "不可用",
+      "loadFailed": "无法加载活动。请稍后重试。",
       "noEvents": "暂无事件",
       "replayWorkflows": "回放工作流",
       "closeReplay": "关闭回放",

@@ -38,12 +38,13 @@ describe('OmniDash UI Surface Integrity', () => {
     expect(screen.getByText('Stale Checks (Simulated)')).toBeTruthy();
   });
 
-  it('explicitly labels OmniTraceFeed as Demo (Simulated)', async () => {
+  it('shows OmniTraceFeed as unavailable, never as sample data, when it cannot load', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', '');
     render(<OmniTraceFeed />);
-    
-    // The feed starts in 'CONNECTING' state which falls back to Demo if URL/Key is missing in test env
-    expect(await screen.findByText('Demo (Simulated)')).toBeTruthy();
+
+    // A missing URL/Key puts the feed in the error state instead of showing sample events
+    expect(await screen.findByText('Unavailable')).toBeTruthy();
+    expect(screen.queryByText('Demo (Simulated)')).toBeNull();
     vi.unstubAllEnvs();
   });
 
