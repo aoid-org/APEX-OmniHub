@@ -2,7 +2,7 @@
   "$schema_note": "Canonical single source of truth for Supabase Edge Functions.",
   "$rule": "scripts/ci/check-edge-fn-manifest.mjs enforces this list matches supabase/functions/ (excluding _shared). Deployment automation should derive its deploy set from this file rather than hand-maintained lists.",
   "generated": "2026-07-10",
-  "count": 35,
+  "count": 34,
   "functions": [
     "activate-client",
     "alchemy-webhook",
@@ -29,7 +29,6 @@
     "ops-voice-health",
     "physiomni-action",
     "physiomni-ingest",
-    "physiomni-ingress",
     "platform-health",
     "seed-crypto",
     "send-push-notification",

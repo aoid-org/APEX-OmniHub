@@ -8,6 +8,7 @@ Status labels:
 - `NOT-IMPLEMENTED`: no code delivers the promise.
 - `NOT-LIVE`: the code exists but is not deployed or configured.
 - `SERVICE`: the promise is a human service, not software.
+- `SOFT-LAUNCH`: deliberately not marketed; the row states whether the code is deployed.
 
 ## Pricing promises
 
@@ -20,7 +21,7 @@ Status labels:
 | Pro | Revenue Engine skills (unlimited) | Same DB skill gates; `PRO` and `BUS` are unlimited (WP-03, F-24) | Server (DB) | IMPLEMENTED+ENFORCED. "Revenue Engine" is only a name in the copy: no separate skill class exists (`Pricing.tsx`, `OnboardingWizard.tsx`). |
 | Pro | Priority orchestration & routing | None. The only "priority" in the orchestrator is model-source order (`orchestrator/activities/plan_generation.py:84`). | — | **NOT-IMPLEMENTED**: WP-08 should remove this from the copy |
 | Pro | Stripe-managed billing portal | `create-billing-portal` (user JWT and Stripe customer) | Server | IMPLEMENTED+ENFORCED |
-| Business | PhysiOmni device telemetry | `usePlan.canAccessPhysiOmni` (`PhysiOmniModule.tsx:75`) | UI only. `physiomni-ingest` and `physiomni-action` are **not deployed**, and `PHYSIOMNI_INGRESS_HMAC_SECRET` is unset. | **NOT-LIVE**: deploy the functions and set the secret, or remove this from the copy |
+| Business | PhysiOmni device telemetry | `usePlan.canAccessPhysiOmni` (`PhysiOmniModule.tsx:75`) | UI, plus a signed ingest endpoint (`physiomni-ingest`) that checks the device registry | **SOFT-LAUNCH**: code present, not deployed, 0 devices. Keep it off the pricing copy (owner decision; D4 (b) unchanged). |
 | Business | Advanced analytics & audit exports | Audit export now gated by `usePlan` (tier ≥ business) in `AuditsModule.tsx` (WP-03) | UI. Export is a client-side transform of rows the user can already read under RLS. | IMPLEMENTED+ENFORCED (export); **NOT-IMPLEMENTED** for "advanced analytics" as a separate feature |
 | Business | Dedicated onboarding support | — | — | SERVICE |
 
