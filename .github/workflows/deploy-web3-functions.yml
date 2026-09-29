@@ -1,6 +1,7 @@
 name: Deploy Web3 Functions
 
-# Manual, reviewer-gated deploy of the Web3 and billing-portal edge functions.
+# Manual, reviewer-gated deploy of one edge-function set per run: the Web3 and
+# billing-portal functions, or apex-agent (chosen with the `target` input).
 #
 # * Trigger: workflow_dispatch only. There is no push trigger, so merging to main
 #   never deploys anything.
@@ -18,6 +19,13 @@ on:
         description: "Why is a production functions deploy being run?"
         required: true
         type: string
+      target:
+        description: "Which function set to deploy"
+        required: true
+        type: choice
+        options:
+          - web3-and-billing
+          - apex-agent
 
 permissions:
   contents: read
@@ -61,9 +69,22 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          DEPLOY_TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
-          for fn in web3-nonce web3-verify alchemy-webhook verify-nft platform-health omnilink-port create-billing-portal; do
+          case "$DEPLOY_TARGET" in
+            web3-and-billing)
+              functions="web3-nonce web3-verify alchemy-webhook verify-nft platform-health omnilink-port create-billing-portal"
+              ;;
+            apex-agent)
+              functions="apex-agent"
+              ;;
+            *)
+              echo "::error::Unknown deploy target: ${DEPLOY_TARGET}"
+              exit 1
+              ;;
+          esac
+          for fn in $functions; do
             supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_REF"
           done
 
@@ -71,8 +92,10 @@ jobs:
         if: always()
         env:
           DEPLOY_REASON: ${{ inputs.reason }}
+          DEPLOY_TARGET: ${{ inputs.target }}
         run: |
           echo "## 🚀 Edge Functions Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "Target: ${DEPLOY_TARGET}" >> $GITHUB_STEP_SUMMARY
           echo "Reason: ${DEPLOY_REASON}" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ **Status:** Success" >> $GITHUB_STEP_SUMMARY

@@ -81,19 +81,40 @@ describe('deploy-web3-functions.yml', () => {
     expect(code).not.toContain('SUPABASE_DB_PASSWORD');
   });
 
-  it('deploys exactly the seven listed functions to the configured project', () => {
-    const list = code.match(/for fn in ([^;]+); do/);
-    expect(list).not.toBeNull();
-    expect(list![1].trim().split(/\s+/)).toEqual([
-      'web3-nonce',
-      'web3-verify',
-      'alchemy-webhook',
-      'verify-nft',
-      'platform-health',
-      'omnilink-port',
-      'create-billing-portal',
-    ]);
+  it('deploys exactly the two allow-listed function sets to the configured project', () => {
+    const sets = Object.fromEntries(
+      [...code.matchAll(/^\s+([a-z0-9-]+)\)\n\s+functions="([^"]+)"/gm)].map((m) => [m[1], m[2].split(/\s+/)]),
+    );
+    expect(sets).toEqual({
+      'web3-and-billing': [
+        'web3-nonce',
+        'web3-verify',
+        'alchemy-webhook',
+        'verify-nft',
+        'platform-health',
+        'omnilink-port',
+        'create-billing-portal',
+      ],
+      'apex-agent': ['apex-agent'],
+    });
     expect(code).toContain('supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_REF"');
+    // An unknown target fails closed.
+    expect(code).toMatch(/\*\)\n\s+echo "::error::Unknown deploy target[^\n]*\n\s+exit 1/);
+  });
+
+  it('selects the set with a choice input, never free text', () => {
+    const inputs = (
+      (doc.on as { workflow_dispatch?: { inputs?: Record<string, { type?: string; options?: string[] }> } })
+        .workflow_dispatch?.inputs ?? {}
+    );
+    expect(inputs.target?.type).toBe('choice');
+    expect(inputs.target?.options).toEqual(['web3-and-billing', 'apex-agent']);
+    // The input reaches the script only through the environment.
+    const uses = code.split('\n').filter((line) => line.includes('inputs.target'));
+    expect(uses.map((line) => line.trim())).toEqual([
+      'DEPLOY_TARGET: ${{ inputs.target }}',
+      'DEPLOY_TARGET: ${{ inputs.target }}',
+    ]);
   });
 
   it('does not interpolate the free-text reason into a shell script', () => {
