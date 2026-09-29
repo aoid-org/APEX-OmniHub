@@ -283,7 +283,7 @@ npm run build      # Production build
 | ------------------------------- | --------------- | ---------------------------- |
 | `ci-runtime-gates`              | PR/Push         | Build, test, lint, typecheck |
 | `cd-staging`                    | Push to develop | Staging deployment           |
-| `deploy-web3-functions`         | Push to main    | Edge function deployment     |
+| `deploy-web3-functions`         | Manual, reviewer-gated | Edge function deployment |
 | `secret-scanning`               | PR              | Security scanning            |
 | `chaos-simulation-ci`           | Scheduled       | Resilience testing           |
 | `alert-guard-rail-violation`    | CI failure      | Guardrail violation alerting |
