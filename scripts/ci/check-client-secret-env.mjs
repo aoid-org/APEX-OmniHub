@@ -55,7 +55,7 @@ export function findClientSecretEnvRefs(targets, repoRoot) {
         .split('\n')
         .forEach((text, i) => {
           for (const match of text.matchAll(SECRET_ENV_PATTERN)) {
-            violations.push({ file: relative(repoRoot, file), line: i + 1, name: match[0] });
+            violations.push({ file: relative(repoRoot, file).replace(/\\/g, '/'), line: i + 1, name: match[0] });
           }
         });
     }
