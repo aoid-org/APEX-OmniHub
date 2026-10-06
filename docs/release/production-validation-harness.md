@@ -4,7 +4,7 @@
 
 This harness supports a truthful production-certification decision for `https://apexomnihub.icu`. It is intentionally non-destructive by default. It does **not** certify production by its existence; each release-critical item is certified only when the matrix item is `VERIFIED` with retained evidence.
 
-Current recommendation: **GO for claiming fully certified production functionality**. Cloudflare provenance, authenticated workflows, Request Access persistence/fallback proof, Supabase RLS, BYOM, billing, mobile/device, performance/load, and branch protection are verified with live evidence.
+Current status (corrected 2026-09-29 to match `docs/release/release-validation-matrix.json`, the authority): the matrix decision is `GO_FOR_FULL_PRODUCTION_CERTIFICATION` with **19 of 20 items `VERIFIED`** with live evidence (Cloudflare provenance, authenticated workflows, Supabase RLS, BYOM, billing sandbox, mobile/device, performance/load, branch protection and the rest). **`REQUEST_ACCESS_PROOF` is `HONESTLY_GATED`**: backend persistence of a submitted lead has not been proven (`backendPersistenceProven: false`; it needs an explicit test write with `APEX_REQUEST_ACCESS_WRITE_OK=true`). Do not claim Request Access persistence as verified. Context: production builds compiled the server-side lead insert out until 2026-09-28 (`docs/APEX_AGENT_OPERATIONS.md` §9.50), so an earlier reading of this line as "persistence verified" was not supported by the evidence. The September 2026 changes are not covered by this matrix.
 
 ## Preflight access/safety matrix
 
